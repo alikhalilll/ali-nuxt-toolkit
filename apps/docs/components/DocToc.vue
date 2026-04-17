@@ -20,23 +20,34 @@ function flatten(nodes: TocLink[] = []): TocLink[] {
 }
 
 const flat = computed(() => flatten(props.links ?? []).filter((n) => n.depth <= 3));
+const ids = computed(() => flat.value.map((n) => n.id));
+const activeId = useActiveHeading(ids);
+
+function scrollTo(id: string, e: MouseEvent) {
+  e.preventDefault();
+  const el = document.getElementById(id);
+  if (!el) return;
+  const top = el.getBoundingClientRect().top + window.scrollY - 80;
+  window.scrollTo({ top, behavior: 'smooth' });
+  history.replaceState(history.state, '', `#${id}`);
+}
 </script>
 
 <template>
   <aside
     v-if="flat.length"
-    class="sticky top-20 hidden max-h-[calc(100vh-6rem)] self-start overflow-y-auto text-[13px] xl:block"
+    class="sticky top-20 hidden max-h-[calc(100vh-6rem)] self-start overflow-y-auto text-sm xl:block"
   >
-    <h4 class="mb-2 text-[11px] font-bold uppercase tracking-widest text-text-dim">On this page</h4>
-    <ul class="m-0 list-none border-l border-border p-0">
-      <li
-        v-for="link in flat"
-        :key="link.id"
-        :class="['-ml-px', link.depth === 3 ? 'pl-4 text-xs' : '']"
-      >
+    <h4 class="mb-3 text-[13px] font-semibold text-text">On This Page</h4>
+    <ul class="m-0 list-none p-0">
+      <li v-for="link in flat" :key="link.id" :class="[link.depth === 3 ? 'pl-3' : '']">
         <a
           :href="`#${link.id}`"
-          class="block border-l-2 border-transparent px-3 py-1 leading-snug text-text-dim hover:text-text hover:no-underline"
+          :class="[
+            'block py-1 text-[13px] leading-snug transition-colors hover:text-text hover:no-underline',
+            activeId === link.id ? 'font-medium text-text' : 'text-text-dim',
+          ]"
+          @click="scrollTo(link.id, $event)"
         >
           {{ link.text }}
         </a>

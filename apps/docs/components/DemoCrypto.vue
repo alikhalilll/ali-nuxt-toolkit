@@ -18,6 +18,7 @@ const decrypt = async () => {
     <h4 class="mb-3 text-[11px] font-bold uppercase tracking-widest text-text-dim">
       Live · AES-GCM round-trip
     </h4>
+    {{ input }}
     <input
       v-model="input"
       type="text"

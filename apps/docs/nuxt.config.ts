@@ -6,6 +6,9 @@ const siteName = 'ali-nuxt-toolkit';
 const siteDescription =
   'Three focused, strongly-typed Nuxt 3/4 modules: a typed fetch client with retry and progress, AES-GCM + PBKDF2 crypto, and layout-based route middleware.';
 
+const baseURL = process.env.NUXT_APP_BASE_URL || '/';
+const withBase = (path: string) => `${baseURL}${path}`.replace(/\/+/g, '/');
+
 export default defineNuxtConfig({
   compatibilityDate: '2026-04-01',
   srcDir: '.',
@@ -54,13 +57,22 @@ export default defineNuxtConfig({
     },
   },
   app: {
-    baseURL: process.env.NUXT_APP_BASE_URL || '/',
+    baseURL,
     head: {
       htmlAttrs: {
         lang: 'en',
       },
       title: siteName,
-      link: [{ rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
+      link: [
+        { rel: 'icon', type: 'image/svg+xml', href: withBase('favicon.svg') },
+        { rel: 'apple-touch-icon', href: withBase('favicon.svg') },
+        { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+        { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
+        {
+          rel: 'stylesheet',
+          href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap',
+        },
+      ],
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
