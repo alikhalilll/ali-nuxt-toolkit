@@ -1,6 +1,6 @@
 {
   "name": "@alikhalilll/nuxt-crypto",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Symmetric Web Crypto service for Nuxt 3/4. AES-256-GCM + PBKDF2 with key caching and pluggable algorithms.",
   "license": "MIT",
   "author": "alikhalilll",
