@@ -25,8 +25,7 @@ definePageMeta({
         <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2">middlewares</code>.
       </p>
       <p class="text-sm text-text-dim">
-        <NuxtLink to="/dashboard/skip" class="text-accent">/dashboard/skip</NuxtLink> — opts out
-        via
+        <NuxtLink to="/dashboard/skip" class="text-accent">/dashboard/skip</NuxtLink> — opts out via
         <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2"
           >skipAutoMiddleware: true</code
         >.

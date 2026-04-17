@@ -17,7 +17,8 @@ const codeChip = 'rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2';
 
     <div :class="card">
       <h2 :class="cardH">Configured rules</h2>
-      <pre :class="preBox">{
+      <pre :class="preBox">
+{
   groups: {
     auth: ['auth'],
     adminOnly: ['auth', 'verify-role', 'require-admin'],
@@ -27,7 +28,8 @@ const codeChip = 'rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2';
     { layouts: ['dashboard', 'dashboard/*'], middlewares: ['@auth'] },
     { layouts: ['admin'],                    middlewares: ['@adminOnly'] },
   ],
-}</pre>
+}</pre
+      >
     </div>
 
     <div class="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -52,9 +54,7 @@ const codeChip = 'rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2';
       <div :class="card">
         <h2 :class="cardH">Per-page extras</h2>
         <p class="mb-2 text-sm text-text-dim">
-          <NuxtLink to="/dashboard/sensitive" class="text-accent"
-            >dashboard/sensitive</NuxtLink
-          >
+          <NuxtLink to="/dashboard/sensitive" class="text-accent">dashboard/sensitive</NuxtLink>
           declares
           <code :class="codeChip">middlewares: ['verify-role']</code>
           in its
@@ -75,11 +75,13 @@ const codeChip = 'rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2';
         <code :class="codeChip">middlewares</code>
         page-meta field are compile errors.
       </p>
-      <pre :class="preBox">import type { AutoMiddlewareName } from '#build/auto-middleware/types';
+      <pre :class="preBox">
+import type { AutoMiddlewareName } from '#build/auto-middleware/types';
 
 definePageMeta({
   middlewares: ['verify-role'] satisfies AutoMiddlewareName[],
-});</pre>
+});</pre
+      >
     </div>
   </section>
 </template>

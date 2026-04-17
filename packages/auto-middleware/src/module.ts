@@ -27,9 +27,7 @@ const autoMiddlewareModule: NuxtModule<AutoMiddlewareOptions> =
       if (rules.length === 0) {
         if (nuxt.options.dev) {
           // eslint-disable-next-line no-console
-          console.warn(
-            '[@alikhalilll/nuxt-auto-middleware] No rules provided; nothing to do.'
-          );
+          console.warn('[@alikhalilll/nuxt-auto-middleware] No rules provided; nothing to do.');
         }
         return;
       }

@@ -188,7 +188,8 @@ const btnDanger =
   <section>
     <h1 class="mb-2 text-3xl font-semibold tracking-tight">api-provider demo</h1>
     <p class="mb-6 text-text-dim">
-      Every button below calls <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2">$apiProvider</code>
+      Every button below calls
+      <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2">$apiProvider</code>
       from
       <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2">useNuxtApp()</code>,
       typed as
@@ -215,9 +216,7 @@ const btnDanger =
           <span
             class="ml-1 inline-block rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider"
             :class="
-              interceptorActive
-                ? 'border-success text-success'
-                : 'border-border text-text-dim'
+              interceptorActive ? 'border-success text-success' : 'border-border text-text-dim'
             "
           >
             {{ interceptorActive ? 'on' : 'off' }}
@@ -231,7 +230,9 @@ const btnDanger =
         Upload / download progress
       </h2>
       <p class="mb-3 text-sm text-text-dim">
-        <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2">onRequestProgress</code>
+        <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2"
+          >onRequestProgress</code
+        >
         receives
         <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2"
           >{ phase, loaded, total, ratio }</code

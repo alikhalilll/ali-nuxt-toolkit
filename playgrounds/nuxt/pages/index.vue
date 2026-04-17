@@ -2,8 +2,8 @@
   <section>
     <h1 class="mb-2 text-3xl font-semibold tracking-tight">ali-nuxt-toolkit playground</h1>
     <p class="mb-8 text-text-dim">
-      Three Nuxt modules, one monorepo. Each demo page below exercises one package end to end.
-      Every option documented in each README is reachable from here.
+      Three Nuxt modules, one monorepo. Each demo page below exercises one package end to end. Every
+      option documented in each README is reachable from here.
     </p>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">

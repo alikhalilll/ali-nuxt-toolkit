@@ -27,9 +27,7 @@ const flat = computed(() => flatten(props.links ?? []).filter((n) => n.depth <= 
     v-if="flat.length"
     class="sticky top-20 hidden max-h-[calc(100vh-6rem)] self-start overflow-y-auto text-[13px] xl:block"
   >
-    <h4 class="mb-2 text-[11px] font-bold uppercase tracking-widest text-text-dim">
-      On this page
-    </h4>
+    <h4 class="mb-2 text-[11px] font-bold uppercase tracking-widest text-text-dim">On this page</h4>
     <ul class="m-0 list-none border-l border-border p-0">
       <li
         v-for="link in flat"

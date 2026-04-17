@@ -21,11 +21,7 @@ declare module '#build/api-provider-config.mjs' {
 }
 
 declare module '#build/api-provider-handlers.mjs' {
-  import type {
-    RequestInterceptor,
-    ResponseInterceptor,
-    ErrorInterceptor,
-  } from './core/types';
+  import type { RequestInterceptor, ResponseInterceptor, ErrorInterceptor } from './core/types';
   export const onRequestHandler: RequestInterceptor;
   export const onSuccessHandler: ResponseInterceptor;
   export const onErrorHandler: ErrorInterceptor;

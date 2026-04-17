@@ -1,5 +1,10 @@
 import minimist from 'minimist';
-import { BUMP_TYPES, DEFAULT_BRANCH, DEFAULT_DIST_TAG, PUBLISHABLE_PACKAGES } from './constants.mjs';
+import {
+  BUMP_TYPES,
+  DEFAULT_BRANCH,
+  DEFAULT_DIST_TAG,
+  PUBLISHABLE_PACKAGES,
+} from './constants.mjs';
 import { die } from './logger.mjs';
 
 export function parseArgs(argv = process.argv.slice(2)) {

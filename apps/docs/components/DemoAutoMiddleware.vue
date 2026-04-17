@@ -50,9 +50,7 @@ const resolved = computed(() => {
       class="mb-3 w-full rounded border border-border bg-code-bg px-3 py-2 font-mono text-sm text-text placeholder:text-text-dim focus:border-accent focus:outline-none"
     />
 
-    <div
-      class="rounded-md border border-border bg-code-bg p-3 font-mono text-[13px] text-text-dim"
-    >
+    <div class="rounded-md border border-border bg-code-bg p-3 font-mono text-[13px] text-text-dim">
       <strong class="text-text">resolved chain:</strong>
       {{ resolved.length ? resolved.join(' → ') : '(none)' }}
     </div>

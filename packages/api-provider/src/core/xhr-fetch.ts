@@ -90,10 +90,7 @@ export function createXhrFetch(
   };
 }
 
-function normaliseProgress(
-  phase: 'upload' | 'download',
-  e: ProgressEvent
-): RequestProgress {
+function normaliseProgress(phase: 'upload' | 'download', e: ProgressEvent): RequestProgress {
   const total = e.lengthComputable ? e.total : null;
   const ratio = total && total > 0 ? e.loaded / total : null;
   return { phase, loaded: e.loaded, total, ratio };

@@ -151,5 +151,7 @@ export interface ApiProviderClient {
   /** Register an error interceptor. Returns an unregister function. */
   useError(interceptor: ErrorInterceptor): () => void;
   /** Read-only snapshot of the client config. */
-  readonly config: Readonly<Required<Pick<ApiClientConfig, 'baseURL' | 'timeoutMs'>> & ApiClientConfig>;
+  readonly config: Readonly<
+    Required<Pick<ApiClientConfig, 'baseURL' | 'timeoutMs'>> & ApiClientConfig
+  >;
 }

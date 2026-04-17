@@ -58,10 +58,5 @@ export interface CryptoAlgorithm {
     plainText: Bytes;
   }): Promise<{ cipher: Bytes; iv: Bytes }>;
   /** Decrypt cipher bytes using a pre-derived key and the IV produced during encrypt. */
-  decrypt(args: {
-    subtle: SubtleCrypto;
-    key: CryptoKey;
-    cipher: Bytes;
-    iv: Bytes;
-  }): Promise<Bytes>;
+  decrypt(args: { subtle: SubtleCrypto; key: CryptoKey; cipher: Bytes; iv: Bytes }): Promise<Bytes>;
 }

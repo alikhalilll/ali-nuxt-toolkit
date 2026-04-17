@@ -2,7 +2,9 @@
   <aside
     class="sticky top-20 hidden max-h-[calc(100vh-6rem)] self-start overflow-y-auto text-sm md:block"
   >
-    <h4 class="mb-1.5 mt-4 text-[11px] font-bold uppercase tracking-widest text-text-dim first:mt-0">
+    <h4
+      class="mb-1.5 mt-4 text-[11px] font-bold uppercase tracking-widest text-text-dim first:mt-0"
+    >
       Overview
     </h4>
     <ul class="m-0 mb-2 list-none p-0">

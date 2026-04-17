@@ -1,0 +1,7 @@
+node_modules
+dist
+.nuxt
+.output
+artifacts
+pnpm-lock.yaml
+WALKTHROUGH.md

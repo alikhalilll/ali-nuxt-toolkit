@@ -3,8 +3,8 @@
     <div class="mb-12 text-center">
       <h1 class="mb-3 text-4xl font-semibold tracking-tight">ali-nuxt-toolkit</h1>
       <p class="mx-auto max-w-xl text-base text-text-dim">
-        Three focused, strongly-typed Nuxt 3 / 4 modules. Pick one — or all three — and keep
-        reading for installation and usage.
+        Three focused, strongly-typed Nuxt 3 / 4 modules. Pick one — or all three — and keep reading
+        for installation and usage.
       </p>
     </div>
 
@@ -26,8 +26,8 @@
       >
         <h3 class="mb-2 text-base font-semibold text-text">@alikhalilll/nuxt-crypto</h3>
         <p class="mb-4 text-sm text-text-dim">
-          AES-256-GCM + PBKDF2 via the Web Crypto API, with key caching and pluggable
-          algorithms. Server-only mode keeps the passphrase off the client.
+          AES-256-GCM + PBKDF2 via the Web Crypto API, with key caching and pluggable algorithms.
+          Server-only mode keeps the passphrase off the client.
         </p>
         <NuxtLink to="/crypto" class="text-sm font-semibold">Read the guide →</NuxtLink>
       </article>
@@ -37,8 +37,8 @@
       >
         <h3 class="mb-2 text-base font-semibold text-text">@alikhalilll/nuxt-auto-middleware</h3>
         <p class="mb-4 text-sm text-text-dim">
-          Layout → middleware mapping with glob patterns, named groups, per-page overrides, and
-          a typed middleware-name registry.
+          Layout → middleware mapping with glob patterns, named groups, per-page overrides, and a
+          typed middleware-name registry.
         </p>
         <NuxtLink to="/auto-middleware" class="text-sm font-semibold">Read the guide →</NuxtLink>
       </article>

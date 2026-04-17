@@ -11,6 +11,12 @@
     "typecheck": "pnpm -r --filter \"./packages/*\" typecheck",
     "clean": "pnpm -r --filter \"./packages/*\" clean",
     "play": "pnpm -C playgrounds/nuxt dev",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "commitlint": "commitlint",
+    "prepare": "husky",
     "pack:all": "node scripts/pack-all.mjs --all",
     "pack:api-provider": "node scripts/pack-all.mjs --pkg api-provider",
     "pack:crypto": "node scripts/pack-all.mjs --pkg crypto",
@@ -23,13 +29,35 @@
     "release:dry": "node scripts/release/index.mjs --interactive --dry-run"
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.0.0",
+    "@commitlint/config-conventional": "^20.0.0",
+    "@eslint/js": "^9.0.0",
     "@inquirer/prompts": "^8.3.2",
     "@types/node": "^22.13.0",
+    "eslint": "^9.0.0",
+    "eslint-config-prettier": "^10.0.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "eslint-plugin-vue": "^10.0.0",
+    "globals": "^17.0.0",
+    "husky": "^9.0.0",
+    "lint-staged": "^15.5.0",
     "minimist": "^1.2.8",
     "picocolors": "^1.1.1",
+    "prettier": "^3.5.0",
     "rimraf": "^6.0.1",
     "tsup": "^8.5.0",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.30.0",
+    "vue-eslint-parser": "^10.0.0"
+  },
+  "lint-staged": {
+    "*.{js,ts,vue,mjs}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{css,scss,md,json}": [
+      "prettier --write"
+    ]
   },
   "pnpm": {
     "onlyBuiltDependencies": [

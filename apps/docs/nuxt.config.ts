@@ -3,11 +3,7 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineNuxtConfig({
   compatibilityDate: '2026-04-01',
   srcDir: '.',
-  modules: [
-    '@nuxt/content',
-    '@alikhalilll/nuxt-api-provider',
-    '@alikhalilll/nuxt-crypto',
-  ],
+  modules: ['@nuxt/content', '@alikhalilll/nuxt-api-provider', '@alikhalilll/nuxt-crypto'],
   css: ['~/assets/docs.css'],
   vite: {
     plugins: [tailwindcss()],
@@ -42,8 +38,7 @@ export default defineNuxtConfig({
       meta: [
         {
           name: 'description',
-          content:
-            'Strongly-typed Nuxt modules for API, crypto, and layout-based middleware.',
+          content: 'Strongly-typed Nuxt modules for API, crypto, and layout-based middleware.',
         },
       ],
     },

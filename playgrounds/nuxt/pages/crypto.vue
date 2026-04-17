@@ -87,9 +87,9 @@ const metric =
     <h1 class="mb-2 text-3xl font-semibold tracking-tight">crypto demo</h1>
     <p class="mb-6 text-text-dim">
       All operations use
-      <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2">$crypto</code>, typed
-      as <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2">CryptoService</code>.
-      The passphrase and iterations come from
+      <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2">$crypto</code>, typed as
+      <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2">CryptoService</code>. The
+      passphrase and iterations come from
       <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2">nuxt.config.ts</code>.
     </p>
 
@@ -156,8 +156,9 @@ const metric =
       <p class="mb-2 text-sm text-text-dim">
         Each encrypt uses a fresh salt, but all decrypts for the same set of payloads hit the cache
         if
-        <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2">keyCacheSize &gt; 0</code>.
-        The third timing clears the cache first.
+        <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2"
+          >keyCacheSize &gt; 0</code
+        >. The third timing clears the cache first.
       </p>
       <label :class="label">Items</label>
       <input v-model.number="bulkCount" type="text" :class="input1" />
