@@ -1,6 +1,6 @@
 {
   "name": "@alikhalilll/nuxt-crypto",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Symmetric Web Crypto service for Nuxt 3/4. AES-256-GCM + PBKDF2 with key caching and pluggable algorithms.",
   "license": "MIT",
   "author": "alikhalilll",
@@ -36,12 +36,21 @@
   "types": "./dist/module.d.ts",
   "typesVersions": {
     "*": {
-      ".": ["./dist/module.d.ts"],
-      "core": ["./dist/core/index.d.ts"],
-      "types": ["./dist/types/index.d.ts"]
+      ".": [
+        "./dist/module.d.ts"
+      ],
+      "core": [
+        "./dist/core/index.d.ts"
+      ],
+      "types": [
+        "./dist/types/index.d.ts"
+      ]
     }
   },
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "clean": "rimraf dist",
     "build": "pnpm clean && tsup",
