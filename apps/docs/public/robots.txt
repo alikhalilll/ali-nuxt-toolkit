@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://alikhalilll.github.io/ali-nuxt-toolkit/sitemap.xml

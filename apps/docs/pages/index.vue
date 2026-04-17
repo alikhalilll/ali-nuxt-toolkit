@@ -1,3 +1,38 @@
+<script setup lang="ts">
+const {
+  public: { siteUrl, siteName, siteDescription },
+} = useRuntimeConfig();
+const canonical = `${siteUrl}/`;
+
+useSeoMeta({
+  title: siteName,
+  description: siteDescription,
+  ogTitle: siteName,
+  ogDescription: siteDescription,
+  ogUrl: canonical,
+  ogType: 'website',
+  twitterTitle: siteName,
+  twitterDescription: siteDescription,
+  twitterCard: 'summary_large_image',
+});
+
+useHead({
+  link: [{ rel: 'canonical', href: canonical }],
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: siteName,
+        url: siteUrl,
+        description: siteDescription,
+      }),
+    },
+  ],
+});
+</script>
+
 <template>
   <section class="mx-auto max-w-4xl px-6 py-16">
     <div class="mb-12 text-center">
