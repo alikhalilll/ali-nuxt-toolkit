@@ -1,6 +1,6 @@
 {
   "name": "@alikhalilll/nuxt-auto-middleware",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Declarative, layout-based route middleware for Nuxt 3/4, with glob matching, named groups, and per-page overrides.",
   "license": "MIT",
   "author": "alikhalilll",
@@ -30,11 +30,18 @@
   "types": "./dist/module.d.ts",
   "typesVersions": {
     "*": {
-      ".": ["./dist/module.d.ts"],
-      "types": ["./dist/types.d.ts"]
+      ".": [
+        "./dist/module.d.ts"
+      ],
+      "types": [
+        "./dist/types.d.ts"
+      ]
     }
   },
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "clean": "rimraf dist",
     "build": "pnpm clean && tsup",
