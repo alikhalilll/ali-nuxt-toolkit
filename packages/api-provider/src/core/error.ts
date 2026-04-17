@@ -9,21 +9,34 @@ export interface ApiErrorDetails {
 }
 
 /**
+ * Generic error contract: a human-readable `message` plus a typed `details`
+ * bag. `TErrors` narrows the allowed keys of `details.errors` (e.g. a union
+ * of field names), and `TOtherKeys` narrows the extra top-level keys that
+ * may appear alongside `errors`.
+ */
+export interface IError<TErrors extends string = string, TOtherKeys extends string = string> {
+  message: string;
+  details: {
+    errors: Record<TErrors, string>;
+  } & {
+    [K in TOtherKeys]?: string | Record<string, string>;
+  };
+}
+
+const API_ERROR_BRAND: unique symbol = Symbol.for('@alikhalilll/nuxt-api-provider.ApiError');
+
+/**
  * Thrown by the client on non-2xx responses and network failures.
  *
- * Extends the standard `Error` so it plays nicely with stack traces and
- * `instanceof` checks. The parsed server payload (if any) is available
- * on `.payload`, while flattened field errors are normalised into
- * `.details.errors`.
+ * Use `ApiError.is(err)` (or the standalone `isApiError(err)`) to discriminate
+ * thrown values — it is safe across duplicate module copies, realms (iframes,
+ * workers), and transpilation targets where `instanceof` is unreliable.
  */
-export class ApiError extends Error {
-  /** HTTP status. `0` for network/abort errors. */
+export class ApiError extends Error implements IError {
+  readonly [API_ERROR_BRAND] = true;
   readonly status: number;
-  /** Normalised error bag — always present, never null. */
   readonly details: ApiErrorDetails;
-  /** The raw parsed payload from the server (undefined if none/invalid). */
   readonly payload: unknown;
-  /** The response object, if one was received. */
   readonly response?: Response;
 
   constructor(params: {
@@ -39,8 +52,20 @@ export class ApiError extends Error {
     this.details = params.details ?? { errors: {} };
     this.payload = params.payload;
     this.response = params.response;
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+
+  static is(value: unknown): value is ApiError {
+    return (
+      !!value &&
+      typeof value === 'object' &&
+      (value as { [API_ERROR_BRAND]?: boolean })[API_ERROR_BRAND] === true
+    );
   }
 }
+
+/** Tree-shake-friendly standalone alias for `ApiError.is`. */
+export const isApiError = (value: unknown): value is ApiError => ApiError.is(value);
 
 const isRecord = (v: unknown): v is UnknownRecord =>
   !!v && typeof v === 'object' && !Array.isArray(v);

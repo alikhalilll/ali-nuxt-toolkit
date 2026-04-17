@@ -1,5 +1,11 @@
 export { createApiClient } from './create-client';
-export { ApiError, normalizeErrorPayload, type ApiErrorDetails } from './error';
+export {
+  ApiError,
+  isApiError,
+  normalizeErrorPayload,
+  type ApiErrorDetails,
+  type IError,
+} from './error';
 export { joinUrl } from './url';
 export { buildQueryString } from './query';
 export { normalizeHeaders, dropContentType } from './headers';

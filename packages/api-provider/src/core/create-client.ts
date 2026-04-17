@@ -141,7 +141,7 @@ export function createApiClient(config: ApiClientConfig = {}): ApiProviderClient
       try {
         return await executeOnce<T>(ctx);
       } catch (e: unknown) {
-        const apiError = e instanceof ApiError ? e : toNetworkError(e);
+        const apiError = ApiError.is(e) ? e : toNetworkError(e);
 
         const isNetwork = apiError.status === 0;
         const retryable =
@@ -202,7 +202,7 @@ function buildUrl(ctx: RequestContext): string {
 }
 
 function toNetworkError(e: unknown): ApiError {
-  if (e instanceof ApiError) return e;
+  if (ApiError.is(e)) return e;
   const message = e instanceof Error ? e.message || 'Network error' : 'Network error';
   return new ApiError({ message, status: 0, details: { errors: {} }, payload: e });
 }

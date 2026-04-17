@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { ApiError } from '@alikhalilll/nuxt-api-provider/types';
+import { isApiError, type IError } from '@alikhalilll/nuxt-api-provider/types';
 
 interface Post {
   id: number;
   title: string;
   body: string;
 }
+
+type PostError = IError<'title' | 'body'>;
 
 const { $apiProvider } = useNuxtApp();
 const result = ref<string>('');
@@ -18,7 +20,12 @@ const run = async () => {
     const post = await $apiProvider<Post>('/posts/1');
     result.value = JSON.stringify(post, null, 2);
   } catch (e) {
-    result.value = e instanceof ApiError ? `ApiError ${e.status}: ${e.message}` : String(e);
+    if (isApiError(e)) {
+      const details = e.details as PostError['details'];
+      result.value = `ApiError ${e.status}: ${e.message} (${Object.keys(details.errors).length} field errors)`;
+    } else {
+      result.value = String(e);
+    }
   } finally {
     loading.value = false;
   }

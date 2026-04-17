@@ -17,4 +17,4 @@ export type {
   UnknownRecord,
 } from '../core/types';
 
-export { ApiError, type ApiErrorDetails } from '../core/error';
+export { ApiError, isApiError, type ApiErrorDetails, type IError } from '../core/error';

@@ -8,7 +8,7 @@ A strongly-typed `fetch` client for Nuxt 3 / 4 with interceptors, retry/backoff,
 - **Smart body encoding** — plain objects → JSON; `FormData` / `URLSearchParams` / `Blob` / `ArrayBuffer` / `string` pass through with correct Content-Type.
 - **Timeouts + abort** — per-call timeout plus `AbortSignal` support via `AbortSignal.any` with a polyfill fallback.
 - **Upload + download progress** — a single `onRequestProgress` hook. The client transparently switches to `XMLHttpRequest` only when you pass it, since `fetch` has no upload-progress support.
-- **`ApiError` class** — structured, `instanceof`-friendly errors with `.status`, `.details`, `.payload`, `.response`.
+- **`ApiError` class** — structured errors with `.status`, `.details`, `.payload`, `.response`, plus an `isApiError(e)` / `ApiError.is(e)` guard that works across bundles and realms.
 - **Framework-agnostic core** — `import { createApiClient } from '@alikhalilll/nuxt-api-provider/core'` to use outside Nuxt.
 
 ---
@@ -18,30 +18,30 @@ A strongly-typed `fetch` client for Nuxt 3 / 4 with interceptors, retry/backoff,
 1. [Install](#install)
 2. [Register the module](#register-the-module)
 3. [Usage](#usage)
-    - [Typed client + composable](#typed-client--composable)
-    - [GET](#get)
-    - [Query parameters](#query-parameters)
-    - [POST with JSON](#post-with-json)
-    - [PATCH / PUT / DELETE](#patch--put--delete)
-    - [Multipart / FormData upload](#multipart--formdata-upload)
-    - [`application/x-www-form-urlencoded`](#applicationx-www-form-urlencoded)
-    - [Custom headers](#custom-headers)
-    - [Per-call timeout](#per-call-timeout)
-    - [External `AbortSignal`](#external-abortsignal)
-    - [Retry + backoff](#retry--backoff)
-    - [Upload / download progress](#upload--download-progress)
-    - [Error handling with `ApiError`](#error-handling-with-apierror)
-    - [Paginated list](#paginated-list)
-    - [Cancel previous request (debounced search)](#cancel-previous-request-debounced-search)
-    - [Passing metadata to interceptors](#passing-metadata-to-interceptors)
+   - [Typed client + composable](#typed-client--composable)
+   - [GET](#get)
+   - [Query parameters](#query-parameters)
+   - [POST with JSON](#post-with-json)
+   - [PATCH / PUT / DELETE](#patch--put--delete)
+   - [Multipart / FormData upload](#multipart--formdata-upload)
+   - [`application/x-www-form-urlencoded`](#applicationx-www-form-urlencoded)
+   - [Custom headers](#custom-headers)
+   - [Per-call timeout](#per-call-timeout)
+   - [External `AbortSignal`](#external-abortsignal)
+   - [Retry + backoff](#retry--backoff)
+   - [Upload / download progress](#upload--download-progress)
+   - [Error handling with `ApiError`](#error-handling-with-apierror)
+   - [Paginated list](#paginated-list)
+   - [Cancel previous request (debounced search)](#cancel-previous-request-debounced-search)
+   - [Passing metadata to interceptors](#passing-metadata-to-interceptors)
 4. [Interceptors](#interceptors)
-    - [Authentication header](#authentication-header)
-    - [Response unwrap](#response-unwrap)
-    - [Error → toast + redirect](#error--toast--redirect)
-    - [Runtime registration](#runtime-registration)
+   - [Authentication header](#authentication-header)
+   - [Response unwrap](#response-unwrap)
+   - [Error → toast + redirect](#error--toast--redirect)
+   - [Runtime registration](#runtime-registration)
 5. [Framework-agnostic core](#framework-agnostic-core)
-    - [Node / Bun / CLI](#node--bun--cli)
-    - [Inside Nitro server routes](#inside-nitro-server-routes)
+   - [Node / Bun / CLI](#node--bun--cli)
+   - [Inside Nitro server routes](#inside-nitro-server-routes)
 6. [Module options reference](#module-options-reference)
 7. [Exported types](#exported-types)
 
@@ -61,7 +61,7 @@ export default defineNuxtConfig({
   modules: ['@alikhalilll/nuxt-api-provider'],
   apiProvider: {
     baseURL: 'https://api.example.com',
-    provideName: '$apiProvider',   // leading "$" optional — gets stripped
+    provideName: '$apiProvider', // leading "$" optional — gets stripped
     defaultTimeoutMs: 20_000,
     retry: { attempts: 2, delayMs: 500, backoff: 2 },
     // Optional paths to modules with default-exported interceptors.
@@ -87,7 +87,10 @@ export const useApi = (): ApiProviderClient => useNuxtApp().$apiProvider;
 
 ```vue
 <script setup lang="ts">
-interface User { id: string; email: string }
+interface User {
+  id: string;
+  email: string;
+}
 
 const api = useApi();
 const user = await api<User>('/me');
@@ -97,7 +100,10 @@ const user = await api<User>('/me');
 ### GET
 
 ```ts
-interface Post { id: number; title: string }
+interface Post {
+  id: number;
+  title: string;
+}
 const post = await api<Post>('/posts/1');
 ```
 
@@ -111,7 +117,7 @@ Queries are the third argument. `null`/`undefined`/empty-string are skipped; arr
 const posts = await api<Post[]>('/posts', null, {
   userId: 1,
   tag: ['news', 'featured'],
-  q: '',            // skipped
+  q: '', // skipped
   draft: undefined, // skipped
 });
 ```
@@ -131,7 +137,7 @@ const created = await api<Post>('/posts', {
 
 ```ts
 await api<Post>('/posts/1', { method: 'PATCH', body: { title: 'Updated' } });
-await api<Post>('/posts/1', { method: 'PUT',   body: fullReplacement });
+await api<Post>('/posts/1', { method: 'PUT', body: fullReplacement });
 await api('/posts/1', { method: 'DELETE' });
 ```
 
@@ -215,7 +221,7 @@ form.append('file', fileInput.value!.files![0]);
 await useApi()('/uploads', {
   method: 'POST',
   body: form,
-  retry: { attempts: 0 },     // don't silently re-upload on failure
+  retry: { attempts: 0 }, // don't silently re-upload on failure
   timeoutMs: 60_000,
   onRequestProgress: ({ phase, loaded, total, ratio }) => {
     if (phase === 'upload') {
@@ -244,18 +250,28 @@ await useApi()('/uploads', {
 
 Every failure throws an `ApiError`. It's the same class for HTTP errors and network errors (`status === 0` means the request never reached a response).
 
+The class implements the generic `IError<TErrors, TOtherKeys>` interface — a reusable contract for typed error shapes:
+
 ```ts
-import { ApiError } from '@alikhalilll/nuxt-api-provider/types';
+import type { IError } from '@alikhalilll/nuxt-api-provider/types';
+
+type LoginError = IError<'email' | 'password', 'hint'>;
+```
+
+Discriminate caught errors with `isApiError(e)` (or the equivalent `ApiError.is(e)`) instead of `instanceof`. `instanceof` breaks when the package is duplicated in a bundle, when errors cross realm boundaries (iframes, workers), or when the class is downleveled to ES5 — `isApiError` uses a `Symbol.for(...)` brand and is robust to all three.
+
+```ts
+import { isApiError } from '@alikhalilll/nuxt-api-provider/types';
 
 try {
   await api('/users', { method: 'POST', body: { email: 'bad' } });
 } catch (e) {
-  if (e instanceof ApiError) {
-    console.log(e.status);          // 422
-    console.log(e.message);         // 'Validation failed'
-    console.log(e.details.errors);  // { email: 'Required' }
-    console.log(e.payload);         // raw server payload (unknown)
-    console.log(e.response);        // the Response object, if any
+  if (isApiError(e)) {
+    console.log(e.status); // 422
+    console.log(e.message); // 'Validation failed'
+    console.log(e.details.errors); // { email: 'Required' }
+    console.log(e.payload); // raw server payload (unknown)
+    console.log(e.response); // the Response object, if any
   }
 }
 ```
@@ -288,7 +304,7 @@ async function search(q: string) {
   try {
     return await api<Result[]>('/search', { signal: current.signal }, { q });
   } catch (e) {
-    if (e instanceof ApiError && e.message.includes('abort')) return [];
+    if (isApiError(e) && e.message.includes('abort')) return [];
     throw e;
   }
 }
@@ -388,7 +404,7 @@ Everything the Nuxt plugin wraps is available as a plain function you can use in
 ### Node / Bun / CLI
 
 ```ts
-import { createApiClient, ApiError } from '@alikhalilll/nuxt-api-provider/core';
+import { createApiClient, isApiError } from '@alikhalilll/nuxt-api-provider/core';
 
 const client = createApiClient({
   baseURL: 'https://api.github.com',
@@ -407,7 +423,7 @@ try {
   const repo = await client<{ stargazers_count: number }>('/repos/nuxt/nuxt');
   console.log(repo?.stargazers_count);
 } catch (e) {
-  if (e instanceof ApiError) process.exitCode = 1;
+  if (isApiError(e)) process.exitCode = 1;
   throw e;
 }
 ```
@@ -431,15 +447,15 @@ export default defineEventHandler(async (event) => {
 
 ## Module options reference
 
-| Option              | Type                     | Default          | Purpose                                                        |
-|---------------------|--------------------------|------------------|----------------------------------------------------------------|
-| `baseURL`           | `string`                 | `''`             | Prepended to every relative endpoint.                          |
-| `provideName`       | `string`                 | `'$apiProvider'` | Injected under `$<name>`. Leading `$` is stripped.             |
-| `defaultTimeoutMs`  | `number`                 | `20000`          | Client-wide request timeout.                                   |
-| `retry`             | `Partial<RetryOptions>`  | `{}`             | Default retry policy, overridable per call.                    |
-| `onRequestPath`     | `string` (optional)      | —                | Path to a module with a default-exported `RequestInterceptor`. |
-| `onSuccessPath`     | `string` (optional)      | —                | Path to a module with a default-exported `ResponseInterceptor`. |
-| `onErrorPath`       | `string` (optional)      | —                | Path to a module with a default-exported `ErrorInterceptor`.   |
+| Option             | Type                    | Default          | Purpose                                                         |
+| ------------------ | ----------------------- | ---------------- | --------------------------------------------------------------- |
+| `baseURL`          | `string`                | `''`             | Prepended to every relative endpoint.                           |
+| `provideName`      | `string`                | `'$apiProvider'` | Injected under `$<name>`. Leading `$` is stripped.              |
+| `defaultTimeoutMs` | `number`                | `20000`          | Client-wide request timeout.                                    |
+| `retry`            | `Partial<RetryOptions>` | `{}`             | Default retry policy, overridable per call.                     |
+| `onRequestPath`    | `string` (optional)     | —                | Path to a module with a default-exported `RequestInterceptor`.  |
+| `onSuccessPath`    | `string` (optional)     | —                | Path to a module with a default-exported `ResponseInterceptor`. |
+| `onErrorPath`      | `string` (optional)     | —                | Path to a module with a default-exported `ErrorInterceptor`.    |
 
 ## Exported types
 
@@ -459,6 +475,8 @@ import type {
   ProgressPhase,
   ApiError,
   ApiErrorDetails,
+  IError,
+  isApiError,
 } from '@alikhalilll/nuxt-api-provider/types';
 ```
 

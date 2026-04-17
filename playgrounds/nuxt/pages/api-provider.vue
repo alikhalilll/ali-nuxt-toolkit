@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { ApiError, type ApiProviderClient } from '@alikhalilll/nuxt-api-provider/types';
+import {
+  isApiError,
+  type ApiProviderClient,
+  type IError,
+} from '@alikhalilll/nuxt-api-provider/types';
+
+type PostError = IError<'title' | 'body', 'hint'>;
 
 interface Post {
   id: number;
@@ -73,8 +79,11 @@ const triggerError = async () => {
   try {
     await api('/nope');
   } catch (e) {
-    if (e instanceof ApiError) push(`→ ApiError status=${e.status} msg="${e.message}"`, 'error');
-    else push(`→ ${(e as Error).message}`, 'error');
+    if (isApiError(e)) {
+      const details = e.details as PostError['details'];
+      const fieldCount = Object.keys(details.errors).length;
+      push(`→ ApiError status=${e.status} msg="${e.message}" fields=${fieldCount}`, 'error');
+    } else push(`→ ${(e as Error).message}`, 'error');
   }
 };
 
@@ -83,7 +92,7 @@ const triggerTimeout = async () => {
   try {
     await api('/posts', { timeoutMs: 1 });
   } catch (e) {
-    if (e instanceof ApiError) push(`→ ApiError status=${e.status} msg="${e.message}"`, 'error');
+    if (isApiError(e)) push(`→ ApiError status=${e.status} msg="${e.message}"`, 'error');
   }
 };
 
@@ -94,7 +103,7 @@ const triggerAbort = async () => {
   try {
     await api('/posts', { signal: ctrl.signal });
   } catch (e) {
-    if (e instanceof ApiError) push(`→ aborted: ${e.message}`, 'error');
+    if (isApiError(e)) push(`→ aborted: ${e.message}`, 'error');
   }
 };
 
@@ -124,7 +133,7 @@ const retryDemo = async () => {
       timeoutMs: 5000,
     });
   } catch (e) {
-    if (e instanceof ApiError) push(`→ still failing after retries: status=${e.status}`, 'error');
+    if (isApiError(e)) push(`→ still failing after retries: status=${e.status}`, 'error');
   }
 };
 
