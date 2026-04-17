@@ -5,8 +5,11 @@ const pageKey = (route: RouteLocationNormalized) => route.path;
 </script>
 
 <template>
-  <div>
+  <div class="flex min-h-screen flex-col">
     <AppHeader />
-    <NuxtPage :page-key="pageKey" />
+    <div class="flex-1">
+      <NuxtPage :page-key="pageKey" />
+    </div>
+    <AppFooter />
   </div>
 </template>

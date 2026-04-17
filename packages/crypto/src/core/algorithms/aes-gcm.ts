@@ -7,10 +7,12 @@ import type { CryptoAlgorithm } from '../types';
 export const aesGcmPbkdf2: CryptoAlgorithm = {
   version: 'v1',
 
-  async deriveKey({ subtle, passphrase, salt, iterations }) {
+  async deriveKey({ subtle, passphrase, fingerprint, salt, iterations }) {
+    // NUL separator prevents `"ab" + "cd"` and `"abc" + "d"` from colliding.
+    const material = fingerprint ? `${passphrase}\x00${fingerprint}` : passphrase;
     const keyMaterial = await subtle.importKey(
       'raw',
-      new TextEncoder().encode(passphrase),
+      new TextEncoder().encode(material),
       { name: 'PBKDF2' },
       false,
       ['deriveKey']

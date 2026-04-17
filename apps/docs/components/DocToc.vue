@@ -25,11 +25,7 @@ const activeId = useActiveHeading(ids);
 
 function scrollTo(id: string, e: MouseEvent) {
   e.preventDefault();
-  const el = document.getElementById(id);
-  if (!el) return;
-  const top = el.getBoundingClientRect().top + window.scrollY - 80;
-  window.scrollTo({ top, behavior: 'smooth' });
-  history.replaceState(history.state, '', `#${id}`);
+  scrollToHash(id);
 }
 </script>
 
@@ -39,13 +35,15 @@ function scrollTo(id: string, e: MouseEvent) {
     class="sticky top-20 hidden max-h-[calc(100vh-6rem)] self-start overflow-y-auto text-sm xl:block"
   >
     <h4 class="mb-3 text-[13px] font-semibold text-text">On This Page</h4>
-    <ul class="m-0 list-none p-0">
-      <li v-for="link in flat" :key="link.id" :class="[link.depth === 3 ? 'pl-3' : '']">
+    <ul class="m-0 list-none border-l border-border p-0">
+      <li v-for="link in flat" :key="link.id" :class="['-ml-px', link.depth === 3 ? 'pl-3' : '']">
         <a
           :href="`#${link.id}`"
           :class="[
-            'block py-1 text-[13px] leading-snug transition-colors hover:text-text hover:no-underline',
-            activeId === link.id ? 'font-medium text-text' : 'text-text-dim',
+            'block border-l-2 px-3 py-1 text-[13px] leading-snug transition-colors hover:text-text hover:no-underline',
+            activeId === link.id
+              ? 'border-accent-2 font-medium text-accent-2'
+              : 'border-transparent text-text-dim',
           ]"
           @click="scrollTo(link.id, $event)"
         >

@@ -68,6 +68,14 @@ const npmUrl = computed(() =>
   packageName.value ? `https://www.npmjs.com/package/${packageName.value}` : null
 );
 
+const accentClass = computed(() => {
+  const p = route.path.replace(/\/+$/, '');
+  if (p === '/api-provider') return 'pkg-api';
+  if (p === '/crypto') return 'pkg-crypto';
+  if (p === '/auto-middleware') return 'pkg-auto';
+  return '';
+});
+
 function enhanceCodeBlocks() {
   if (!import.meta.client) return;
   const pres = document.querySelectorAll<HTMLPreElement>('article.prose pre');
@@ -125,7 +133,9 @@ watch(
     class="mx-auto grid max-w-[1400px] gap-10 px-4 py-6 pb-16 sm:px-6 md:grid-cols-[220px_minmax(0,1fr)] md:py-8 xl:grid-cols-[220px_minmax(0,1fr)_200px]"
   >
     <DocSidebar />
-    <main class="min-w-0 pb-[50vh]">
+    <main :class="[accentClass, 'min-w-0']">
+      <MobileTocBar />
+
       <!-- Breadcrumb -->
       <nav class="mb-4 flex items-center gap-1.5 text-[13px] text-text-dim" aria-label="Breadcrumb">
         <NuxtLink to="/" class="transition-colors hover:text-text hover:no-underline"
@@ -146,6 +156,7 @@ watch(
         >
           <polyline points="9 18 15 12 9 6" />
         </svg>
+        <span v-if="accentClass" class="pkg-dot" aria-hidden="true" />
         <span class="text-text">{{ pageTitle }}</span>
       </nav>
 
@@ -155,7 +166,11 @@ watch(
           :href="npmUrl!"
           target="_blank"
           rel="noopener"
-          class="inline-flex items-center gap-1.5 rounded-md border border-border bg-surface/40 px-2.5 py-1 font-mono text-text-dim transition-colors hover:border-text/40 hover:text-text hover:no-underline"
+          class="inline-flex items-center gap-1.5 rounded-md border bg-surface/40 px-2.5 py-1 font-mono text-text-dim transition-colors hover:no-underline"
+          :style="{
+            borderColor: 'color-mix(in oklab, var(--pkg-color) 30%, var(--color-border))',
+            color: 'var(--pkg-color)',
+          }"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -196,6 +211,8 @@ watch(
       <article v-if="page" class="prose">
         <ContentRenderer :value="page" />
       </article>
+
+      <DocPager />
     </main>
 
     <DocToc :links="page?.body?.toc?.links" />
