@@ -11,8 +11,10 @@ export class KeyCache {
   private readonly map = new Map<string, Promise<CryptoKey>>();
   constructor(private readonly capacity: number) {}
 
-  static key(salt: Bytes, iterations: number): string {
-    return `${iterations}.${toBase64(salt)}`;
+  static key(salt: Bytes, iterations: number, fingerprint?: string): string {
+    // `.` separates the fields; iterations and base64 can't contain one,
+    // so the joined key is unambiguous even when fingerprint is empty.
+    return `${iterations}.${fingerprint ?? ''}.${toBase64(salt)}`;
   }
 
   get(key: string): Promise<CryptoKey> | undefined {

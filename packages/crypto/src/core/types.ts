@@ -2,15 +2,34 @@
 export type Bytes = Uint8Array<ArrayBuffer>;
 
 /**
+ * Options accepted by `encrypt` / `decrypt`. Both calls must receive the
+ * same `fingerprint` value to round-trip; passing different fingerprints
+ * produces undecryptable ciphertext.
+ */
+export interface CryptoOperationOptions {
+  /**
+   * Optional extra key material mixed into the PBKDF2 input. Typically a
+   * device fingerprint produced server-side from an HttpOnly device-ID
+   * cookie via `getClientFingerprint()` from `@alikhalilll/nuxt-crypto/server`.
+   *
+   * ⚠️ Binding ciphertext to a fingerprint means the payload becomes
+   * undecryptable the moment the device cookie is cleared. Use only for
+   * ephemeral tokens (short-lived session cookies, one-time links), never
+   * for long-lived user data.
+   */
+  fingerprint?: string;
+}
+
+/**
  * A CryptoService encrypts plaintext to a serialisable string payload and
  * decrypts it back. Every operation is async because it hits the Web Crypto
  * subtle API.
  */
 export interface CryptoService {
   /** Encrypt a UTF-8 string to a versioned, base64-encoded payload. */
-  encrypt(plainText: string): Promise<string>;
-  /** Decrypt a payload produced by `encrypt`. */
-  decrypt(payload: string): Promise<string>;
+  encrypt(plainText: string, options?: CryptoOperationOptions): Promise<string>;
+  /** Decrypt a payload produced by `encrypt`. Pass the same `fingerprint` used at encrypt time, if any. */
+  decrypt(payload: string, options?: CryptoOperationOptions): Promise<string>;
   /** Clear any cached derived keys. Safe to call at any time. */
   clearKeyCache(): void;
 }
@@ -44,10 +63,15 @@ export interface CryptoServiceConfig {
 export interface CryptoAlgorithm {
   /** Short identifier stored as the first segment of every payload (e.g. `'v1'`). */
   readonly version: string;
-  /** Derive a CryptoKey from a passphrase + salt pair. Expected to be idempotent. */
+  /**
+   * Derive a CryptoKey from a passphrase + salt pair. Expected to be idempotent.
+   * When `fingerprint` is provided it is mixed into the key-derivation input
+   * (alongside the passphrase) so ciphertext becomes bound to that fingerprint.
+   */
   deriveKey(args: {
     subtle: SubtleCrypto;
     passphrase: string;
+    fingerprint?: string;
     salt: Bytes;
     iterations: number;
   }): Promise<CryptoKey>;
