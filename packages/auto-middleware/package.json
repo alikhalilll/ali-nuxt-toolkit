@@ -1,6 +1,6 @@
 {
   "name": "@alikhalilll/nuxt-auto-middleware",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Declarative, layout-based route middleware for Nuxt 3/4, with glob matching, named groups, and per-page overrides.",
   "license": "MIT",
   "author": "alikhalilll",
