@@ -1,7 +1,7 @@
 ---
 title: crypto
 description: AES-256-GCM + PBKDF2 encryption for Nuxt 3/4 using the Web Crypto API, with key caching and pluggable algorithms.
-package: "@alikhalilll/nuxt-crypto"
+package: '@alikhalilll/nuxt-crypto'
 order: 2
 ---
 
@@ -113,13 +113,13 @@ $crypto.clearKeyCache();
 
 ## Error handling
 
-| Scenario                                 | Message |
-|------------------------------------------|---------|
-| Payload isn't `a.b.c.d`                  | `Invalid payload format — expected 4 dot-separated segments.` |
-| A segment is empty                       | `Invalid payload format — one or more segments were empty.`   |
-| Algorithm version mismatch               | `Unsupported payload version: v2 (algorithm expects v1).`     |
-| Wrong passphrase / tampered ciphertext   | Native `OperationError` from Web Crypto.                      |
-| Passphrase not set in module config      | `[nuxt-crypto] passphrase is required.`                       |
+| Scenario                               | Message                                                       |
+| -------------------------------------- | ------------------------------------------------------------- |
+| Payload isn't `a.b.c.d`                | `Invalid payload format — expected 4 dot-separated segments.` |
+| A segment is empty                     | `Invalid payload format — one or more segments were empty.`   |
+| Algorithm version mismatch             | `Unsupported payload version: v2 (algorithm expects v1).`     |
+| Wrong passphrase / tampered ciphertext | Native `OperationError` from Web Crypto.                      |
+| Passphrase not set in module config    | `[nuxt-crypto] passphrase is required.`                       |
 
 ## Server-only mode
 
@@ -169,9 +169,15 @@ import type { CryptoAlgorithm } from '@alikhalilll/nuxt-crypto/types';
 
 const myAlgo: CryptoAlgorithm = {
   version: 'v2',
-  async deriveKey({ subtle, passphrase, salt, iterations }) { /* ... */ },
-  async encrypt({ subtle, key, plainText })                  { /* ... */ },
-  async decrypt({ subtle, key, cipher, iv })                 { /* ... */ },
+  async deriveKey({ subtle, passphrase, salt, iterations }) {
+    /* ... */
+  },
+  async encrypt({ subtle, key, plainText }) {
+    /* ... */
+  },
+  async decrypt({ subtle, key, cipher, iv }) {
+    /* ... */
+  },
 };
 
 const service = await createCryptoService({
@@ -196,22 +202,22 @@ async function rotate(payload: string): Promise<string> {
 
 `v1.{saltB64}.{ivB64}.{cipherB64}` — four dot-separated segments, each standard base64.
 
-| Segment | Bytes | Notes |
-|---------|-------|-------|
-| `v1`    | —     | Algorithm / version tag. |
-| salt    | 16    | Per-encryption PBKDF2 salt. |
-| iv      | 12    | AES-GCM initialization vector. |
+| Segment | Bytes | Notes                              |
+| ------- | ----- | ---------------------------------- |
+| `v1`    | —     | Algorithm / version tag.           |
+| salt    | 16    | Per-encryption PBKDF2 salt.        |
+| iv      | 12    | AES-GCM initialization vector.     |
 | cipher  | N     | Ciphertext + 16-byte GCM auth tag. |
 
 ## Module options
 
-| Option         | Type     | Default    | Purpose                                                              |
-|----------------|----------|------------|----------------------------------------------------------------------|
-| `passphrase`   | `string` | `''`       | Passphrase to derive the AES key from. Throws at use if empty.       |
-| `provideName`  | `string` | `'$crypto'`| Injected under `$<name>`. Leading `$` is stripped.                   |
-| `iterations`   | `number` | `100_000`  | PBKDF2 iteration count.                                              |
-| `keyCacheSize` | `number` | `64`       | Max derived keys kept in memory. Set to 0 to disable caching.        |
-| `serverOnly`   | `boolean`| `false`    | When true, plugin runs only on the server.                           |
+| Option         | Type      | Default     | Purpose                                                        |
+| -------------- | --------- | ----------- | -------------------------------------------------------------- |
+| `passphrase`   | `string`  | `''`        | Passphrase to derive the AES key from. Throws at use if empty. |
+| `provideName`  | `string`  | `'$crypto'` | Injected under `$<name>`. Leading `$` is stripped.             |
+| `iterations`   | `number`  | `100_000`   | PBKDF2 iteration count.                                        |
+| `keyCacheSize` | `number`  | `64`        | Max derived keys kept in memory. Set to 0 to disable caching.  |
+| `serverOnly`   | `boolean` | `false`     | When true, plugin runs only on the server.                     |
 
 ## Exported types
 

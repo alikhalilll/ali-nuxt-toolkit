@@ -41,6 +41,11 @@ const flatSections = computed(() => {
 const sectionIds = computed(() => flatSections.value.map((s) => s.id));
 const activeId = useActiveHeading(sectionIds);
 
+const normalizedRoutePath = computed(() => {
+  const p = route.path.replace(/\/+$/, '');
+  return p || '/';
+});
+
 function scrollTo(id: string, e: MouseEvent) {
   e.preventDefault();
   const el = document.getElementById(id);
@@ -64,7 +69,7 @@ function scrollTo(id: string, e: MouseEvent) {
           <li>
             <SidebarLink :to="page.path">{{ page.label }}</SidebarLink>
           </li>
-          <li v-if="route.path === page.path && flatSections.length">
+          <li v-if="normalizedRoutePath === page.path && flatSections.length">
             <ul class="m-0 mb-2 ml-5 list-none border-l border-border p-0">
               <li
                 v-for="section in flatSections"

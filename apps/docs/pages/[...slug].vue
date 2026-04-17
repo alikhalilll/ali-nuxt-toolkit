@@ -3,7 +3,10 @@ const route = useRoute();
 const {
   public: { siteUrl, siteName, siteDescription },
 } = useRuntimeConfig();
-const path = computed(() => (route.path === '/' ? '/index' : route.path));
+const path = computed(() => {
+  if (route.path === '/') return '/index';
+  return route.path.replace(/\/+$/, '') || '/index';
+});
 
 const { data: page } = await useAsyncData(route.path, () =>
   queryCollection('docs').path(path.value).first()

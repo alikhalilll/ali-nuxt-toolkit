@@ -14,11 +14,11 @@ Three focused Nuxt 3 / 4 modules published under the `@alikhalilll` npm scope. E
 
 ## Packages
 
-| Package | Purpose |
-| --- | --- |
-| [`@alikhalilll/nuxt-api-provider`](/api-provider) | Typed `fetch` client with interceptors, retry, upload/download progress. |
-| [`@alikhalilll/nuxt-crypto`](/crypto) | AES-GCM + PBKDF2 encryption with key caching and pluggable algorithms. |
-| [`@alikhalilll/nuxt-auto-middleware`](/auto-middleware) | Layout-based middleware with glob matching, groups, per-page overrides. |
+| Package                                                 | Purpose                                                                  |
+| ------------------------------------------------------- | ------------------------------------------------------------------------ |
+| [`@alikhalilll/nuxt-api-provider`](/api-provider)       | Typed `fetch` client with interceptors, retry, upload/download progress. |
+| [`@alikhalilll/nuxt-crypto`](/crypto)                   | AES-GCM + PBKDF2 encryption with key caching and pluggable algorithms.   |
+| [`@alikhalilll/nuxt-auto-middleware`](/auto-middleware) | Layout-based middleware with glob matching, groups, per-page overrides.  |
 
 ## Install
 

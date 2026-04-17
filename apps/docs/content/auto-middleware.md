@@ -1,7 +1,7 @@
 ---
 title: auto-middleware
 description: Declarative, layout-based route middleware for Nuxt 3/4 with glob patterns, named groups, and per-page overrides.
-package: "@alikhalilll/nuxt-auto-middleware"
+package: '@alikhalilll/nuxt-auto-middleware'
 order: 3
 ---
 
@@ -141,11 +141,11 @@ When multiple rules match, middlewares are concatenated in config order and dedu
 
 Middleware functions receive `(to, from)` exactly like standard Nuxt route middlewares.
 
-| Return        | Behaviour                                      |
-|---------------|------------------------------------------------|
-| `false`       | Stop the chain, allow navigation.              |
-| `true` / void | Continue to the next middleware.               |
-| anything else | Treated as a navigation result — chain stops.  |
+| Return        | Behaviour                                     |
+| ------------- | --------------------------------------------- |
+| `false`       | Stop the chain, allow navigation.             |
+| `true` / void | Continue to the next middleware.              |
+| anything else | Treated as a navigation result — chain stops. |
 
 ```ts
 // ~/middleware/auth.ts
@@ -177,12 +177,12 @@ export type AutoMiddlewareName = 'auth' | 'verify-role' | 'require-admin' | 'log
 
 ## Module options
 
-| Option          | Type                                      | Default             | Purpose                                                                      |
-|-----------------|-------------------------------------------|---------------------|------------------------------------------------------------------------------|
-| `rules`         | `AutoMiddlewareRule[]`                    | `[]`                | Layout → middlewares mapping. Required.                                      |
-| `groups`        | `Record<string, string[]>`                | `{}`                | Named reusable middleware lists, referenced via `@name` inside rules.        |
-| `debug`         | `boolean`                                 | `false`             | Log resolution + execution at runtime.                                       |
-| `pageMetaField` | `string \| false`                         | `'middlewares'`     | Page-meta key used to append extra middlewares.                              |
+| Option          | Type                       | Default         | Purpose                                                               |
+| --------------- | -------------------------- | --------------- | --------------------------------------------------------------------- |
+| `rules`         | `AutoMiddlewareRule[]`     | `[]`            | Layout → middlewares mapping. Required.                               |
+| `groups`        | `Record<string, string[]>` | `{}`            | Named reusable middleware lists, referenced via `@name` inside rules. |
+| `debug`         | `boolean`                  | `false`         | Log resolution + execution at runtime.                                |
+| `pageMetaField` | `string \| false`          | `'middlewares'` | Page-meta key used to append extra middlewares.                       |
 
 ## Exported types
 
