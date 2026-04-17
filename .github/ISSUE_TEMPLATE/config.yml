@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Docs site
+    url: https://alikhalilll.github.io/ali-nuxt-toolkit/
+    about: Read the full guide for each package before filing an issue.
+  - name: Security report
+    url: https://github.com/alikhalilll/ali-nuxt-toolkit/security/advisories/new
+    about: Please disclose vulnerabilities privately via GitHub Security Advisories.

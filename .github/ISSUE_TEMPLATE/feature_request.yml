@@ -1,0 +1,42 @@
+name: Feature request
+description: Propose a new feature or enhancement.
+title: '[feat]: '
+labels: ['enhancement', 'needs-triage']
+body:
+  - type: dropdown
+    id: package
+    attributes:
+      label: Package
+      options:
+        - '@alikhalilll/nuxt-api-provider'
+        - '@alikhalilll/nuxt-crypto'
+        - '@alikhalilll/nuxt-auto-middleware'
+        - New package
+        - Repo / tooling
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What are you trying to do today? Why is it awkward?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed API / behavior
+      description: Sketch the shape. Pseudo-code is fine.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What workarounds or other designs did you think about?
+  - type: checkboxes
+    id: willing-to-pr
+    attributes:
+      label: Are you willing to open a PR?
+      options:
+        - label: "Yes, I'd like to contribute this"

@@ -1,0 +1,68 @@
+name: Bug report
+description: Report a reproducible bug in one of the packages.
+title: '[bug]: '
+labels: ['bug', 'needs-triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug. A minimal reproduction is the fastest path to a fix — a Stackblitz, a short Gist, or a tiny repo all work.
+  - type: dropdown
+    id: package
+    attributes:
+      label: Package
+      description: Which package is affected?
+      options:
+        - '@alikhalilll/nuxt-api-provider'
+        - '@alikhalilll/nuxt-crypto'
+        - '@alikhalilll/nuxt-auto-middleware'
+        - 'apps/docs'
+        - Repo / tooling
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Package version
+      description: Version of the affected package (from `package.json` or `pnpm why`).
+      placeholder: '1.0.5'
+    validations:
+      required: true
+  - type: input
+    id: nuxt-version
+    attributes:
+      label: Nuxt version
+      placeholder: '4.4.2'
+    validations:
+      required: true
+  - type: input
+    id: node-version
+    attributes:
+      label: Node version
+      placeholder: '20.19.0'
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: A link to a minimal Stackblitz/Gist/repo, or inlined code.
+      placeholder: https://stackblitz.com/edit/...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include the full error/stack if any.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Browser, OS, any workarounds you've found.
