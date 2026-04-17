@@ -4,6 +4,15 @@
   "description": "Symmetric Web Crypto service for Nuxt 3/4. AES-256-GCM + PBKDF2 with key caching and pluggable algorithms.",
   "license": "MIT",
   "author": "alikhalilll",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alikhalilll/ali-nuxt-toolkit.git",
+    "directory": "packages/crypto"
+  },
+  "homepage": "https://github.com/alikhalilll/ali-nuxt-toolkit#readme",
+  "bugs": {
+    "url": "https://github.com/alikhalilll/ali-nuxt-toolkit/issues"
+  },
   "type": "module",
   "sideEffects": false,
   "publishConfig": {

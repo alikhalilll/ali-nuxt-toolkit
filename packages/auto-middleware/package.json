@@ -4,6 +4,15 @@
   "description": "Declarative, layout-based route middleware for Nuxt 3/4, with glob matching, named groups, and per-page overrides.",
   "license": "MIT",
   "author": "alikhalilll",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alikhalilll/ali-nuxt-toolkit.git",
+    "directory": "packages/auto-middleware"
+  },
+  "homepage": "https://github.com/alikhalilll/ali-nuxt-toolkit#readme",
+  "bugs": {
+    "url": "https://github.com/alikhalilll/ali-nuxt-toolkit/issues"
+  },
   "type": "module",
   "sideEffects": false,
   "publishConfig": {

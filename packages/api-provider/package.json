@@ -1,9 +1,18 @@
 {
   "name": "@alikhalilll/nuxt-api-provider",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Strongly-typed fetch client for Nuxt 3/4 with interceptors, retry/backoff, and a framework-agnostic core.",
   "license": "MIT",
   "author": "alikhalilll",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alikhalilll/ali-nuxt-toolkit.git",
+    "directory": "packages/api-provider"
+  },
+  "homepage": "https://github.com/alikhalilll/ali-nuxt-toolkit#readme",
+  "bugs": {
+    "url": "https://github.com/alikhalilll/ali-nuxt-toolkit/issues"
+  },
   "type": "module",
   "sideEffects": false,
   "publishConfig": {
