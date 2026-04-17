@@ -168,6 +168,9 @@ importers:
       '@types/node':
         specifier: ^22.13.0
         version: 22.19.17
+      h3:
+        specifier: ^1.13.0
+        version: 1.15.11
       rimraf:
         specifier: ^6.0.1
         version: 6.1.3

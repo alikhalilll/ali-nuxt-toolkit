@@ -37,6 +37,7 @@ interface PackageCard {
   docs: string;
   npm: string;
   description: string;
+  accent: 'api' | 'crypto' | 'auto';
 }
 
 const installCommands = [
@@ -51,7 +52,7 @@ let installTimer: ReturnType<typeof setInterval> | undefined;
 onMounted(() => {
   installTimer = setInterval(() => {
     installIndex.value = (installIndex.value + 1) % installCommands.length;
-  }, 3200);
+  }, 1800);
 });
 
 onBeforeUnmount(() => {
@@ -77,6 +78,7 @@ const packages: PackageCard[] = [
     npm: 'https://www.npmjs.com/package/@alikhalilll/nuxt-api-provider',
     description:
       'Typed fetch client with interceptors, retry/backoff, timeouts, and a unified upload + download progress hook.',
+    accent: 'api',
   },
   {
     name: '@alikhalilll/nuxt-crypto',
@@ -84,6 +86,7 @@ const packages: PackageCard[] = [
     npm: 'https://www.npmjs.com/package/@alikhalilll/nuxt-crypto',
     description:
       'AES-256-GCM + PBKDF2 via the Web Crypto API, with key caching and pluggable algorithms. Server-only mode keeps the passphrase off the client.',
+    accent: 'crypto',
   },
   {
     name: '@alikhalilll/nuxt-auto-middleware',
@@ -91,21 +94,13 @@ const packages: PackageCard[] = [
     npm: 'https://www.npmjs.com/package/@alikhalilll/nuxt-auto-middleware',
     description:
       'Layout → middleware mapping with glob patterns, named groups, per-page overrides, and a typed middleware-name registry.',
+    accent: 'auto',
   },
 ];
 </script>
 
 <template>
   <section class="relative isolate overflow-hidden">
-    <!-- Subtle radial glow background -->
-    <div
-      class="pointer-events-none absolute inset-0 -z-10"
-      style="
-        background: radial-gradient(60% 40% at 50% 0%, rgba(255, 255, 255, 0.06), transparent 70%);
-      "
-      aria-hidden="true"
-    />
-
     <div class="mx-auto max-w-5xl px-4 pb-20 pt-16 sm:px-6 sm:pb-24 sm:pt-24">
       <!-- Announcement pill -->
       <div class="mb-8 flex justify-center">
@@ -113,10 +108,10 @@ const packages: PackageCard[] = [
           href="https://www.npmjs.com/package/@alikhalilll/nuxt-api-provider"
           target="_blank"
           rel="noopener"
-          class="group inline-flex items-center gap-2 rounded-full border border-border bg-surface/40 px-3 py-1 text-xs text-text-dim transition-colors hover:border-text hover:text-text hover:no-underline"
+          class="group inline-flex items-center gap-2 rounded-full border border-brand/30 bg-brand/5 px-3 py-1 text-xs text-text-dim transition-colors hover:border-brand hover:text-text hover:no-underline"
         >
           <span
-            class="rounded-full !bg-white px-1.5 py-[1px] text-[10px] font-semibold !text-black"
+            class="bg-gradient-brand rounded-full px-1.5 py-[1px] text-[10px] font-semibold !text-black"
           >
             New
           </span>
@@ -145,7 +140,7 @@ const packages: PackageCard[] = [
           class="mb-6 text-4xl font-bold tracking-tight text-text sm:text-5xl md:text-6xl"
           style="letter-spacing: -0.03em; line-height: 1.05"
         >
-          Strongly-typed Nuxt modules.<br />
+          <span class="text-gradient-brand">Strongly-typed</span> Nuxt modules.<br />
           <span class="text-text-dim">Pick one, or all three.</span>
         </h1>
         <p class="mx-auto mb-8 max-w-2xl text-base text-text-dim sm:text-lg">
@@ -155,7 +150,7 @@ const packages: PackageCard[] = [
         <div class="flex flex-wrap items-center justify-center gap-3">
           <NuxtLink
             to="/api-provider"
-            class="inline-flex h-10 items-center justify-center rounded-md !bg-white px-5 text-sm font-medium !text-black transition-colors hover:!bg-zinc-200 hover:no-underline"
+            class="bg-gradient-brand inline-flex h-10 items-center justify-center rounded-md px-5 text-sm font-semibold !text-black shadow-[0_4px_24px_-8px_rgba(74,222,128,0.6)] transition-[filter] hover:brightness-110 hover:no-underline"
           >
             Get Started
           </NuxtLink>
@@ -268,14 +263,26 @@ const packages: PackageCard[] = [
         <article
           v-for="pkg in packages"
           :key="pkg.name"
-          class="group flex flex-col rounded-lg border border-border bg-surface/40 p-5 transition-colors hover:border-text/30"
+          :class="[
+            `pkg-${pkg.accent}`,
+            'group relative flex flex-col overflow-hidden rounded-lg border border-border bg-surface/40 p-5 transition-colors',
+          ]"
         >
-          <h3 class="mb-2 font-mono text-[13px] font-semibold text-text">{{ pkg.name }}</h3>
+          <span
+            class="absolute inset-x-0 top-0 h-[2px] opacity-60 transition-opacity group-hover:opacity-100"
+            :style="{ background: 'var(--pkg-color)' }"
+            aria-hidden="true"
+          />
+          <div class="mb-2 flex items-center gap-2">
+            <span class="pkg-dot" aria-hidden="true" />
+            <h3 class="font-mono text-[13px] font-semibold text-text">{{ pkg.name }}</h3>
+          </div>
           <p class="mb-5 flex-1 text-sm text-text-dim">{{ pkg.description }}</p>
           <div class="flex items-center gap-4 text-sm">
             <NuxtLink
               :to="pkg.docs"
-              class="font-medium text-text transition-colors hover:no-underline"
+              class="font-medium transition-colors hover:no-underline"
+              :style="{ color: 'var(--pkg-color)' }"
             >
               Docs →
             </NuxtLink>

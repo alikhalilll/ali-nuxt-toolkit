@@ -2,28 +2,17 @@
 const route = useRoute();
 const toc = useDocToc();
 
-interface PageEntry {
+interface ModuleEntry {
   path: string;
-  label: string;
-  group: string;
+  title: string;
+  accent: 'pkg-api' | 'pkg-crypto' | 'pkg-auto';
 }
 
-const pages: PageEntry[] = [
-  { path: '/', label: 'Introduction', group: 'Getting Started' },
-  { path: '/api-provider', label: 'Guide', group: 'api-provider' },
-  { path: '/crypto', label: 'Guide', group: 'crypto' },
-  { path: '/auto-middleware', label: 'Guide', group: 'auto-middleware' },
+const modules: ModuleEntry[] = [
+  { path: '/api-provider', title: 'api-provider', accent: 'pkg-api' },
+  { path: '/crypto', title: 'crypto', accent: 'pkg-crypto' },
+  { path: '/auto-middleware', title: 'auto-middleware', accent: 'pkg-auto' },
 ];
-
-const groupedPages = computed(() => {
-  const groups = new Map<string, PageEntry[]>();
-  for (const p of pages) {
-    const list = groups.get(p.group) ?? [];
-    list.push(p);
-    groups.set(p.group, list);
-  }
-  return [...groups.entries()];
-});
 
 const flatSections = computed(() => {
   const out: { id: string; text: string; depth: number }[] = [];
@@ -48,11 +37,7 @@ const normalizedRoutePath = computed(() => {
 
 function scrollTo(id: string, e: MouseEvent) {
   e.preventDefault();
-  const el = document.getElementById(id);
-  if (!el) return;
-  const top = el.getBoundingClientRect().top + window.scrollY - 80;
-  window.scrollTo({ top, behavior: 'smooth' });
-  history.replaceState(history.state, '', `#${id}`);
+  scrollToHash(id);
 }
 </script>
 
@@ -60,39 +45,55 @@ function scrollTo(id: string, e: MouseEvent) {
   <aside
     class="sticky top-20 hidden max-h-[calc(100vh-6rem)] self-start overflow-y-auto pr-2 text-sm md:block"
   >
-    <template v-for="[group, list] in groupedPages" :key="group">
-      <h4 class="mb-1.5 mt-6 px-3 text-[13px] font-semibold text-text first:mt-0">
-        {{ group }}
-      </h4>
-      <ul class="m-0 list-none p-0">
-        <template v-for="page in list" :key="page.path">
-          <li>
-            <SidebarLink :to="page.path">{{ page.label }}</SidebarLink>
+    <h4
+      class="mb-1.5 mt-4 px-3 text-[11px] font-semibold uppercase tracking-wider text-text-muted first:mt-0"
+    >
+      Getting Started
+    </h4>
+    <ul class="m-0 mb-4 list-none p-0">
+      <li><SidebarLink to="/">Introduction</SidebarLink></li>
+    </ul>
+
+    <h4 class="mb-1.5 mt-4 px-3 text-[11px] font-semibold uppercase tracking-wider text-text-muted">
+      Modules
+    </h4>
+    <ul class="m-0 list-none p-0">
+      <li v-for="mod in modules" :key="mod.path" :class="[mod.accent, 'mb-1']">
+        <NuxtLink
+          :to="mod.path"
+          :class="[
+            'module-link flex items-center gap-2 rounded-md px-3 py-1.5 font-mono text-[13px] font-semibold transition-colors hover:no-underline',
+            normalizedRoutePath === mod.path ? 'is-active' : 'text-text hover:bg-surface/60',
+          ]"
+        >
+          <span class="pkg-dot" aria-hidden="true" />
+          {{ mod.title }}
+        </NuxtLink>
+
+        <ul
+          v-if="normalizedRoutePath === mod.path && flatSections.length"
+          class="m-0 mb-3 mt-1 ml-5 list-none border-l border-border p-0"
+        >
+          <li
+            v-for="section in flatSections"
+            :key="section.id"
+            :class="['-ml-px', section.depth === 3 ? 'pl-3' : '']"
+          >
+            <a
+              :href="`#${section.id}`"
+              :class="[
+                'block border-l-2 px-3 py-1 text-[13px] leading-snug transition-colors hover:text-text hover:no-underline',
+                activeId === section.id
+                  ? 'border-brand bg-brand/10 font-medium text-brand'
+                  : 'border-transparent text-text-dim',
+              ]"
+              @click="scrollTo(section.id, $event)"
+            >
+              {{ section.text }}
+            </a>
           </li>
-          <li v-if="normalizedRoutePath === page.path && flatSections.length">
-            <ul class="m-0 mb-2 ml-5 list-none border-l border-border p-0">
-              <li
-                v-for="section in flatSections"
-                :key="section.id"
-                :class="['-ml-px', section.depth === 3 ? 'pl-3' : '']"
-              >
-                <a
-                  :href="`#${section.id}`"
-                  :class="[
-                    'block border-l-2 px-3 py-1 text-[13px] leading-snug transition-colors hover:text-text hover:no-underline',
-                    activeId === section.id
-                      ? 'border-text font-medium text-text'
-                      : 'border-transparent text-text-dim',
-                  ]"
-                  @click="scrollTo(section.id, $event)"
-                >
-                  {{ section.text }}
-                </a>
-              </li>
-            </ul>
-          </li>
-        </template>
-      </ul>
-    </template>
+        </ul>
+      </li>
+    </ul>
   </aside>
 </template>

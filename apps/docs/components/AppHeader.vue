@@ -1,7 +1,6 @@
 <script setup lang="ts">
 const route = useRoute();
 const mobileNavOpen = useMobileNavOpen();
-const toc = useDocToc();
 
 const navLinks = [
   { to: '/api-provider', label: 'api-provider' },
@@ -9,38 +8,12 @@ const navLinks = [
   { to: '/auto-middleware', label: 'auto-middleware' },
 ];
 
-const flatSections = computed(() => {
-  const out: { id: string; text: string; depth: number }[] = [];
-  const walk = (nodes: typeof toc.value) => {
-    if (!nodes) return;
-    for (const n of nodes) {
-      if (n.depth <= 3) out.push({ id: n.id, text: n.text, depth: n.depth });
-      if (n.children?.length) walk(n.children);
-    }
-  };
-  walk(toc.value);
-  return out;
-});
-
-const sectionIds = computed(() => flatSections.value.map((s) => s.id));
-const activeId = useActiveHeading(sectionIds);
-
 watch(
   () => route.fullPath,
   () => {
     mobileNavOpen.value = false;
   }
 );
-
-function scrollToSection(id: string, e: MouseEvent) {
-  e.preventDefault();
-  mobileNavOpen.value = false;
-  const el = document.getElementById(id);
-  if (!el) return;
-  const top = el.getBoundingClientRect().top + window.scrollY - 80;
-  window.scrollTo({ top, behavior: 'smooth' });
-  history.replaceState(history.state, '', `#${id}`);
-}
 </script>
 
 <template>
@@ -92,7 +65,7 @@ function scrollToSection(id: string, e: MouseEvent) {
 
         <NuxtLink to="/" class="mr-6 flex items-center gap-2 hover:no-underline">
           <span
-            class="inline-flex h-6 w-7 items-center justify-center rounded border border-text text-[9px] font-bold tracking-tight text-text"
+            class="bg-gradient-brand inline-flex h-6 w-7 items-center justify-center rounded text-[9px] font-bold tracking-tight !text-black"
             aria-hidden="true"
           >
             ANT
@@ -108,7 +81,7 @@ function scrollToSection(id: string, e: MouseEvent) {
           :key="link.to"
           :to="link.to"
           class="text-text-dim transition-colors hover:text-text hover:no-underline"
-          active-class="!text-text font-medium"
+          active-class="!text-accent-2 font-medium"
         >
           {{ link.label }}
         </NuxtLink>
@@ -139,7 +112,7 @@ function scrollToSection(id: string, e: MouseEvent) {
       </div>
     </div>
 
-    <!-- Mobile dropdown -->
+    <!-- Mobile page nav — TOC now lives in MobileTocBar below the main header -->
     <div v-if="mobileNavOpen" class="border-t border-border bg-bg md:hidden">
       <nav class="mx-auto max-w-[1400px] px-4 py-3 text-sm">
         <ul class="m-0 list-none p-0">
@@ -147,8 +120,8 @@ function scrollToSection(id: string, e: MouseEvent) {
             <NuxtLink
               to="/"
               class="block rounded-md px-3 py-2 text-text-dim transition-colors hover:bg-surface hover:text-text hover:no-underline"
-              active-class="!text-text font-medium"
-              exact-active-class="!text-text font-medium"
+              active-class="!text-accent-2 font-medium"
+              exact-active-class="!text-accent-2 font-medium"
               @click="mobileNavOpen = false"
             >
               Introduction
@@ -158,37 +131,13 @@ function scrollToSection(id: string, e: MouseEvent) {
             <NuxtLink
               :to="link.to"
               class="block rounded-md px-3 py-2 text-text-dim transition-colors hover:bg-surface hover:text-text hover:no-underline"
-              active-class="!text-text font-medium"
+              active-class="!text-accent-2 font-medium"
               @click="mobileNavOpen = false"
             >
               {{ link.label }}
             </NuxtLink>
           </li>
         </ul>
-
-        <template v-if="flatSections.length">
-          <h4 class="mb-1 mt-4 px-3 text-[12px] font-semibold text-text">On this page</h4>
-          <ul class="m-0 list-none border-l border-border p-0">
-            <li
-              v-for="section in flatSections"
-              :key="section.id"
-              :class="['-ml-px', section.depth === 3 ? 'pl-3' : '']"
-            >
-              <a
-                :href="`#${section.id}`"
-                :class="[
-                  'block border-l-2 px-3 py-1.5 text-[13px] leading-snug transition-colors hover:text-text hover:no-underline',
-                  activeId === section.id
-                    ? 'border-text text-text'
-                    : 'border-transparent text-text-dim',
-                ]"
-                @click="scrollToSection(section.id, $event)"
-              >
-                {{ section.text }}
-              </a>
-            </li>
-          </ul>
-        </template>
 
         <div class="mt-4 border-t border-border pt-3">
           <a
