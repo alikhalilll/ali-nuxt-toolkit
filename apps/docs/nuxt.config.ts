@@ -8,6 +8,14 @@ export default defineNuxtConfig({
   vite: {
     plugins: [tailwindcss()],
   },
+  nitro: {
+    preset: 'github-pages',
+    prerender: {
+      crawlLinks: true,
+      routes: ['/'],
+      failOnError: false,
+    },
+  },
   apiProvider: {
     baseURL: 'https://jsonplaceholder.typicode.com',
     provideName: '$apiProvider',
@@ -33,6 +41,7 @@ export default defineNuxtConfig({
     },
   },
   app: {
+    baseURL: process.env.NUXT_APP_BASE_URL || '/',
     head: {
       title: 'ali-nuxt-toolkit',
       meta: [
