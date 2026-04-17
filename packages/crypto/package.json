@@ -36,6 +36,10 @@
       "types": "./dist/core/index.d.ts",
       "import": "./dist/core/index.mjs"
     },
+    "./server": {
+      "types": "./dist/server/index.d.ts",
+      "import": "./dist/server/index.mjs"
+    },
     "./types": {
       "types": "./dist/types/index.d.ts",
       "import": "./dist/types/index.mjs"
@@ -50,6 +54,9 @@
       ],
       "core": [
         "./dist/core/index.d.ts"
+      ],
+      "server": [
+        "./dist/server/index.d.ts"
       ],
       "types": [
         "./dist/types/index.d.ts"
@@ -71,10 +78,14 @@
     "prepack": "pnpm build"
   },
   "peerDependencies": {
-    "@nuxt/kit": "^3.0.0 || ^4.0.0"
+    "@nuxt/kit": "^3.0.0 || ^4.0.0",
+    "h3": "^1.0.0 || ^2.0.0"
   },
   "peerDependenciesMeta": {
     "@nuxt/kit": {
+      "optional": true
+    },
+    "h3": {
       "optional": true
     }
   },
@@ -82,6 +93,7 @@
     "@nuxt/kit": "^4.0.0",
     "@nuxt/schema": "^4.0.0",
     "@types/node": "^22.13.0",
+    "h3": "^1.13.0",
     "rimraf": "^6.0.1",
     "tsup": "^8.5.0",
     "typescript": "^5.9.2"

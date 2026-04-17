@@ -14,6 +14,7 @@ Symmetric encryption for Nuxt 3 / 4 built on the native **Web Crypto API**. Defa
 - **Pluggable algorithms** — swap the default AES-GCM implementation for your own `CryptoAlgorithm` without touching the payload envelope.
 - **Versioned payload format** — `v1.{salt}.{iv}.{cipher}` with clean forward compatibility.
 - **Server-only mode** — opt into registering the plugin only on the server so the passphrase never ships to the browser bundle.
+- **Device fingerprint** _(new)_ — optional HttpOnly-cookie-based binding so ciphertext becomes undecryptable outside the browser that created it, while still surviving IP changes.
 
 ## Install
 
@@ -144,6 +145,117 @@ export default defineEventHandler(async (event) => {
   return { token: await $crypto.encrypt(JSON.stringify(body)) };
 });
 ```
+
+## Device fingerprint
+
+Bind a payload to the browser that created it — a copy of the ciphertext in another browser or on another device will refuse to decrypt. Useful for short-lived CSRF tokens, one-time magic links, anti-replay nonces, or any flow where a stolen token must be worthless off-origin.
+
+The fingerprint is built from an **HttpOnly device-ID cookie** (not the client IP), so it survives network changes — Wi-Fi → 4G, cell handoffs, VPN rotations, laptop sleeps — while still blocking copy-paste to a different browser or device.
+
+### Setup
+
+Add a fingerprint salt to your runtime config — a long random secret, **server-side only**:
+
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  runtimeConfig: {
+    cryptoFingerprintSalt: process.env.NUXT_CRYPTO_FINGERPRINT_SALT ?? '',
+  },
+});
+```
+
+```bash
+# .env
+NUXT_CRYPTO_FINGERPRINT_SALT=replace-with-64-random-hex-chars
+```
+
+### Encrypt with a fingerprint (server side)
+
+```ts
+// server/api/session/encode.post.ts
+import { getClientFingerprint } from '@alikhalilll/nuxt-crypto/server';
+
+export default defineEventHandler(async (event) => {
+  const body = await readBody(event);
+  const { $crypto } = useNuxtApp();
+
+  const fingerprint = await getClientFingerprint(event, {
+    salt: useRuntimeConfig().cryptoFingerprintSalt,
+  });
+
+  return {
+    token: await $crypto.encrypt(JSON.stringify(body), { fingerprint }),
+  };
+});
+```
+
+On the first request for a browser, `getClientFingerprint` sets an HttpOnly cookie (`__nuxt_crypto_device`) with a random 32-byte device ID. Subsequent calls reuse it, so the returned fingerprint is stable per browser.
+
+### Decrypt with a fingerprint (server side)
+
+```ts
+// server/api/session/decode.post.ts
+import { getClientFingerprint } from '@alikhalilll/nuxt-crypto/server';
+
+export default defineEventHandler(async (event) => {
+  const { token } = await readBody(event);
+  const { $crypto } = useNuxtApp();
+
+  const fingerprint = await getClientFingerprint(event, {
+    salt: useRuntimeConfig().cryptoFingerprintSalt,
+  });
+
+  // Same cookie → same fingerprint → succeeds.
+  // Different browser/device → no cookie → different fingerprint → OperationError.
+  return { body: JSON.parse(await $crypto.decrypt(token, { fingerprint })) };
+});
+```
+
+### What survives, what doesn't
+
+| Scenario                                    | Still decrypts?                     |
+| ------------------------------------------- | ----------------------------------- |
+| Wi-Fi → 4G on the same device               | ✅ yes — cookie travels             |
+| Cell tower handoff                          | ✅ yes                              |
+| Laptop sleeps, rejoins a new Wi-Fi          | ✅ yes                              |
+| VPN exit node changes                       | ✅ yes                              |
+| User copies token to another browser        | ❌ no — no cookie there             |
+| Token exfiltrated via XSS to attacker's box | ❌ no — HttpOnly cookie unreachable |
+| User clears cookies                         | ❌ no — device ID regenerates       |
+
+### `deriveFingerprint` — bring your own device ID
+
+If you already have a stable per-browser identifier (a session cookie, a signed JWT `sub` claim, a row in your `devices` table), skip the helper cookie entirely:
+
+```ts
+import { deriveFingerprint } from '@alikhalilll/nuxt-crypto/server';
+
+const fingerprint = await deriveFingerprint({
+  deviceId: session.id,
+  salt: useRuntimeConfig().cryptoFingerprintSalt,
+});
+```
+
+::alert{type="warning"}
+Binding ciphertext to a fingerprint is **not appropriate for long-lived user data**. If the device cookie is cleared or the session rotates, those payloads become undecryptable — permanently. Use this for tokens the user can afford to lose: short sessions, magic links, one-shot nonces.
+::
+
+### Customizing the cookie
+
+```ts
+await getClientFingerprint(event, {
+  salt: useRuntimeConfig().cryptoFingerprintSalt,
+  cookieName: 'my-app-dev-id',
+  cookieMaxAge: 60 * 60 * 24 * 30, // 30 days
+  cookieOptions: {
+    sameSite: 'strict', // defaults to 'lax'
+    domain: '.example.com',
+  },
+});
+```
+
+Defaults: `httpOnly: true`, `sameSite: 'lax'`, `path: '/'`, `secure` auto-detected from the request protocol, `maxAge` = 1 year.
 
 ## Framework-agnostic core
 

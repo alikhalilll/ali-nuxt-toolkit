@@ -4,6 +4,7 @@ export default defineConfig({
   entry: {
     module: 'src/module.ts',
     'core/index': 'src/core/index.ts',
+    'server/index': 'src/server/index.ts',
     'types/index': 'src/types/index.ts',
     'runtime/plugin': 'src/runtime/plugin.ts',
   },
@@ -13,6 +14,7 @@ export default defineConfig({
     entry: {
       module: 'src/module.ts',
       'core/index': 'src/core/index.ts',
+      'server/index': 'src/server/index.ts',
       'types/index': 'src/types/index.ts',
     },
   },
@@ -24,6 +26,7 @@ export default defineConfig({
     '@nuxt/kit',
     '@nuxt/schema',
     'nuxt',
+    'h3',
     '#app',
     '#imports',
     '#build/crypto-config.mjs',

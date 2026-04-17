@@ -16,11 +16,11 @@ You only need to re-run `pnpm build` when you change `package.json` exports or h
 
 ## What's exercised here
 
-| Area                                                                           | Where                                                       |
-| ------------------------------------------------------------------------------ | ----------------------------------------------------------- |
-| `@alikhalilll/nuxt-api-provider` — basic client, retry, progress               | `pages/api-*.vue`, `composables/useApi.ts`                  |
-| `@alikhalilll/nuxt-crypto` — encrypt/decrypt round-trip, server-only mode      | `pages/crypto.vue`, `server/api/*`                          |
-| `@alikhalilll/nuxt-auto-middleware` — layout rules, groups, per-page overrides | `middleware/*.ts`, `layouts/*.vue`, `pages/dashboard/*.vue` |
+| Area                                                                                                  | Where                                                       |
+| ----------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `@alikhalilll/nuxt-api-provider` — basic client, retry, progress                                      | `pages/api-*.vue`, `composables/useApi.ts`                  |
+| `@alikhalilll/nuxt-crypto` — encrypt/decrypt round-trip, server-only mode, device-fingerprint binding | `pages/crypto.vue`, `server/api/*`                          |
+| `@alikhalilll/nuxt-auto-middleware` — layout rules, groups, per-page overrides                        | `middleware/*.ts`, `layouts/*.vue`, `pages/dashboard/*.vue` |
 
 Every module is configured in `nuxt.config.ts` — that's also the canonical example of how a downstream user would wire all three together.
 

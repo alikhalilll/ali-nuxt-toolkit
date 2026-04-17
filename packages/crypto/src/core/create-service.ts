@@ -28,19 +28,22 @@ export async function createCryptoService(config: CryptoServiceConfig): Promise<
   const encoder = new TextEncoder();
   const decoder = new TextDecoder();
 
-  async function getDerivedKey(salt: Uint8Array<ArrayBuffer>): Promise<CryptoKey> {
-    const key = KeyCache.key(salt, iterations);
+  async function getDerivedKey(
+    salt: Uint8Array<ArrayBuffer>,
+    fingerprint?: string
+  ): Promise<CryptoKey> {
+    const key = KeyCache.key(salt, iterations, fingerprint);
     const cached = cache.get(key);
     if (cached) return cached;
-    const pending = algorithm.deriveKey({ subtle, passphrase, salt, iterations });
+    const pending = algorithm.deriveKey({ subtle, passphrase, fingerprint, salt, iterations });
     cache.set(key, pending);
     return pending;
   }
 
   return {
-    async encrypt(plainText: string): Promise<string> {
+    async encrypt(plainText, options) {
       const salt = getRandomBytes(SALT_BYTES);
-      const key = await getDerivedKey(salt);
+      const key = await getDerivedKey(salt, options?.fingerprint);
       const encoded = encoder.encode(plainText);
       const plainBytes = new Uint8Array(new ArrayBuffer(encoded.byteLength));
       plainBytes.set(encoded);
@@ -48,14 +51,14 @@ export async function createCryptoService(config: CryptoServiceConfig): Promise<
       return encodePayload({ version: algorithm.version, salt, iv, cipher });
     },
 
-    async decrypt(payload: string): Promise<string> {
+    async decrypt(payload, options) {
       const parsed = parsePayload(payload);
       if (parsed.version !== algorithm.version) {
         throw new Error(
           `[nuxt-crypto] Unsupported payload version: ${parsed.version} (algorithm expects ${algorithm.version}).`
         );
       }
-      const key = await getDerivedKey(parsed.salt);
+      const key = await getDerivedKey(parsed.salt, options?.fingerprint);
       const plainBytes = await algorithm.decrypt({
         subtle,
         key,

@@ -7,6 +7,7 @@ Symmetric encryption for Nuxt 3 / 4, built on the native **Web Crypto API**. Def
 - **Pluggable algorithms** — swap the default AES-GCM implementation for your own `CryptoAlgorithm` without touching the payload envelope.
 - **Versioned payload format** — `v1.{salt}.{iv}.{cipher}` with clean forward compatibility.
 - **Server-only mode** — opt into registering the plugin only on the server so the passphrase never ships to the browser bundle.
+- **Device fingerprint** _(new)_ — bind a payload to the browser that created it via an HttpOnly cookie. Survives IP changes (Wi-Fi ↔ 4G, VPN rotation) while still blocking copy-paste to another browser or device.
 - **Strong types** — `CryptoService`, `CryptoServiceConfig`, and `CryptoAlgorithm` all exported.
 
 ---
@@ -25,12 +26,13 @@ Symmetric encryption for Nuxt 3 / 4, built on the native **Web Crypto API**. Def
    - [Error handling](#error-handling)
 4. [Server-only mode](#server-only-mode)
 5. [Nitro / API routes](#nitro--api-routes)
-6. [Framework-agnostic core](#framework-agnostic-core)
-7. [Custom algorithm](#custom-algorithm)
-8. [Rotating the passphrase (re-encryption)](#rotating-the-passphrase-re-encryption)
-9. [Payload format](#payload-format)
-10. [Module options reference](#module-options-reference)
-11. [Exported types](#exported-types)
+6. [Device fingerprint](#device-fingerprint)
+7. [Framework-agnostic core](#framework-agnostic-core)
+8. [Custom algorithm](#custom-algorithm)
+9. [Rotating the passphrase (re-encryption)](#rotating-the-passphrase-re-encryption)
+10. [Payload format](#payload-format)
+11. [Module options reference](#module-options-reference)
+12. [Exported types](#exported-types)
 
 ---
 
@@ -210,6 +212,76 @@ export default defineEventHandler(async (event) => {
 });
 ```
 
+## Device fingerprint
+
+Bind a payload to the browser that created it, so a copy of the ciphertext in another browser or on another device won't decrypt. Useful for short-lived CSRF tokens, magic links, and anti-replay nonces.
+
+The fingerprint is built from an **HttpOnly device-ID cookie** — not the client IP — so it survives Wi-Fi → 4G switches, cell handoffs, VPN rotations, and residential IP rotation while still blocking copy-paste to another origin.
+
+### Setup
+
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  runtimeConfig: {
+    // Server-side pepper. Keep this secret; never expose to the client.
+    cryptoFingerprintSalt: process.env.NUXT_CRYPTO_FINGERPRINT_SALT ?? '',
+  },
+});
+```
+
+```
+# .env
+NUXT_CRYPTO_FINGERPRINT_SALT=<64 random hex chars>
+```
+
+### Encrypt / decrypt with a fingerprint
+
+```ts
+// server/api/session.post.ts
+import { getClientFingerprint } from '@alikhalilll/nuxt-crypto/server';
+
+export default defineEventHandler(async (event) => {
+  const body = await readBody(event);
+  const { $crypto } = useNuxtApp();
+
+  const fingerprint = await getClientFingerprint(event, {
+    salt: useRuntimeConfig().cryptoFingerprintSalt,
+  });
+
+  return {
+    token: await $crypto.encrypt(JSON.stringify(body), { fingerprint }),
+  };
+});
+```
+
+The first call sets an HttpOnly cookie (`__nuxt_crypto_device`) with a random 32-byte ID; subsequent calls reuse it. Pass the same `{ fingerprint }` to `$crypto.decrypt` on the server to round-trip.
+
+### What this protects against
+
+| Scenario                                  | Decrypts?                            |
+| ----------------------------------------- | ------------------------------------ |
+| Wi-Fi → 4G on the same device             | ✅ yes — cookie travels with browser |
+| VPN exit node or ISP IP rotation          | ✅ yes                               |
+| Copy token to another browser on same box | ❌ no — no cookie in that browser    |
+| XSS-exfiltrated token to an attacker      | ❌ no — HttpOnly cookie unreachable  |
+| User clears cookies                       | ❌ no — permanently unrecoverable    |
+
+### `deriveFingerprint` — bring your own device ID
+
+If you already manage per-device identity (session table, signed JWT, etc.), skip the cookie helper:
+
+```ts
+import { deriveFingerprint } from '@alikhalilll/nuxt-crypto/server';
+
+const fingerprint = await deriveFingerprint({
+  deviceId: session.id,
+  salt: useRuntimeConfig().cryptoFingerprintSalt,
+});
+```
+
+> **Warning** — a fingerprinted payload becomes undecryptable if the device cookie is cleared or the session rotates. Use only for tokens the user can afford to lose (short sessions, magic links, one-shot nonces), never for long-lived data.
+
 ## Framework-agnostic core
 
 Everything the Nuxt plugin wraps is available as a plain factory:
@@ -302,11 +374,16 @@ Run `rotate` over your stored ciphertexts during a background migration. Clear t
 import type {
   CryptoService,
   CryptoServiceConfig,
+  CryptoOperationOptions,
   CryptoAlgorithm,
   CryptoModuleOptions,
   Bytes,
   ParsedPayload,
 } from '@alikhalilll/nuxt-crypto/types';
+
+// Server subpath (Nitro / H3 only)
+import type { ClientFingerprintOptions, FingerprintParts } from '@alikhalilll/nuxt-crypto/server';
+import { getClientFingerprint, deriveFingerprint } from '@alikhalilll/nuxt-crypto/server';
 ```
 
 ## License
