@@ -15,8 +15,7 @@
   --color-danger: #f7768e;
   --color-code-bg: #0f1218;
 
-  --font-sans:
-    Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
 }
 
