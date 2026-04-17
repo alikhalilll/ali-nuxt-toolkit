@@ -47,3 +47,8 @@ updates:
       - 'github-actions'
     commit-message:
       prefix: 'chore(ci)'
+    ignore:
+      # pnpm/action-setup@v6 switched to Corepack and requires setup-node
+      # to run first. Pin to v4 until the workflows are reworked.
+      - dependency-name: 'pnpm/action-setup'
+        update-types: ['version-update:semver-major']
