@@ -12,12 +12,14 @@ import { capture } from './exec.mjs';
 import {
   commitAll,
   createTag,
+  deleteTagLocal,
   ensureGitClean,
   ensureOnBranch,
   pushBranch,
   pushTag,
   tagExists,
 } from './git.mjs';
+import { createGithubRelease, ghAvailable } from './github.mjs';
 import { die, divider, fail, header, info, step, success, warn } from './logger.mjs';
 import {
   bumpVersion,
@@ -61,61 +63,95 @@ async function pickInteractive(cliPackages, cliBump, cliTag) {
   return { packages, bump, distTag };
 }
 
-async function releasePackage({ dir, bump, distTag, skipGit, skipPublish, dryRun }) {
+async function releasePackage({ dir, bump, distTag, skipGit, skipPublish, forceTag, dryRun }) {
   const cwd = packagePath(dir);
   const { data: pkg } = readPackageJson(dir);
   const nextVersion = bumpVersion(pkg.version, bump);
+  const previousVersion = pkg.version;
 
   step(`Releasing ${pkg.name}`);
-  info(`version: ${pkg.version} → ${nextVersion}`);
+  info(`version: ${previousVersion} → ${nextVersion}`);
   info(`cwd:     ${cwd}`);
 
-  if (versionPublished(pkg.name, nextVersion)) {
+  if (!forceTag && versionPublished(pkg.name, nextVersion)) {
     die(`${pkg.name}@${nextVersion} already exists on npm. Pick a different bump.`);
   }
 
-  // 1) Bump version in package.json (unless bump === 'none').
-  if (bump !== 'none' && !dryRun) {
-    setVersion(dir, nextVersion);
-    success(`Wrote package.json with ${nextVersion}`);
-  } else if (dryRun) {
-    info(`[dry-run] would bump package.json → ${nextVersion}`);
-  }
+  let versionWritten = false;
+  let published = false;
 
-  // 2) Build.
-  step('Build');
-  runPnpm(['-C', cwd, 'build']);
-  success('Build complete');
-
-  // 3) Publish.
-  if (skipPublish) {
-    warn('--skip-publish set; not publishing');
-  } else if (dryRun) {
-    info(`[dry-run] would: pnpm publish --tag ${distTag} --no-git-checks --access public`);
-  } else {
-    step('Publish to npm');
-    runPnpm(['publish', '--tag', distTag, '--no-git-checks', '--access', 'public'], { cwd });
-    success(`Published ${pkg.name}@${nextVersion} (tag: ${distTag})`);
-  }
-
-  // 4) Git commit + tag.
-  const tag = `${pkg.name}@${nextVersion}`;
-  if (skipGit) {
-    warn('--skip-git set; not committing/tagging');
-  } else if (dryRun) {
-    info(`[dry-run] would: git commit -m "chore(release): ${tag}" && git tag ${tag}`);
-  } else {
-    step('Git');
-    if (tagExists(tag)) {
-      warn(`Tag ${tag} already exists — skipping tag step`);
-    } else {
-      commitAll(`chore(release): ${tag}`);
-      createTag(tag, `Release ${tag}`);
-      success(`Committed + tagged ${tag}`);
+  try {
+    // 1) Bump version in package.json (unless bump === 'none').
+    if (bump !== 'none' && !dryRun) {
+      setVersion(dir, nextVersion);
+      versionWritten = true;
+      success(`Wrote package.json with ${nextVersion}`);
+    } else if (dryRun) {
+      info(`[dry-run] would bump package.json → ${nextVersion}`);
     }
-  }
 
-  return { name: pkg.name, previousVersion: pkg.version, nextVersion, tag };
+    // 2) Build.
+    step('Build');
+    runPnpm(['-C', cwd, 'build']);
+    success('Build complete');
+
+    // 3) Publish.
+    if (skipPublish) {
+      warn('--skip-publish set; not publishing');
+    } else if (dryRun) {
+      info(`[dry-run] would: pnpm publish --tag ${distTag} --no-git-checks --access public`);
+    } else {
+      step('Publish to npm');
+      runPnpm(['publish', '--tag', distTag, '--no-git-checks', '--access', 'public'], { cwd });
+      published = true;
+      success(`Published ${pkg.name}@${nextVersion} (tag: ${distTag})`);
+    }
+
+    // 4) Git commit + tag.
+    const tag = `${pkg.name}@${nextVersion}`;
+    if (skipGit) {
+      warn('--skip-git set; not committing/tagging');
+    } else if (dryRun) {
+      info(`[dry-run] would: git commit -m "chore(release): ${tag}" && git tag ${tag}`);
+    } else {
+      step('Git');
+      const existed = tagExists(tag);
+      if (existed && !forceTag) {
+        warn(`Tag ${tag} already exists — skipping tag step (pass --force-tag to overwrite)`);
+      } else {
+        commitAll(`chore(release): ${tag}`);
+        if (existed && forceTag) {
+          warn(`Tag ${tag} already exists — overwriting (--force-tag)`);
+          deleteTagLocal(tag);
+        }
+        createTag(tag, `Release ${tag}`, { force: forceTag });
+        success(`Committed + tagged ${tag}${forceTag ? ' (forced)' : ''}`);
+      }
+    }
+
+    return { name: pkg.name, previousVersion, nextVersion, tag };
+  } catch (err) {
+    // If we bumped the version but never published, roll the file back so the
+    // working tree isn't left with a phantom bump. If publish succeeded, the
+    // version is live on npm — keep it so state matches reality.
+    if (versionWritten && !published) {
+      try {
+        setVersion(dir, previousVersion);
+        warn(`Rolled ${pkg.name} package.json back to ${previousVersion}`);
+      } catch (rollbackErr) {
+        fail(
+          `Failed to roll back ${pkg.name} to ${previousVersion}: ${
+            rollbackErr instanceof Error ? rollbackErr.message : rollbackErr
+          }`
+        );
+      }
+    } else if (versionWritten && published) {
+      warn(
+        `${pkg.name}@${nextVersion} was published to npm before failure — version not rolled back.`
+      );
+    }
+    throw err;
+  }
 }
 
 async function main() {
@@ -168,6 +204,7 @@ async function main() {
         distTag,
         skipGit: flags.skipGit,
         skipPublish: flags.skipPublish,
+        forceTag: flags.forceTag,
         dryRun: flags.dryRun,
       })
     );
@@ -180,9 +217,39 @@ async function main() {
     success(`Pushed ${branch || DEFAULT_BRANCH}`);
     for (const r of results) {
       if (tagExists(r.tag)) {
-        pushTag(r.tag);
-        success(`Pushed ${r.tag}`);
+        pushTag(r.tag, { force: flags.forceTag });
+        success(`Pushed ${r.tag}${flags.forceTag ? ' (forced)' : ''}`);
       }
+    }
+
+    if (!flags.skipGithub) {
+      step('GitHub Releases');
+      const gh = ghAvailable();
+      if (!gh.ok) {
+        warn(`Skipping GitHub Releases: ${gh.reason}`);
+        info('Install with: brew install gh  (then: gh auth login)');
+        info('Or pass --skip-github to silence this.');
+      } else {
+        const isPrerelease = distTag !== 'latest';
+        for (const r of results) {
+          if (!tagExists(r.tag)) continue;
+          try {
+            createGithubRelease(r.tag, {
+              title: r.tag,
+              prerelease: isPrerelease,
+              force: flags.forceTag,
+            });
+            success(`Created release ${r.tag}${flags.forceTag ? ' (forced)' : ''}`);
+          } catch (err) {
+            warn(`Failed to create release ${r.tag}: ${err instanceof Error ? err.message : err}`);
+          }
+        }
+      }
+    }
+  } else if (flags.dryRun && !flags.skipGithub) {
+    step('GitHub Releases');
+    for (const r of results) {
+      info(`[dry-run] would: gh release create ${r.tag} --title ${r.tag} --generate-notes`);
     }
   }
 

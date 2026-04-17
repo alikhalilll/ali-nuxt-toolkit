@@ -10,7 +10,15 @@ import { die } from './logger.mjs';
 export function parseArgs(argv = process.argv.slice(2)) {
   const parsed = minimist(argv, {
     string: ['pkg', 'bump', 'tag', 'branch'],
-    boolean: ['all', 'interactive', 'dry-run', 'skip-git', 'skip-publish'],
+    boolean: [
+      'all',
+      'interactive',
+      'dry-run',
+      'skip-git',
+      'skip-publish',
+      'skip-github',
+      'force-tag',
+    ],
     alias: {
       i: 'interactive',
       d: 'dry-run',
@@ -21,6 +29,8 @@ export function parseArgs(argv = process.argv.slice(2)) {
       'dry-run': false,
       'skip-git': false,
       'skip-publish': false,
+      'skip-github': false,
+      'force-tag': false,
       tag: DEFAULT_DIST_TAG,
       branch: DEFAULT_BRANCH,
     },
@@ -31,6 +41,8 @@ export function parseArgs(argv = process.argv.slice(2)) {
     dryRun: !!parsed['dry-run'],
     skipGit: !!parsed['skip-git'],
     skipPublish: !!parsed['skip-publish'],
+    skipGithub: !!parsed['skip-github'],
+    forceTag: !!parsed['force-tag'],
     all: !!parsed.all,
   };
 

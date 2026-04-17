@@ -35,9 +35,11 @@ export function commitAll(message, { dryRun = false } = {}) {
   run('git', ['commit', '-m', message]);
 }
 
-export function createTag(tag, message, { dryRun = false } = {}) {
+export function createTag(tag, message, { dryRun = false, force = false } = {}) {
   if (dryRun) return;
-  run('git', ['tag', '-a', tag, '-m', message]);
+  const args = ['tag', '-a', tag, '-m', message];
+  if (force) args.splice(1, 0, '-f');
+  run('git', args);
 }
 
 export function pushBranch(branch, { dryRun = false } = {}) {
@@ -45,7 +47,14 @@ export function pushBranch(branch, { dryRun = false } = {}) {
   run('git', ['push', 'origin', branch]);
 }
 
-export function pushTag(tag, { dryRun = false } = {}) {
+export function pushTag(tag, { dryRun = false, force = false } = {}) {
   if (dryRun) return;
-  run('git', ['push', 'origin', tag]);
+  const args = ['push', 'origin', tag];
+  if (force) args.splice(1, 0, '--force');
+  run('git', args);
+}
+
+export function deleteTagLocal(tag, { dryRun = false } = {}) {
+  if (dryRun) return;
+  run('git', ['tag', '-d', tag], { allowFail: true });
 }
