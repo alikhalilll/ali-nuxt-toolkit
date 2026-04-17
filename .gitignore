@@ -14,3 +14,4 @@ artifacts/
 # Personal notes — not public docs
 WALKTHROUGH.md
 .idea
+.npmrc
