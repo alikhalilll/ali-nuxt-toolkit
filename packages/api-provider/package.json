@@ -1,0 +1,67 @@
+{
+  "name": "@alikhalilll/nuxt-api-provider",
+  "version": "0.1.0",
+  "description": "Strongly-typed fetch client for Nuxt 3/4 with interceptors, retry/backoff, and a framework-agnostic core.",
+  "license": "MIT",
+  "author": "alikhalilll",
+  "type": "module",
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "nuxt",
+    "nuxt-module",
+    "fetch",
+    "http-client",
+    "api",
+    "interceptors",
+    "retry"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/module.d.ts",
+      "import": "./dist/module.mjs"
+    },
+    "./core": {
+      "types": "./dist/core/index.d.ts",
+      "import": "./dist/core/index.mjs"
+    },
+    "./types": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/types/index.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/module.d.ts",
+  "typesVersions": {
+    "*": {
+      ".": ["./dist/module.d.ts"],
+      "core": ["./dist/core/index.d.ts"],
+      "types": ["./dist/types/index.d.ts"]
+    }
+  },
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "pnpm clean && tsup",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "prepack": "pnpm build"
+  },
+  "peerDependencies": {
+    "@nuxt/kit": "^3.0.0 || ^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@nuxt/kit": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@nuxt/kit": "^4.0.0",
+    "@nuxt/schema": "^4.0.0",
+    "@types/node": "^22.13.0",
+    "rimraf": "^6.0.1",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.2"
+  }
+}

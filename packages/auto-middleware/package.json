@@ -1,0 +1,55 @@
+{
+  "name": "@alikhalilll/nuxt-auto-middleware",
+  "version": "0.1.0",
+  "description": "Declarative, layout-based route middleware for Nuxt 3/4, with glob matching, named groups, and per-page overrides.",
+  "license": "MIT",
+  "author": "alikhalilll",
+  "type": "module",
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "nuxt",
+    "nuxt-module",
+    "middleware",
+    "layout",
+    "route-middleware"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/module.d.ts",
+      "import": "./dist/module.mjs"
+    },
+    "./types": {
+      "types": "./dist/types.d.ts",
+      "import": "./dist/types.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/module.d.ts",
+  "typesVersions": {
+    "*": {
+      ".": ["./dist/module.d.ts"],
+      "types": ["./dist/types.d.ts"]
+    }
+  },
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "pnpm clean && tsup",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "prepack": "pnpm build"
+  },
+  "peerDependencies": {
+    "@nuxt/kit": "^3.0.0 || ^4.0.0"
+  },
+  "devDependencies": {
+    "@nuxt/kit": "^4.0.0",
+    "@nuxt/schema": "^4.0.0",
+    "@types/node": "^22.13.0",
+    "rimraf": "^6.0.1",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.2"
+  }
+}

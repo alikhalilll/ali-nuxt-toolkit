@@ -1,0 +1,16 @@
+node_modules
+dist
+.nuxt
+.output
+.DS_Store
+*.log
+.env
+.env.*
+!.env.example
+coverage
+*.tgz
+artifacts/
+
+# Personal notes — not public docs
+WALKTHROUGH.md
+.idea
