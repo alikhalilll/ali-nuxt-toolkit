@@ -26,9 +26,15 @@
     "release:api-provider": "node scripts/release/index.mjs --pkg api-provider --interactive",
     "release:crypto": "node scripts/release/index.mjs --pkg crypto --interactive",
     "release:auto-middleware": "node scripts/release/index.mjs --pkg auto-middleware --interactive",
-    "release:dry": "node scripts/release/index.mjs --interactive --dry-run"
+    "release:dry": "node scripts/release/index.mjs --interactive --dry-run",
+    "changeset": "changeset",
+    "changeset:version": "changeset version",
+    "changeset:publish": "pnpm build && changeset publish",
+    "changeset:status": "changeset status --verbose"
   },
   "devDependencies": {
+    "@changesets/changelog-github": "^0.5.0",
+    "@changesets/cli": "^2.27.0",
     "@commitlint/cli": "^20.0.0",
     "@commitlint/config-conventional": "^20.0.0",
     "@eslint/js": "^9.0.0",
