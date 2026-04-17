@@ -16,13 +16,13 @@ Symmetric encryption for Nuxt 3 / 4, built on the native **Web Crypto API**. Def
 1. [Install](#install)
 2. [Register the module](#register-the-module)
 3. [Usage](#usage)
-    - [Basic round-trip](#basic-round-trip)
-    - [Encrypt / decrypt a JSON object](#encrypt--decrypt-a-json-object)
-    - [Encrypt / decrypt an arbitrary value](#encrypt--decrypt-an-arbitrary-value)
-    - [Persist a ciphertext in a cookie](#persist-a-ciphertext-in-a-cookie)
-    - [Bulk encrypt / decrypt (key cache benefits)](#bulk-encrypt--decrypt-key-cache-benefits)
-    - [Clear the key cache](#clear-the-key-cache)
-    - [Error handling](#error-handling)
+   - [Basic round-trip](#basic-round-trip)
+   - [Encrypt / decrypt a JSON object](#encrypt--decrypt-a-json-object)
+   - [Encrypt / decrypt an arbitrary value](#encrypt--decrypt-an-arbitrary-value)
+   - [Persist a ciphertext in a cookie](#persist-a-ciphertext-in-a-cookie)
+   - [Bulk encrypt / decrypt (key cache benefits)](#bulk-encrypt--decrypt-key-cache-benefits)
+   - [Clear the key cache](#clear-the-key-cache)
+   - [Error handling](#error-handling)
 4. [Server-only mode](#server-only-mode)
 5. [Nitro / API routes](#nitro--api-routes)
 6. [Framework-agnostic core](#framework-agnostic-core)
@@ -49,7 +49,7 @@ export default defineNuxtConfig({
   crypto: {
     // Always wire this from an env var. Never commit the passphrase.
     passphrase: process.env.NUXT_ENCRYPTION_PASSPHRASE ?? '',
-    provideName: '$crypto',  // leading "$" optional
+    provideName: '$crypto', // leading "$" optional
     iterations: 100_000,
     keyCacheSize: 64,
     serverOnly: false,
@@ -148,6 +148,7 @@ $crypto.clearKeyCache();
 ```
 
 Useful when:
+
 - You rotate the passphrase (the cache would still hold old keys).
 - You want to force re-derivation in a security-audit test.
 
@@ -164,13 +165,13 @@ try {
 
 Errors you can see:
 
-| Scenario                                      | Message |
-|-----------------------------------------------|---------|
-| Payload isn't `a.b.c.d`                       | `Invalid payload format — expected 4 dot-separated segments.` |
-| A segment is empty                            | `Invalid payload format — one or more segments were empty.`   |
-| Algorithm version mismatch                    | `Unsupported payload version: v2 (algorithm expects v1).`     |
-| Wrong passphrase / tampered ciphertext        | Native `OperationError` from Web Crypto.                      |
-| Passphrase not set in module config           | `[nuxt-crypto] passphrase is required.`                       |
+| Scenario                               | Message                                                       |
+| -------------------------------------- | ------------------------------------------------------------- |
+| Payload isn't `a.b.c.d`                | `Invalid payload format — expected 4 dot-separated segments.` |
+| A segment is empty                     | `Invalid payload format — one or more segments were empty.`   |
+| Algorithm version mismatch             | `Unsupported payload version: v2 (algorithm expects v1).`     |
+| Wrong passphrase / tampered ciphertext | Native `OperationError` from Web Crypto.                      |
+| Passphrase not set in module config    | `[nuxt-crypto] passphrase is required.`                       |
 
 ## Server-only mode
 
@@ -184,6 +185,7 @@ crypto: {
 ```
 
 With this enabled, `$crypto` is `undefined` on the client. Use it only in:
+
 - Nitro server routes (`server/api/*.ts`)
 - Server-only plugins
 - `<script setup>` blocks guarded by `import.meta.server`
@@ -238,9 +240,15 @@ import type { CryptoAlgorithm } from '@alikhalilll/nuxt-crypto/types';
 
 const myAlgo: CryptoAlgorithm = {
   version: 'v2',
-  async deriveKey({ subtle, passphrase, salt, iterations }) { /* ... */ },
-  async encrypt({ subtle, key, plainText })                  { /* ... */ },
-  async decrypt({ subtle, key, cipher, iv })                 { /* ... */ },
+  async deriveKey({ subtle, passphrase, salt, iterations }) {
+    /* ... */
+  },
+  async encrypt({ subtle, key, plainText }) {
+    /* ... */
+  },
+  async decrypt({ subtle, key, cipher, iv }) {
+    /* ... */
+  },
 };
 
 const service = await createCryptoService({
@@ -271,22 +279,22 @@ Run `rotate` over your stored ciphertexts during a background migration. Clear t
 
 `v1.{saltB64}.{ivB64}.{cipherB64}` — four dot-separated segments, each standard base64:
 
-| Segment | Bytes | Notes |
-|---------|-------|-------|
-| `v1`    | —     | Algorithm / version tag. |
-| salt    | 16    | Per-encryption PBKDF2 salt. |
-| iv      | 12    | AES-GCM initialization vector. |
+| Segment | Bytes | Notes                              |
+| ------- | ----- | ---------------------------------- |
+| `v1`    | —     | Algorithm / version tag.           |
+| salt    | 16    | Per-encryption PBKDF2 salt.        |
+| iv      | 12    | AES-GCM initialization vector.     |
 | cipher  | N     | Ciphertext + 16-byte GCM auth tag. |
 
 ## Module options reference
 
-| Option         | Type     | Default    | Purpose                                                              |
-|----------------|----------|------------|----------------------------------------------------------------------|
-| `passphrase`   | `string` | `''`       | Passphrase to derive the AES key from. Throws at use if empty.       |
-| `provideName`  | `string` | `'$crypto'`| Injected under `$<name>`. Leading `$` is stripped.                   |
-| `iterations`   | `number` | `100_000`  | PBKDF2 iteration count.                                              |
-| `keyCacheSize` | `number` | `64`       | Max derived keys kept in memory. Set to 0 to disable caching.        |
-| `serverOnly`   | `boolean`| `false`    | When true, plugin runs only on the server.                           |
+| Option         | Type      | Default     | Purpose                                                        |
+| -------------- | --------- | ----------- | -------------------------------------------------------------- |
+| `passphrase`   | `string`  | `''`        | Passphrase to derive the AES key from. Throws at use if empty. |
+| `provideName`  | `string`  | `'$crypto'` | Injected under `$<name>`. Leading `$` is stripped.             |
+| `iterations`   | `number`  | `100_000`   | PBKDF2 iteration count.                                        |
+| `keyCacheSize` | `number`  | `64`        | Max derived keys kept in memory. Set to 0 to disable caching.  |
+| `serverOnly`   | `boolean` | `false`     | When true, plugin runs only on the server.                     |
 
 ## Exported types
 

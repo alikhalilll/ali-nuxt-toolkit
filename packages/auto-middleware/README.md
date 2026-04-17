@@ -16,15 +16,15 @@ Declarative, layout-based route middleware for Nuxt 3 / 4. Map layouts to middle
 1. [Install](#install)
 2. [Register the module](#register-the-module)
 3. [Usage](#usage)
-    - [Basic mapping](#basic-mapping)
-    - [Named groups](#named-groups)
-    - [Glob patterns](#glob-patterns)
-    - [RegExp patterns](#regexp-patterns)
-    - [Per-page extras](#per-page-extras)
-    - [Opt a page out entirely](#opt-a-page-out-entirely)
-    - [Catch-all layout](#catch-all-layout)
-    - [Disabling per-page overrides](#disabling-per-page-overrides)
-    - [Debug logs](#debug-logs)
+   - [Basic mapping](#basic-mapping)
+   - [Named groups](#named-groups)
+   - [Glob patterns](#glob-patterns)
+   - [RegExp patterns](#regexp-patterns)
+   - [Per-page extras](#per-page-extras)
+   - [Opt a page out entirely](#opt-a-page-out-entirely)
+   - [Catch-all layout](#catch-all-layout)
+   - [Disabling per-page overrides](#disabling-per-page-overrides)
+   - [Debug logs](#debug-logs)
 4. [Middleware return values](#middleware-return-values)
 5. [Typed registry](#typed-registry)
 6. [Matching rules](#matching-rules)
@@ -182,11 +182,11 @@ With debug on, each navigation logs the resolved layout and the full ordered cha
 
 Middleware functions receive `(to, from)` exactly like standard Nuxt route middlewares:
 
-| Return        | Behaviour                                      |
-|---------------|------------------------------------------------|
-| `false`       | Stop the chain, allow navigation.              |
-| `true` / void | Continue to the next middleware.               |
-| anything else | Treated as a navigation result — chain stops.  |
+| Return        | Behaviour                                     |
+| ------------- | --------------------------------------------- |
+| `false`       | Stop the chain, allow navigation.             |
+| `true` / void | Continue to the next middleware.              |
+| anything else | Treated as a navigation result — chain stops. |
 
 Example: an auth middleware that redirects to `/login` when the cookie is missing, otherwise lets the chain continue:
 
@@ -209,7 +209,7 @@ The module emits `#build/auto-middleware/types.d.ts` with:
 export type AutoMiddlewareName = 'auth' | 'verify-role' | 'require-admin' | 'log-activity';
 ```
 
-…plus an augmentation that adds `middlewares?: AutoMiddlewareName[]` and `skipAutoMiddleware?: boolean` to `PageMeta`. Both are auto-included in the Nuxt-generated `nuxt.d.ts`, so you don't need to import anything. You *can* import the type if you're authoring outside of `definePageMeta`:
+…plus an augmentation that adds `middlewares?: AutoMiddlewareName[]` and `skipAutoMiddleware?: boolean` to `PageMeta`. Both are auto-included in the Nuxt-generated `nuxt.d.ts`, so you don't need to import anything. You _can_ import the type if you're authoring outside of `definePageMeta`:
 
 ```ts
 import type { AutoMiddlewareName } from '#build/auto-middleware/types';
@@ -227,12 +227,12 @@ const stack: AutoMiddlewareName[] = ['auth', 'verify-role'];
 
 ## Module options reference
 
-| Option          | Type                                      | Default             | Purpose                                                                                                |
-|-----------------|-------------------------------------------|---------------------|--------------------------------------------------------------------------------------------------------|
-| `rules`         | `AutoMiddlewareRule[]`                    | `[]`                | Layout → middlewares mapping. Required.                                                                |
-| `groups`        | `Record<string, string[]>`                | `{}`                | Named reusable middleware lists, referenced via `@name` inside rules.                                  |
-| `debug`         | `boolean`                                 | `false`             | Log resolution + execution at runtime.                                                                 |
-| `pageMetaField` | `string \| false`                         | `'middlewares'`     | Page-meta key used to append extra middlewares. Set to `false` to disable per-page overrides.          |
+| Option          | Type                       | Default         | Purpose                                                                                       |
+| --------------- | -------------------------- | --------------- | --------------------------------------------------------------------------------------------- |
+| `rules`         | `AutoMiddlewareRule[]`     | `[]`            | Layout → middlewares mapping. Required.                                                       |
+| `groups`        | `Record<string, string[]>` | `{}`            | Named reusable middleware lists, referenced via `@name` inside rules.                         |
+| `debug`         | `boolean`                  | `false`         | Log resolution + execution at runtime.                                                        |
+| `pageMetaField` | `string \| false`          | `'middlewares'` | Page-meta key used to append extra middlewares. Set to `false` to disable per-page overrides. |
 
 ## Exported types
 
