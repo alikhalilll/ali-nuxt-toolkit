@@ -63,6 +63,7 @@ export default defineNuxtConfig({
     baseURL: 'https://api.example.com',
     provideName: '$apiProvider', // leading "$" optional — gets stripped
     defaultTimeoutMs: 20_000,
+    server: true, // set false to skip SSR (client-only)
     retry: { attempts: 2, delayMs: 500, backoff: 2 },
     // Optional paths to modules with default-exported interceptors.
     onRequestPath: '~/api/on-request',
@@ -452,6 +453,7 @@ export default defineEventHandler(async (event) => {
 | `baseURL`          | `string`                | `''`             | Prepended to every relative endpoint.                           |
 | `provideName`      | `string`                | `'$apiProvider'` | Injected under `$<name>`. Leading `$` is stripped.              |
 | `defaultTimeoutMs` | `number`                | `20000`          | Client-wide request timeout.                                    |
+| `server`           | `boolean`               | `true`           | Register the plugin on the server. Set `false` for client-only. |
 | `retry`            | `Partial<RetryOptions>` | `{}`             | Default retry policy, overridable per call.                     |
 | `onRequestPath`    | `string` (optional)     | —                | Path to a module with a default-exported `RequestInterceptor`.  |
 | `onSuccessPath`    | `string` (optional)     | —                | Path to a module with a default-exported `ResponseInterceptor`. |

@@ -20,6 +20,7 @@ const apiProviderModule: NuxtModule<ApiProviderModuleOptions> =
       baseURL: '',
       provideName: '$apiProvider',
       defaultTimeoutMs: 20_000,
+      server: true,
     },
     setup(options, nuxt) {
       const resolver = createResolver(import.meta.url);
@@ -44,7 +45,10 @@ const apiProviderModule: NuxtModule<ApiProviderModuleOptions> =
           }),
       });
 
-      addPlugin({ mode: 'all', src: resolver.resolve('./runtime/plugin') });
+      addPlugin({
+        mode: options.server === false ? 'client' : 'all',
+        src: resolver.resolve('./runtime/plugin'),
+      });
 
       nuxt.hook('prepare:types', ({ references }) => {
         references.push({ path: typesTemplate.dst });
