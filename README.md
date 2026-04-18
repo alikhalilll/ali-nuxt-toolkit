@@ -77,6 +77,7 @@ export default defineNuxtConfig({
     baseURL: 'https://api.example.com',
     provideName: '$apiProvider',
     defaultTimeoutMs: 20_000,
+    server: true, // set false to skip SSR (client-only)
     retry: { attempts: 2, delayMs: 500, backoff: 2 },
     onRequestPath: '~/api/on-request',
     onSuccessPath: '~/api/on-success',
