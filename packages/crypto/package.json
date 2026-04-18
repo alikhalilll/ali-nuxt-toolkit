@@ -9,7 +9,7 @@
     "url": "git+https://github.com/alikhalilll/ali-nuxt-toolkit.git",
     "directory": "packages/crypto"
   },
-  "homepage": "https://github.com/alikhalilll/ali-nuxt-toolkit#readme",
+  "homepage": "https://alikhalilll.github.io/ali-nuxt-toolkit/crypto",
   "bugs": {
     "url": "https://github.com/alikhalilll/ali-nuxt-toolkit/issues"
   },

@@ -8,6 +8,22 @@ const siteDescription =
 
 const baseURL = process.env.NUXT_APP_BASE_URL || '/';
 const withBase = (path: string) => `${baseURL}${path}`.replace(/\/+/g, '/');
+const absoluteUrl = (path: string) => `${siteUrl.replace(/\/$/, '')}${withBase(path)}`;
+const socialImage = absoluteUrl('og-image.png');
+
+// Cloudflare Web Analytics — unlimited, cookieless, no banner required.
+// Set NUXT_PUBLIC_CF_ANALYTICS_TOKEN (see .env.example) to enable tracking.
+// Unset = no script injected, so local dev stays silent.
+const cfAnalyticsToken = process.env.NUXT_PUBLIC_CF_ANALYTICS_TOKEN?.trim();
+const analyticsScripts = cfAnalyticsToken
+  ? [
+      {
+        src: 'https://static.cloudflareinsights.com/beacon.min.js',
+        defer: true,
+        'data-cf-beacon': JSON.stringify({ token: cfAnalyticsToken }),
+      },
+    ]
+  : [];
 
 export default defineNuxtConfig({
   compatibilityDate: '2026-04-01',
@@ -65,7 +81,8 @@ export default defineNuxtConfig({
       title: siteName,
       link: [
         { rel: 'icon', type: 'image/svg+xml', href: withBase('favicon.svg') },
-        { rel: 'apple-touch-icon', href: withBase('favicon.svg') },
+        { rel: 'icon', type: 'image/png', sizes: '32x32', href: withBase('favicon-32.png') },
+        { rel: 'apple-touch-icon', sizes: '180x180', href: withBase('apple-touch-icon.png') },
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
         { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
         {
@@ -96,12 +113,20 @@ export default defineNuxtConfig({
         { property: 'og:description', content: siteDescription },
         { property: 'og:url', content: siteUrl },
         { property: 'og:locale', content: 'en_US' },
+        { property: 'og:image', content: socialImage },
+        { property: 'og:image:type', content: 'image/png' },
+        { property: 'og:image:width', content: '1200' },
+        { property: 'og:image:height', content: '630' },
+        { property: 'og:image:alt', content: `${siteName} logo` },
 
         // Twitter
         { name: 'twitter:card', content: 'summary_large_image' },
         { name: 'twitter:title', content: siteName },
         { name: 'twitter:description', content: siteDescription },
+        { name: 'twitter:image', content: socialImage },
+        { name: 'twitter:image:alt', content: `${siteName} logo` },
       ],
+      script: analyticsScripts,
     },
   },
 });
