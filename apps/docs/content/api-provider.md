@@ -67,6 +67,85 @@ const post = await useApi()<Post>('/posts/1');
 ::DemoApiBasic
 ::
 
+## SSR (server-side rendering)
+
+With `server: true` (the default), `$apiProvider` is available during SSR, so top-level `await` inside a page's `<script setup>` runs on the server and the HTML arrives fully populated.
+
+```vue
+<!-- pages/posts/[id].vue -->
+<script setup lang="ts">
+interface Post {
+  id: number;
+  title: string;
+  body: string;
+}
+
+const route = useRoute();
+const api = useApi();
+
+// Resolves on the server during SSR, then hydrates on the client.
+const post = await api<Post>(`/posts/${route.params.id}`);
+</script>
+
+<template>
+  <article>
+    <h1>{{ post?.title }}</h1>
+    <p>{{ post?.body }}</p>
+  </article>
+</template>
+```
+
+If you set `server: false` in `nuxt.config.ts`, `$apiProvider` won't exist during SSR and this pattern will throw — move the call into `onMounted` or `useAsyncData(..., { server: false })`.
+
+## `useAsyncData`
+
+`useAsyncData` is the idiomatic way to fetch in Nuxt: it deduplicates per-key, populates the SSR payload, and exposes `pending` / `error` / `refresh`. Capture the client **synchronously** at the top of `<script setup>` — `useNuxtApp()` only works in the synchronous prefix of a setup or a Nuxt-managed callback, so reaching for it after an `await` throws _"A composable that requires access to the Nuxt instance was called outside of …"_.
+
+```vue
+<script setup lang="ts">
+interface Post {
+  id: number;
+  title: string;
+}
+
+const { $apiProvider } = useNuxtApp(); // capture ONCE, before any await
+
+const { data, pending, error, refresh } = await useAsyncData('posts', () =>
+  $apiProvider<Post[]>('/posts')
+);
+</script>
+
+<template>
+  <div v-if="pending">Loading…</div>
+  <div v-else-if="error">Failed: {{ error.message }}</div>
+  <ul v-else>
+    <li v-for="post in data" :key="post.id">{{ post.title }}</li>
+  </ul>
+  <button @click="refresh()">Reload</button>
+</template>
+```
+
+If you factor the call into a service, pass the client in rather than calling `useNuxtApp()` inside the service:
+
+```ts
+// services/posts.ts
+import type { ApiProviderClient } from '@alikhalilll/nuxt-api-provider/types';
+
+export const getPost = (api: ApiProviderClient, id: string) =>
+  api<{ id: number; title: string }>(`/posts/${id}`);
+```
+
+```vue
+<script setup lang="ts">
+import { getPost } from '~/services/posts';
+
+const { $apiProvider } = useNuxtApp();
+const { data } = await useAsyncData('post-1', () => getPost($apiProvider, '1'));
+</script>
+```
+
+The same function now works from a Nitro route (pass a `createApiClient` instance instead) — see the core section below.
+
 ## Query parameters
 
 Queries are the third argument. `null`/`undefined`/empty-string are skipped; arrays are repeated as `?tag=a&tag=b`.
