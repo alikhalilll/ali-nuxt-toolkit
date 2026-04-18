@@ -137,12 +137,31 @@ With this enabled, `$crypto` is `undefined` on the client. Use it in Nitro route
 
 ## Nitro routes
 
+Nitro event handlers run outside the Nuxt app context — `useNuxtApp()` (and `$crypto`) is not available there. Use the framework-agnostic core and cache it in `server/utils/`:
+
+```ts
+// server/utils/crypto.ts
+import { createCryptoService } from '@alikhalilll/nuxt-crypto/core';
+
+let servicePromise: ReturnType<typeof createCryptoService> | null = null;
+
+export function useServerCrypto() {
+  if (!servicePromise) {
+    servicePromise = createCryptoService({
+      passphrase: process.env.NUXT_ENCRYPTION_PASSPHRASE!,
+      iterations: 100_000,
+    });
+  }
+  return servicePromise;
+}
+```
+
 ```ts
 // server/api/session/encode.post.ts
 export default defineEventHandler(async (event) => {
   const body = await readBody(event);
-  const { $crypto } = useNuxtApp();
-  return { token: await $crypto.encrypt(JSON.stringify(body)) };
+  const crypto = await useServerCrypto();
+  return { token: await crypto.encrypt(JSON.stringify(body)) };
 });
 ```
 
@@ -178,14 +197,14 @@ import { getClientFingerprint } from '@alikhalilll/nuxt-crypto/server';
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event);
-  const { $crypto } = useNuxtApp();
+  const crypto = await useServerCrypto(); // from server/utils/crypto.ts — see "Nitro routes" above
 
   const fingerprint = await getClientFingerprint(event, {
     salt: useRuntimeConfig().cryptoFingerprintSalt,
   });
 
   return {
-    token: await $crypto.encrypt(JSON.stringify(body), { fingerprint }),
+    token: await crypto.encrypt(JSON.stringify(body), { fingerprint }),
   };
 });
 ```
@@ -200,7 +219,7 @@ import { getClientFingerprint } from '@alikhalilll/nuxt-crypto/server';
 
 export default defineEventHandler(async (event) => {
   const { token } = await readBody(event);
-  const { $crypto } = useNuxtApp();
+  const crypto = await useServerCrypto();
 
   const fingerprint = await getClientFingerprint(event, {
     salt: useRuntimeConfig().cryptoFingerprintSalt,
@@ -208,7 +227,7 @@ export default defineEventHandler(async (event) => {
 
   // Same cookie → same fingerprint → succeeds.
   // Different browser/device → no cookie → different fingerprint → OperationError.
-  return { body: JSON.parse(await $crypto.decrypt(token, { fingerprint })) };
+  return { body: JSON.parse(await crypto.decrypt(token, { fingerprint })) };
 });
 ```
 
