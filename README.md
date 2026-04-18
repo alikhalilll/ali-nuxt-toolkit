@@ -259,17 +259,22 @@ PBKDF2 is deliberately slow. Derived keys are cached per salt (default size 64) 
 
 Bind a payload to the browser that created it — a copy of the token in another browser or on another device will refuse to decrypt. The fingerprint is built from an **HttpOnly device-ID cookie**, so it survives Wi-Fi ↔ 4G switches, cell-tower handoffs, VPN rotations, and residential IP rotation while still blocking copy-paste off-origin.
 
+Inside Nitro event handlers, `useNuxtApp()` isn't available — construct the service from the framework-agnostic core instead (the package README shows a cached `useServerCrypto` helper for `server/utils/`).
+
 ```ts
 // server/api/session.post.ts
+import { createCryptoService } from '@alikhalilll/nuxt-crypto/core';
 import { getClientFingerprint } from '@alikhalilll/nuxt-crypto/server';
 
 export default defineEventHandler(async (event) => {
-  const { $crypto } = useNuxtApp();
+  const crypto = await createCryptoService({
+    passphrase: process.env.NUXT_ENCRYPTION_PASSPHRASE!,
+  });
   const fingerprint = await getClientFingerprint(event, {
     salt: useRuntimeConfig().cryptoFingerprintSalt, // server-side secret
   });
   const body = await readBody(event);
-  return { token: await $crypto.encrypt(JSON.stringify(body), { fingerprint }) };
+  return { token: await crypto.encrypt(JSON.stringify(body), { fingerprint }) };
 });
 ```
 

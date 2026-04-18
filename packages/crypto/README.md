@@ -194,21 +194,40 @@ With this enabled, `$crypto` is `undefined` on the client. Use it only in:
 
 ## Nitro / API routes
 
+Nitro event handlers run outside the Nuxt app context, so `useNuxtApp()` — and therefore `$crypto` — isn't available there. Use the framework-agnostic core directly. A tiny server utility keeps the service cached across requests:
+
+```ts
+// server/utils/crypto.ts
+import { createCryptoService } from '@alikhalilll/nuxt-crypto/core';
+
+let servicePromise: ReturnType<typeof createCryptoService> | null = null;
+
+export function useServerCrypto() {
+  if (!servicePromise) {
+    servicePromise = createCryptoService({
+      passphrase: process.env.NUXT_ENCRYPTION_PASSPHRASE!,
+      iterations: 100_000,
+    });
+  }
+  return servicePromise;
+}
+```
+
 Encrypt data before sending it to the browser, decrypt it when it comes back:
 
 ```ts
 // server/api/session/encode.post.ts
 export default defineEventHandler(async (event) => {
   const body = await readBody(event);
-  const { $crypto } = useNuxtApp();
-  return { token: await $crypto.encrypt(JSON.stringify(body)) };
+  const crypto = await useServerCrypto();
+  return { token: await crypto.encrypt(JSON.stringify(body)) };
 });
 
 // server/api/session/decode.post.ts
 export default defineEventHandler(async (event) => {
   const { token } = await readBody(event);
-  const { $crypto } = useNuxtApp();
-  return JSON.parse(await $crypto.decrypt(token));
+  const crypto = await useServerCrypto();
+  return JSON.parse(await crypto.decrypt(token));
 });
 ```
 
@@ -243,19 +262,19 @@ import { getClientFingerprint } from '@alikhalilll/nuxt-crypto/server';
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event);
-  const { $crypto } = useNuxtApp();
+  const crypto = await useServerCrypto(); // see "Nitro / API routes" above
 
   const fingerprint = await getClientFingerprint(event, {
     salt: useRuntimeConfig().cryptoFingerprintSalt,
   });
 
   return {
-    token: await $crypto.encrypt(JSON.stringify(body), { fingerprint }),
+    token: await crypto.encrypt(JSON.stringify(body), { fingerprint }),
   };
 });
 ```
 
-The first call sets an HttpOnly cookie (`__nuxt_crypto_device`) with a random 32-byte ID; subsequent calls reuse it. Pass the same `{ fingerprint }` to `$crypto.decrypt` on the server to round-trip.
+The first call sets an HttpOnly cookie (`__nuxt_crypto_device`) with a random 32-byte ID; subsequent calls reuse it. Pass the same `{ fingerprint }` to `crypto.decrypt` on the server to round-trip.
 
 ### What this protects against
 
