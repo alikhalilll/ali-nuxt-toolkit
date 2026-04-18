@@ -13,8 +13,7 @@ export class KeyCache {
 
   static key(salt: Bytes, iterations: number, fingerprint?: string): string {
     // `.` separates the fields; iterations and base64 can't contain one,
-    // and fingerprint is sanitised via toBase64-ish hex via consumer, so
-    // the joined key is unambiguous.
+    // so the joined key is unambiguous even when fingerprint is empty.
     return `${iterations}.${fingerprint ?? ''}.${toBase64(salt)}`;
   }
 

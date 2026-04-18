@@ -9,14 +9,13 @@ export type Bytes = Uint8Array<ArrayBuffer>;
 export interface CryptoOperationOptions {
   /**
    * Optional extra key material mixed into the PBKDF2 input. Typically a
-   * device fingerprint produced server-side from the client IP + User-Agent
-   * via `getClientFingerprint()` from `@alikhalilll/nuxt-crypto/server`.
+   * device fingerprint produced server-side from an HttpOnly device-ID
+   * cookie via `getClientFingerprint()` from `@alikhalilll/nuxt-crypto/server`.
    *
    * ⚠️ Binding ciphertext to a fingerprint means the payload becomes
-   * undecryptable the moment any input to the fingerprint changes
-   * (IP rotation, UA update, browser switch). Use only for ephemeral
-   * tokens (short-lived session cookies, one-time links), never for
-   * long-lived user data.
+   * undecryptable the moment the device cookie is cleared. Use only for
+   * ephemeral tokens (short-lived session cookies, one-time links), never
+   * for long-lived user data.
    */
   fingerprint?: string;
 }

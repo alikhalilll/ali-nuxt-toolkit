@@ -13,13 +13,32 @@
   --color-accent-2: #60a5fa;
   --color-primary: #fafafa;
   --color-primary-fg: #09090b;
-  --color-success: #22c55e;
-  --color-warning: #eab308;
-  --color-danger: #ef4444;
+
+  /* Brand — used for hero gradient, primary CTAs, active scrollspy */
+  --color-brand: #60a5fa;
+  --color-brand-2: #22d3ee;
+  --color-brand-3: #a78bfa;
+
+  /* Per-package accents */
+  --color-pkg-api: #60a5fa; /* blue   — nuxt-api-provider */
+  --color-pkg-crypto: #c084fc; /* purple — nuxt-crypto */
+  --color-pkg-auto: #fbbf24; /* amber  — nuxt-auto-middleware */
+
+  /* Callout / status */
+  --color-success: #4ade80;
+  --color-info: #60a5fa;
+  --color-warning: #fbbf24;
+  --color-danger: #f87171;
+  --color-tip: #22d3ee;
+
   --color-code-bg: #0a0a0a;
 
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'Geist Mono', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+html {
+  background: var(--color-bg);
 }
 
 html,
@@ -28,7 +47,6 @@ body,
   margin: 0;
   padding: 0;
   min-height: 100vh;
-  background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-sans);
   font-size: 14px;
@@ -38,14 +56,154 @@ body,
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* body / #__nuxt must stay transparent so the fixed gradient layers below show. */
+body,
+#__nuxt {
+  background: transparent;
+}
+
+/*
+ * Multi-layer brand gradient painted on `html::before` (not body::before):
+ *   1. body usually has an opaque background-color in reset stylesheets,
+ *      which paints on top of its own pseudo-elements.
+ *   2. Attaching to html means the gradient sits on top of html's solid
+ *      background color but below everything rendered inside body.
+ */
+/*
+ * Registered custom property. Because `syntax: '<color>'` is declared here,
+ * the browser knows how to *interpolate* between colors across keyframes —
+ * you get a smooth crossfade instead of a hard swap.
+ */
+@property --hero-glow {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #60a5fa;
+}
+
+html {
+  --hero-glow: var(--color-brand);
+  animation: glow-cycle 18s ease-in-out infinite;
+}
+
+@keyframes glow-cycle {
+  0%,
+  100% {
+    --hero-glow: var(--color-brand);
+  }
+  33% {
+    --hero-glow: var(--color-brand-2);
+  }
+  66% {
+    --hero-glow: var(--color-brand-3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    animation: none;
+  }
+}
+
+html::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(
+    ellipse 70% 50% at 50% -10%,
+    color-mix(in oklab, var(--hero-glow) 22%, transparent),
+    transparent 65%
+  );
+}
+
+/* Subtle grid texture — stacks over the gradient, fades out mid-page. */
+html::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black, transparent 75%);
+}
+
+/* Lift body content above the html::before/::after layers. */
+body {
+  position: relative;
+  z-index: 1;
+}
+
 a {
   color: inherit;
   text-decoration: none;
 }
 
 ::selection {
-  background: var(--color-surface-2);
+  background: color-mix(in oklab, var(--color-brand) 40%, transparent);
   color: var(--color-text);
+}
+
+/* Brand gradient — for hero text and decorative accents */
+.text-gradient-brand {
+  background: linear-gradient(
+    135deg,
+    var(--color-brand) 0%,
+    var(--color-brand-2) 50%,
+    var(--color-brand-3) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+.bg-gradient-brand {
+  background: linear-gradient(135deg, var(--color-brand) 0%, var(--color-brand-2) 100%);
+}
+
+.bg-gradient-brand-soft {
+  background: radial-gradient(
+    60% 40% at 50% 0%,
+    color-mix(in oklab, var(--color-brand) 12%, transparent),
+    transparent 70%
+  );
+}
+
+/* Per-package color utility — drives card borders, pill icons, sidebar dots */
+.pkg-api {
+  --pkg-color: var(--color-pkg-api);
+}
+.pkg-crypto {
+  --pkg-color: var(--color-pkg-crypto);
+}
+.pkg-auto {
+  --pkg-color: var(--color-pkg-auto);
+}
+.pkg-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--pkg-color, var(--color-text-dim));
+  box-shadow: 0 0 8px 0 var(--pkg-color, transparent);
+}
+
+/* Sidebar module link — takes its color from --pkg-color set by .pkg-api/-crypto/-auto */
+.module-link {
+  border: 1px solid transparent;
+}
+.module-link.is-active {
+  background: color-mix(in oklab, var(--pkg-color) 12%, transparent);
+  color: var(--pkg-color);
+  border-color: color-mix(in oklab, var(--pkg-color) 25%, transparent);
+}
+.module-link.is-active .pkg-dot {
+  box-shadow: 0 0 12px 0 var(--pkg-color);
 }
 
 /* Prose — rendered markdown, scoped to `.prose` */
@@ -74,17 +232,29 @@ a {
 }
 .prose h2 {
   font-size: 1.5rem;
-  margin: 2.5rem 0 0.75rem;
-  scroll-margin-top: 5rem;
-  font-weight: 600;
+  margin: 2.75rem 0 0.75rem;
+  scroll-margin-top: 7rem;
+  font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--color-text);
+  position: relative;
+  padding-left: 0.9rem;
+}
+.prose h2::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.35em;
+  bottom: 0.35em;
+  width: 3px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--color-brand) 0%, var(--color-brand-2) 100%);
 }
 .prose h3 {
   font-size: 1.125rem;
   margin: 2rem 0 0.5rem;
   color: var(--color-text);
-  scroll-margin-top: 5rem;
+  scroll-margin-top: 7rem;
   font-weight: 600;
   letter-spacing: -0.015em;
 }
@@ -93,14 +263,17 @@ a {
   color: var(--color-text);
 }
 .prose a {
-  color: var(--color-text);
+  color: var(--color-brand);
   text-decoration: underline;
   text-underline-offset: 4px;
-  text-decoration-color: var(--color-text-muted);
-  transition: text-decoration-color 150ms ease;
+  text-decoration-color: color-mix(in oklab, var(--color-brand) 40%, transparent);
+  transition:
+    color 150ms ease,
+    text-decoration-color 150ms ease;
 }
 .prose a:hover {
-  text-decoration-color: var(--color-text);
+  color: var(--color-brand-2);
+  text-decoration-color: var(--color-brand-2);
 }
 .prose ul,
 .prose ol {
@@ -162,12 +335,17 @@ a {
 .prose :not(pre) > code {
   font-family: var(--font-mono);
   font-size: 0.85em;
-  background: var(--color-surface);
-  color: var(--color-text);
+  background: color-mix(in oklab, var(--color-brand) 8%, var(--color-surface));
+  color: var(--color-brand);
   padding: 0.15em 0.4em;
   border-radius: 4px;
-  border: 1px solid var(--color-border);
+  border: 1px solid color-mix(in oklab, var(--color-brand) 20%, var(--color-border));
   font-weight: 500;
+}
+.prose a code {
+  color: inherit;
+  background: color-mix(in oklab, var(--color-brand) 12%, var(--color-surface));
+  border-color: color-mix(in oklab, var(--color-brand) 30%, var(--color-border));
 }
 .prose pre {
   background: var(--color-code-bg);
@@ -262,26 +440,44 @@ a {
   color: var(--color-text);
   margin: 0 0 0.25rem;
 }
+.doc-callout--info {
+  border-color: color-mix(in oklab, var(--color-info) 30%, transparent);
+  background: color-mix(in oklab, var(--color-info) 8%, var(--color-surface));
+}
 .doc-callout--info .doc-callout__icon {
-  color: #60a5fa;
+  color: var(--color-info);
+}
+.doc-callout--note {
+  border-color: color-mix(in oklab, var(--color-brand-3) 30%, transparent);
+  background: color-mix(in oklab, var(--color-brand-3) 8%, var(--color-surface));
+}
+.doc-callout--note .doc-callout__icon {
+  color: var(--color-brand-3);
+}
+.doc-callout--tip {
+  border-color: color-mix(in oklab, var(--color-tip) 30%, transparent);
+  background: color-mix(in oklab, var(--color-tip) 8%, var(--color-surface));
+}
+.doc-callout--tip .doc-callout__icon {
+  color: var(--color-tip);
 }
 .doc-callout--warning {
-  border-color: rgba(234, 179, 8, 0.25);
-  background: rgba(234, 179, 8, 0.06);
+  border-color: color-mix(in oklab, var(--color-warning) 30%, transparent);
+  background: color-mix(in oklab, var(--color-warning) 8%, var(--color-surface));
 }
 .doc-callout--warning .doc-callout__icon {
   color: var(--color-warning);
 }
 .doc-callout--danger {
-  border-color: rgba(239, 68, 68, 0.25);
-  background: rgba(239, 68, 68, 0.06);
+  border-color: color-mix(in oklab, var(--color-danger) 30%, transparent);
+  background: color-mix(in oklab, var(--color-danger) 8%, var(--color-surface));
 }
 .doc-callout--danger .doc-callout__icon {
   color: var(--color-danger);
 }
 .doc-callout--success {
-  border-color: rgba(34, 197, 94, 0.25);
-  background: rgba(34, 197, 94, 0.06);
+  border-color: color-mix(in oklab, var(--color-success) 30%, transparent);
+  background: color-mix(in oklab, var(--color-success) 8%, var(--color-surface));
 }
 .doc-callout--success .doc-callout__icon {
   color: var(--color-success);
@@ -299,7 +495,7 @@ a {
 }
 .install-slider__track {
   display: block;
-  transition: transform 500ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
   will-change: transform;
 }
 .install-slider__item {

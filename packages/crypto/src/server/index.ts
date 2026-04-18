@@ -1,11 +1,11 @@
 import type { H3Event } from 'h3';
 import { getCookie, getRequestProtocol, setCookie } from 'h3';
 
-// h3 doesn't re-export the cookie options type, so derive it from setCookie.
-type CookieSerializeOptions = NonNullable<Parameters<typeof setCookie>[3]>;
-
 import { toBase64 } from '../core/base64';
 import { getRandomBytes, getSubtle } from '../core/subtle';
+
+// h3 doesn't re-export its cookie-options type, so derive it from setCookie.
+type CookieSerializeOptions = NonNullable<Parameters<typeof setCookie>[3]>;
 
 const DEFAULT_COOKIE_NAME = '__nuxt_crypto_device';
 const DEFAULT_COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // one year
