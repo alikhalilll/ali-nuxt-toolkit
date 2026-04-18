@@ -23,11 +23,11 @@ cd ali-nuxt-toolkit
 pnpm install && pnpm build && pnpm play
 ```
 
-| Package                                                           | Version                                                                                                                                                 | Downloads                                                                                                                                                      | Size                                                                                                                                                                               | Purpose                                                                                                       |
-| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| [`@alikhalilll/nuxt-api-provider`](./packages/api-provider)       | [![npm](https://img.shields.io/npm/v/@alikhalilll/nuxt-api-provider.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-api-provider)       | [![downloads](https://img.shields.io/npm/dm/@alikhalilll/nuxt-api-provider.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-api-provider)       | [![size](https://img.shields.io/bundlephobia/minzip/@alikhalilll/nuxt-api-provider?label=minzip&color=444)](https://bundlephobia.com/package/@alikhalilll/nuxt-api-provider)       | Typed `fetch` client with interceptors, retry/backoff, timeouts, and a unified upload/download progress hook. |
-| [`@alikhalilll/nuxt-crypto`](./packages/crypto)                   | [![npm](https://img.shields.io/npm/v/@alikhalilll/nuxt-crypto.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-crypto)                   | [![downloads](https://img.shields.io/npm/dm/@alikhalilll/nuxt-crypto.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-crypto)                   | [![size](https://img.shields.io/bundlephobia/minzip/@alikhalilll/nuxt-crypto?label=minzip&color=444)](https://bundlephobia.com/package/@alikhalilll/nuxt-crypto)                   | AES-256-GCM + PBKDF2 via Web Crypto — key caching, pluggable algorithms, server-only mode.                    |
-| [`@alikhalilll/nuxt-auto-middleware`](./packages/auto-middleware) | [![npm](https://img.shields.io/npm/v/@alikhalilll/nuxt-auto-middleware.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-auto-middleware) | [![downloads](https://img.shields.io/npm/dm/@alikhalilll/nuxt-auto-middleware.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-auto-middleware) | [![size](https://img.shields.io/bundlephobia/minzip/@alikhalilll/nuxt-auto-middleware?label=minzip&color=444)](https://bundlephobia.com/package/@alikhalilll/nuxt-auto-middleware) | Layout-based route middleware with glob patterns, named groups, and per-page overrides.                       |
+| Package                                                           | Version                                                                                                                                                 | Downloads                                                                                                                                                      | Size                                                                                                                                                                               | Purpose                                                                                                                         |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| [`@alikhalilll/nuxt-api-provider`](./packages/api-provider)       | [![npm](https://img.shields.io/npm/v/@alikhalilll/nuxt-api-provider.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-api-provider)       | [![downloads](https://img.shields.io/npm/dm/@alikhalilll/nuxt-api-provider.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-api-provider)       | [![size](https://img.shields.io/bundlephobia/minzip/@alikhalilll/nuxt-api-provider?label=minzip&color=444)](https://bundlephobia.com/package/@alikhalilll/nuxt-api-provider)       | Typed `fetch` client with interceptors, retry/backoff, timeouts, and a unified upload/download progress hook.                   |
+| [`@alikhalilll/nuxt-crypto`](./packages/crypto)                   | [![npm](https://img.shields.io/npm/v/@alikhalilll/nuxt-crypto.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-crypto)                   | [![downloads](https://img.shields.io/npm/dm/@alikhalilll/nuxt-crypto.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-crypto)                   | [![size](https://img.shields.io/bundlephobia/minzip/@alikhalilll/nuxt-crypto?label=minzip&color=444)](https://bundlephobia.com/package/@alikhalilll/nuxt-crypto)                   | AES-256-GCM + PBKDF2 via Web Crypto — key caching, pluggable algorithms, server-only mode, optional device-fingerprint binding. |
+| [`@alikhalilll/nuxt-auto-middleware`](./packages/auto-middleware) | [![npm](https://img.shields.io/npm/v/@alikhalilll/nuxt-auto-middleware.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-auto-middleware) | [![downloads](https://img.shields.io/npm/dm/@alikhalilll/nuxt-auto-middleware.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-auto-middleware) | [![size](https://img.shields.io/bundlephobia/minzip/@alikhalilll/nuxt-auto-middleware?label=minzip&color=444)](https://bundlephobia.com/package/@alikhalilll/nuxt-auto-middleware) | Layout-based route middleware with glob patterns, named groups, and per-page overrides.                                         |
 
 Every package ships:
 
@@ -254,6 +254,26 @@ PBKDF2 is deliberately slow. Derived keys are cached per salt (default size 64) 
 ### Server-only mode
 
 `serverOnly: true` skips the client plugin so the passphrase never ships to the browser. `$crypto` becomes `undefined` on the client; use it in Nitro routes, server plugins, or `<script setup>` blocks guarded by `import.meta.server`.
+
+### Device fingerprint
+
+Bind a payload to the browser that created it — a copy of the token in another browser or on another device will refuse to decrypt. The fingerprint is built from an **HttpOnly device-ID cookie**, so it survives Wi-Fi ↔ 4G switches, cell-tower handoffs, VPN rotations, and residential IP rotation while still blocking copy-paste off-origin.
+
+```ts
+// server/api/session.post.ts
+import { getClientFingerprint } from '@alikhalilll/nuxt-crypto/server';
+
+export default defineEventHandler(async (event) => {
+  const { $crypto } = useNuxtApp();
+  const fingerprint = await getClientFingerprint(event, {
+    salt: useRuntimeConfig().cryptoFingerprintSalt, // server-side secret
+  });
+  const body = await readBody(event);
+  return { token: await $crypto.encrypt(JSON.stringify(body), { fingerprint }) };
+});
+```
+
+Decrypt with the same `{ fingerprint }` on the server. Suitable for short-lived CSRF tokens, magic links, and anti-replay nonces — not long-lived data (clearing cookies makes payloads permanently undecryptable).
 
 ### Payload format
 
