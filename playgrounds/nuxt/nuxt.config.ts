@@ -23,6 +23,9 @@ export default defineNuxtConfig({
     provideName: '$crypto',
     iterations: 10_000,
   },
+  runtimeConfig: {
+    cryptoFingerprintSalt: process.env.NUXT_CRYPTO_FINGERPRINT_SALT ?? 'dev-only-fingerprint-salt',
+  },
   autoMiddleware: {
     groups: {
       auth: ['auth'],

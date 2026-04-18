@@ -55,6 +55,41 @@ const decryptInvalid = async () => {
   }
 };
 
+const fpInput = ref('bound-to-this-browser');
+const fpToken = ref('');
+const fpDecrypted = ref('');
+const fpUnboundError = ref('');
+
+const fpEncrypt = async () => {
+  fpDecrypted.value = '';
+  fpUnboundError.value = '';
+  const res = await $fetch<{ token: string }>('/api/crypto/fingerprint-encrypt', {
+    method: 'POST',
+    body: { text: fpInput.value },
+  });
+  fpToken.value = res.token;
+};
+
+const fpDecrypt = async () => {
+  const res = await $fetch<{ text: string }>('/api/crypto/fingerprint-decrypt', {
+    method: 'POST',
+    body: { token: fpToken.value },
+  });
+  fpDecrypted.value = res.text;
+};
+
+const fpDecryptUnbound = async () => {
+  try {
+    fpUnboundError.value = '';
+    // Same ciphertext, but call the plain client-side $crypto.decrypt without a
+    // fingerprint — a bound payload rejects this.
+    await $crypto.decrypt(fpToken.value);
+    fpUnboundError.value = '(unexpectedly succeeded)';
+  } catch (e) {
+    fpUnboundError.value = (e as Error).message || String(e);
+  }
+};
+
 const payloadParts = computed(() => {
   if (!ciphertext.value) return null;
   const [version, salt, iv, cipher] = ciphertext.value.split('.');
@@ -189,6 +224,47 @@ const metric =
       <h2 :class="cardH">4. Invalid payload handling</h2>
       <button :class="btnDanger" @click="decryptInvalid">decrypt garbage</button>
       <pre v-if="invalidError" :class="'mt-3 ' + preBox">{{ invalidError }}</pre>
+    </div>
+
+    <div :class="card">
+      <h2 :class="cardH">5. Device fingerprint (server-only)</h2>
+      <p class="mb-2 text-sm text-text-dim">
+        Encrypt / decrypt happen in
+        <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2"
+          >server/api/crypto/fingerprint-*.post.ts</code
+        >. The first encrypt sets an HttpOnly cookie (<code
+          class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2"
+          >__nuxt_crypto_device</code
+        >) and binds the payload to this browser. Copy the token into another browser and decrypt
+        will fail.
+      </p>
+      <label :class="label">Plain text</label>
+      <input v-model="fpInput" type="text" :class="input1" />
+      <div class="mt-3 flex flex-wrap gap-2">
+        <button :class="btnPrimary" @click="fpEncrypt">encrypt (server)</button>
+        <button :class="btnBase" :disabled="!fpToken" @click="fpDecrypt">decrypt (server)</button>
+        <button :class="btnDanger" :disabled="!fpToken" @click="fpDecryptUnbound">
+          try decrypt without fingerprint
+        </button>
+      </div>
+      <template v-if="fpToken">
+        <h3 class="mt-4 mb-1 text-xs font-semibold uppercase tracking-wider text-text-dim">
+          bound payload
+        </h3>
+        <pre :class="preBox">{{ fpToken }}</pre>
+      </template>
+      <template v-if="fpDecrypted">
+        <h3 class="mt-3 mb-1 text-xs font-semibold uppercase tracking-wider text-text-dim">
+          decrypted (same browser)
+        </h3>
+        <pre :class="preBox">{{ fpDecrypted }}</pre>
+      </template>
+      <template v-if="fpUnboundError">
+        <h3 class="mt-3 mb-1 text-xs font-semibold uppercase tracking-wider text-text-dim">
+          decrypt without fingerprint
+        </h3>
+        <pre :class="preBox">{{ fpUnboundError }}</pre>
+      </template>
     </div>
   </section>
 </template>
