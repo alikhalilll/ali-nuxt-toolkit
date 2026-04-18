@@ -130,7 +130,7 @@ watch(
 
 <template>
   <div
-    class="mx-auto grid max-w-[1400px] gap-10 px-4 py-6 pb-16 sm:px-6 md:grid-cols-[220px_minmax(0,1fr)] md:py-8 xl:grid-cols-[220px_minmax(0,1fr)_200px]"
+    class="mx-auto grid max-w-[1400px] gap-10 pt-0 md:pt-6 px-4 py-6 pb-16 sm:px-6 md:grid-cols-[220px_minmax(0,1fr)] md:py-8 xl:grid-cols-[220px_minmax(0,1fr)_200px]"
   >
     <DocSidebar />
     <main :class="[accentClass, 'min-w-0']">
