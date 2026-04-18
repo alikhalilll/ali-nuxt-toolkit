@@ -1,6 +1,6 @@
 {
   "name": "@alikhalilll/nuxt-api-provider",
-  "version": "1.0.5",
+  "version": "1.1.0",
   "description": "Strongly-typed fetch client for Nuxt 3/4 with interceptors, retry/backoff, and a framework-agnostic core.",
   "license": "MIT",
   "author": "alikhalilll",
