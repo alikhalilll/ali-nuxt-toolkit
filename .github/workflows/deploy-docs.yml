@@ -38,6 +38,7 @@ jobs:
         working-directory: apps/docs
         env:
           NUXT_APP_BASE_URL: /ali-nuxt-toolkit/
+          NUXT_PUBLIC_CF_ANALYTICS_TOKEN: 9b74107355e248b7887bf7ef69925180
         run: pnpm generate
 
       - uses: actions/configure-pages@v5

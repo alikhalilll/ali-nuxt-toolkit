@@ -35,14 +35,14 @@ const packages = [
     <div class="mx-auto grid max-w-[1400px] gap-8 px-4 py-10 sm:px-6 md:grid-cols-3 md:gap-10">
       <!-- Brand -->
       <div>
-        <NuxtLink to="/" class="inline-flex items-center gap-2 hover:no-underline">
+        <NuxtLink to="/" class="inline-flex items-center gap-2.5 hover:no-underline">
           <span
-            class="bg-gradient-brand inline-flex h-7 w-8 items-center justify-center rounded text-[10px] font-bold tracking-tight !text-black"
+            class="bg-gradient-brand inline-flex h-9 w-10 items-center justify-center rounded text-xs font-bold tracking-tight !text-black"
             aria-hidden="true"
           >
             ANT
           </span>
-          <span class="text-sm font-semibold text-text">ali-nuxt-toolkit</span>
+          <span class="text-base font-semibold text-text">ali-nuxt-toolkit</span>
         </NuxtLink>
         <p class="mt-3 max-w-xs text-sm text-text-dim">
           Three focused, strongly-typed Nuxt 3 / 4 modules. Crafted with care by a developer who
@@ -55,11 +55,11 @@ const packages = [
         <h4 class="mb-3 text-[11px] font-semibold uppercase tracking-widest text-text-muted">
           Packages
         </h4>
-        <ul class="m-0 list-none space-y-2 p-0 text-sm">
+        <ul class="m-0 list-none space-y-2.5 p-0 text-base">
           <li v-for="pkg in packages" :key="pkg.to" :class="pkg.accent">
             <NuxtLink
               :to="pkg.to"
-              class="inline-flex items-center gap-2 text-text-dim transition-colors hover:text-text hover:no-underline"
+              class="inline-flex items-center gap-2 font-medium text-text-dim transition-colors hover:text-text hover:no-underline"
             >
               <span class="pkg-dot" aria-hidden="true" />
               {{ pkg.label }}

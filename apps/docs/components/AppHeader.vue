@@ -20,7 +20,7 @@ watch(
   <header
     class="sticky top-0 z-30 w-full border-b border-border/60 bg-bg/80 backdrop-blur-xl supports-[backdrop-filter]:bg-bg/60"
   >
-    <div class="mx-auto flex h-14 max-w-[1400px] items-center px-4 sm:px-6">
+    <div class="mx-auto flex h-16 max-w-[1400px] items-center px-4 sm:px-6">
       <!-- Logo + mobile toggle -->
       <div class="flex items-center gap-2">
         <button
@@ -63,25 +63,25 @@ watch(
           </svg>
         </button>
 
-        <NuxtLink to="/" class="mr-6 flex items-center gap-2 hover:no-underline">
+        <NuxtLink to="/" class="mr-6 flex items-center gap-2.5 hover:no-underline">
           <span
-            class="bg-gradient-brand inline-flex h-6 w-7 items-center justify-center rounded text-[9px] font-bold tracking-tight !text-black"
+            class="bg-gradient-brand inline-flex h-8 w-9 items-center justify-center rounded text-[11px] font-bold tracking-tight !text-black"
             aria-hidden="true"
           >
             ANT
           </span>
-          <span class="hidden text-sm font-semibold text-text sm:inline">ali-nuxt-toolkit</span>
+          <span class="hidden text-base font-semibold text-text sm:inline">ali-nuxt-toolkit</span>
         </NuxtLink>
       </div>
 
       <!-- Inline nav (desktop) -->
-      <nav class="hidden items-center gap-5 text-sm md:flex">
+      <nav class="hidden items-center gap-6 text-base md:flex">
         <NuxtLink
           v-for="link in navLinks"
           :key="link.to"
           :to="link.to"
-          class="text-text-dim transition-colors hover:text-text hover:no-underline"
-          active-class="!text-accent-2 font-medium"
+          class="font-medium text-text-dim transition-colors hover:text-text hover:no-underline"
+          active-class="!text-accent-2 font-semibold"
         >
           {{ link.label }}
         </NuxtLink>
