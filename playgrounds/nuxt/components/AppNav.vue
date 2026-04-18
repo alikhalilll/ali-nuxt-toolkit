@@ -2,7 +2,9 @@
 const links = [
   { to: '/', label: 'Home' },
   { to: '/api-provider', label: 'api-provider' },
+  { to: '/api-provider-core', label: 'api-provider · core' },
   { to: '/crypto', label: 'crypto' },
+  { to: '/crypto-core', label: 'crypto · core' },
   { to: '/auto-middleware', label: 'auto-middleware' },
   { to: '/dashboard', label: 'Dashboard' },
   { to: '/admin', label: 'Admin' },
