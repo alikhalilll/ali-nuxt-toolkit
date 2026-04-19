@@ -13,6 +13,11 @@ const social = [
     icon: 'linkedin',
   },
   {
+    label: 'Portfolio',
+    href: 'https://alikhalilll.github.io/',
+    icon: 'portfolio',
+  },
+  {
     label: 'Repository',
     href: 'https://github.com/alikhalilll/ali-nuxt-toolkit',
     icon: 'repo',
@@ -109,6 +114,26 @@ const packages = [
             >
               <path
                 d="M20.45 20.45h-3.55v-5.56c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.13 1.45-2.13 2.95v5.65H9.37V9h3.41v1.56h.05c.47-.9 1.64-1.85 3.37-1.85 3.6 0 4.26 2.37 4.26 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.23 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.46c.98 0 1.77-.77 1.77-1.72V1.72C24 .77 23.21 0 22.23 0z"
+              />
+            </svg>
+            <!-- Portfolio / globe -->
+            <svg
+              v-else-if="item.icon === 'portfolio'"
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <path d="M2 12h20" />
+              <path
+                d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
               />
             </svg>
             <!-- Repo / box -->
