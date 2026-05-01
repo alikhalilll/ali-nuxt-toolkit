@@ -44,10 +44,13 @@ export function createApiClient(config: ApiClientConfig = {}): ApiProviderClient
     return current;
   }
 
-  async function runResponseInterceptors<T>(ctx: ResponseContext<T>): Promise<void> {
+  async function runResponseInterceptors<T>(ctx: ResponseContext<T>): Promise<ResponseContext<T>> {
+    let current = ctx;
     for (const interceptor of responseInterceptors) {
-      await interceptor(ctx);
+      const result = await interceptor(current);
+      if (result) current = result;
     }
+    return current;
   }
 
   async function runErrorInterceptors(error: ApiError, ctx: RequestContext): Promise<void> {
@@ -109,11 +112,10 @@ export function createApiClient(config: ApiClientConfig = {}): ApiProviderClient
 
     const data = await safeParseJson<T>(response);
 
-    if (!ctx.options.skipInterceptors) {
-      await runResponseInterceptors<T>({ request: ctx, response, data });
-    }
+    if (ctx.options.skipInterceptors) return data;
+    const final = await runResponseInterceptors<T>({ request: ctx, response, data });
 
-    return data;
+    return final.data;
   }
 
   const client = async function apiClient<T = unknown>(

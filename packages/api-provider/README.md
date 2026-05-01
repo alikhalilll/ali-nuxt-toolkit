@@ -37,15 +37,23 @@ A strongly-typed `fetch` client for Nuxt 3 / 4 with interceptors, retry/backoff,
    - [Cancel previous request (debounced search)](#cancel-previous-request-debounced-search)
    - [Passing metadata to interceptors](#passing-metadata-to-interceptors)
 4. [Interceptors](#interceptors)
+   - [Lifecycle](#lifecycle)
+   - [Type signatures](#type-signatures)
    - [Authentication header](#authentication-header)
-   - [Response unwrap](#response-unwrap)
+   - [Response transform / unwrap](#response-transform--unwrap)
    - [Error → toast + redirect](#error--toast--redirect)
    - [Runtime registration](#runtime-registration)
 5. [Framework-agnostic core](#framework-agnostic-core)
    - [Node / Bun / CLI](#node--bun--cli)
    - [Inside Nitro server routes](#inside-nitro-server-routes)
+   - [`ApiClientConfig` reference](#apiclientconfig-reference)
+   - [Initial interceptors at construction](#initial-interceptors-at-construction)
+   - [Custom fetch (testing / instrumentation)](#custom-fetch-testing--instrumentation)
+   - [`/core` helpers](#core-helpers)
 6. [Module options reference](#module-options-reference)
-7. [Exported types](#exported-types)
+7. [`RequestOptions` reference](#requestoptions-reference)
+8. [`RetryOptions` reference](#retryoptions-reference)
+9. [Exported types](#exported-types)
 
 ---
 
@@ -411,7 +419,54 @@ api.useError((err, ctx) => {
 
 ## Interceptors
 
-There are three kinds of interceptors. Register them via module options (file paths with a default export) or at runtime on the client.
+There are three kinds of interceptors. Register them via module options (file paths with a default export) or at runtime on the client. Every registration returns an unregister function.
+
+### Lifecycle
+
+```
+client(endpoint)
+  ├─ runRequestInterceptors(ctx)        ← can mutate ctx or return a new one (chained)
+  ├─ build URL · encode body · fetch
+  ├─ if !response.ok → throw ApiError
+  ├─ retry loop on retryable status / network error
+  ├─ runResponseInterceptors(resCtx)    ← can mutate resCtx.data or return a new resCtx (chained)
+  └─ on thrown ApiError → runErrorInterceptors(err, ctx)   ← side-effect only
+```
+
+`skipInterceptors: true` on a per-call basis bypasses request, response, **and** error interceptors for that one call.
+
+### Type signatures
+
+```ts
+// All three live on `@alikhalilll/nuxt-api-provider/types`.
+
+interface RequestContext {
+  endpoint: string;
+  baseURL: string;
+  headers: Record<string, string>;
+  queries: Record<string, unknown>;
+  options: RequestOptions; // per-call options (headers cleared — they live on ctx.headers)
+  meta: Record<string, unknown>;
+}
+
+interface ResponseContext<T = unknown> {
+  request: RequestContext;
+  response: Response;
+  data: T | undefined; // already JSON-parsed; mutate or replace
+}
+
+type RequestInterceptor = (
+  ctx: RequestContext
+) => void | RequestContext | Promise<void | RequestContext>;
+
+type ResponseInterceptor = <T = unknown>(
+  ctx: ResponseContext<T>
+) => void | ResponseContext<T> | Promise<void | ResponseContext<T>>;
+
+type ErrorInterceptor = (err: ApiError, ctx: RequestContext) => void | Promise<void>;
+```
+
+Request and response interceptors **chain** — the value returned by interceptor _N_ is what interceptor _N+1_ receives. Returning nothing keeps the previous context. Error interceptors are side-effect only; they can't suppress or rewrite the thrown `ApiError`.
 
 ### Authentication header
 
@@ -434,18 +489,43 @@ apiProvider: {
 }
 ```
 
-### Response unwrap
+### Response transform / unwrap
+
+Response interceptors are chained the same way as request interceptors. Each one gets the `ResponseContext` from the previous step and may either **mutate it in place** or **return a new context**. Whatever the last interceptor leaves in `ctx.data` is what the caller `await`s.
+
+Common use case — strip a `{ data: T }` envelope so consumers see `T` directly:
 
 ```ts
 // ~/api/on-success.ts
 import type { ResponseInterceptor } from '@alikhalilll/nuxt-api-provider/types';
 
-const onSuccess: ResponseInterceptor = (ctx) => {
-  // Analytics / tracing; can't mutate `data` (it's readonly in the ctx).
-  void ctx.response.headers.get('server-timing');
+const unwrapEnvelope: ResponseInterceptor = (ctx) => {
+  const payload = ctx.data as { data?: unknown } | undefined;
+  if (payload && typeof payload === 'object' && 'data' in payload) {
+    ctx.data = payload.data as typeof ctx.data;
+  }
 };
-export default onSuccess;
+export default unwrapEnvelope;
 ```
+
+Or return a brand-new context (handy when you'd rather not mutate):
+
+```ts
+const onSuccess: ResponseInterceptor = (ctx) => ({
+  ...ctx,
+  data: normalize(ctx.data),
+});
+```
+
+Pure side-effect interceptors return nothing — useful for tracing, analytics, latency logs:
+
+```ts
+api.useResponse((ctx) => {
+  console.debug(ctx.response.status, ctx.response.headers.get('server-timing'));
+});
+```
+
+The `ctx.request` field gives you the full `RequestContext` that produced this response (endpoint, baseURL, headers, queries, options, meta) so you can branch on `ctx.request.meta.feature`, the URL, or any header you set in the request interceptor.
 
 ### Error → toast + redirect
 
@@ -527,6 +607,93 @@ export default defineEventHandler(async (event) => {
 });
 ```
 
+### `ApiClientConfig` reference
+
+| Field          | Type                              | Default            | Purpose                                                                |
+| -------------- | --------------------------------- | ------------------ | ---------------------------------------------------------------------- |
+| `baseURL`      | `string`                          | `''`               | Prepended to every relative endpoint.                                  |
+| `timeoutMs`    | `number`                          | `20000`            | Default timeout (overridable per call).                                |
+| `retry`        | `Partial<RetryOptions>`           | `{}`               | Default retry policy.                                                  |
+| `headers`      | `HeadersInit`                     | —                  | Default headers merged into every request.                             |
+| `fetch`        | `typeof fetch`                    | `globalThis.fetch` | Inject a custom fetch (test doubles, polyfills, instrumented fetches). |
+| `interceptors` | `{ request?, response?, error? }` | `{}`               | Initial interceptor arrays — equivalent to calling `.useX()` later.    |
+
+### Initial interceptors at construction
+
+```ts
+const client = createApiClient({
+  baseURL: 'https://api.example.com',
+  interceptors: {
+    request: [
+      (ctx) => {
+        ctx.headers['X-Trace'] = crypto.randomUUID();
+      },
+    ],
+    response: [
+      (ctx) => {
+        ctx.data = unwrap(ctx.data);
+      },
+    ],
+    error: [
+      (err) => {
+        logger.error(err);
+      },
+    ],
+  },
+});
+```
+
+### Custom fetch (testing / instrumentation)
+
+> **You almost never need this.** Modern Nuxt, browsers, Node 18+, Bun, and Deno all ship a global `fetch`, so leaving `fetch` unset is the right default. It's an escape hatch for environments or use cases the platform `fetch` can't cover.
+
+When you'd actually inject one:
+
+- **Unit tests** that stub the network without an MSW / `nock` layer — return canned `Response` objects.
+- **Older Node** (≤ 17) or sandboxes without a global `fetch` — pass `undici` / `node-fetch`.
+- **CLI or Nitro edge cases** that need a custom dispatcher (HTTP proxy, mTLS, custom DNS, cookie jar).
+- **Transport-layer tracing / metrics** that need to live below the interceptor chain.
+
+```ts
+const fakeFetch: typeof fetch = async () =>
+  new Response(JSON.stringify({ ok: true }), {
+    status: 200,
+    headers: { 'content-type': 'application/json' },
+  });
+
+const client = createApiClient({ fetch: fakeFetch });
+```
+
+Notes:
+
+- Must match the platform `fetch` signature `(input, init) => Promise<Response>`.
+- Bypassed for any call that sets `onRequestProgress` — the client switches to `XMLHttpRequest` for that single request (the only way to observe upload progress), then the rest of the pipeline (interceptors, retry, error mapping) continues unchanged.
+- There's **no per-call override** — `fetch` lives on `ApiClientConfig` only. Use a separate `createApiClient` instance if you need different transports for different call sites.
+
+### `/core` helpers
+
+The `/core` entry exports the building blocks the client itself uses. They're stable and useful in tests, custom transports, and adapters.
+
+| Export                    | Signature / purpose                                                                                           |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `createApiClient`         | `(config?: ApiClientConfig) => ApiProviderClient`. The factory.                                               |
+| `joinUrl`                 | `(endpoint, baseURL) => string`. Absolute URLs pass through; collapses duplicate slashes.                     |
+| `buildQueryString`        | `(params) => string`. `null`/`undefined`/empty + whitespace strings skipped; arrays repeated.                 |
+| `normalizeHeaders`        | `(HeadersInit) => Record<string,string>`. Accepts `Headers`, arrays, plain objects.                           |
+| `dropContentType`         | `(headers) => headers`. Case-insensitive Content-Type strip — used internally for `FormData`.                 |
+| `encodeBody`              | `(headers, body) => { headers, body }`. JSON / FormData / URLSearchParams / passthrough pipeline.             |
+| `shouldOmitBody`          | `(method?) => boolean`. `true` for `GET` and `HEAD`.                                                          |
+| `safeParseJson`           | `(Response) => Promise<T \| undefined>`. `204`/`205` → `undefined`; non-JSON bodies fall through as **text**. |
+| `combineSignals`          | `(internal, external?) => AbortSignal`. `AbortSignal.any` with a polyfill fallback.                           |
+| `DEFAULT_RETRY`           | The default `RetryOptions` constant.                                                                          |
+| `resolveRetry`            | `(clientDefaults, perCall) => RetryOptions`. Layered merge.                                                   |
+| `shouldRetryStatus`       | `(status, options) => boolean`.                                                                               |
+| `computeDelay`            | `(attempt, options) => number`. `delayMs * backoff^n`.                                                        |
+| `sleep`                   | `(ms, signal?) => Promise<void>`. Abortable.                                                                  |
+| `createXhrFetch`          | `(onProgress) => fetch`. The XHR-backed fetch used for upload progress. Browser-only.                         |
+| `normalizeErrorPayload`   | `(input, fallback) => { message, details }`. Flattens common server error shapes into `ApiErrorDetails`.      |
+| `ApiError` / `isApiError` | The error class and its brand-checked guard (works across realms).                                            |
+
 ## Module options reference
 
 | Option             | Type                    | Default          | Purpose                                                         |
@@ -539,6 +706,30 @@ export default defineEventHandler(async (event) => {
 | `onRequestPath`    | `string` (optional)     | —                | Path to a module with a default-exported `RequestInterceptor`.  |
 | `onSuccessPath`    | `string` (optional)     | —                | Path to a module with a default-exported `ResponseInterceptor`. |
 | `onErrorPath`      | `string` (optional)     | —                | Path to a module with a default-exported `ErrorInterceptor`.    |
+
+## `RequestOptions` reference
+
+`RequestOptions` extends the standard `RequestInit` (so `method`, `credentials`, `cache`, `mode`, `redirect`, `referrer`, `keepalive`, `integrity`, etc. all pass through) and adds:
+
+| Field               | Type                                                                                         | Default        | Purpose                                                                                                |
+| ------------------- | -------------------------------------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------ |
+| `body`              | object · array · `FormData` · `URLSearchParams` · `Blob` · `ArrayBuffer` · `string` · `null` | —              | Plain objects / arrays are JSON-encoded; everything else passes through with the right `Content-Type`. |
+| `timeoutMs`         | `number`                                                                                     | client default | Per-call timeout. Aborts via an internal `AbortController`.                                            |
+| `signal`            | `AbortSignal`                                                                                | —              | External abort signal. Combined with the timeout signal via `AbortSignal.any`.                         |
+| `retry`             | `Partial<RetryOptions>`                                                                      | client default | Per-call retry override. `{ attempts: 0 }` disables retries.                                           |
+| `skipInterceptors`  | `boolean`                                                                                    | `false`        | Bypass request, response, **and** error interceptors for this call.                                    |
+| `meta`              | `Record<string, unknown>`                                                                    | `{}`           | Arbitrary data forwarded to interceptors via `ctx.meta`.                                               |
+| `onRequestProgress` | `(p: RequestProgress) => void`                                                               | —              | Upload + download progress. Switches transport to `XMLHttpRequest`.                                    |
+
+## `RetryOptions` reference
+
+| Field                 | Type       | Default                          | Purpose                                               |
+| --------------------- | ---------- | -------------------------------- | ----------------------------------------------------- |
+| `attempts`            | `number`   | `0`                              | Retry attempts **in addition** to the initial call.   |
+| `delayMs`             | `number`   | `300`                            | Base delay between retries, in ms.                    |
+| `backoff`             | `number`   | `2`                              | Exponent applied per attempt (`delayMs * backoff^n`). |
+| `statusCodes`         | `number[]` | `[408, 429, 500, 502, 503, 504]` | Response status codes that trigger a retry.           |
+| `retryOnNetworkError` | `boolean`  | `true`                           | Retry on aborted / network failures (no `Response`).  |
 
 ## Exported types
 

@@ -26,7 +26,7 @@ declare module 'vue' {
 
 declare module '#build/api-provider-handlers.mjs' {
   export function onRequestHandler(ctx: RequestContext): void | RequestContext | Promise<void | RequestContext>;
-  export function onSuccessHandler<T = unknown>(ctx: ResponseContext<T>): void | Promise<void>;
+  export function onSuccessHandler<T = unknown>(ctx: ResponseContext<T>): void | ResponseContext<T> | Promise<void | ResponseContext<T>>;
   export function onErrorHandler(error: ApiError, ctx: RequestContext): void | Promise<void>;
 }
 

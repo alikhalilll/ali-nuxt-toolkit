@@ -84,11 +84,12 @@ export interface RequestContext {
   meta: UnknownRecord;
 }
 
-/** Immutable response handed to response and error interceptors. */
+/** Response handed to
+ response and error interceptors. May be mutated or replaced by returning a new context. */
 export interface ResponseContext<T = unknown> {
-  readonly request: RequestContext;
-  readonly response: Response;
-  readonly data: T | undefined;
+  request: RequestContext;
+  response: Response;
+  data: T | undefined;
 }
 
 /** Request interceptor — may mutate the context or return a new one. */
@@ -99,7 +100,7 @@ export type RequestInterceptor = (
 /** Response interceptor — fires on 2xx responses. */
 export type ResponseInterceptor = <T = unknown>(
   context: ResponseContext<T>
-) => void | Promise<void>;
+) => void | ResponseContext<T> | Promise<void | ResponseContext<T>>;
 
 /** Error interceptor — fires on non-2xx responses and network errors. */
 export type ErrorInterceptor = (
