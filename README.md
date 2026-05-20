@@ -23,17 +23,20 @@ cd ali-nuxt-toolkit
 pnpm install && pnpm build && pnpm play
 ```
 
-| Package                                                           | Version                                                                                                                                                 | Downloads                                                                                                                                                      | Size                                                                                                                                                                               | Purpose                                                                                                                         |
-| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| [`@alikhalilll/nuxt-api-provider`](./packages/api-provider)       | [![npm](https://img.shields.io/npm/v/@alikhalilll/nuxt-api-provider.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-api-provider)       | [![downloads](https://img.shields.io/npm/dm/@alikhalilll/nuxt-api-provider.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-api-provider)       | [![size](https://img.shields.io/bundlephobia/minzip/@alikhalilll/nuxt-api-provider?label=minzip&color=444)](https://bundlephobia.com/package/@alikhalilll/nuxt-api-provider)       | Typed `fetch` client with interceptors, retry/backoff, timeouts, and a unified upload/download progress hook.                   |
-| [`@alikhalilll/nuxt-crypto`](./packages/crypto)                   | [![npm](https://img.shields.io/npm/v/@alikhalilll/nuxt-crypto.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-crypto)                   | [![downloads](https://img.shields.io/npm/dm/@alikhalilll/nuxt-crypto.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-crypto)                   | [![size](https://img.shields.io/bundlephobia/minzip/@alikhalilll/nuxt-crypto?label=minzip&color=444)](https://bundlephobia.com/package/@alikhalilll/nuxt-crypto)                   | AES-256-GCM + PBKDF2 via Web Crypto — key caching, pluggable algorithms, server-only mode, optional device-fingerprint binding. |
-| [`@alikhalilll/nuxt-auto-middleware`](./packages/auto-middleware) | [![npm](https://img.shields.io/npm/v/@alikhalilll/nuxt-auto-middleware.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-auto-middleware) | [![downloads](https://img.shields.io/npm/dm/@alikhalilll/nuxt-auto-middleware.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-auto-middleware) | [![size](https://img.shields.io/bundlephobia/minzip/@alikhalilll/nuxt-auto-middleware?label=minzip&color=444)](https://bundlephobia.com/package/@alikhalilll/nuxt-auto-middleware) | Layout-based route middleware with glob patterns, named groups, and per-page overrides.                                         |
+| Package                                                           | Version                                                                                                                                                 | Downloads                                                                                                                                                      | Size                                                                                                                                                                               | Purpose                                                                                                                                                                             |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`@alikhalilll/nuxt-api-provider`](./packages/api-provider)       | [![npm](https://img.shields.io/npm/v/@alikhalilll/nuxt-api-provider.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-api-provider)       | [![downloads](https://img.shields.io/npm/dm/@alikhalilll/nuxt-api-provider.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-api-provider)       | [![size](https://img.shields.io/bundlephobia/minzip/@alikhalilll/nuxt-api-provider?label=minzip&color=444)](https://bundlephobia.com/package/@alikhalilll/nuxt-api-provider)       | Typed `fetch` client with interceptors, retry/backoff, timeouts, and a unified upload/download progress hook.                                                                       |
+| [`@alikhalilll/nuxt-crypto`](./packages/crypto)                   | [![npm](https://img.shields.io/npm/v/@alikhalilll/nuxt-crypto.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-crypto)                   | [![downloads](https://img.shields.io/npm/dm/@alikhalilll/nuxt-crypto.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-crypto)                   | [![size](https://img.shields.io/bundlephobia/minzip/@alikhalilll/nuxt-crypto?label=minzip&color=444)](https://bundlephobia.com/package/@alikhalilll/nuxt-crypto)                   | AES-256-GCM + PBKDF2 via Web Crypto — key caching, pluggable algorithms, server-only mode, optional device-fingerprint binding.                                                     |
+| [`@alikhalilll/nuxt-auto-middleware`](./packages/auto-middleware) | [![npm](https://img.shields.io/npm/v/@alikhalilll/nuxt-auto-middleware.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-auto-middleware) | [![downloads](https://img.shields.io/npm/dm/@alikhalilll/nuxt-auto-middleware.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-auto-middleware) | [![size](https://img.shields.io/bundlephobia/minzip/@alikhalilll/nuxt-auto-middleware?label=minzip&color=444)](https://bundlephobia.com/package/@alikhalilll/nuxt-auto-middleware) | Layout-based route middleware with glob patterns, named groups, and per-page overrides.                                                                                             |
+| [`@alikhalilll/ui`](./packages/ui)                                | [![npm](https://img.shields.io/npm/v/@alikhalilll/ui.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/ui)                                     | [![downloads](https://img.shields.io/npm/dm/@alikhalilll/ui.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/ui)                                     | [![size](https://img.shields.io/bundlephobia/minzip/@alikhalilll/ui?label=minzip&color=444)](https://bundlephobia.com/package/@alikhalilll/ui)                                     | Headless, shadcn-vue style Vue 3 components. First: `ATellInput` — IP-detected country, libphonenumber-js validation, popover/drawer picker, deeply customizable via slots + props. |
 
-Every package ships:
+Every Nuxt-module package (`api-provider`, `crypto`, `auto-middleware`) ships:
 
 - A **Nuxt module** — default export from the package root.
 - A **framework-agnostic core** (`./core` subpath) usable in Node, Bun, Deno, CLIs, tests.
 - Full **type exports** (`./types` subpath).
+
+`@alikhalilll/ui` is a plain **Vue 3 component library** — it works in any Vue app, not just Nuxt. CSS variables are prefixed `--ak-ui-*` and theme is set by overriding them anywhere in the cascade.
 
 ---
 
@@ -45,9 +48,10 @@ Install the packages you need — they have no overlap:
 pnpm add @alikhalilll/nuxt-api-provider
 pnpm add @alikhalilll/nuxt-crypto
 pnpm add @alikhalilll/nuxt-auto-middleware
+pnpm add @alikhalilll/ui
 ```
 
-Register in `nuxt.config.ts`:
+Register the Nuxt modules in `nuxt.config.ts`; `@alikhalilll/ui` is a component library, not a module, so it's imported directly in your code:
 
 ```ts
 export default defineNuxtConfig({
@@ -56,6 +60,7 @@ export default defineNuxtConfig({
     '@alikhalilll/nuxt-crypto',
     '@alikhalilll/nuxt-auto-middleware',
   ],
+  css: ['@alikhalilll/ui/styles.css'], // expose the lib's CSS variables
 });
 ```
 
@@ -392,6 +397,97 @@ Every middleware runs inside `callWithNuxt()`, so `useNuxtApp()` / composables w
 | `debug`         | `boolean`                  | `false`         | Log resolution + execution at runtime.           |
 
 [Full guide →](https://alikhalilll.github.io/ali-nuxt-toolkit/auto-middleware)
+
+---
+
+## `@alikhalilll/ui`
+
+Headless, [shadcn-vue](https://www.shadcn-vue.com) style Vue 3 components built on [reka-ui](https://reka-ui.com) + [vaul-vue](https://github.com/unovue/vaul-vue). Theme via prefixed CSS variables, size via a shared scale (xs/sm/md/lg/xl; md = 43 px), customize via deep slots + override props.
+
+### First component — `ATellInput`
+
+A composite phone-number input that:
+
+- Auto-detects the user's country (IP → timezone → `navigator.language` → fallback) with override hooks at every step.
+- Validates + formats numbers via `libphonenumber-js`, exposes a structured `PhoneValidationResult`.
+- Renders a **popover on desktop / vaul-vue drawer on mobile** country picker with a "Suggested" group (current + recents from localStorage) above the full list.
+- Is **fully customizable** — every visual region is a slot, every data source is a prop, every region accepts its own class.
+
+### Setup
+
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  css: ['@alikhalilll/ui/styles.css'],
+  app: { head: { htmlAttrs: { class: 'dark' } } }, // or .light
+});
+```
+
+```css
+/* assets/main.css */
+@import 'tailwindcss';
+@source '../node_modules/@alikhalilll/ui/dist/index.mjs';
+
+@theme inline {
+  --color-background: hsl(var(--ak-ui-background));
+  --color-foreground: hsl(var(--ak-ui-foreground));
+  --color-popover: hsl(var(--ak-ui-popover));
+  --color-popover-foreground: hsl(var(--ak-ui-popover-foreground));
+  --color-muted: hsl(var(--ak-ui-muted));
+  --color-muted-foreground: hsl(var(--ak-ui-muted-foreground));
+  --color-accent: hsl(var(--ak-ui-accent));
+  --color-accent-foreground: hsl(var(--ak-ui-accent-foreground));
+  --color-destructive: hsl(var(--ak-ui-destructive));
+  --color-destructive-foreground: hsl(var(--ak-ui-destructive-foreground));
+  --color-border: hsl(var(--ak-ui-border));
+  --color-input: hsl(var(--ak-ui-input));
+  --color-ring: hsl(var(--ak-ui-ring));
+}
+```
+
+### Use
+
+```vue
+<script setup lang="ts">
+import { ref } from 'vue';
+import { ATellInput } from '@alikhalilll/ui';
+
+const phone = ref('');
+const country = ref('');
+</script>
+
+<template>
+  <ATellInput
+    v-model:phone="phone"
+    v-model:country="country"
+    default-country="SA"
+    show-validation
+  />
+</template>
+```
+
+### Customize anything
+
+| Vector            | What you can override                                                                                                                                             |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Slots**         | `prefix`, `suffix`, `trigger`, `chevron`, `flag`, `search`, `loading`, `empty`, `group-header`, `item`, `item-check`, `valid-icon`, `error-icon`, `hint`, `error` |
+| **Data props**    | `countries`, `flagUrl`, `searcher`, `detector`, `errorMessages`, `kbdOpen`, `kbdClose`                                                                            |
+| **Class props**   | `class`, `fieldClass`, `inputClass`, `contentClass`, `popoverClass`, `drawerClass`, `hintClass`, `errorClass`                                                     |
+| **CSS variables** | `--ak-ui-{background,foreground,popover,muted,accent,destructive,border,input,ring,radius,...}`                                                                   |
+
+### Components exported
+
+- **`ATellInput`** · `ACountrySelect` · `ACountryFlag`
+- **`AInput`** — base text input with `prefix`/`suffix` slots
+- **`APopover`** / `*Trigger` / `*Content` — reka-ui Popover (modal + optional overlay)
+- **`ADrawer`** / `*Trigger` / `*Content` / `*Overlay` — vaul-vue Drawer
+- **`AResponsivePopover`** — popover on desktop, drawer on mobile
+
+### Composables + helpers
+
+`usePhoneValidation`, `useCountryDetection`, `detectCountry`, `defaultFlagUrl`, `cn`, `SIZES`, `controlHeight`, `controlPaddingX`, `controlTextSize`, `controlHeightPx`.
+
+[Full guide →](https://alikhalilll.github.io/ali-nuxt-toolkit/ui)
 
 ---
 
