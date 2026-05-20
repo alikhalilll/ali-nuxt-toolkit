@@ -12,6 +12,18 @@ Wraps reka-ui's `PopoverRoot` / `PopoverTrigger` / `PopoverContent` primitives. 
 ::DemoPopover
 ::
 
+## Install
+
+```bash
+pnpm add @alikhalilll/ui
+```
+
+If this is your first `@alikhalilll/ui` component, complete the [one-time setup](/ui#setup) (CSS import + Tailwind `@theme inline` mapping + `.dark` class). Then import:
+
+```ts
+import { APopover, APopoverTrigger, APopoverContent } from '@alikhalilll/ui';
+```
+
 ## Basic usage
 
 ```vue

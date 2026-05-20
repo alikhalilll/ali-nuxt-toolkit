@@ -12,6 +12,18 @@ A thin wrapper around the native `<input>` element with shadcn-vue styling, `v-m
 ::DemoInput
 ::
 
+## Install
+
+```bash
+pnpm add @alikhalilll/ui
+```
+
+If this is your first `@alikhalilll/ui` component, complete the [one-time setup](/ui#setup) (CSS import + Tailwind `@theme inline` mapping + `.dark` class). Then import:
+
+```ts
+import { AInput } from '@alikhalilll/ui';
+```
+
 ## Basic usage
 
 ```vue

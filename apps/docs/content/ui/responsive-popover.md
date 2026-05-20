@@ -14,6 +14,22 @@ A surface that renders as an [`APopover`](/ui/popover) at ≥ 768 px and as an [
 
 This is the surface [`ACountrySelect`](/ui/tell-input) uses internally to deliver the popover-on-desktop / drawer-on-mobile UX in the country picker.
 
+## Install
+
+```bash
+pnpm add @alikhalilll/ui
+```
+
+If this is your first `@alikhalilll/ui` component, complete the [one-time setup](/ui#setup) (CSS import + Tailwind `@theme inline` mapping + `.dark` class). Then import:
+
+```ts
+import {
+  AResponsivePopover,
+  AResponsivePopoverTrigger,
+  AResponsivePopoverContent,
+} from '@alikhalilll/ui';
+```
+
 ## Basic usage
 
 ```vue
