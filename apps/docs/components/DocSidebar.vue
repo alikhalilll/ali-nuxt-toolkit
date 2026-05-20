@@ -7,12 +7,21 @@ interface SubPage {
   title: string;
 }
 
+interface SubGroup {
+  label: string;
+  items: SubPage[];
+}
+
 interface ModuleEntry {
   path: string;
   title: string;
   accent: 'pkg-api' | 'pkg-crypto' | 'pkg-auto' | 'pkg-ui';
-  /** Optional child pages — each acts as its own parent with a nested in-page TOC. */
-  subpages?: SubPage[];
+  /**
+   * Optional grouped child pages. Each group renders an uppercase header above
+   * its items, and each item still acts as its own parent (with a nested in-page
+   * TOC when active).
+   */
+  groups?: SubGroup[];
 }
 
 const modules: ModuleEntry[] = [
@@ -23,12 +32,17 @@ const modules: ModuleEntry[] = [
     path: '/ui',
     title: 'ui',
     accent: 'pkg-ui',
-    subpages: [
-      { path: '/ui/tell-input', title: 'ATellInput' },
-      { path: '/ui/input', title: 'AInput' },
-      { path: '/ui/popover', title: 'APopover' },
-      { path: '/ui/drawer', title: 'ADrawer' },
-      { path: '/ui/responsive-popover', title: 'AResponsivePopover' },
+    groups: [
+      {
+        label: 'Components',
+        items: [
+          { path: '/ui/tell-input', title: 'ATellInput' },
+          { path: '/ui/input', title: 'AInput' },
+          { path: '/ui/popover', title: 'APopover' },
+          { path: '/ui/drawer', title: 'ADrawer' },
+          { path: '/ui/responsive-popover', title: 'AResponsivePopover' },
+        ],
+      },
     ],
   },
 ];
@@ -100,88 +114,95 @@ function scrollTo(id: string, e: MouseEvent) {
         </NuxtLink>
 
         <!--
-          Modules with subpages: render each subpage as a parent row. When that subpage
-          is active, expand its flat in-page TOC immediately below it so every component
-          page behaves as its own parent in the tree.
+          Modules with grouped subpages: render an uppercase group header above each
+          set of items. Each item still acts as its own parent — when active, its
+          in-page TOC nests under it as a third level (ui → Components → ATellInput → §).
         -->
-        <ul
-          v-if="mod.subpages && isModuleActive(mod)"
-          class="m-0 mb-3 mt-1 ml-5 list-none border-l border-border p-0"
-        >
+        <div v-if="mod.groups && isModuleActive(mod)" class="ml-5 mb-3">
           <!--
-            Module landing page (/ui) — when no subpage is active, expose the module's own
-            in-page TOC right under the module link so the overview behaves like a parent too.
+            Module landing page (/ui itself) — surface its own in-page TOC under the
+            module link so the overview also reads as a parent.
           -->
-          <li v-if="normalizedRoutePath === mod.path && flatSections.length" class="-ml-px">
-            <ul class="m-0 mb-2 mt-1 ml-3 list-none border-l border-border/60 p-0">
-              <li
-                v-for="section in flatSections"
-                :key="section.id"
-                :class="['-ml-px', section.depth === 3 ? 'pl-3' : '']"
-              >
-                <a
-                  :href="`#${section.id}`"
-                  :class="[
-                    'block border-l-2 px-3 py-0.5 text-[12px] leading-snug transition-colors hover:text-text hover:no-underline',
-                    activeId === section.id
-                      ? 'border-brand/70 text-brand'
-                      : 'border-transparent text-text-muted',
-                  ]"
-                  @click="scrollTo(section.id, $event)"
-                >
-                  {{ section.text }}
-                </a>
-              </li>
-            </ul>
-          </li>
-
-          <template v-for="sub in mod.subpages" :key="sub.path">
-            <li class="-ml-px">
-              <NuxtLink
-                :to="sub.path"
+          <ul
+            v-if="normalizedRoutePath === mod.path && flatSections.length"
+            class="m-0 mt-1 mb-3 list-none border-l border-border/60 p-0"
+          >
+            <li
+              v-for="section in flatSections"
+              :key="section.id"
+              :class="['-ml-px', section.depth === 3 ? 'pl-3' : '']"
+            >
+              <a
+                :href="`#${section.id}`"
                 :class="[
-                  'block border-l-2 px-3 py-1 text-[13px] leading-snug transition-colors hover:text-text hover:no-underline',
-                  isSubpageActive(sub)
-                    ? 'border-brand bg-brand/10 font-medium text-brand'
-                    : 'border-transparent text-text-dim',
+                  'block border-l-2 px-3 py-0.5 text-[12px] leading-snug transition-colors hover:text-text hover:no-underline',
+                  activeId === section.id
+                    ? 'border-brand/70 text-brand'
+                    : 'border-transparent text-text-muted',
                 ]"
+                @click="scrollTo(section.id, $event)"
               >
-                {{ sub.title }}
-              </NuxtLink>
+                {{ section.text }}
+              </a>
             </li>
+          </ul>
 
-            <!-- Nested in-page TOC for the active subpage. Each section is a leaf under its component. -->
-            <li v-if="isSubpageActive(sub) && flatSections.length" class="-ml-px">
-              <ul class="m-0 mb-2 mt-1 ml-3 list-none border-l border-border/60 p-0">
-                <li
-                  v-for="section in flatSections"
-                  :key="section.id"
-                  :class="['-ml-px', section.depth === 3 ? 'pl-3' : '']"
-                >
-                  <a
-                    :href="`#${section.id}`"
+          <div v-for="group in mod.groups" :key="group.label" class="mt-3 first:mt-1">
+            <h5
+              class="mb-1 px-2 text-[10px] font-semibold uppercase tracking-wider text-text-muted"
+            >
+              {{ group.label }}
+            </h5>
+            <ul class="m-0 list-none border-l border-border p-0">
+              <template v-for="sub in group.items" :key="sub.path">
+                <li class="-ml-px">
+                  <NuxtLink
+                    :to="sub.path"
                     :class="[
-                      'block border-l-2 px-3 py-0.5 text-[12px] leading-snug transition-colors hover:text-text hover:no-underline',
-                      activeId === section.id
-                        ? 'border-brand/70 text-brand'
-                        : 'border-transparent text-text-muted',
+                      'block border-l-2 px-3 py-1 text-[13px] leading-snug transition-colors hover:text-text hover:no-underline',
+                      isSubpageActive(sub)
+                        ? 'border-brand bg-brand/10 font-medium text-brand'
+                        : 'border-transparent text-text-dim',
                     ]"
-                    @click="scrollTo(section.id, $event)"
                   >
-                    {{ section.text }}
-                  </a>
+                    {{ sub.title }}
+                  </NuxtLink>
                 </li>
-              </ul>
-            </li>
-          </template>
-        </ul>
+
+                <!-- Nested in-page TOC for the active component page. -->
+                <li v-if="isSubpageActive(sub) && flatSections.length" class="-ml-px">
+                  <ul class="m-0 mt-1 mb-2 ml-3 list-none border-l border-border/60 p-0">
+                    <li
+                      v-for="section in flatSections"
+                      :key="section.id"
+                      :class="['-ml-px', section.depth === 3 ? 'pl-3' : '']"
+                    >
+                      <a
+                        :href="`#${section.id}`"
+                        :class="[
+                          'block border-l-2 px-3 py-0.5 text-[12px] leading-snug transition-colors hover:text-text hover:no-underline',
+                          activeId === section.id
+                            ? 'border-brand/70 text-brand'
+                            : 'border-transparent text-text-muted',
+                        ]"
+                        @click="scrollTo(section.id, $event)"
+                      >
+                        {{ section.text }}
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+              </template>
+            </ul>
+          </div>
+        </div>
 
         <!--
-          Modules without subpages keep the original behavior: in-page TOC nested
+          Modules without groups keep the original behaviour: in-page TOC nested
           directly under the module name with the existing scrollspy treatment.
         -->
         <ul
-          v-else-if="!mod.subpages && normalizedRoutePath === mod.path && flatSections.length"
+          v-else-if="!mod.groups && normalizedRoutePath === mod.path && flatSections.length"
           class="m-0 mb-3 mt-1 ml-5 list-none border-l border-border p-0"
         >
           <li
