@@ -37,13 +37,14 @@ interface PackageCard {
   docs: string;
   npm: string;
   description: string;
-  accent: 'api' | 'crypto' | 'auto';
+  accent: 'api' | 'crypto' | 'auto' | 'ui';
 }
 
 const installCommands = [
   'pnpm add @alikhalilll/nuxt-api-provider',
   'pnpm add @alikhalilll/nuxt-crypto',
   'pnpm add @alikhalilll/nuxt-auto-middleware',
+  'pnpm add @alikhalilll/ui',
 ];
 const installIndex = ref(0);
 const installCopied = ref(false);
@@ -95,6 +96,14 @@ const packages: PackageCard[] = [
     description:
       'Layout → middleware mapping with glob patterns, named groups, per-page overrides, and a typed middleware-name registry.',
     accent: 'auto',
+  },
+  {
+    name: '@alikhalilll/ui',
+    docs: '/ui',
+    npm: 'https://www.npmjs.com/package/@alikhalilll/ui',
+    description:
+      'Headless, shadcn-vue style components. First component: ATellInput — automatic country detection, libphonenumber-js validation, popover on desktop / vaul-vue drawer on mobile.',
+    accent: 'ui',
   },
 ];
 </script>

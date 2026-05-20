@@ -70,9 +70,10 @@ const npmUrl = computed(() =>
 
 const accentClass = computed(() => {
   const p = route.path.replace(/\/+$/, '');
-  if (p === '/api-provider') return 'pkg-api';
-  if (p === '/crypto') return 'pkg-crypto';
-  if (p === '/auto-middleware') return 'pkg-auto';
+  if (p === '/api-provider' || p.startsWith('/api-provider/')) return 'pkg-api';
+  if (p === '/crypto' || p.startsWith('/crypto/')) return 'pkg-crypto';
+  if (p === '/auto-middleware' || p.startsWith('/auto-middleware/')) return 'pkg-auto';
+  if (p === '/ui' || p.startsWith('/ui/')) return 'pkg-ui';
   return '';
 });
 

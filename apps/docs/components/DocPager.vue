@@ -7,11 +7,25 @@ interface PagerEntry {
 
 const route = useRoute();
 
+/**
+ * Single linear order across the entire site. Subpages get their own entries so the
+ * Previous / Next chips walk through every doc — including the /ui/* component pages.
+ */
 const order: PagerEntry[] = [
   { path: '/', title: 'Introduction', description: 'Overview of the toolkit' },
   { path: '/api-provider', title: 'api-provider', description: 'Typed fetch client' },
   { path: '/crypto', title: 'crypto', description: 'AES-GCM + PBKDF2' },
   { path: '/auto-middleware', title: 'auto-middleware', description: 'Layout-based middleware' },
+  { path: '/ui', title: 'ui', description: 'Headless component library' },
+  { path: '/ui/tell-input', title: 'ATellInput', description: 'Composite phone input' },
+  { path: '/ui/input', title: 'AInput', description: 'Base text input' },
+  { path: '/ui/popover', title: 'APopover', description: 'reka-ui Popover wrapper' },
+  { path: '/ui/drawer', title: 'ADrawer', description: 'vaul-vue Drawer wrapper' },
+  {
+    path: '/ui/responsive-popover',
+    title: 'AResponsivePopover',
+    description: 'Popover on desktop, Drawer on mobile',
+  },
 ];
 
 const normalizedPath = computed(() => {

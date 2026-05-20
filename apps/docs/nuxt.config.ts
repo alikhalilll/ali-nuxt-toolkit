@@ -29,7 +29,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2026-04-01',
   srcDir: '.',
   modules: ['@nuxt/content', '@alikhalilll/nuxt-api-provider', '@alikhalilll/nuxt-crypto'],
-  css: ['~/assets/docs.css'],
+  css: ['@alikhalilll/ui/styles.css', '~/assets/docs.css'],
   vite: {
     plugins: [tailwindcss()],
   },
@@ -63,8 +63,14 @@ export default defineNuxtConfig({
     build: {
       markdown: {
         highlight: {
+          /*
+           * Dual-theme Shiki output. Keys map to selectors Shiki emits as CSS vars:
+           *   - `default` is the base (light) theme
+           *   - `dark`    activates when an ancestor has `.dark`
+           * Switching the `.dark` class on <html> swaps every code block instantly.
+           */
           theme: {
-            default: 'github-dark',
+            default: 'github-light',
             dark: 'github-dark',
           },
           langs: ['ts', 'js', 'vue', 'bash', 'json', 'html', 'css'],
@@ -126,7 +132,23 @@ export default defineNuxtConfig({
         { name: 'twitter:image', content: socialImage },
         { name: 'twitter:image:alt', content: `${siteName} logo` },
       ],
-      script: analyticsScripts,
+      script: [
+        /*
+         * Pre-paint theme detection — runs before any CSS or Vue hydration. Reads the saved
+         * choice (or prefers-color-scheme) and writes the correct class on <html>, so the page
+         * paints in the right theme on first frame instead of flashing dark before swapping
+         * to light (or vice versa).
+         */
+        {
+          // Tri-state pre-paint: read stored 'light'|'dark'|'system' and resolve to
+          // light/dark before first paint to avoid flash-of-wrong-theme. Defaults to
+          // 'system' which follows prefers-color-scheme.
+          innerHTML: `(function(){try{var k='ant-docs-theme';var s=localStorage.getItem(k);var p=(s==='light'||s==='dark'||s==='system')?s:'system';var d=p==='dark'||(p==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d);document.documentElement.classList.toggle('light',!d);}catch(e){document.documentElement.classList.add('dark');}})();`,
+          type: 'text/javascript',
+          tagPosition: 'head',
+        },
+        ...analyticsScripts,
+      ],
     },
   },
 });

@@ -1,0 +1,54 @@
+<script setup lang="ts">
+import { ref } from 'vue';
+import { ATellInput, SIZES, controlHeightPx, type Size } from '@alikhalilll/ui';
+
+interface Row {
+  size: Size;
+  phone: string;
+  country: string;
+}
+
+const rows = ref<Row[]>(SIZES.map((s) => ({ size: s, phone: '', country: '' })));
+
+const source = `<script setup lang="ts">
+import { ATellInput, SIZES, controlHeightPx, type Size } from '@alikhalilll/ui';
+\u003c/script>
+
+<template>
+  <div v-for="size in SIZES" :key="size" class="flex items-start gap-4">
+    <div class="w-24 pt-2 font-mono text-xs">
+      {{ size }} · {{ controlHeightPx[size] }}px
+    </div>
+    <ATellInput :size="size" default-country="EG" />
+  </div>
+</template>`;
+</script>
+
+<template>
+  <div class="my-4 rounded-lg border border-border bg-surface p-5">
+    <h4 class="mb-4 text-[11px] font-bold uppercase tracking-widest text-text-dim">
+      Live · All five sizes
+    </h4>
+
+    <DemoTabs :code="source">
+      <div class="flex flex-col gap-4 p-5">
+        <div v-for="row in rows" :key="row.size" class="flex items-start gap-4">
+          <div
+            class="w-24 shrink-0 pt-2 font-mono text-xs text-text-dim"
+            :title="`${controlHeightPx[row.size]}px tall`"
+          >
+            {{ row.size }} · {{ controlHeightPx[row.size] }}px
+          </div>
+          <div class="max-w-sm flex-1">
+            <ATellInput
+              v-model:phone="row.phone"
+              v-model:country="row.country"
+              :size="row.size"
+              default-country="EG"
+            />
+          </div>
+        </div>
+      </div>
+    </DemoTabs>
+  </div>
+</template>

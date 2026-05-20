@@ -1,37 +1,124 @@
 @import 'tailwindcss';
 
-@theme {
-  --color-bg: #09090b;
-  --color-surface: #18181b;
-  --color-surface-2: #27272a;
-  --color-border: #27272a;
-  --color-border-soft: rgba(255, 255, 255, 0.06);
-  --color-text: #fafafa;
-  --color-text-dim: #a1a1aa;
-  --color-text-muted: #71717a;
-  --color-accent: #fafafa;
-  --color-accent-2: #60a5fa;
-  --color-primary: #fafafa;
-  --color-primary-fg: #09090b;
+/*
+ * Make Tailwind v4 scan the @alikhalilll/ui package for utility classes (bg-popover,
+ * text-muted-foreground, etc.). Without this the components used in demos render unstyled.
+ */
+@source '../../../packages/ui/src/**/*.{vue,ts}';
 
-  /* Brand — used for hero gradient, primary CTAs, active scrollspy */
+/*
+ * Expose @alikhalilll/ui design tokens as Tailwind utility classes.
+ * The lib ships `:root, .light { ... }` and `.dark { ... }` blocks; the docs site is
+ * always dark (html.class="dark"), so the .dark cascade always wins here.
+ */
+@theme inline {
+  --color-background: hsl(var(--ak-ui-background));
+  --color-foreground: hsl(var(--ak-ui-foreground));
+  --color-card: hsl(var(--ak-ui-card));
+  --color-card-foreground: hsl(var(--ak-ui-card-foreground));
+  --color-popover: hsl(var(--ak-ui-popover));
+  --color-popover-foreground: hsl(var(--ak-ui-popover-foreground));
+  --color-primary: hsl(var(--ak-ui-primary));
+  --color-primary-foreground: hsl(var(--ak-ui-primary-foreground));
+  --color-secondary: hsl(var(--ak-ui-secondary));
+  --color-secondary-foreground: hsl(var(--ak-ui-secondary-foreground));
+  --color-muted: hsl(var(--ak-ui-muted));
+  --color-muted-foreground: hsl(var(--ak-ui-muted-foreground));
+  --color-accent: hsl(var(--ak-ui-accent));
+  --color-accent-foreground: hsl(var(--ak-ui-accent-foreground));
+  --color-destructive: hsl(var(--ak-ui-destructive));
+  --color-destructive-foreground: hsl(var(--ak-ui-destructive-foreground));
+  --color-border: hsl(var(--ak-ui-border));
+  --color-input: hsl(var(--ak-ui-input));
+  --color-ring: hsl(var(--ak-ui-ring));
+}
+
+/*
+ * Theme tokens — raw CSS variables backed by `:root` (light defaults) and `html.dark` (overrides).
+ * Tailwind v4 picks them up via @theme inline below, so utility classes resolve at runtime and
+ * automatically swap when the `.dark` class flips on <html>.
+ */
+:root {
+  /* Surfaces */
+  --bg: #ffffff;
+  --surface: #f4f4f5;
+  --surface-2: #e4e4e7;
+  --border: #e4e4e7;
+  --border-soft: rgba(0, 0, 0, 0.06);
+
+  /* Text */
+  --text: #09090b;
+  --text-dim: #52525b;
+  --text-muted: #71717a;
+
+  /* Foreground accents (CTAs, scrollspy) */
+  --accent: #09090b;
+  --accent-2: #2563eb;
+  --primary: #09090b;
+  --primary-fg: #ffffff;
+
+  /* Code surfaces */
+  --code-bg: #f4f4f5;
+
+  /* Subtle grid line color on the page background */
+  --grid-line: rgba(0, 0, 0, 0.04);
+}
+
+html.dark {
+  --bg: #09090b;
+  --surface: #18181b;
+  --surface-2: #27272a;
+  --border: #27272a;
+  --border-soft: rgba(255, 255, 255, 0.06);
+
+  --text: #fafafa;
+  --text-dim: #a1a1aa;
+  --text-muted: #71717a;
+
+  --accent: #fafafa;
+  --accent-2: #60a5fa;
+  --primary: #fafafa;
+  --primary-fg: #09090b;
+
+  --code-bg: #0a0a0a;
+  --grid-line: rgba(255, 255, 255, 0.025);
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-border-soft: var(--border-soft);
+  --color-text: var(--text);
+  --color-text-dim: var(--text-dim);
+  --color-text-muted: var(--text-muted);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-primary: var(--primary);
+  --color-primary-fg: var(--primary-fg);
+  --color-code-bg: var(--code-bg);
+}
+
+@theme {
+  /*
+   * Brand + package accents stay constant across themes — they're colour identity, not
+   * theme-derived chrome. Same with callout statuses and fonts.
+   */
   --color-brand: #60a5fa;
   --color-brand-2: #22d3ee;
   --color-brand-3: #a78bfa;
 
-  /* Per-package accents */
-  --color-pkg-api: #60a5fa; /* blue   — nuxt-api-provider */
-  --color-pkg-crypto: #c084fc; /* purple — nuxt-crypto */
-  --color-pkg-auto: #fbbf24; /* amber  — nuxt-auto-middleware */
+  --color-pkg-api: #60a5fa;
+  --color-pkg-crypto: #c084fc;
+  --color-pkg-auto: #fbbf24;
+  --color-pkg-ui: #34d399;
 
-  /* Callout / status */
   --color-success: #4ade80;
   --color-info: #60a5fa;
   --color-warning: #fbbf24;
   --color-danger: #f87171;
   --color-tip: #22d3ee;
-
-  --color-code-bg: #0a0a0a;
 
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'Geist Mono', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -117,7 +204,7 @@ html::before {
   );
 }
 
-/* Subtle grid texture — stacks over the gradient, fades out mid-page. */
+/* Subtle grid texture — line colour swaps with the theme via --grid-line. */
 html::after {
   content: '';
   position: fixed;
@@ -125,8 +212,8 @@ html::after {
   pointer-events: none;
   z-index: 0;
   background-image:
-    linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
   background-size: 40px 40px;
   mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black, transparent 75%);
   -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black, transparent 75%);
@@ -183,6 +270,9 @@ a {
 }
 .pkg-auto {
   --pkg-color: var(--color-pkg-auto);
+}
+.pkg-ui {
+  --pkg-color: var(--color-pkg-ui);
 }
 .pkg-dot {
   display: inline-block;
@@ -348,7 +438,10 @@ a {
   border-color: color-mix(in oklab, var(--color-brand) 30%, var(--color-border));
 }
 .prose pre {
-  background: var(--color-code-bg);
+  /*
+   * Background + text colour come from Shiki's inline styles (per-token), so we don't set
+   * them here. We only style the wrapper chrome (border, padding, scroll).
+   */
   border: 1px solid var(--color-border);
   border-radius: 10px;
   padding: 1rem 1.15rem;
@@ -356,8 +449,8 @@ a {
   font-family: var(--font-mono);
   font-size: 0.8rem;
   line-height: 1.65;
-  color: var(--color-text);
   margin: 0.5rem 0 1.5rem;
+  background: var(--color-code-bg);
 }
 .prose pre code {
   background: transparent;
@@ -366,6 +459,11 @@ a {
   border: 0;
   font-weight: 400;
 }
+
+/*
+ * Nuxt Content + Shiki injects its own `html .dark .shiki span { color: var(--shiki-dark) }`
+ * rule when the `theme` object has multiple keys — we don't need to duplicate it here.
+ */
 
 /* Copy button on code blocks */
 .prose pre {

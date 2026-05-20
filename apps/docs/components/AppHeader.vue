@@ -1,12 +1,29 @@
 <script setup lang="ts">
+import { APopover, APopoverContent, APopoverTrigger } from '@alikhalilll/ui';
+
 const route = useRoute();
 const mobileNavOpen = useMobileNavOpen();
+const { pref, set: setMode } = useColorMode();
 
 const navLinks = [
   { to: '/api-provider', label: 'api-provider' },
   { to: '/crypto', label: 'crypto' },
   { to: '/auto-middleware', label: 'auto-middleware' },
+  { to: '/ui', label: 'ui' },
 ];
+
+const themeOptions = [
+  { value: 'light' as const, label: 'Light', desc: 'Locked light theme' },
+  { value: 'dark' as const, label: 'Dark', desc: 'Locked dark theme' },
+  { value: 'system' as const, label: 'System', desc: 'Follow OS preference' },
+];
+
+const themePopoverOpen = ref(false);
+
+function selectTheme(value: 'light' | 'dark' | 'system') {
+  setMode(value);
+  themePopoverOpen.value = false;
+}
 
 watch(
   () => route.fullPath,
@@ -89,6 +106,168 @@ watch(
 
       <!-- Right side -->
       <div class="ml-auto flex items-center gap-1">
+        <!-- Theme switcher — popover with Light / Dark / System -->
+        <APopover v-model:open="themePopoverOpen" :modal="false">
+          <APopoverTrigger as-child>
+            <button
+              type="button"
+              aria-label="Theme settings"
+              title="Theme settings"
+              class="inline-flex h-9 w-9 items-center justify-center rounded-md text-text-dim transition-colors hover:bg-surface hover:text-text"
+            >
+              <!-- Sun -->
+              <svg
+                v-if="pref === 'light'"
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="12" r="4" />
+                <path d="M12 2v2" />
+                <path d="M12 20v2" />
+                <path d="m4.93 4.93 1.41 1.41" />
+                <path d="m17.66 17.66 1.41 1.41" />
+                <path d="M2 12h2" />
+                <path d="M20 12h2" />
+                <path d="m6.34 17.66-1.41 1.41" />
+                <path d="m19.07 4.93-1.41 1.41" />
+              </svg>
+              <!-- Moon -->
+              <svg
+                v-else-if="pref === 'dark'"
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              </svg>
+              <!-- Monitor (system) -->
+              <svg
+                v-else
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <rect width="20" height="14" x="2" y="3" rx="2" />
+                <line x1="8" x2="16" y1="21" y2="21" />
+                <line x1="12" x2="12" y1="17" y2="21" />
+              </svg>
+            </button>
+          </APopoverTrigger>
+
+          <APopoverContent
+            align="end"
+            :side-offset="6"
+            class="w-44 rounded-md border border-border bg-surface p-1 shadow-lg"
+          >
+            <button
+              v-for="opt in themeOptions"
+              :key="opt.value"
+              type="button"
+              :data-active="opt.value === pref || undefined"
+              class="flex w-full items-center gap-2 rounded px-2.5 py-1.5 text-left text-sm text-text-dim transition-colors hover:bg-surface-2 hover:text-text data-[active]:bg-surface-2 data-[active]:text-text"
+              @click="selectTheme(opt.value)"
+            >
+              <!-- Per-option icon -->
+              <svg
+                v-if="opt.value === 'light'"
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="shrink-0"
+              >
+                <circle cx="12" cy="12" r="4" />
+                <path d="M12 2v2" />
+                <path d="M12 20v2" />
+                <path d="m4.93 4.93 1.41 1.41" />
+                <path d="m17.66 17.66 1.41 1.41" />
+                <path d="M2 12h2" />
+                <path d="M20 12h2" />
+                <path d="m6.34 17.66-1.41 1.41" />
+                <path d="m19.07 4.93-1.41 1.41" />
+              </svg>
+              <svg
+                v-else-if="opt.value === 'dark'"
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="shrink-0"
+              >
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              </svg>
+              <svg
+                v-else
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="shrink-0"
+              >
+                <rect width="20" height="14" x="2" y="3" rx="2" />
+                <line x1="8" x2="16" y1="21" y2="21" />
+                <line x1="12" x2="12" y1="17" y2="21" />
+              </svg>
+
+              <span class="flex-1">{{ opt.label }}</span>
+
+              <!-- Active check -->
+              <svg
+                v-if="opt.value === pref"
+                xmlns="http://www.w3.org/2000/svg"
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="text-brand"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </button>
+          </APopoverContent>
+        </APopover>
+
         <a
           href="https://github.com/alikhalilll/ali-nuxt-toolkit"
           target="_blank"
