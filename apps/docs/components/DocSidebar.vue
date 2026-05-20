@@ -45,17 +45,20 @@ const modules: ModuleEntry[] = [
           { path: '/ui#install', title: 'Install', kind: 'anchor' },
           { path: '/ui#setup', title: 'Setup', kind: 'anchor' },
           { path: '/ui#theming', title: 'Theming', kind: 'anchor' },
-          { path: '/ui#important-notes', title: 'Important notes', kind: 'anchor' },
+          { path: '/ui#important-notes', title: 'Notes', kind: 'anchor' },
         ],
       },
       {
+        // The `A` prefix is dropped in the sidebar — the "Components" group context
+        // already implies the @alikhalilll/ui component family. Page H1s + imports
+        // still carry the prefix (ATellInput, AInput, …). Keeps long labels readable.
         label: 'Components',
         items: [
-          { path: '/ui/tell-input', title: 'ATellInput', kind: 'page' },
-          { path: '/ui/input', title: 'AInput', kind: 'page' },
-          { path: '/ui/popover', title: 'APopover', kind: 'page' },
-          { path: '/ui/drawer', title: 'ADrawer', kind: 'page' },
-          { path: '/ui/responsive-popover', title: 'AResponsivePopover', kind: 'page' },
+          { path: '/ui/tell-input', title: 'TellInput', kind: 'page' },
+          { path: '/ui/input', title: 'Input', kind: 'page' },
+          { path: '/ui/popover', title: 'Popover', kind: 'page' },
+          { path: '/ui/drawer', title: 'Drawer', kind: 'page' },
+          { path: '/ui/responsive-popover', title: 'ResponsivePopover', kind: 'page' },
         ],
       },
     ],
@@ -139,7 +142,7 @@ function scrollTo(id: string, e: MouseEvent) {
           set of items. Each item still acts as its own parent — when active, its
           in-page TOC nests under it as a third level (ui → Components → ATellInput → §).
         -->
-        <div v-if="mod.groups && isModuleActive(mod)" class="ml-5 mb-3">
+        <div v-if="mod.groups && isModuleActive(mod)" class="ml-4 mb-3">
           <!--
             Groups already surface the relevant in-page sections (as anchor items) and
             the component pages, so we don't render a separate /ui-overview TOC here —
@@ -147,7 +150,7 @@ function scrollTo(id: string, e: MouseEvent) {
           -->
           <div v-for="group in mod.groups" :key="group.label" class="mt-3 first:mt-1">
             <h5
-              class="mb-1 px-2 text-[10px] font-semibold uppercase tracking-wider text-text-muted"
+              class="mb-0.5 px-2 text-[10px] font-semibold uppercase tracking-wider text-text-muted"
             >
               {{ group.label }}
             </h5>
@@ -156,8 +159,9 @@ function scrollTo(id: string, e: MouseEvent) {
                 <li class="-ml-px">
                   <NuxtLink
                     :to="sub.path"
+                    :title="sub.title"
                     :class="[
-                      'block border-l-2 px-3 py-1 text-[13px] leading-snug transition-colors hover:text-text hover:no-underline',
+                      'block truncate border-l-2 px-2.5 py-[3px] text-[12.5px] leading-snug transition-colors hover:text-text hover:no-underline',
                       isSubpageActive(sub)
                         ? 'border-brand bg-brand/10 font-medium text-brand'
                         : 'border-transparent text-text-dim',
