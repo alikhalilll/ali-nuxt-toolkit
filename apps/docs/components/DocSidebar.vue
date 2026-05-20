@@ -5,6 +5,12 @@ const toc = useDocToc();
 interface SubPage {
   path: string;
   title: string;
+  /**
+   * `'page'` — full route (e.g. `/ui/tell-input`). Expands its in-page TOC under it
+   * when active.
+   * `'anchor'` — same-page section link (e.g. `/ui#install`). No nested TOC.
+   */
+  kind?: 'page' | 'anchor';
 }
 
 interface SubGroup {
@@ -34,13 +40,22 @@ const modules: ModuleEntry[] = [
     accent: 'pkg-ui',
     groups: [
       {
+        label: 'Getting started',
+        items: [
+          { path: '/ui#install', title: 'Install', kind: 'anchor' },
+          { path: '/ui#setup', title: 'Setup', kind: 'anchor' },
+          { path: '/ui#theming', title: 'Theming', kind: 'anchor' },
+          { path: '/ui#important-notes', title: 'Important notes', kind: 'anchor' },
+        ],
+      },
+      {
         label: 'Components',
         items: [
-          { path: '/ui/tell-input', title: 'ATellInput' },
-          { path: '/ui/input', title: 'AInput' },
-          { path: '/ui/popover', title: 'APopover' },
-          { path: '/ui/drawer', title: 'ADrawer' },
-          { path: '/ui/responsive-popover', title: 'AResponsivePopover' },
+          { path: '/ui/tell-input', title: 'ATellInput', kind: 'page' },
+          { path: '/ui/input', title: 'AInput', kind: 'page' },
+          { path: '/ui/popover', title: 'APopover', kind: 'page' },
+          { path: '/ui/drawer', title: 'ADrawer', kind: 'page' },
+          { path: '/ui/responsive-popover', title: 'AResponsivePopover', kind: 'page' },
         ],
       },
     ],
@@ -74,6 +89,12 @@ function isModuleActive(mod: ModuleEntry) {
 }
 
 function isSubpageActive(sub: SubPage) {
+  if (sub.kind === 'anchor') {
+    // Anchor items are active when we're on the owning page AND scrollspy is on that section.
+    const [base, hash] = sub.path.split('#');
+    if (normalizedRoutePath.value !== base) return false;
+    return activeId.value === hash;
+  }
   return normalizedRoutePath.value === sub.path;
 }
 
@@ -120,33 +141,10 @@ function scrollTo(id: string, e: MouseEvent) {
         -->
         <div v-if="mod.groups && isModuleActive(mod)" class="ml-5 mb-3">
           <!--
-            Module landing page (/ui itself) — surface its own in-page TOC under the
-            module link so the overview also reads as a parent.
+            Groups already surface the relevant in-page sections (as anchor items) and
+            the component pages, so we don't render a separate /ui-overview TOC here —
+            the right-column DocToc still shows full headings for the rendered page.
           -->
-          <ul
-            v-if="normalizedRoutePath === mod.path && flatSections.length"
-            class="m-0 mt-1 mb-3 list-none border-l border-border/60 p-0"
-          >
-            <li
-              v-for="section in flatSections"
-              :key="section.id"
-              :class="['-ml-px', section.depth === 3 ? 'pl-3' : '']"
-            >
-              <a
-                :href="`#${section.id}`"
-                :class="[
-                  'block border-l-2 px-3 py-0.5 text-[12px] leading-snug transition-colors hover:text-text hover:no-underline',
-                  activeId === section.id
-                    ? 'border-brand/70 text-brand'
-                    : 'border-transparent text-text-muted',
-                ]"
-                @click="scrollTo(section.id, $event)"
-              >
-                {{ section.text }}
-              </a>
-            </li>
-          </ul>
-
           <div v-for="group in mod.groups" :key="group.label" class="mt-3 first:mt-1">
             <h5
               class="mb-1 px-2 text-[10px] font-semibold uppercase tracking-wider text-text-muted"
@@ -169,8 +167,14 @@ function scrollTo(id: string, e: MouseEvent) {
                   </NuxtLink>
                 </li>
 
-                <!-- Nested in-page TOC for the active component page. -->
-                <li v-if="isSubpageActive(sub) && flatSections.length" class="-ml-px">
+                <!--
+                  Nested in-page TOC — only for the active component page (kind: 'page').
+                  Anchor items don't nest; they ARE in-page section links themselves.
+                -->
+                <li
+                  v-if="sub.kind !== 'anchor' && isSubpageActive(sub) && flatSections.length"
+                  class="-ml-px"
+                >
                   <ul class="m-0 mt-1 mb-2 ml-3 list-none border-l border-border/60 p-0">
                     <li
                       v-for="section in flatSections"

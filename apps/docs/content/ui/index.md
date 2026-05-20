@@ -221,7 +221,7 @@ Everything exported from `@alikhalilll/ui`:
 - `DetectionStrategy` · `DetectCountryOptions` · `UseCountryDetectionReturn` · `UsePhoneValidationReturn`
 - `FlagUrlBuilder`
 
-## SSR notes
+## Important notes
 
 - **Country detection** runs in `onMounted`, never on the server — the input always renders immediately with the `defaultCountry`, and the detected ISO2 patches in on the client.
 - The **responsive popover** uses `useMediaQuery('(min-width: 768px)')`, which is `false` during SSR. The first server-rendered paint is the drawer variant; the client may swap to the popover variant on hydration. The vaul-vue drawer is collapsed when closed, so this is invisible.
