@@ -1,0 +1,74 @@
+/*
+ * @alikhalilll/ui — design tokens
+ *
+ * Every variable is prefixed `--ak-ui-` to avoid collisions with consumer CSS or other
+ * libraries. The components themselves use Tailwind utility classes (`bg-popover`,
+ * `text-destructive`, etc.) which the consumer wires to these variables via an
+ * `@theme inline` block — see README.
+ *
+ * Override any variable in your own CSS to customize the theme — globally on `:root`,
+ * or scoped to a wrapper class for per-tenant theming.
+ */
+
+:root,
+.light {
+  --ak-ui-background: 0 0% 100%;
+  --ak-ui-foreground: 240 10% 3.9%;
+
+  --ak-ui-card: 0 0% 100%;
+  --ak-ui-card-foreground: 240 10% 3.9%;
+
+  --ak-ui-popover: 0 0% 100%;
+  --ak-ui-popover-foreground: 240 10% 3.9%;
+
+  --ak-ui-primary: 240 5.9% 10%;
+  --ak-ui-primary-foreground: 0 0% 98%;
+
+  --ak-ui-secondary: 240 4.8% 95.9%;
+  --ak-ui-secondary-foreground: 240 5.9% 10%;
+
+  --ak-ui-muted: 240 4.8% 95.9%;
+  --ak-ui-muted-foreground: 240 3.8% 46.1%;
+
+  --ak-ui-accent: 240 4.8% 95.9%;
+  --ak-ui-accent-foreground: 240 5.9% 10%;
+
+  --ak-ui-destructive: 0 84.2% 60.2%;
+  --ak-ui-destructive-foreground: 0 0% 98%;
+
+  --ak-ui-border: 240 5.9% 90%;
+  --ak-ui-input: 240 5.9% 90%;
+  --ak-ui-ring: 240 5.9% 10%;
+
+  --ak-ui-radius: 0.5rem;
+}
+
+.dark {
+  --ak-ui-background: 240 10% 3.9%;
+  --ak-ui-foreground: 0 0% 98%;
+
+  --ak-ui-card: 240 10% 3.9%;
+  --ak-ui-card-foreground: 0 0% 98%;
+
+  --ak-ui-popover: 240 10% 3.9%;
+  --ak-ui-popover-foreground: 0 0% 98%;
+
+  --ak-ui-primary: 0 0% 98%;
+  --ak-ui-primary-foreground: 240 5.9% 10%;
+
+  --ak-ui-secondary: 240 3.7% 15.9%;
+  --ak-ui-secondary-foreground: 0 0% 98%;
+
+  --ak-ui-muted: 240 3.7% 15.9%;
+  --ak-ui-muted-foreground: 240 5% 64.9%;
+
+  --ak-ui-accent: 240 3.7% 15.9%;
+  --ak-ui-accent-foreground: 0 0% 98%;
+
+  --ak-ui-destructive: 0 62.8% 30.6%;
+  --ak-ui-destructive-foreground: 0 0% 98%;
+
+  --ak-ui-border: 240 3.7% 15.9%;
+  --ak-ui-input: 240 3.7% 15.9%;
+  --ak-ui-ring: 240 4.9% 83.9%;
+}

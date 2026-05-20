@@ -1,0 +1,82 @@
+{
+  "name": "@alikhalilll/ui",
+  "version": "0.1.0",
+  "description": "Headless, shadcn-vue style component library. Scalable, fully typed, with sensible defaults and a tel input that detects the user's country automatically.",
+  "license": "MIT",
+  "author": "alikhalilll",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alikhalilll/ali-nuxt-toolkit.git",
+    "directory": "packages/ui"
+  },
+  "homepage": "https://alikhalilll.github.io/ali-nuxt-toolkit/ui",
+  "bugs": {
+    "url": "https://github.com/alikhalilll/ali-nuxt-toolkit/issues"
+  },
+  "type": "module",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "vue",
+    "vue3",
+    "nuxt",
+    "components",
+    "ui",
+    "headless",
+    "shadcn",
+    "tel-input",
+    "phone-input",
+    "reka-ui",
+    "vaul-vue"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs"
+    },
+    "./styles.css": "./dist/styles.css",
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "pnpm clean && vite build && node -e \"require('node:fs').copyFileSync('src/styles.css','dist/styles.css')\"",
+    "typecheck": "vue-tsc --noEmit -p tsconfig.json",
+    "prepack": "pnpm build"
+  },
+  "peerDependencies": {
+    "vue": "^3.5.0"
+  },
+  "dependencies": {
+    "@vueuse/core": "^14.0.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "libphonenumber-js": "^1.12.0",
+    "lucide-vue-next": "^0.460.0",
+    "reka-ui": "^2.9.0",
+    "tailwind-merge": "^2.6.0",
+    "vaul-vue": "^0.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.0",
+    "@vitejs/plugin-vue": "^5.2.0",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.9.2",
+    "vite": "^5.4.0",
+    "vite-plugin-dts": "^4.5.0",
+    "vue": "^3.5.0",
+    "vue-tsc": "^2.2.0"
+  }
+}
