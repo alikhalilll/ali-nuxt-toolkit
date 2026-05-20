@@ -11,7 +11,8 @@
   "dependencies": {
     "@alikhalilll/nuxt-api-provider": "workspace:*",
     "@alikhalilll/nuxt-crypto": "workspace:*",
-    "@alikhalilll/nuxt-auto-middleware": "workspace:*"
+    "@alikhalilll/nuxt-auto-middleware": "workspace:*",
+    "@alikhalilll/ui": "workspace:*"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.0.0",
