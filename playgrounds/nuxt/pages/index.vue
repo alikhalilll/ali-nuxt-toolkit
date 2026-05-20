@@ -7,62 +7,76 @@
     </p>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      <div class="rounded-xl border border-border bg-surface p-5">
-        <h2 class="mb-2 border-l-[3px] border-accent pl-2 text-lg font-semibold">api-provider</h2>
+      <div class="rounded-xl border border-brand-border bg-surface p-5">
+        <h2 class="mb-2 border-l-[3px] border-brand pl-2 text-lg font-semibold">api-provider</h2>
         <p class="mb-3 text-sm text-text-dim">
-          Typed <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2">fetch</code>
+          Typed <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-brand-2">fetch</code>
           client with interceptors, retry/backoff, timeouts, and a framework-agnostic core.
         </p>
         <NuxtLink to="/api-provider">
           <button
-            class="cursor-pointer rounded border border-accent bg-accent px-3.5 py-1.5 text-sm font-semibold text-bg hover:brightness-110"
+            class="cursor-pointer rounded border border-brand bg-brand px-3.5 py-1.5 text-sm font-semibold text-bg hover:brightness-110"
           >
             Open demo →
           </button>
         </NuxtLink>
       </div>
 
-      <div class="rounded-xl border border-border bg-surface p-5">
-        <h2 class="mb-2 border-l-[3px] border-accent pl-2 text-lg font-semibold">crypto</h2>
+      <div class="rounded-xl border border-brand-border bg-surface p-5">
+        <h2 class="mb-2 border-l-[3px] border-brand pl-2 text-lg font-semibold">crypto</h2>
         <p class="mb-3 text-sm text-text-dim">
           AES-256-GCM + PBKDF2 via Web Crypto, with key caching and pluggable algorithms.
         </p>
         <NuxtLink to="/crypto">
           <button
-            class="cursor-pointer rounded border border-accent bg-accent px-3.5 py-1.5 text-sm font-semibold text-bg hover:brightness-110"
+            class="cursor-pointer rounded border border-brand bg-brand px-3.5 py-1.5 text-sm font-semibold text-bg hover:brightness-110"
           >
             Open demo →
           </button>
         </NuxtLink>
       </div>
 
-      <div class="rounded-xl border border-border bg-surface p-5">
-        <h2 class="mb-2 border-l-[3px] border-accent pl-2 text-lg font-semibold">
-          auto-middleware
-        </h2>
+      <div class="rounded-xl border border-brand-border bg-surface p-5">
+        <h2 class="mb-2 border-l-[3px] border-brand pl-2 text-lg font-semibold">auto-middleware</h2>
         <p class="mb-3 text-sm text-text-dim">
           Declarative layout → middleware mapping with glob patterns, named groups, and per-page
           overrides.
         </p>
         <NuxtLink to="/auto-middleware">
           <button
-            class="cursor-pointer rounded border border-accent bg-accent px-3.5 py-1.5 text-sm font-semibold text-bg hover:brightness-110"
+            class="cursor-pointer rounded border border-brand bg-brand px-3.5 py-1.5 text-sm font-semibold text-bg hover:brightness-110"
           >
             Open demo →
           </button>
         </NuxtLink>
       </div>
 
-      <div class="rounded-xl border border-border bg-surface p-5">
-        <h2 class="mb-2 border-l-[3px] border-accent pl-2 text-lg font-semibold">Live layouts</h2>
+      <div class="rounded-xl border border-brand-border bg-surface p-5">
+        <h2 class="mb-2 border-l-[3px] border-brand pl-2 text-lg font-semibold">ui</h2>
+        <p class="mb-3 text-sm text-text-dim">
+          Headless, shadcn-vue style components. First component:
+          <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-brand-2">ATellInput</code>
+          with automatic country detection and a vaul-vue drawer on mobile.
+        </p>
+        <NuxtLink to="/ui">
+          <button
+            class="cursor-pointer rounded border border-brand bg-brand px-3.5 py-1.5 text-sm font-semibold text-bg hover:brightness-110"
+          >
+            Open demo →
+          </button>
+        </NuxtLink>
+      </div>
+
+      <div class="rounded-xl border border-brand-border bg-surface p-5">
+        <h2 class="mb-2 border-l-[3px] border-brand pl-2 text-lg font-semibold">Live layouts</h2>
         <p class="text-sm text-text-dim">
-          <NuxtLink to="/dashboard" class="text-accent">/dashboard</NuxtLink>
+          <NuxtLink to="/dashboard" class="text-brand">/dashboard</NuxtLink>
           runs the
-          <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2">@auth</code>
+          <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-brand-2">@auth</code>
           group;
-          <NuxtLink to="/admin" class="text-accent">/admin</NuxtLink>
+          <NuxtLink to="/admin" class="text-brand">/admin</NuxtLink>
           runs
-          <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2">@adminOnly</code>.
+          <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-brand-2">@adminOnly</code>.
           Open the devtools console to see each middleware fire.
         </p>
       </div>
@@ -76,31 +90,29 @@
     </p>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      <div class="rounded-xl border border-border bg-surface p-5">
-        <h2 class="mb-2 border-l-[3px] border-accent pl-2 text-lg font-semibold">
+      <div class="rounded-xl border border-brand-border bg-surface p-5">
+        <h2 class="mb-2 border-l-[3px] border-brand pl-2 text-lg font-semibold">
           api-provider · core
         </h2>
         <p class="mb-3 text-sm text-text-dim">
           Build a client with
-          <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2"
-            >createApiClient</code
-          >
+          <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-brand-2">createApiClient</code>
           in the browser, and see the same factory reused inside a Nitro handler.
         </p>
         <NuxtLink to="/api-provider-core">
           <button
-            class="cursor-pointer rounded border border-accent bg-accent px-3.5 py-1.5 text-sm font-semibold text-bg hover:brightness-110"
+            class="cursor-pointer rounded border border-brand bg-brand px-3.5 py-1.5 text-sm font-semibold text-bg hover:brightness-110"
           >
             Open demo →
           </button>
         </NuxtLink>
       </div>
 
-      <div class="rounded-xl border border-border bg-surface p-5">
-        <h2 class="mb-2 border-l-[3px] border-accent pl-2 text-lg font-semibold">crypto · core</h2>
+      <div class="rounded-xl border border-brand-border bg-surface p-5">
+        <h2 class="mb-2 border-l-[3px] border-brand pl-2 text-lg font-semibold">crypto · core</h2>
         <p class="mb-3 text-sm text-text-dim">
           Spin up
-          <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2"
+          <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-brand-2"
             >createCryptoService</code
           >
           with a passphrase you supply, then watch a second service with a different passphrase
@@ -108,17 +120,15 @@
         </p>
         <NuxtLink to="/crypto-core">
           <button
-            class="cursor-pointer rounded border border-accent bg-accent px-3.5 py-1.5 text-sm font-semibold text-bg hover:brightness-110"
+            class="cursor-pointer rounded border border-brand bg-brand px-3.5 py-1.5 text-sm font-semibold text-bg hover:brightness-110"
           >
             Open demo →
           </button>
         </NuxtLink>
       </div>
 
-      <div class="rounded-xl border border-border bg-surface p-5 opacity-70">
-        <h2 class="mb-2 border-l-[3px] border-accent pl-2 text-lg font-semibold">
-          auto-middleware
-        </h2>
+      <div class="rounded-xl border border-brand-border bg-surface p-5 opacity-70">
+        <h2 class="mb-2 border-l-[3px] border-brand pl-2 text-lg font-semibold">auto-middleware</h2>
         <p class="text-sm text-text-dim">
           No framework-agnostic core — the module compiles layout-rules into a Nuxt global route
           middleware, which is a Nuxt-specific extension point.

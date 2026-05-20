@@ -186,9 +186,9 @@ const fmtBytes = (n: number) => {
 };
 
 const btnBase =
-  'cursor-pointer rounded border border-border bg-surface-2 px-3.5 py-2 text-sm transition-colors hover:bg-border';
+  'cursor-pointer rounded border border-brand-border bg-surface-2 px-3.5 py-2 text-sm transition-colors hover:bg-border';
 const btnPrimary =
-  'cursor-pointer rounded border border-accent bg-accent px-3.5 py-2 text-sm font-semibold text-bg hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50';
+  'cursor-pointer rounded border border-brand bg-brand px-3.5 py-2 text-sm font-semibold text-bg hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50';
 const btnDanger =
   'cursor-pointer rounded border border-danger bg-surface-2 px-3.5 py-2 text-sm text-danger transition-colors hover:bg-border';
 </script>
@@ -198,15 +198,15 @@ const btnDanger =
     <h1 class="mb-2 text-3xl font-semibold tracking-tight">api-provider demo</h1>
     <p class="mb-6 text-text-dim">
       Every button below calls
-      <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2">$apiProvider</code>
+      <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-brand-2">$apiProvider</code>
       from
-      <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2">useNuxtApp()</code>,
-      typed as
-      <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2">ApiProviderClient</code>.
+      <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-brand-2">useNuxtApp()</code>, typed
+      as
+      <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-brand-2">ApiProviderClient</code>.
     </p>
 
-    <div class="mb-4 rounded-xl border border-border bg-surface p-5">
-      <h2 class="mb-3 border-l-[3px] border-accent pl-2 text-lg font-semibold">Actions</h2>
+    <div class="mb-4 rounded-xl border border-brand-border bg-surface p-5">
+      <h2 class="mb-3 border-l-[3px] border-brand pl-2 text-lg font-semibold">Actions</h2>
       <div class="flex flex-wrap gap-2">
         <button :class="btnPrimary" @click="loadPost">GET /posts/1</button>
         <button :class="btnBase" @click="loadUserPosts">GET with queries</button>
@@ -225,7 +225,9 @@ const btnDanger =
           <span
             class="ml-1 inline-block rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider"
             :class="
-              interceptorActive ? 'border-success text-success' : 'border-border text-text-dim'
+              interceptorActive
+                ? 'border-success text-success'
+                : 'border-brand-border text-text-dim'
             "
           >
             {{ interceptorActive ? 'on' : 'off' }}
@@ -234,20 +236,18 @@ const btnDanger =
       </div>
     </div>
 
-    <div class="mb-4 rounded-xl border border-border bg-surface p-5">
-      <h2 class="mb-3 border-l-[3px] border-accent pl-2 text-lg font-semibold">
+    <div class="mb-4 rounded-xl border border-brand-border bg-surface p-5">
+      <h2 class="mb-3 border-l-[3px] border-brand pl-2 text-lg font-semibold">
         Upload / download progress
       </h2>
       <p class="mb-3 text-sm text-text-dim">
-        <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2"
-          >onRequestProgress</code
-        >
+        <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-brand-2">onRequestProgress</code>
         receives
-        <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2"
+        <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-brand-2"
           >{ phase, loaded, total, ratio }</code
         >
         for both phases. The client auto-switches to
-        <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2">XMLHttpRequest</code>
+        <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-brand-2">XMLHttpRequest</code>
         only when this option is set.
       </p>
       <button :class="btnPrimary" :disabled="progressRunning" @click="runProgress">
@@ -256,16 +256,16 @@ const btnDanger =
 
       <div class="mt-4">
         <div class="mb-1 text-xs text-text-dim">upload · {{ fmtBytes(uploadLoaded) }}</div>
-        <div class="h-2.5 overflow-hidden rounded-full border border-border bg-code-bg">
+        <div class="h-2.5 overflow-hidden rounded-full border border-brand-border bg-code-bg">
           <div
-            class="h-full bg-accent transition-[width] duration-150 ease-linear"
+            class="h-full bg-brand transition-[width] duration-150 ease-linear"
             :style="{ width: (uploadRatio * 100).toFixed(1) + '%' }"
           />
         </div>
       </div>
       <div class="mt-3">
         <div class="mb-1 text-xs text-text-dim">download · {{ fmtBytes(downloadLoaded) }}</div>
-        <div class="h-2.5 overflow-hidden rounded-full border border-border bg-code-bg">
+        <div class="h-2.5 overflow-hidden rounded-full border border-brand-border bg-code-bg">
           <div
             class="h-full bg-success transition-[width] duration-150 ease-linear"
             :style="{ width: (downloadRatio * 100).toFixed(1) + '%' }"
@@ -275,32 +275,32 @@ const btnDanger =
     </div>
 
     <div class="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-      <div class="rounded-xl border border-border bg-surface p-5">
-        <h2 class="mb-3 border-l-[3px] border-accent pl-2 text-lg font-semibold">
+      <div class="rounded-xl border border-brand-border bg-surface p-5">
+        <h2 class="mb-3 border-l-[3px] border-brand pl-2 text-lg font-semibold">
           Last post fetched
         </h2>
         <pre
-          class="overflow-x-auto rounded-md border border-border bg-code-bg p-3 font-mono text-xs text-text"
+          class="overflow-x-auto rounded-md border border-brand-border bg-code-bg p-3 font-mono text-xs text-text"
           >{{ post ?? '—' }}</pre
         >
       </div>
-      <div class="rounded-xl border border-border bg-surface p-5">
-        <h2 class="mb-3 border-l-[3px] border-accent pl-2 text-lg font-semibold">Log</h2>
+      <div class="rounded-xl border border-brand-border bg-surface p-5">
+        <h2 class="mb-3 border-l-[3px] border-brand pl-2 text-lg font-semibold">Log</h2>
         <div
-          class="max-h-52 overflow-y-auto rounded-md border border-border bg-code-bg p-3 font-mono text-xs text-text-dim"
+          class="max-h-52 overflow-y-auto rounded-md border border-brand-border bg-code-bg p-3 font-mono text-xs text-text-dim"
         >
           <div
             v-if="log.length === 0"
-            class="border-b border-dashed border-border/50 py-0.5 last:border-b-0"
+            class="border-b border-dashed border-brand-border/50 py-0.5 last:border-b-0"
           >
             No activity yet — click an action.
           </div>
           <div
             v-for="(line, i) in log"
             :key="i"
-            class="border-b border-dashed border-border/50 py-0.5 last:border-b-0"
+            class="border-b border-dashed border-brand-border/50 py-0.5 last:border-b-0"
             :class="{
-              'text-accent': line.level === 'info',
+              'text-brand': line.level === 'info',
               'text-success': line.level === 'success',
               'text-danger': line.level === 'error',
             }"

@@ -3,7 +3,12 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineNuxtConfig({
   compatibilityDate: '2026-04-01',
   srcDir: '.',
-  css: ['~/assets/main.css'],
+  css: ['@alikhalilll/ui/styles.css', '~/assets/main.css'],
+  app: {
+    head: {
+      htmlAttrs: { class: 'dark' },
+    },
+  },
   vite: {
     plugins: [tailwindcss()],
   },

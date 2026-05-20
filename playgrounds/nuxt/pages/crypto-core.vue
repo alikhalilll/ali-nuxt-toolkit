@@ -71,19 +71,19 @@ const payloadParts = computed(() => {
 });
 
 const btnPrimary =
-  'cursor-pointer rounded border border-accent bg-accent px-3.5 py-2 text-sm font-semibold text-bg hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50';
+  'cursor-pointer rounded border border-brand bg-brand px-3.5 py-2 text-sm font-semibold text-bg hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50';
 const btnBase =
-  'cursor-pointer rounded border border-border bg-surface-2 px-3.5 py-2 text-sm transition-colors hover:bg-border disabled:cursor-not-allowed disabled:opacity-50';
+  'cursor-pointer rounded border border-brand-border bg-surface-2 px-3.5 py-2 text-sm transition-colors hover:bg-border disabled:cursor-not-allowed disabled:opacity-50';
 const btnDanger =
   'cursor-pointer rounded border border-danger bg-surface-2 px-3.5 py-2 text-sm text-danger transition-colors hover:bg-border disabled:cursor-not-allowed disabled:opacity-50';
 const input1 =
-  'w-full rounded border border-border bg-code-bg px-3 py-2 font-mono text-sm text-text focus:border-accent focus:outline-none disabled:opacity-60';
+  'w-full rounded border border-brand-border bg-code-bg px-3 py-2 font-mono text-sm text-text focus:border-brand focus:outline-none disabled:opacity-60';
 const label = 'mb-1 block text-xs uppercase tracking-wider text-text-dim';
 const preBox =
-  'overflow-x-auto whitespace-pre-wrap break-all rounded-md border border-border bg-code-bg p-3 font-mono text-xs text-text';
-const card = 'mb-4 rounded-xl border border-border bg-surface p-5';
-const cardH = 'mb-3 border-l-[3px] border-accent pl-2 text-lg font-semibold';
-const codeChip = 'rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2';
+  'overflow-x-auto whitespace-pre-wrap break-all rounded-md border border-brand-border bg-code-bg p-3 font-mono text-xs text-text';
+const card = 'mb-4 rounded-xl border border-brand-border bg-surface p-5';
+const cardH = 'mb-3 border-l-[3px] border-brand pl-2 text-lg font-semibold';
+const codeChip = 'rounded bg-code-bg px-1.5 py-0.5 text-xs text-brand-2';
 </script>
 
 <template>

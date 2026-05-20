@@ -2,7 +2,7 @@
   <div class="mx-auto max-w-5xl px-6 py-8 pb-16">
     <AppNav />
     <span
-      class="mb-4 inline-block rounded-md border border-accent-2 bg-surface px-3 py-1.5 text-xs uppercase tracking-widest text-accent-2"
+      class="mb-4 inline-block rounded-md border border-brand-2 bg-surface px-3 py-1.5 text-xs uppercase tracking-widest text-brand-2"
     >
       layout: admin · @adminOnly runs
     </span>

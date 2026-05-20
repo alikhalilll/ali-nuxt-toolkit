@@ -101,20 +101,20 @@ onMounted(async () => {
 });
 
 const input1 =
-  'w-full rounded border border-border bg-code-bg px-3 py-2 font-mono text-sm text-text focus:border-accent focus:outline-none';
+  'w-full rounded border border-brand-border bg-code-bg px-3 py-2 font-mono text-sm text-text focus:border-brand focus:outline-none';
 const btnPrimary =
-  'cursor-pointer rounded border border-accent bg-accent px-3.5 py-2 text-sm font-semibold text-bg hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50';
+  'cursor-pointer rounded border border-brand bg-brand px-3.5 py-2 text-sm font-semibold text-bg hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50';
 const btnBase =
-  'cursor-pointer rounded border border-border bg-surface-2 px-3.5 py-2 text-sm text-text transition-colors hover:bg-border disabled:cursor-not-allowed disabled:opacity-50';
+  'cursor-pointer rounded border border-brand-border bg-surface-2 px-3.5 py-2 text-sm text-text transition-colors hover:bg-border disabled:cursor-not-allowed disabled:opacity-50';
 const btnDanger =
   'cursor-pointer rounded border border-danger bg-surface-2 px-3.5 py-2 text-sm text-danger transition-colors hover:bg-border';
 const label = 'mb-1 block text-xs uppercase tracking-wider text-text-dim';
 const preBox =
-  'overflow-x-auto whitespace-pre-wrap break-all rounded-md border border-border bg-code-bg p-3 font-mono text-xs text-text';
-const card = 'mb-4 rounded-xl border border-border bg-surface p-5';
-const cardH = 'mb-3 border-l-[3px] border-accent pl-2 text-lg font-semibold';
+  'overflow-x-auto whitespace-pre-wrap break-all rounded-md border border-brand-border bg-code-bg p-3 font-mono text-xs text-text';
+const card = 'mb-4 rounded-xl border border-brand-border bg-surface p-5';
+const cardH = 'mb-3 border-l-[3px] border-brand pl-2 text-lg font-semibold';
 const metric =
-  'inline-flex min-w-[7rem] flex-col rounded-lg border border-border bg-surface-2 px-3 py-2';
+  'inline-flex min-w-[7rem] flex-col rounded-lg border border-brand-border bg-surface-2 px-3 py-2';
 </script>
 
 <template>
@@ -122,10 +122,10 @@ const metric =
     <h1 class="mb-2 text-3xl font-semibold tracking-tight">crypto demo</h1>
     <p class="mb-6 text-text-dim">
       All operations use
-      <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2">$crypto</code>, typed as
-      <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2">CryptoService</code>. The
+      <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-brand-2">$crypto</code>, typed as
+      <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-brand-2">CryptoService</code>. The
       passphrase and iterations come from
-      <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2">nuxt.config.ts</code>.
+      <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-brand-2">nuxt.config.ts</code>.
     </p>
 
     <div :class="card">
@@ -157,11 +157,11 @@ const metric =
     <div :class="card">
       <h2 :class="cardH">2. Encrypt a JSON object</h2>
       <p class="mb-2 text-sm text-text-dim">
-        <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2"
+        <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-brand-2"
           >CryptoService.encrypt</code
         >
         takes a string — serialise structured data via
-        <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2">JSON.stringify</code>
+        <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-brand-2">JSON.stringify</code>
         first.
       </p>
       <label :class="label">JSON input</label>
@@ -191,7 +191,7 @@ const metric =
       <p class="mb-2 text-sm text-text-dim">
         Each encrypt uses a fresh salt, but all decrypts for the same set of payloads hit the cache
         if
-        <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2"
+        <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-brand-2"
           >keyCacheSize &gt; 0</code
         >. The third timing clears the cache first.
       </p>
@@ -230,10 +230,10 @@ const metric =
       <h2 :class="cardH">5. Device fingerprint (server-only)</h2>
       <p class="mb-2 text-sm text-text-dim">
         Encrypt / decrypt happen in
-        <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2"
+        <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-brand-2"
           >server/api/crypto/fingerprint-*.post.ts</code
         >. The first encrypt sets an HttpOnly cookie (<code
-          class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2"
+          class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-brand-2"
           >__nuxt_crypto_device</code
         >) and binds the payload to this browser. Copy the token into another browser and decrypt
         will fail.

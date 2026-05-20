@@ -12,7 +12,7 @@ const links = [
 </script>
 
 <template>
-  <nav class="mb-8 flex flex-wrap gap-1 rounded-xl border border-border bg-surface p-2">
+  <nav class="mb-8 flex flex-wrap gap-1 rounded-xl border border-brand-border bg-surface p-2">
     <NuxtLink
       v-for="l in links"
       :key="l.to"

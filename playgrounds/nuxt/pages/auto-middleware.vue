@@ -1,9 +1,9 @@
 <script setup lang="ts">
-const card = 'mb-4 rounded-xl border border-border bg-surface p-5';
-const cardH = 'mb-3 border-l-[3px] border-accent pl-2 text-lg font-semibold';
+const card = 'mb-4 rounded-xl border border-brand-border bg-surface p-5';
+const cardH = 'mb-3 border-l-[3px] border-brand pl-2 text-lg font-semibold';
 const preBox =
-  'overflow-x-auto whitespace-pre-wrap break-all rounded-md border border-border bg-code-bg p-3 font-mono text-xs text-text';
-const codeChip = 'rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2';
+  'overflow-x-auto whitespace-pre-wrap break-all rounded-md border border-brand-border bg-code-bg p-3 font-mono text-xs text-text';
+const codeChip = 'rounded bg-code-bg px-1.5 py-0.5 text-xs text-brand-2';
 </script>
 
 <template>
@@ -36,16 +36,16 @@ const codeChip = 'rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2';
       <div :class="card">
         <h2 :class="cardH">Layouts</h2>
         <p class="mb-2 text-sm text-text-dim">
-          <NuxtLink to="/" class="text-accent">default</NuxtLink> — only
+          <NuxtLink to="/" class="text-brand">default</NuxtLink> — only
           <code :class="codeChip">log-activity</code> fires.
         </p>
         <p class="mb-2 text-sm text-text-dim">
-          <NuxtLink to="/dashboard" class="text-accent">dashboard</NuxtLink> — the
+          <NuxtLink to="/dashboard" class="text-brand">dashboard</NuxtLink> — the
           <code :class="codeChip">@auth</code> group expands to
           <code :class="codeChip">[auth]</code>.
         </p>
         <p class="text-sm text-text-dim">
-          <NuxtLink to="/admin" class="text-accent">admin</NuxtLink> — the
+          <NuxtLink to="/admin" class="text-brand">admin</NuxtLink> — the
           <code :class="codeChip">@adminOnly</code> group expands to
           <code :class="codeChip">[auth, verify-role, require-admin]</code>.
         </p>
@@ -54,7 +54,7 @@ const codeChip = 'rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2';
       <div :class="card">
         <h2 :class="cardH">Per-page extras</h2>
         <p class="mb-2 text-sm text-text-dim">
-          <NuxtLink to="/dashboard/sensitive" class="text-accent">dashboard/sensitive</NuxtLink>
+          <NuxtLink to="/dashboard/sensitive" class="text-brand">dashboard/sensitive</NuxtLink>
           declares
           <code :class="codeChip">middlewares: ['verify-role']</code>
           in its
@@ -62,7 +62,7 @@ const codeChip = 'rounded bg-code-bg px-1.5 py-0.5 text-xs text-accent-2';
           <code :class="codeChip">@auth</code>.
         </p>
         <p class="text-sm text-text-dim">
-          <NuxtLink to="/dashboard/skip" class="text-accent">dashboard/skip</NuxtLink> sets
+          <NuxtLink to="/dashboard/skip" class="text-brand">dashboard/skip</NuxtLink> sets
           <code :class="codeChip">skipAutoMiddleware: true</code> — the dispatcher short-circuits.
         </p>
       </div>
