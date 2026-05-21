@@ -1,13 +1,29 @@
 # @alikhalilll/ui
 
-Headless, [shadcn-vue](https://www.shadcn-vue.com/) style component library for Vue 3 (and Nuxt). Built on [reka-ui](https://reka-ui.com) and [vaul-vue](https://github.com/unovue/vaul-vue), fully typed, scalable, with sensible defaults you can override on every level.
+[![npm](https://img.shields.io/npm/v/@alikhalilll/ui.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/ui)
+[![downloads](https://img.shields.io/npm/dm/@alikhalilll/ui.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/ui)
+[![size](https://img.shields.io/bundlephobia/minzip/@alikhalilll/ui?label=minzip&color=444)](https://bundlephobia.com/package/@alikhalilll/ui)
+[![License: MIT](https://img.shields.io/badge/License-MIT-444.svg)](./LICENSE)
 
-The first component shipped is **`ATellInput`** — a phone-number input that:
+Headless, shadcn-vue style Vue 3 component library — every component lives behind its own subpath import so consumers only ship the components they actually use. Built on [reka-ui](https://reka-ui.com) and [vaul-vue](https://github.com/unovue/vaul-vue), themed via prefixed CSS variables, fully typed.
 
-- Detects the user's country automatically (IP geolocation → timezone → `navigator.language` → fallback).
-- Validates and formats input via [`libphonenumber-js`](https://www.npmjs.com/package/libphonenumber-js).
-- Renders a **popover on desktop, vaul-vue drawer on mobile** for the country picker.
-- Exposes every sub-primitive so you can compose your own variant if the default doesn't fit.
+📚 **Live docs:** <https://alikhalilll.github.io/ali-nuxt-toolkit/ui>
+📦 **npm:** <https://www.npmjs.com/package/@alikhalilll/ui>
+🐙 **Source:** <https://github.com/alikhalilll/ali-nuxt-toolkit/tree/master/packages/ui>
+
+---
+
+## Components
+
+| Component            | Subpath                              | Per-component README                                                             | Live docs                                                                                      |
+| -------------------- | ------------------------------------ | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `ATellInput`         | `@alikhalilll/ui/tell-input`         | [./entries/tell-input/README.md](./entries/tell-input/README.md)                 | [/ui/tell-input](https://alikhalilll.github.io/ali-nuxt-toolkit/ui/tell-input)                 |
+| `AInput`             | `@alikhalilll/ui/input`              | [./entries/input/README.md](./entries/input/README.md)                           | [/ui/input](https://alikhalilll.github.io/ali-nuxt-toolkit/ui/input)                           |
+| `APopover`           | `@alikhalilll/ui/popover`            | [./entries/popover/README.md](./entries/popover/README.md)                       | [/ui/popover](https://alikhalilll.github.io/ali-nuxt-toolkit/ui/popover)                       |
+| `ADrawer`            | `@alikhalilll/ui/drawer`             | [./entries/drawer/README.md](./entries/drawer/README.md)                         | [/ui/drawer](https://alikhalilll.github.io/ali-nuxt-toolkit/ui/drawer)                         |
+| `AResponsivePopover` | `@alikhalilll/ui/responsive-popover` | [./entries/responsive-popover/README.md](./entries/responsive-popover/README.md) | [/ui/responsive-popover](https://alikhalilll.github.io/ali-nuxt-toolkit/ui/responsive-popover) |
+
+Each README ships inside the npm tarball at `node_modules/@alikhalilll/ui/entries/<name>/README.md` and is rendered on the file browser at <https://www.npmjs.com/package/@alikhalilll/ui?activeTab=code>.
 
 ## Install
 
@@ -15,129 +31,164 @@ The first component shipped is **`ATellInput`** — a phone-number input that:
 pnpm add @alikhalilll/ui
 ```
 
-Peer dependency: `vue ^3.5.0`. The library bundles `reka-ui`, `vaul-vue`, `libphonenumber-js`, `lucide-vue-next`, `@vueuse/core`, `class-variance-authority`, `clsx`, and `tailwind-merge`.
+Peer dependency: `vue ^3.5.0`. Bundled deps: `reka-ui`, `vaul-vue`, `libphonenumber-js`, `lucide-vue-next`, `@vueuse/core`, `class-variance-authority`, `clsx`, `tailwind-merge`.
 
-### Per-component subpath imports
-
-Each component lives behind its own subpath so consumers can pull a single component without dragging the rest of the library into their bundle:
+### Subpath imports (recommended)
 
 ```ts
-// Minimal — only the tell-input chunk gets included.
+// Only the tell-input chunk ships into the bundle.
 import { ATellInput } from '@alikhalilll/ui/tell-input';
 
-// Or the main entry (modern bundlers tree-shake unused exports via `sideEffects`).
-import { ATellInput } from '@alikhalilll/ui';
+// Main entry — bundlers still tree-shake unused exports via `sideEffects`.
+import { ATellInput, APopover } from '@alikhalilll/ui';
 ```
 
 Available subpaths: `/tell-input`, `/input`, `/popover`, `/drawer`, `/responsive-popover`, `/utils`.
 
 ## Setup
 
-The components are styled with Tailwind utility classes (`bg-popover`, `text-destructive`, etc.) that resolve to CSS variables shipped in `@alikhalilll/ui/styles.css`. You need to:
+Components style themselves with Tailwind utility classes (`bg-popover`, `text-muted-foreground`, …) resolving to CSS variables shipped at `@alikhalilll/ui/styles.css`. Three steps:
 
-1. **Import the variables** somewhere global:
+### 1. Import the tokens
 
-   ```ts
-   // In a Nuxt config or your main entry
-   import '@alikhalilll/ui/styles.css';
-   ```
+**Nuxt 3 / 4:**
 
-2. **Expose the variables to Tailwind**. For Tailwind v4 add an `@theme inline` block to your global stylesheet:
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  css: ['@alikhalilll/ui/styles.css'],
+});
+```
 
-   ```css
-   @import 'tailwindcss';
-   @import '@alikhalilll/ui/styles.css';
+**Vue + Vite (no Nuxt):**
 
-   @theme inline {
-     --color-background: hsl(var(--ak-ui-background));
-     --color-foreground: hsl(var(--ak-ui-foreground));
-     --color-popover: hsl(var(--ak-ui-popover));
-     --color-popover-foreground: hsl(var(--ak-ui-popover-foreground));
-     --color-primary: hsl(var(--ak-ui-primary));
-     --color-primary-foreground: hsl(var(--ak-ui-primary-foreground));
-     --color-muted: hsl(var(--ak-ui-muted));
-     --color-muted-foreground: hsl(var(--ak-ui-muted-foreground));
-     --color-accent: hsl(var(--ak-ui-accent));
-     --color-accent-foreground: hsl(var(--ak-ui-accent-foreground));
-     --color-destructive: hsl(var(--ak-ui-destructive));
-     --color-destructive-foreground: hsl(var(--ak-ui-destructive-foreground));
-     --color-border: hsl(var(--ak-ui-border));
-     --color-input: hsl(var(--ak-ui-input));
-     --color-ring: hsl(var(--ak-ui-ring));
-   }
-   ```
+```ts
+// main.ts
+import { createApp } from 'vue';
+import App from './App.vue';
+import '@alikhalilll/ui/styles.css';
 
-   For Tailwind v3, add the same colors to `theme.extend.colors` in `tailwind.config.ts`.
+createApp(App).mount('#app');
+```
 
-3. **Toggle dark mode** by adding `.dark` to a parent element (typically `<html>`).
+Every variable is prefixed `--ak-ui-` — guaranteed not to collide with your own CSS.
 
-   The lib ships **both** `:root, .light { … }` and `.dark { … }` blocks. You can lock the theme:
+### 2. Map to Tailwind v4
 
-   ```ts
-   // Locked dark
-   export default defineNuxtConfig({
-     app: { head: { htmlAttrs: { class: 'dark' } } },
-   });
-   ```
+```css
+@import 'tailwindcss';
+@import '@alikhalilll/ui/styles.css';
+@source '../node_modules/@alikhalilll/ui/dist/index.mjs';
 
-   Or run a tri-state Light / Dark / System switcher that follows `prefers-color-scheme`. The docs site under [`apps/docs/composables/useColorMode.ts`](https://github.com/alikhalilll/ali-nuxt-toolkit/blob/master/apps/docs/composables/useColorMode.ts) ships a complete working pattern (persisted preference, OS-change listener, pre-paint inline script to avoid flash of wrong theme) that you can copy as-is.
+@theme inline {
+  --color-background: hsl(var(--ak-ui-background));
+  --color-foreground: hsl(var(--ak-ui-foreground));
+  --color-popover: hsl(var(--ak-ui-popover));
+  --color-popover-foreground: hsl(var(--ak-ui-popover-foreground));
+  --color-muted: hsl(var(--ak-ui-muted));
+  --color-muted-foreground: hsl(var(--ak-ui-muted-foreground));
+  --color-accent: hsl(var(--ak-ui-accent));
+  --color-accent-foreground: hsl(var(--ak-ui-accent-foreground));
+  --color-destructive: hsl(var(--ak-ui-destructive));
+  --color-destructive-foreground: hsl(var(--ak-ui-destructive-foreground));
+  --color-border: hsl(var(--ak-ui-border));
+  --color-input: hsl(var(--ak-ui-input));
+  --color-ring: hsl(var(--ak-ui-ring));
+}
+```
 
-## Usage
+`@source` tells Tailwind v4 to scan the lib's compiled templates — it skips `node_modules` by default. Inside a pnpm workspace, point at the source so HMR works:
+
+```css
+@source '../../packages/ui/index.ts';
+@source '../../packages/ui/entries/**/*.{vue,ts}';
+@source '../../packages/ui/utils/**/*.ts';
+```
+
+### 3. Dark mode
+
+The lib ships both `.light` and `.dark` blocks. Toggle the class on `<html>` — portaled popovers and drawers inherit via the cascade.
+
+**Nuxt 3 / 4 — locked dark:**
+
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  app: { head: { htmlAttrs: { class: 'dark' } } },
+});
+```
+
+**Vue + Vite — locked dark:**
+
+```html
+<!-- index.html -->
+<html class="dark">
+  ...
+</html>
+```
+
+For Light / Dark / System (persisted, OS-aware, no flash of wrong theme), see [`apps/docs/composables/useColorMode.ts`](https://github.com/alikhalilll/ali-nuxt-toolkit/blob/master/apps/docs/composables/useColorMode.ts) — the pattern is framework-agnostic.
+
+## Quick start
 
 ```vue
 <script setup lang="ts">
 import { ref } from 'vue';
-import { ATellInput } from '@alikhalilll/ui';
+import { ATellInput } from '@alikhalilll/ui/tell-input';
 
 const phone = ref('');
-const country = ref<number | null>(null);
+const country = ref<number | null>(null); // dial number, e.g. 20 for Egypt
 </script>
 
 <template>
-  <ATellInput
-    v-model:phone="phone"
-    v-model:country="country"
-    default-country="20"
-    show-validation
-  />
+  <ATellInput v-model:phone="phone" v-model:country="country" show-validation />
 </template>
 ```
 
-### Props
+The picker stays hidden until the user types or pastes something that matches a known dial code, then slides in pre-filled and `phone` is normalised to the national significant number (`01066105963` → `1066105963`, `+447911123456` → `7911123456`).
 
-| Prop                | Type                                             | Default                        | Description                                                                                |
-| ------------------- | ------------------------------------------------ | ------------------------------ | ------------------------------------------------------------------------------------------ |
-| `v-model:phone`     | `string`                                         | `''`                           | Digits-only national number (no leading `+` or dial code).                                 |
-| `v-model:country`   | `string`                                         | `''`                           | ISO 3166-1 alpha-2 code, e.g. `"EG"`.                                                      |
-| `placeholder`       | `string`                                         | `'Phone number'`               | Falls back to the country's example number when empty.                                     |
-| `disabled`          | `boolean`                                        | `false`                        |                                                                                            |
-| `loading`           | `boolean`                                        | `false`                        | Disables interaction.                                                                      |
-| `size`              | `'sm' \| 'default' \| 'lg'`                      | `'default'`                    | Controls input height (32 / 36 / 40 px).                                                   |
-| `allowedDialCodes`  | `string[]`                                       | _all_                          | Whitelist of dial-digit codes (no `+`). Countries outside the list are shown but disabled. |
-| `showValidation`    | `boolean`                                        | `false`                        | Renders an error message below the input when invalid.                                     |
-| `detectCountry`     | `'auto' \| 'locale' \| 'none'`                   | `'auto'`                       | Strategy for the silent environment lookup (hint source for input detection).              |
-| `defaultCountry`    | `string`                                         | `''`                           | Explicit initial country. When set, the picker is visible at mount.                        |
-| `detectFromInput`   | `boolean`                                        | `true`                         | Default mode: picker hidden until input matches a dial code. Set `false` for legacy.       |
-| `detectDebounceMs`  | `number`                                         | `150`                          | Debounce window (ms) for input-driven detection.                                           |
-| `ipEndpoint`        | `string`                                         | `'https://ipapi.co/json/'`     | Override the geolocation endpoint. Must return JSON with `country_code` or `country`.      |
-| `searchPlaceholder` | `string`                                         | `'Search by country or code…'` | Country picker search input placeholder.                                                   |
-| `emptyText`         | `string`                                         | `'No countries found.'`        | Shown when the search yields no results.                                                   |
-| `loadingText`       | `string`                                         | `'Loading…'`                   | Shown while the country list is loading.                                                   |
-| `errorMessages`     | `Partial<Record<PhoneValidationReason, string>>` | English defaults               | Override the validation error labels.                                                      |
-| `class`             | `string \| any[] \| Record<string, boolean>`     | —                              | Merged into the outer wrapper via `tailwind-merge`.                                        |
+Full props, slots, theming recipes, and live demos → [tell-input docs](https://alikhalilll.github.io/ali-nuxt-toolkit/ui/tell-input) or [./entries/tell-input/README.md](./entries/tell-input/README.md).
 
-### Exposed (via template ref)
+## Nuxt integration
+
+`@alikhalilll/ui` is a plain Vue 3 library — works in Nuxt 3 / 4 without a module wrapper. Full guide (auto-imports, SSR behaviour, source globs) on the [docs site](https://alikhalilll.github.io/ali-nuxt-toolkit/ui#nuxt-integration).
 
 ```ts
-const ref = ref<InstanceType<typeof ATellInput>>();
-ref.value.validation; // PhoneValidationResult — computed, reactive
-ref.value.required; // PhoneRequiredInfo | null — example, length range, format hint
-ref.value.selectedDialCode; // '+20' | null
+// nuxt.config.ts — optional auto-import
+export default defineNuxtConfig({
+  components: [{ path: '@alikhalilll/ui', pathPrefix: false, global: true }],
+});
 ```
 
-## Compose your own component
+## Theming
 
-Every primitive, composable, and CVA helper is re-exported from the package root, so you can build a custom variant without forking the library.
+Override any `--ak-ui-*` variable globally, per wrapper, or inline:
+
+```css
+.tenant-acme {
+  --ak-ui-popover: 220 70% 8%;
+  --ak-ui-accent: 220 50% 30%;
+  --ak-ui-ring: 220 100% 65%;
+}
+```
+
+Values are HSL **triplets** — no `hsl(…)` wrapper. Full token list + recipes (brand-only, day/night, multi-tenant, server-driven, state-specific) → [theming guide](https://alikhalilll.github.io/ali-nuxt-toolkit/ui#theming).
+
+## Size scale
+
+| Token | Height              | Tailwind   |
+| ----- | ------------------- | ---------- |
+| `xs`  | 28 px               | `h-7`      |
+| `sm`  | 36 px               | `h-9`      |
+| `md`  | **43 px (default)** | `h-[43px]` |
+| `lg`  | 52 px               | `h-[52px]` |
+| `xl`  | 60 px               | `h-[60px]` |
+
+`controlHeight`, `controlPaddingX`, `controlTextSize`, `controlHeightPx`, `SIZES`, `DEFAULT_SIZE`, and the `Size` type are exported so you can build size-aware components in lockstep with the library.
+
+## Compose your own variant
+
+Every primitive, composable, and helper is re-exported — fork-free composition:
 
 ```ts
 import {
@@ -165,101 +216,12 @@ import {
   ACountryFlag,
   aTellInputVariants,
   DEFAULT_ERROR_MESSAGES,
+  defaultFlagUrl,
 
-  // Utilities
+  // Helpers
   cn,
 } from '@alikhalilll/ui';
-
-// Build your own tel input from the same composables
-const { validate, getCountries, searchCountries } = usePhoneValidation();
-const detected = await detectCountry({ strategy: 'auto' });
 ```
-
-Or pull the country select on its own (any list-of-countries UI):
-
-```vue
-<ACountrySelect v-model:selected="iso2" />
-```
-
-Or build any responsive popover (popover-on-desktop, drawer-on-mobile):
-
-```vue
-<AResponsivePopover v-model:open="open">
-  <AResponsivePopoverTrigger as-child>
-    <button>Open</button>
-  </AResponsivePopoverTrigger>
-  <AResponsivePopoverContent>
-    <p>Content</p>
-  </AResponsivePopoverContent>
-</AResponsivePopover>
-```
-
-## Full customization
-
-`ATellInput` exposes a deep customization surface across three vectors. Every override is opt-in — defaults are sensible, so a vanilla `<ATellInput />` works out of the box.
-
-**Slots (replace any rendered region):**
-
-```
-prefix · suffix · trigger · chevron · flag · search · search-icon ·
-loading · empty · group-header · item · item-check · valid-icon ·
-error-icon · hint · error
-```
-
-**Data-override props:**
-
-```ts
-flagUrl?:   (iso2, width) => string                                   // swap flagcdn.com for any source
-countries?: CountryOption[]                                          // bypass REST Countries; ship your own list
-searcher?:  (query, country) => boolean                              // custom search (fuzzy/starts-with/locale-aware)
-detector?:  (opts) => Promise<string | null>                         // custom country detection (e.g. server-driven)
-errorMessages?: Partial<Record<PhoneValidationReason, string>>       // i18n
-kbdOpen?: string | null      // override the '⌘K' hint
-kbdClose?: string | null     // override the 'Esc' hint
-```
-
-**Class-override props (every region):** `class`, `fieldClass`, `inputClass`, `contentClass`, `popoverClass`, `drawerClass`, `hintClass`, `errorClass`. All merged via `tailwind-merge`, so you only specify the bits you want to change.
-
-**Example — fully bespoke trigger, custom country list, custom searcher, custom detector:**
-
-```vue
-<script setup lang="ts">
-import { ATellInput, defaultFlagUrl, type CountryOption } from '@alikhalilll/ui';
-
-const countries: CountryOption[] = [
-  /* … your curated list … */
-];
-
-const flagUrl = (iso: string) => `/flags/${iso.toLowerCase()}.svg`;
-const searcher = (q: string, c: CountryOption) =>
-  c.raw_data.name.toLowerCase().startsWith(q.toLowerCase());
-
-async function detector() {
-  // Pretend your backend tells you the user's country from the request
-  const { country } = await $fetch('/api/locale');
-  return country;
-}
-</script>
-
-<template>
-  <ATellInput
-    v-model:phone="phone"
-    v-model:country="country"
-    :countries="countries"
-    :flag-url="flagUrl"
-    :searcher="searcher"
-    :detector="detector"
-  >
-    <template #trigger="{ selectedCountry, open }">
-      <button :data-open="open">
-        {{ selectedCountry?.raw_data.iso2 ?? '??' }}
-      </button>
-    </template>
-  </ATellInput>
-</template>
-```
-
-`AInput` also exposes `#prefix` and `#suffix` slots — when either is filled the component switches to a wrapped layout so the bordered field carries the focus ring while the slot content sits inside the border. See the [docs site](https://alikhalilll.github.io/ali-nuxt-toolkit/ui/input) for the full prop tables and a live demo gallery.
 
 ## Exported types
 
@@ -281,21 +243,11 @@ import type {
 } from '@alikhalilll/ui';
 ```
 
-The `defaultFlagUrl(iso2, width)` builder is also exported — handy for composing a custom builder on top of the default:
+## Notes
 
-```ts
-import { defaultFlagUrl } from '@alikhalilll/ui';
-const hiRes = (iso: string) => defaultFlagUrl(iso, 80);
-```
-
-## Country detection chain
-
-1. **IP geolocation** — fetch `ipEndpoint` (default `https://ipapi.co/json/`), aborted after `timeoutMs` (default 2 s). Result cached in `sessionStorage` so re-mounts skip the network call.
-2. **Timezone** — `Intl.DateTimeFormat().resolvedOptions().timeZone` against a built-in IANA-zone-to-ISO2 map (~70 zones, covers most populated cities).
-3. **`navigator.language`** — extracts the region from tags like `en-US`, `ar-EG`, `pt-BR`.
-4. **`defaultCountry`** — final fallback (`'US'` if you don't set one).
-
-Pass `detect-country="locale"` to skip the IP step (no network), or `detect-country="none"` to use `defaultCountry` immediately.
+- **Country detection** runs only in `onMounted` — the input renders immediately with `defaultCountry` (or empty); the detected ISO2 patches in on hydration.
+- The default tel-input behaviour is **picker hidden until detected** (`detect-from-input`). Pass `:detect-from-input="false"` to opt out, or `default-country="20"` / `default-country="EG"` to pre-fill the picker at mount.
+- Import `@alikhalilll/ui/styles.css` **before** your overrides so your overrides win the cascade.
 
 ## License
 

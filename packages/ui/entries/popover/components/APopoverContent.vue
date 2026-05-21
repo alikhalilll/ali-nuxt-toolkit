@@ -9,6 +9,7 @@ import {
   useForwardPropsEmits,
 } from 'reka-ui';
 import { cn } from '@/utils';
+import APopoverOverlay from './APopoverOverlay.vue';
 
 defineOptions({ inheritAttrs: false });
 
@@ -16,7 +17,9 @@ const props = withDefaults(
   defineProps<
     PopoverContentProps & {
       class?: HTMLAttributes['class'];
-      /** Render a dimmed, clickable backdrop behind the popover. Pair with `<APopover modal>`. */
+      /** Dim the entire viewport behind the popover and block all interaction with the
+       *  page (clicks are captured by the overlay; body scroll is locked while open).
+       *  Pair with `<APopover :modal="true">` (the default) for the full modal behaviour. */
       overlay?: boolean;
       overlayClass?: HTMLAttributes['class'];
     }
@@ -33,25 +36,16 @@ const forwarded = useForwardPropsEmits(delegated, emits);
     <!--
       Overlay is a sibling of PopoverContent inside the same portal. Reka-ui's
       DismissableLayer treats any pointer-down outside the content as a dismiss,
-      so clicking the overlay closes the popover for free. We still mark it
-      pointer-events:auto explicitly to be safe.
+      so clicking the overlay closes the popover for free. The overlay component
+      locks body scroll on mount and restores it on unmount.
     -->
-    <div
-      v-if="props.overlay"
-      data-slot="popover-overlay"
-      :class="
-        cn(
-          'fixed inset-0 z-40 bg-black/60 backdrop-blur-sm pointer-events-auto data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
-          props.overlayClass
-        )
-      "
-    />
+    <APopoverOverlay v-if="props.overlay" :class="props.overlayClass" />
     <PopoverContent
       data-slot="popover-content"
       v-bind="{ ...$attrs, ...forwarded }"
       :class="
         cn(
-          'bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 w-72 rounded-md border p-4 shadow-md outline-none',
+          'bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-[60] w-72 rounded-md border p-4 shadow-md outline-none',
           props.class
         )
       "

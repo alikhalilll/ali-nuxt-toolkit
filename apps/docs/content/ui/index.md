@@ -43,15 +43,29 @@ Each component also ships its own README at `node_modules/@alikhalilll/ui/entrie
 
 ## Setup
 
-Components style themselves with Tailwind utility classes (`bg-popover`, `text-muted-foreground`, …) that resolve to CSS variables. Three steps:
+Components style themselves with Tailwind utility classes (`bg-popover`, `text-muted-foreground`, …) that resolve to CSS variables. Three steps — pick the snippet for your framework.
 
 ### 1. Import the tokens
+
+#### Nuxt 3 / 4
 
 ```ts
 // nuxt.config.ts
 export default defineNuxtConfig({
   css: ['@alikhalilll/ui/styles.css', '~/assets/main.css'],
 });
+```
+
+#### Vue + Vite (no Nuxt)
+
+```ts
+// main.ts
+import { createApp } from 'vue';
+import App from './App.vue';
+import '@alikhalilll/ui/styles.css';
+import './assets/main.css';
+
+createApp(App).mount('#app');
 ```
 
 Every variable is prefixed `--ak-ui-` — guaranteed not to collide with your CSS.
@@ -88,16 +102,27 @@ The `@source` directive tells Tailwind v4 to scan the library's compiled templat
 
 ### 3. Dark mode
 
-The lib ships both `.light` and `.dark` blocks. Toggle the class on `<html>` — portaled popovers/drawers inherit via the cascade.
+The lib ships both `.light` and `.dark` blocks. Toggle the class on `<html>` — portaled popovers and drawers inherit via the cascade.
+
+#### Nuxt 3 / 4 — locked dark
 
 ```ts
-// nuxt.config.ts — locked dark
+// nuxt.config.ts
 export default defineNuxtConfig({
   app: { head: { htmlAttrs: { class: 'dark' } } },
 });
 ```
 
-For Light / Dark / System, see `apps/docs/composables/useColorMode.ts` in this repo.
+#### Vue + Vite — locked dark
+
+```html
+<!-- index.html -->
+<html class="dark">
+  ...
+</html>
+```
+
+For Light / Dark / System (persisted, OS-aware, no flash of wrong theme), see `apps/docs/composables/useColorMode.ts` in the repo — the pattern is framework-agnostic; the same composable works under Vite once you drop the Nuxt-specific `useState` / `useHead` calls.
 
 ## Nuxt integration
 
@@ -168,6 +193,44 @@ import { APopover, APopoverContent, APopoverTrigger } from '@alikhalilll/ui/popo
 ```
 
 The trade-off vs. auto-imports: subpath imports are explicit (easier to grep, easier to tree-shake). Auto-imports are terser at the cost of pulling the main entry. Pick one per project.
+
+## Without Nuxt (Vue + Vite, etc.)
+
+`@alikhalilll/ui` is just a Vue 3 package — no Nuxt module, no build-time magic. Anywhere Vue 3 runs (Vite, Vue CLI, Astro Vue, Quasar, …), it works the same way: import the CSS variables once in your entry, import the components you use, render them.
+
+```ts
+// main.ts (Vite + Vue 3 example)
+import { createApp } from 'vue';
+import App from './App.vue';
+
+import '@alikhalilll/ui/styles.css';
+import './assets/main.css'; // your own stylesheet that imports Tailwind + maps the tokens
+
+createApp(App).mount('#app');
+```
+
+```vue
+<!-- AnyComponent.vue -->
+<script setup lang="ts">
+import { ref } from 'vue';
+import { ATellInput } from '@alikhalilll/ui/tell-input';
+
+const phone = ref('');
+const country = ref<number | null>(null);
+</script>
+
+<template>
+  <ATellInput v-model:phone="phone" v-model:country="country" show-validation />
+</template>
+```
+
+Differences from the Nuxt path:
+
+- **No auto-imports** — every component must be `import`ed (encouraged anyway, because subpath imports tree-shake better).
+- **No `nuxt.config.ts`** — replace it with `vite.config.ts` and your `main.ts`. CSS goes into your main entry; dark mode goes onto the `<html>` element in `index.html` (or via a Vue composable that toggles the class on mount).
+- **No SSR concerns** unless you opt in (e.g. via Vite SSR or another framework). For pure SPAs, the country detection still fires `onMounted` exactly the same; the responsive popover stays consistent because the first render runs in the browser.
+
+The Tailwind v4 mapping (`@import 'tailwindcss';` + `@theme inline { … }` + `@source` directives) is identical to the Nuxt setup — see the [Setup](#setup) section above.
 
 ## Theming
 
