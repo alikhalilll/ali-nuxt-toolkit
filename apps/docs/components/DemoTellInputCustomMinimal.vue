@@ -4,7 +4,7 @@ import { ChevronDown } from 'lucide-vue-next';
 import { ATellInput } from '@alikhalilll/ui';
 
 const phone = ref('');
-const country = ref('');
+const country = ref<number | null>(null);
 
 const minimalTheme = {
   '--ak-ui-background': '0 0% 8%',
@@ -27,7 +27,7 @@ import { ChevronDown } from 'lucide-vue-next';
 import { ATellInput } from '@alikhalilll/ui';
 
 const phone = ref('');
-const country = ref('');
+const country = ref<number | null>(null);
 
 // Pure grayscale, dense, sharp
 const minimalTheme = {

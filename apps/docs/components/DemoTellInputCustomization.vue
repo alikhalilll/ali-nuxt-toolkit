@@ -9,7 +9,7 @@ import {
 } from '@alikhalilll/ui';
 
 const phone = ref('');
-const country = ref('');
+const country = ref<number | null>(null);
 
 const curated = computed<CountryOption[]>(() => [
   mkCountry('EG', 'Egypt', '+20'),
@@ -64,7 +64,7 @@ import {
 } from '@alikhalilll/ui';
 
 const phone = ref('');
-const country = ref('');
+const country = ref<number | null>(null);
 
 // Curated 7-country list overrides the internal REST Countries fetch
 const curated = computed<CountryOption[]>(() => [
@@ -107,7 +107,7 @@ async function alwaysEgypt() { return 'EG'; }
   <ATellInput
     v-model:phone="phone"
     v-model:country="country"
-    default-country="EG"
+    default-country="20"
     show-validation
     :countries="curated"
     :flag-url="hiResFlag"
@@ -187,7 +187,7 @@ async function alwaysEgypt() { return 'EG'; }
           <ATellInput
             v-model:phone="phone"
             v-model:country="country"
-            default-country="EG"
+            default-country="20"
             show-validation
             :countries="curated"
             :flag-url="hiResFlag"

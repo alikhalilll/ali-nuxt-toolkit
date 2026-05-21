@@ -3,7 +3,7 @@ import { computed, ref } from 'vue';
 import { ATellInput } from '@alikhalilll/ui';
 
 const phone = ref('');
-const country = ref('');
+const country = ref<number | null>(null);
 
 /**
  * Each theme is a pure CSS-variable rewrite — no component prop changes, no rebuild.
@@ -262,7 +262,7 @@ async function copyCss() {
         <ATellInput
           v-model:phone="phone"
           v-model:country="country"
-          default-country="SA"
+          default-country="20"
           show-validation
         />
       </div>

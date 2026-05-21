@@ -1,25 +1,23 @@
 ---
 title: ui
-description: Headless, shadcn-vue style component library. Built on reka-ui and vaul-vue, fully typed, theme-able via CSS variables, and deeply customizable via slots + override props.
+description: Headless, shadcn-vue style component library. Built on reka-ui and vaul-vue, fully typed, themed via CSS variables, tree-shakable per subpath.
 package: '@alikhalilll/ui'
 order: 4
 ---
 
 # @alikhalilll/ui
 
-A headless, [shadcn-vue](https://www.shadcn-vue.com/) style component library for Vue 3 and Nuxt 3/4. Built on top of [reka-ui](https://reka-ui.com) and [vaul-vue](https://github.com/unovue/vaul-vue), fully typed, theme-able via CSS variables, and deeply customizable via slots + override props.
-
-The flagship composite component is **[`ATellInput`](/ui/tell-input)** — a phone-number input that detects the user's country automatically, validates with `libphonenumber-js`, and lets you re-skin every visible region.
+A headless, [shadcn-vue](https://www.shadcn-vue.com/) style component library for Vue 3 + Nuxt 3/4. Built on [reka-ui](https://reka-ui.com) and [vaul-vue](https://github.com/unovue/vaul-vue). Fully typed, themed via CSS variables, **tree-shakable per component** through subpath imports.
 
 ## Components
 
-| Component                                      | Description                                                                                                                       |
-| ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| [`ATellInput`](/ui/tell-input)                 | Composite phone input: country picker + national-number field. Auto-detection, validation, popover/drawer picker, 16 named slots. |
-| [`AInput`](/ui/input)                          | Base shadcn-style text input. Shared size scale, optional `#prefix` / `#suffix` slots.                                            |
-| [`APopover`](/ui/popover)                      | reka-ui Popover wrapper. Modal by default, optional overlay, full props/emits forwarding.                                         |
-| [`ADrawer`](/ui/drawer)                        | vaul-vue Drawer wrapper. Bottom-anchored, drag-to-dismiss, snap points.                                                           |
-| [`AResponsivePopover`](/ui/responsive-popover) | Popover on desktop, Drawer on mobile. Single `v-model:open`, separate per-branch class props.                                     |
+| Component                                      | Subpath                              | Summary                                                                                          |
+| ---------------------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| [`ATellInput`](/ui/tell-input)                 | `@alikhalilll/ui/tell-input`         | Phone input with auto country detection, libphonenumber validation, and a popover/drawer picker. |
+| [`AInput`](/ui/input)                          | `@alikhalilll/ui/input`              | Sized, themed text input with `prefix` / `suffix` slots.                                         |
+| [`APopover`](/ui/popover)                      | `@alikhalilll/ui/popover`            | Themed reka-ui popover — modal by default, optional overlay.                                     |
+| [`ADrawer`](/ui/drawer)                        | `@alikhalilll/ui/drawer`             | Bottom-sheet drawer (vaul-vue + reka-ui), drag-to-dismiss.                                       |
+| [`AResponsivePopover`](/ui/responsive-popover) | `@alikhalilll/ui/responsive-popover` | Popover on desktop, drawer on mobile. Single API.                                                |
 
 ## Install
 
@@ -27,41 +25,43 @@ The flagship composite component is **[`ATellInput`](/ui/tell-input)** — a pho
 pnpm add @alikhalilll/ui
 ```
 
-Peer dependency: `vue ^3.5.0`. The library bundles `reka-ui`, `vaul-vue`, `libphonenumber-js`, `lucide-vue-next`, `@vueuse/core`, `class-variance-authority`, `clsx`, and `tailwind-merge`. **It does NOT require Nuxt** — it works in any Vue 3 app.
+Peer dependency: `vue ^3.5.0`. The library bundles `reka-ui`, `vaul-vue`, `libphonenumber-js`, `lucide-vue-next`, `@vueuse/core`, `class-variance-authority`, `clsx`, and `tailwind-merge`. Works in any Vue 3 app — Nuxt is optional.
+
+### Subpath imports (recommended)
+
+Each component lives behind its own subpath so consumers pay only for what they import:
+
+```ts
+import { ATellInput } from '@alikhalilll/ui/tell-input'; // tree-shaken
+import { APopover } from '@alikhalilll/ui/popover';
+
+// Or the main entry — bundlers still tree-shake unused exports.
+import { ATellInput, APopover } from '@alikhalilll/ui';
+```
+
+Each component also ships its own README at `node_modules/@alikhalilll/ui/entries/<name>/README.md`.
 
 ## Setup
 
-Components are styled with Tailwind utility classes (`bg-popover`, `text-muted-foreground`, etc.) that resolve to CSS variables shipped in `@alikhalilll/ui/styles.css`. Three steps:
+Components style themselves with Tailwind utility classes (`bg-popover`, `text-muted-foreground`, …) that resolve to CSS variables. Three steps:
 
-### 1. Import the CSS variables
+### 1. Import the tokens
 
 ```ts
-// nuxt.config.ts (or wherever you import global CSS)
+// nuxt.config.ts
 export default defineNuxtConfig({
   css: ['@alikhalilll/ui/styles.css', '~/assets/main.css'],
 });
 ```
 
-Every variable is prefixed `--ak-ui-` so it cannot collide with your existing CSS:
+Every variable is prefixed `--ak-ui-` — guaranteed not to collide with your CSS.
 
-```css
-:root,
-.light {
-  --ak-ui-background: 0 0% 100%;
-  --ak-ui-foreground: 240 10% 3.9%; /* ... */
-}
-.dark {
-  --ak-ui-background: 240 10% 3.9%;
-  --ak-ui-foreground: 0 0% 98%; /* ... */
-}
-```
-
-### 2. Expose the tokens to Tailwind
-
-Tailwind v4 — add an `@theme inline` block to your global stylesheet so utility classes like `bg-popover` resolve to the lib's HSL variables:
+### 2. Map to Tailwind v4
 
 ```css
 @import 'tailwindcss';
+@import '@alikhalilll/ui/styles.css';
+@source '../node_modules/@alikhalilll/ui/dist/index.mjs';
 
 @theme inline {
   --color-background: hsl(var(--ak-ui-background));
@@ -80,21 +80,15 @@ Tailwind v4 — add an `@theme inline` block to your global stylesheet so utilit
 }
 ```
 
-Then add an `@source` directive so Tailwind v4 scans the library's compiled templates (it doesn't scan `node_modules` by default):
+The `@source` directive tells Tailwind v4 to scan the library's compiled templates (it skips `node_modules` by default). Inside a pnpm workspace, point at the source instead so HMR works:
 
 ```css
-@source '../node_modules/@alikhalilll/ui/dist/index.mjs';
+@source '../../packages/ui/**/*.{vue,ts}';
 ```
 
-Inside a pnpm workspace, point at the source directly so HMR works:
+### 3. Dark mode
 
-```css
-@source '../../packages/ui/src/**/*.{vue,ts}';
-```
-
-### 3. Toggle dark mode
-
-The lib ships **both** `:root, .light { … }` and `.dark { … }` blocks out of the box. Toggle the class on `<html>` (statically, with a `useColorMode` composable, or via a pre-paint inline script) and every component flips themes through the CSS cascade — including content rendered inside Teleport portals.
+The lib ships both `.light` and `.dark` blocks. Toggle the class on `<html>` — portaled popovers/drawers inherit via the cascade.
 
 ```ts
 // nuxt.config.ts — locked dark
@@ -103,80 +97,87 @@ export default defineNuxtConfig({
 });
 ```
 
-Or roll a tri-state Light / Dark / System switcher in three lines — see the docs site source under `apps/docs/composables/useColorMode.ts` + `AppHeader.vue` for a working pattern.
+For Light / Dark / System, see `apps/docs/composables/useColorMode.ts` in this repo.
 
-## Customization at a glance
+## Nuxt integration
 
-Three vectors compose together — pick one or stack them all.
+`@alikhalilll/ui` is a plain Vue 3 library — it works in Nuxt 3 and 4 without a module wrapper. The docs site you're reading right now is a Nuxt app importing components directly from this package.
 
-### Slots (replace any visible region)
-
-| Component        | Slots                                                                                                                                                                                                                  |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ATellInput`     | `prefix`, `suffix`, `valid-icon`, `error-icon`, `hint`, `error`, plus forwarded from `ACountrySelect`: `trigger`, `chevron`, `flag`, `search`, `search-icon`, `loading`, `empty`, `group-header`, `item`, `item-check` |
-| `ACountrySelect` | Same set as above (without the validation/prefix/suffix slots)                                                                                                                                                         |
-| `AInput`         | `prefix`, `suffix` — when either is filled, the component wraps the native input in a bordered row so the prefix/suffix sit inside the field                                                                           |
-| `ACountryFlag`   | `empty` — fallback when no ISO2 is provided                                                                                                                                                                            |
-
-### Data-override props (replace the data source)
-
-| Prop                   | Type                                             | Replaces                                                                                                    |
-| ---------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
-| `flagUrl`              | `(iso2, width) => string`                        | The default `flagcdn.com` URL builder. Swap for SVG sprites, your CDN, or the `country-flag-icons` package. |
-| `countries`            | `CountryOption[]`                                | The internal REST Countries fetch. Useful for curated lists or fully offline.                               |
-| `searcher`             | `(query, country) => boolean`                    | The default `search_key.includes(q)` filter. Implement fuzzy / starts-with / locale-aware matching.         |
-| `detector`             | `(opts) => Promise<string \| null>`              | The IP → timezone → locale chain. Return `null` to fall through to the built-in chain.                      |
-| `errorMessages`        | `Partial<Record<PhoneValidationReason, string>>` | English defaults — useful for i18n.                                                                         |
-| `kbdOpen` / `kbdClose` | `string \| null`                                 | The `⌘K` / `Esc` keyboard hints in the picker. Pass `null` to hide.                                         |
-| `maxResults`           | `number`                                         | Cap on search result count (default 80).                                                                    |
-| `suggestedLimit`       | `number`                                         | Cap on "Suggested" group items (default 4).                                                                 |
-
-### Class-override props (every region)
-
-`class`, `fieldClass`, `inputClass`, `contentClass`, `popoverClass`, `drawerClass`, `triggerClass`, `hintClass`, `errorClass`. All merged via `tailwind-merge`, so you only specify the bits you want to change.
-
-### CSS variables (prefixed `--ak-ui-*`)
-
-19 design tokens for background, popover, muted, accent, destructive, border, input, ring, radius, plus their `*-foreground` pairs. Override on `:root`, `.dark`, or any scoped class for per-tenant theming.
-
-See the full live customization gallery on the [`ATellInput`](/ui/tell-input#full-customization) page — Cream pill, Banking, Playful, Minimal, plus an "everything customized" reference example.
-
-## Size scale
-
-Every interactive component (`AInput`, `ATellInput`, `ACountrySelect`) shares one scale:
-
-| Token | Height              | Tailwind   |
-| ----- | ------------------- | ---------- |
-| `xs`  | 28 px               | `h-7`      |
-| `sm`  | 36 px               | `h-9`      |
-| `md`  | **43 px (default)** | `h-[43px]` |
-| `lg`  | 52 px               | `h-[52px]` |
-| `xl`  | 60 px               | `h-[60px]` |
-
-The maps are exported so you can build your own size-aware components:
+### Minimal config
 
 ```ts
-import {
-  SIZES,
-  DEFAULT_SIZE,
-  controlHeight,
-  controlPaddingX,
-  controlTextSize,
-  controlHeightPx,
-  type Size,
-} from '@alikhalilll/ui';
+// nuxt.config.ts
+export default defineNuxtConfig({
+  css: ['@alikhalilll/ui/styles.css'],
+  app: { head: { htmlAttrs: { class: 'dark' } } }, // or .light
+});
 ```
+
+```vue
+<script setup lang="ts">
+import { ref } from 'vue';
+import { ATellInput } from '@alikhalilll/ui/tell-input';
+
+const phone = ref('');
+const country = ref<number | null>(null);
+</script>
+
+<template>
+  <ATellInput v-model:phone="phone" v-model:country="country" show-validation />
+</template>
+```
+
+### Auto-imports (optional)
+
+To skip the explicit `import` in every component, register the library as a global component source:
+
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  components: [{ path: '@alikhalilll/ui', pathPrefix: false, global: true }],
+});
+```
+
+`<ATellInput />`, `<APopover />`, etc. become available in templates without any import. Subpath imports still tree-shake better when you opt out of this and import per component.
+
+### SSR behaviour
+
+- **Country detection** runs only in `onMounted` — the input renders immediately with `defaultCountry` (or empty if you don't set one). The IP/timezone/locale resolution patches in on hydration; there's no SSR network call.
+- **Responsive popover** uses `useMediaQuery('(min-width: 768px)')`, which returns `false` during SSR. The first server-rendered paint is the drawer branch; the client may swap to the popover branch on hydration. Both branches are pre-imported (no lazy chunks) so hydration always finds the right tree, and the closed drawer is collapsed so the swap is invisible.
+- **Tailwind v4 source globs** — when you import the package from `node_modules`, point Tailwind at the dist:
+
+  ```css
+  @source '../node_modules/@alikhalilll/ui/dist/index.mjs';
+  ```
+
+  Inside this monorepo (or any workspace setup) point at the source so HMR works:
+
+  ```css
+  @source '../../packages/ui/index.ts';
+  @source '../../packages/ui/entries/**/*.{vue,ts}';
+  @source '../../packages/ui/utils/**/*.ts';
+  ```
+
+### Per-subpath imports inside Nuxt
+
+Subpath imports (`@alikhalilll/ui/tell-input`, `@alikhalilll/ui/popover`, …) work identically inside Nuxt. They give the smallest client bundle — only the chunks you actually import ship to the browser.
+
+```ts
+import { ATellInput } from '@alikhalilll/ui/tell-input';
+import { APopover, APopoverContent, APopoverTrigger } from '@alikhalilll/ui/popover';
+```
+
+The trade-off vs. auto-imports: subpath imports are explicit (easier to grep, easier to tree-shake). Auto-imports are terser at the cost of pulling the main entry. Pick one per project.
 
 ## Theming
 
-The lib ships HSL CSS variables for a light and a dark mode. Override them anywhere in the cascade — globally on `:root`, or scoped to a single section for per-tenant theming.
+Override any `--ak-ui-*` variable globally, scoped to a wrapper, or inline. Portaled content inherits.
 
 ```css
-/* Per-tenant theme — scope to a wrapper class */
+/* Per-tenant theme */
 .tenant-acme {
   --ak-ui-popover: 220 70% 8%;
-  --ak-ui-popover-foreground: 220 30% 96%;
-  --ak-ui-accent: 220 70% 30%;
+  --ak-ui-accent: 220 50% 30%;
   --ak-ui-ring: 220 100% 65%;
 }
 ```
@@ -187,45 +188,53 @@ The lib ships HSL CSS variables for a light and a dark mode. Override them anywh
 </div>
 ```
 
-Eight live theming recipes (brand-color-only, dynamic JSON-driven, day/night toggle, multi-tenant, state-specific surfaces, etc.) are demonstrated on the [`ATellInput`](/ui/tell-input#theming) page.
+Values are HSL **triplets** — no `hsl(…)` wrapper — because the Tailwind tokens compose them via `hsl(var(--ak-ui-…))`.
 
-## Public API surface
+| Variable                              | Used for                                          |
+| ------------------------------------- | ------------------------------------------------- |
+| `--ak-ui-background` / `*-foreground` | Page background + text                            |
+| `--ak-ui-popover` / `*-foreground`    | Popover surfaces + their text                     |
+| `--ak-ui-muted` / `*-foreground`      | Hint text, search bar bg, country trigger bg      |
+| `--ak-ui-accent` / `*-foreground`     | List hover + selected row                         |
+| `--ak-ui-destructive`                 | Error ring + warning icon                         |
+| `--ak-ui-border` / `--ak-ui-input`    | Outer border + inner dividers                     |
+| `--ak-ui-ring`                        | Focus ring (the visual "brand")                   |
+| `--ak-ui-radius`                      | Border radius (no Tailwind token — used directly) |
 
-Everything exported from `@alikhalilll/ui`:
+Live theming recipes (brand-only, day/night, multi-tenant, server-driven, state-specific) live on the [`ATellInput`](/ui/tell-input#theming) page.
 
-**Components**
+## Size scale
 
-- [`ATellInput`](/ui/tell-input), `ACountrySelect`, `ACountryFlag`
-- [`AInput`](/ui/input)
-- [`APopover`](/ui/popover), `APopoverTrigger`, `APopoverContent`
-- [`ADrawer`](/ui/drawer), `ADrawerTrigger`, `ADrawerContent`, `ADrawerOverlay`
-- [`AResponsivePopover`](/ui/responsive-popover), `AResponsivePopoverTrigger`, `AResponsivePopoverContent`
+Every interactive component shares one scale:
 
-**Composables**
+| Token | Height              | Tailwind   |
+| ----- | ------------------- | ---------- |
+| `xs`  | 28 px               | `h-7`      |
+| `sm`  | 36 px               | `h-9`      |
+| `md`  | **43 px (default)** | `h-[43px]` |
+| `lg`  | 52 px               | `h-[52px]` |
+| `xl`  | 60 px               | `h-[60px]` |
 
-- `usePhoneValidation()` — country list (REST Countries + localStorage cache), `validate()`, `searchCountries()`, `getCountryByValue()`, `getCountriesByDial()`, `getRequiredInfo()`
-- `useCountryDetection(opts?)` — reactive `{ country, isLoading, refresh }`
-- `detectCountry(opts?)` — imperative one-shot detection
+The maps are exported for building size-aware components:
 
-**Helpers**
+```ts
+import { SIZES, controlHeight, controlPaddingX, controlTextSize, type Size } from '@alikhalilll/ui';
+```
 
-- `cn` — `clsx` + `tailwind-merge`
-- `SIZES`, `DEFAULT_SIZE`, `controlHeight`, `controlPaddingX`, `controlTextSize`, `controlHeightPx`
-- `aTellInputVariants`, `DEFAULT_ERROR_MESSAGES`
-- `defaultFlagUrl(iso2, width)` — the default flag URL builder (handy to wrap when customizing `flagUrl`)
+## Public API
 
-**Types**
+**Components** — `ATellInput`, `ACountrySelect`, `ACountryFlag`, `AInput`, `APopover` + `Trigger` + `Content`, `ADrawer` + `Trigger` + `Content` + `Overlay`, `AResponsivePopover` + `Trigger` + `Content`.
 
-- `ATellInputProps` · `ATellInputSize` · `ATellInputVariants` · `Size`
-- `CountryOption` · `PhoneValidationResult` · `PhoneValidationReason` · `PhoneRequiredInfo`
-- `DetectionStrategy` · `DetectCountryOptions` · `UseCountryDetectionReturn` · `UsePhoneValidationReturn`
-- `FlagUrlBuilder`
+**Composables** — `usePhoneValidation`, `useCountryDetection`, imperative `detectCountry`.
 
-## Important notes
+**Helpers** — `cn`, `SIZES`, `DEFAULT_SIZE`, `controlHeight`, `controlPaddingX`, `controlTextSize`, `controlHeightPx`, `aTellInputVariants`, `DEFAULT_ERROR_MESSAGES`, `defaultFlagUrl`.
 
-- **Country detection** runs in `onMounted`, never on the server — the input always renders immediately with the `defaultCountry`, and the detected ISO2 patches in on the client.
-- The **responsive popover** uses `useMediaQuery('(min-width: 768px)')`, which is `false` during SSR. The first server-rendered paint is the drawer variant; the client may swap to the popover variant on hydration. The vaul-vue drawer is collapsed when closed, so this is invisible.
-- The lib's CSS variables ship via `@alikhalilll/ui/styles.css` — make sure it's listed in your `css: [...]` _before_ any consumer overrides so your overrides win the cascade.
+**Types** — `ATellInputProps`, `Size`, `CountryOption`, `PhoneValidationResult`, `PhoneValidationReason`, `PhoneRequiredInfo`, `DetectionStrategy`, `DetectCountryOptions`, `FlagUrlBuilder`.
+
+## Notes
+
+- Country detection runs in `onMounted` (client-only) — the input renders immediately with `defaultCountry`; the detected ISO2 patches in on hydration.
+- Import `@alikhalilll/ui/styles.css` **before** your own overrides so your overrides win the cascade.
 
 ## License
 

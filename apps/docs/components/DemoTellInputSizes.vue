@@ -5,10 +5,10 @@ import { ATellInput, SIZES, controlHeightPx, type Size } from '@alikhalilll/ui';
 interface Row {
   size: Size;
   phone: string;
-  country: string;
+  country: number | null;
 }
 
-const rows = ref<Row[]>(SIZES.map((s) => ({ size: s, phone: '', country: '' })));
+const rows = ref<Row[]>(SIZES.map((s) => ({ size: s, phone: '', country: null })));
 
 const source = `<script setup lang="ts">
 import { ATellInput, SIZES, controlHeightPx, type Size } from '@alikhalilll/ui';
@@ -19,7 +19,7 @@ import { ATellInput, SIZES, controlHeightPx, type Size } from '@alikhalilll/ui';
     <div class="w-24 pt-2 font-mono text-xs">
       {{ size }} · {{ controlHeightPx[size] }}px
     </div>
-    <ATellInput :size="size" default-country="EG" />
+    <ATellInput :size="size" default-country="20" />
   </div>
 </template>`;
 </script>
@@ -44,7 +44,7 @@ import { ATellInput, SIZES, controlHeightPx, type Size } from '@alikhalilll/ui';
               v-model:phone="row.phone"
               v-model:country="row.country"
               :size="row.size"
-              default-country="EG"
+              default-country="20"
             />
           </div>
         </div>

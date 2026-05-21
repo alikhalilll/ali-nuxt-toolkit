@@ -9,7 +9,9 @@
  * For consumers installing from npm, the equivalent is:
  *   @source '../node_modules/@alikhalilll/ui/dist/index.mjs';
  */
-@source '../../../packages/ui/src/**/*.{vue,ts}';
+@source '../../../packages/ui/index.ts';
+@source '../../../packages/ui/entries/**/*.{vue,ts}';
+@source '../../../packages/ui/utils/**/*.ts';
 
 /* Playground-only tokens (renamed to avoid collisions with lib tokens) */
 @theme {

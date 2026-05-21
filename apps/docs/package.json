@@ -14,6 +14,7 @@
     "@alikhalilll/nuxt-api-provider": "workspace:*",
     "@alikhalilll/nuxt-crypto": "workspace:*",
     "@alikhalilll/nuxt-auto-middleware": "workspace:*",
+    "@alikhalilll/ui": "workspace:*",
     "@nuxt/content": "^3.0.0",
     "better-sqlite3": "^12.0.0"
   },

@@ -408,7 +408,9 @@ Headless, [shadcn-vue](https://www.shadcn-vue.com) style Vue 3 components built 
 
 A composite phone-number input that:
 
-- Auto-detects the user's country (IP → timezone → `navigator.language` → fallback) with override hooks at every step.
+- **Default shape**: plain tel input with the country picker hidden. Detection runs against what the user types or pastes (debounced, NANP-aware via libphonenumber-js); on first match the picker slides in pre-filled and the dial code + national prefix get stripped from `phone`.
+- Other shapes are variants — `default-country="…"`, `v-model:country`, or `:detect-from-input="false"` for the legacy always-visible picker.
+- Silent IP → timezone → `navigator.language` lookup runs as a parsing hint so local formats (e.g. Egyptian `01066105963`) resolve even without a `+` prefix.
 - Validates + formats numbers via `libphonenumber-js`, exposes a structured `PhoneValidationResult`.
 - Renders a **popover on desktop / vaul-vue drawer on mobile** country picker with a "Suggested" group (current + recents from localStorage) above the full list.
 - Is **fully customizable** — every visual region is a slot, every data source is a prop, every region accepts its own class.
@@ -453,7 +455,7 @@ import { ref } from 'vue';
 import { ATellInput } from '@alikhalilll/ui';
 
 const phone = ref('');
-const country = ref('');
+const country = ref<number | null>(null);
 </script>
 
 <template>

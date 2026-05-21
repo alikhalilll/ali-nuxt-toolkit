@@ -4,7 +4,7 @@ import { ChevronDown, Frown, PartyPopper, Sparkles, Smile } from 'lucide-vue-nex
 import { ATellInput } from '@alikhalilll/ui';
 
 const phone = ref('');
-const country = ref('');
+const country = ref<number | null>(null);
 
 const playfulTheme = {
   '--ak-ui-background': '20 40% 7%',
@@ -27,7 +27,7 @@ import { ChevronDown, Frown, PartyPopper, Sparkles, Smile } from 'lucide-vue-nex
 import { ATellInput } from '@alikhalilll/ui';
 
 const phone = ref('');
-const country = ref('');
+const country = ref<number | null>(null);
 
 // Sunset warm theme + pill radius
 const playfulTheme = {
@@ -58,7 +58,7 @@ const playfulTheme = {
     <ATellInput
       v-model:phone="phone"
       v-model:country="country"
-      default-country="EG"
+      default-country="20"
       size="xl"
       show-validation
       placeholder="Phone number"
@@ -138,7 +138,7 @@ const playfulTheme = {
           <ATellInput
             v-model:phone="phone"
             v-model:country="country"
-            default-country="EG"
+            default-country="20"
             size="xl"
             show-validation
             placeholder="Phone number"

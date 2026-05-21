@@ -4,7 +4,7 @@ import { ChevronDown, Smartphone } from 'lucide-vue-next';
 import { ATellInput } from '@alikhalilll/ui';
 
 const phone = ref('234567890');
-const country = ref('US');
+const country = ref<number | null>(1);
 
 const creamTheme = {
   '--ak-ui-background': '36 50% 96%',
@@ -27,7 +27,7 @@ import { ChevronDown, Smartphone } from 'lucide-vue-next';
 import { ATellInput } from '@alikhalilll/ui';
 
 const phone = ref('');
-const country = ref('US');
+const country = ref<number | null>(1);
 
 // Warm light-mode palette + pill radius
 const creamTheme = {
@@ -53,7 +53,7 @@ const creamTheme = {
     <ATellInput
       v-model:phone="phone"
       v-model:country="country"
-      default-country="US"
+      default-country="1"
       size="xl"
       field-class="border-2"
       input-class="text-base font-medium tracking-wide"
@@ -112,7 +112,7 @@ const creamTheme = {
           <ATellInput
             v-model:phone="phone"
             v-model:country="country"
-            default-country="US"
+            default-country="1"
             size="xl"
             field-class="border-2"
             input-class="text-base font-medium tracking-wide"

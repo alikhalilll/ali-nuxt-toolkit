@@ -1,13 +1,13 @@
 ---
 title: ADrawer
-description: vaul-vue Drawer wrapper. Bottom-anchored, drag-to-dismiss, with overlay + scroll-lock.
+description: Themed bottom-sheet drawer built on vaul-vue + reka-ui. Drag-to-dismiss with overlay and scroll-lock.
 package: '@alikhalilll/ui'
 order: 4
 ---
 
 # ADrawer
 
-Wraps [vaul-vue](https://github.com/unovue/vaul-vue) — the Vue port of Emil Kowalski's Vaul. A bottom-anchored sheet that can be dragged down to dismiss, with built-in scroll lock, background scaling, and an animated overlay.
+Wraps [vaul-vue](https://github.com/unovue/vaul-vue) — a bottom-anchored sheet that drags to dismiss, with overlay, scroll lock, and background-scale built in.
 
 ::DemoDrawer
 ::
@@ -18,18 +18,18 @@ Wraps [vaul-vue](https://github.com/unovue/vaul-vue) — the Vue port of Emil Ko
 pnpm add @alikhalilll/ui
 ```
 
-If this is your first `@alikhalilll/ui` component, complete the [one-time setup](/ui#setup) (CSS import + Tailwind `@theme inline` mapping + `.dark` class). Then import:
-
 ```ts
-import { ADrawer, ADrawerTrigger, ADrawerContent } from '@alikhalilll/ui';
+import { ADrawer, ADrawerTrigger, ADrawerContent } from '@alikhalilll/ui/drawer';
 ```
 
-## Basic usage
+First time using `@alikhalilll/ui`? Run the [one-time setup](/ui#setup).
+
+## Usage
 
 ```vue
 <script setup lang="ts">
 import { ref } from 'vue';
-import { ADrawer, ADrawerTrigger, ADrawerContent } from '@alikhalilll/ui';
+import { ADrawer, ADrawerTrigger, ADrawerContent } from '@alikhalilll/ui/drawer';
 
 const open = ref(false);
 </script>
@@ -47,11 +47,9 @@ const open = ref(false);
 </template>
 ```
 
-`ADrawerContent` automatically includes a drag handle at the top and an `ADrawerOverlay` (dim backdrop) behind itself — you don't need to render those manually.
+`ADrawerContent` includes a drag handle at the top and an overlay automatically — no need to render them manually.
 
-## ADrawer (root) props
-
-Inherits every prop and emit from vaul-vue's [`DrawerRootProps` / `DrawerRootEmits`](https://github.com/unovue/vaul-vue#api). Highlights:
+## ADrawer props
 
 | Prop                    | Type                                     | Default    | Description                                 |
 | ----------------------- | ---------------------------------------- | ---------- | ------------------------------------------- |
@@ -60,30 +58,19 @@ Inherits every prop and emit from vaul-vue's [`DrawerRootProps` / `DrawerRootEmi
 | `modal`                 | `boolean`                                | `true`     | Lock body scroll while open.                |
 | `direction`             | `'top' \| 'bottom' \| 'left' \| 'right'` | `'bottom'` | Edge the drawer slides from.                |
 | `dismissible`           | `boolean`                                | `true`     | Whether the drawer can be dragged to close. |
-| `shouldScaleBackground` | `boolean`                                | **`true`** | Adds the subtle background-scale effect.    |
+| `shouldScaleBackground` | `boolean`                                | `true`     | Subtle background-scale effect.             |
 | `snapPoints`            | `(number \| string)[]`                   | —          | Multi-step snap positions.                  |
-| `closeThreshold`        | `number`                                 | `0.25`     | Drag distance fraction at which to close.   |
+| `closeThreshold`        | `number`                                 | `0.25`     | Drag fraction at which to close.            |
 | `handleOnly`            | `boolean`                                | `false`    | Restrict drag to the handle element.        |
 
-## ADrawerContent props
-
-| Prop    | Type                      | Default | Description                             |
-| ------- | ------------------------- | ------- | --------------------------------------- |
-| `class` | `HTMLAttributes['class']` | —       | Tailwind classes merged into the sheet. |
-
-Plus reka-ui's `DialogContentEmits` (`onEscapeKeyDown`, `onPointerDownOutside`, etc.) which are forwarded.
-
-## ADrawerOverlay
-
-Used internally by `ADrawerContent`. Exported in case you want to compose your own drawer-style sheet — sits at `z-40` with `bg-black/60 backdrop-blur-sm` and animates with the drawer's open/close state.
+All other props/emits from [`DrawerRoot`](https://github.com/unovue/vaul-vue#api) are forwarded.
 
 ## When to use vs. APopover
 
-| Use `ADrawer` when                     | Use [`APopover`](/ui/popover) when     |
-| -------------------------------------- | -------------------------------------- |
-| Mobile-first or full-bleed content     | Desktop-first or attached to a trigger |
-| Form sheets, multi-step actions        | Tooltips, comboboxes, dropdowns        |
-| Content that should slide from an edge | Content that floats near its trigger   |
-| You want drag-to-dismiss gestures      | You want positioning via floating-ui   |
+| Use `ADrawer` when               | Use [`APopover`](/ui/popover) when     |
+| -------------------------------- | -------------------------------------- |
+| Mobile-first, full-bleed content | Desktop-first, attached to a trigger   |
+| Form sheets, multi-step actions  | Tooltips, comboboxes, dropdowns        |
+| Drag-to-dismiss gestures         | Floating-ui positioning near a trigger |
 
-For "popover on desktop, drawer on mobile" — use [`AResponsivePopover`](/ui/responsive-popover).
+For both at once — popover on desktop, drawer on mobile — use [`AResponsivePopover`](/ui/responsive-popover).

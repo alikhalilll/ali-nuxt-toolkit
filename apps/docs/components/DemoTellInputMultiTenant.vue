@@ -3,9 +3,9 @@ import { ref } from 'vue';
 import { ATellInput } from '@alikhalilll/ui';
 
 const acmePhone = ref('');
-const acmeCountry = ref('');
+const acmeCountry = ref<number | null>(null);
 const novaPhone = ref('');
-const novaCountry = ref('');
+const novaCountry = ref<number | null>(null);
 
 const acmeTheme = {
   '--ak-ui-background': '155 50% 6%',
@@ -90,7 +90,7 @@ const source = `<style>
           <ATellInput
             v-model:phone="acmePhone"
             v-model:country="acmeCountry"
-            default-country="EG"
+            default-country="20"
             show-validation
           />
         </div>
@@ -108,7 +108,7 @@ const source = `<style>
           <ATellInput
             v-model:phone="novaPhone"
             v-model:country="novaCountry"
-            default-country="SA"
+            default-country="20"
             show-validation
           />
         </div>

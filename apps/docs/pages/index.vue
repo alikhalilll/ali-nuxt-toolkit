@@ -102,7 +102,7 @@ const packages: PackageCard[] = [
     docs: '/ui',
     npm: 'https://www.npmjs.com/package/@alikhalilll/ui',
     description:
-      'Headless, shadcn-vue style components. First component: ATellInput — automatic country detection, libphonenumber-js validation, popover on desktop / vaul-vue drawer on mobile.',
+      'Headless Vue 3 components — ATellInput, APopover, ADrawer, AResponsivePopover, AInput. Each lives behind its own subpath import (`@alikhalilll/ui/tell-input`, …) so you only ship the components you use.',
     accent: 'ui',
   },
 ];
@@ -149,12 +149,13 @@ const packages: PackageCard[] = [
           class="mb-6 text-4xl font-bold tracking-tight text-text sm:text-5xl md:text-6xl"
           style="letter-spacing: -0.03em; line-height: 1.05"
         >
-          <span class="text-gradient-brand">Strongly-typed</span> Nuxt modules.<br />
-          <span class="text-text-dim">Pick one, or all three.</span>
+          <span class="text-gradient-brand">Strongly-typed</span> toolkit for Nuxt.<br />
+          <span class="text-text-dim">Pick one, or all four.</span>
         </h1>
         <p class="mx-auto mb-8 max-w-2xl text-base text-text-dim sm:text-lg">
           A typed fetch client with retry and progress. AES-GCM + PBKDF2 crypto. Layout-based route
-          middleware. Built for Nuxt 3 and 4 — independently usable, zero overlap.
+          middleware. A tree-shakable headless component library. Built for Nuxt 3 / 4 and Vue 3 —
+          independently usable, zero overlap.
         </p>
         <div class="flex flex-wrap items-center justify-center gap-3">
           <NuxtLink
@@ -263,7 +264,8 @@ const packages: PackageCard[] = [
         <div>
           <h2 class="text-xl font-semibold tracking-tight text-text sm:text-2xl">Packages</h2>
           <p class="mt-1 text-sm text-text-dim">
-            Each package is independently installable. Same ergonomics across all three.
+            Each package is independently installable. The UI lib ships its components behind their
+            own subpath imports, so you only bundle what you actually use.
           </p>
         </div>
       </div>

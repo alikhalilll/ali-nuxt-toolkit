@@ -3,14 +3,14 @@ import { ref } from 'vue';
 import { ATellInput } from '@alikhalilll/ui';
 
 const phone = ref('');
-const country = ref('');
+const country = ref<number | null>(null);
 
 const source = `<script setup lang="ts">
 import { ref } from 'vue';
 import { ATellInput } from '@alikhalilll/ui';
 
 const phone = ref('');
-const country = ref('');
+const country = ref<number | null>(null);
 \u003c/script>
 
 <template>
@@ -18,7 +18,7 @@ const country = ref('');
     v-model:phone="phone"
     v-model:country="country"
     :allowed-dial-codes="['20', '966', '971']"
-    default-country="SA"
+    default-country="20"
     show-validation
   />
 </template>`;
@@ -42,7 +42,7 @@ const country = ref('');
             v-model:phone="phone"
             v-model:country="country"
             :allowed-dial-codes="['20', '966', '971']"
-            default-country="SA"
+            default-country="20"
             show-validation
           />
         </div>

@@ -4,7 +4,7 @@ import { BadgeAlert, BadgeCheck, ShieldCheck, Smartphone } from 'lucide-vue-next
 import { ATellInput } from '@alikhalilll/ui';
 
 const phone = ref('');
-const country = ref('');
+const country = ref<number | null>(null);
 
 const bankTheme = {
   '--ak-ui-background': '222 35% 8%',
@@ -27,7 +27,7 @@ import { BadgeAlert, BadgeCheck, ShieldCheck, Smartphone } from 'lucide-vue-next
 import { ATellInput } from '@alikhalilll/ui';
 
 const phone = ref('');
-const country = ref('');
+const country = ref<number | null>(null);
 
 // Indigo identity-verification palette
 const bankTheme = {
@@ -56,7 +56,7 @@ const bankTheme = {
     <ATellInput
       v-model:phone="phone"
       v-model:country="country"
-      default-country="SA"
+      default-country="20"
       show-validation
       placeholder="5XXXXXXXX"
     >
@@ -112,7 +112,7 @@ const bankTheme = {
           <ATellInput
             v-model:phone="phone"
             v-model:country="country"
-            default-country="SA"
+            default-country="20"
             show-validation
             placeholder="5XXXXXXXX"
           >

@@ -1,7 +1,7 @@
 {
   "name": "@alikhalilll/ui",
   "version": "1.0.0",
-  "description": "Headless, shadcn-vue style component library. Scalable, fully typed, with sensible defaults and a tel input that detects the user's country automatically.",
+  "description": "Headless, shadcn-vue style Vue 3 component library — every component is its own importable subpath (`@alikhalilll/ui/tell-input`, `@alikhalilll/ui/popover`, …) so users pay only for what they actually use.",
   "license": "MIT",
   "author": "alikhalilll",
   "repository": {
@@ -38,12 +38,38 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs"
     },
-    "./styles.css": "./dist/styles.css",
+    "./tell-input": {
+      "types": "./dist/tell-input.d.ts",
+      "import": "./dist/tell-input.mjs"
+    },
+    "./input": {
+      "types": "./dist/input.d.ts",
+      "import": "./dist/input.mjs"
+    },
+    "./popover": {
+      "types": "./dist/popover.d.ts",
+      "import": "./dist/popover.mjs"
+    },
+    "./drawer": {
+      "types": "./dist/drawer.d.ts",
+      "import": "./dist/drawer.mjs"
+    },
+    "./responsive-popover": {
+      "types": "./dist/responsive-popover.d.ts",
+      "import": "./dist/responsive-popover.mjs"
+    },
+    "./utils": {
+      "types": "./dist/utils.d.ts",
+      "import": "./dist/utils.mjs"
+    },
+    "./assets/styles.css": "./dist/assets/styles.css",
+    "./styles.css": "./dist/assets/styles.css",
     "./package.json": "./package.json"
   },
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
+    "entries/**/README.md",
     "README.md",
     "LICENSE"
   ],
@@ -52,7 +78,7 @@
   },
   "scripts": {
     "clean": "rimraf dist",
-    "build": "pnpm clean && vite build && node -e \"require('node:fs').copyFileSync('src/styles.css','dist/styles.css')\"",
+    "build": "pnpm clean && vite build && node -e \"const fs=require('node:fs'); fs.mkdirSync('dist/assets',{recursive:true}); fs.copyFileSync('assets/styles.css','dist/assets/styles.css');\"",
     "typecheck": "vue-tsc --noEmit -p tsconfig.json",
     "prepack": "pnpm build"
   },

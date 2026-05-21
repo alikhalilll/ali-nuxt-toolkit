@@ -17,6 +17,20 @@ pnpm add @alikhalilll/ui
 
 Peer dependency: `vue ^3.5.0`. The library bundles `reka-ui`, `vaul-vue`, `libphonenumber-js`, `lucide-vue-next`, `@vueuse/core`, `class-variance-authority`, `clsx`, and `tailwind-merge`.
 
+### Per-component subpath imports
+
+Each component lives behind its own subpath so consumers can pull a single component without dragging the rest of the library into their bundle:
+
+```ts
+// Minimal — only the tell-input chunk gets included.
+import { ATellInput } from '@alikhalilll/ui/tell-input';
+
+// Or the main entry (modern bundlers tree-shake unused exports via `sideEffects`).
+import { ATellInput } from '@alikhalilll/ui';
+```
+
+Available subpaths: `/tell-input`, `/input`, `/popover`, `/drawer`, `/responsive-popover`, `/utils`.
+
 ## Setup
 
 The components are styled with Tailwind utility classes (`bg-popover`, `text-destructive`, etc.) that resolve to CSS variables shipped in `@alikhalilll/ui/styles.css`. You need to:
@@ -76,14 +90,14 @@ import { ref } from 'vue';
 import { ATellInput } from '@alikhalilll/ui';
 
 const phone = ref('');
-const country = ref('');
+const country = ref<number | null>(null);
 </script>
 
 <template>
   <ATellInput
     v-model:phone="phone"
     v-model:country="country"
-    default-country="SA"
+    default-country="20"
     show-validation
   />
 </template>
@@ -101,8 +115,10 @@ const country = ref('');
 | `size`              | `'sm' \| 'default' \| 'lg'`                      | `'default'`                    | Controls input height (32 / 36 / 40 px).                                                   |
 | `allowedDialCodes`  | `string[]`                                       | _all_                          | Whitelist of dial-digit codes (no `+`). Countries outside the list are shown but disabled. |
 | `showValidation`    | `boolean`                                        | `false`                        | Renders an error message below the input when invalid.                                     |
-| `detectCountry`     | `'auto' \| 'locale' \| 'none'`                   | `'auto'`                       | Country auto-detect strategy.                                                              |
-| `defaultCountry`    | `string`                                         | `'US'`                         | Fallback ISO2 when detection fails or is disabled.                                         |
+| `detectCountry`     | `'auto' \| 'locale' \| 'none'`                   | `'auto'`                       | Strategy for the silent environment lookup (hint source for input detection).              |
+| `defaultCountry`    | `string`                                         | `''`                           | Explicit initial country. When set, the picker is visible at mount.                        |
+| `detectFromInput`   | `boolean`                                        | `true`                         | Default mode: picker hidden until input matches a dial code. Set `false` for legacy.       |
+| `detectDebounceMs`  | `number`                                         | `150`                          | Debounce window (ms) for input-driven detection.                                           |
 | `ipEndpoint`        | `string`                                         | `'https://ipapi.co/json/'`     | Override the geolocation endpoint. Must return JSON with `country_code` or `country`.      |
 | `searchPlaceholder` | `string`                                         | `'Search by country or code…'` | Country picker search input placeholder.                                                   |
 | `emptyText`         | `string`                                         | `'No countries found.'`        | Shown when the search yields no results.                                                   |

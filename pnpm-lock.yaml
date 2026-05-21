@@ -86,6 +86,9 @@ importers:
       '@alikhalilll/nuxt-crypto':
         specifier: workspace:*
         version: link:../../packages/crypto
+      '@alikhalilll/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       '@nuxt/content':
         specifier: ^3.0.0
         version: 3.13.0(better-sqlite3@12.9.0)(magicast@0.5.2)

@@ -3,7 +3,7 @@ import { ref } from 'vue';
 import { ATellInput } from '@alikhalilll/ui';
 
 const phone = ref('');
-const country = ref('');
+const country = ref<number | null>(null);
 const mode = ref<'dark' | 'light'>('dark');
 
 const source = `<script setup lang="ts">
@@ -11,7 +11,7 @@ import { ref } from 'vue';
 import { ATellInput } from '@alikhalilll/ui';
 
 const phone = ref('');
-const country = ref('');
+const country = ref<number | null>(null);
 const mode = ref<'dark' | 'light'>('dark');
 \u003c/script>
 
@@ -24,7 +24,7 @@ const mode = ref<'dark' | 'light'>('dark');
     <ATellInput
       v-model:phone="phone"
       v-model:country="country"
-      default-country="SA"
+      default-country="20"
       show-validation
     />
   </div>
@@ -78,7 +78,7 @@ const mode = ref<'dark' | 'light'>('dark');
             <ATellInput
               v-model:phone="phone"
               v-model:country="country"
-              default-country="SA"
+              default-country="20"
               show-validation
             />
           </div>

@@ -3,7 +3,7 @@ import { computed, ref } from 'vue';
 import { ATellInput } from '@alikhalilll/ui';
 
 const phone = ref('');
-const country = ref('');
+const country = ref<number | null>(null);
 
 const tellRef = ref<InstanceType<typeof ATellInput> | null>(null);
 const validation = computed(() => tellRef.value?.validation);
@@ -14,7 +14,7 @@ import { computed, ref } from 'vue';
 import { ATellInput } from '@alikhalilll/ui';
 
 const phone = ref('');
-const country = ref('');
+const country = ref<number | null>(null);
 
 const tellRef = ref<InstanceType<typeof ATellInput> | null>(null);
 const validation = computed(() => tellRef.value?.validation);
@@ -26,7 +26,7 @@ const dialCode = computed(() => tellRef.value?.selectedDialCode);
     ref="tellRef"
     v-model:phone="phone"
     v-model:country="country"
-    default-country="SA"
+    default-country="20"
     show-validation
   />
 </template>`;
@@ -45,7 +45,7 @@ const dialCode = computed(() => tellRef.value?.selectedDialCode);
             ref="tellRef"
             v-model:phone="phone"
             v-model:country="country"
-            default-country="SA"
+            default-country="20"
             show-validation
           />
         </div>

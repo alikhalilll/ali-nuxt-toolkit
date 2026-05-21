@@ -4,7 +4,9 @@
  * Make Tailwind v4 scan the @alikhalilll/ui package for utility classes (bg-popover,
  * text-muted-foreground, etc.). Without this the components used in demos render unstyled.
  */
-@source '../../../packages/ui/src/**/*.{vue,ts}';
+@source '../../../packages/ui/index.ts';
+@source '../../../packages/ui/entries/**/*.{vue,ts}';
+@source '../../../packages/ui/utils/**/*.ts';
 
 /*
  * Expose @alikhalilll/ui design tokens as Tailwind utility classes.

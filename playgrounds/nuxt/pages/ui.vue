@@ -9,11 +9,12 @@ import {
 } from '@alikhalilll/ui';
 
 const phone = ref('');
-const country = ref('');
+const country = ref<number | null>(null);
 const allowedOnly = ref<string[]>([]);
 const allowOnlyEgypt = ref(false);
 const showValidation = ref(true);
 const detectMode = ref<'auto' | 'locale' | 'none'>('auto');
+const detectFromInput = ref(true);
 const theme = ref<'dark' | 'light'>('dark');
 const size = ref<'xs' | 'sm' | 'md' | 'lg' | 'xl'>('md');
 
@@ -103,8 +104,9 @@ watch(theme, (t) => applyTheme(t));
             :allowed-dial-codes="allowedOnly.length ? allowedOnly : undefined"
             :show-validation="showValidation"
             :detect-country="detectMode"
+            :detect-from-input="detectFromInput"
             :size="size"
-            default-country="SA"
+            default-country="20"
           />
         </div>
 
@@ -112,6 +114,17 @@ watch(theme, (t) => applyTheme(t));
           <label class="flex items-center gap-2">
             <input v-model="showValidation" type="checkbox" />
             <span>show-validation</span>
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input v-model="detectFromInput" type="checkbox" />
+            <span
+              >detect-from-input
+              <span class="text-text-dim text-xs">
+                — hide picker until input matches a dial code (try
+                <code>+447911123456</code>)
+              </span>
+            </span>
           </label>
 
           <label class="flex items-center gap-2">
@@ -207,7 +220,7 @@ watch(theme, (t) => applyTheme(t));
         <ATellInput
           v-model:phone="customPhone"
           v-model:country="customCountry"
-          default-country="EG"
+          default-country="20"
           show-validation
           :countries="curated"
           :flag-url="hiResFlag"
