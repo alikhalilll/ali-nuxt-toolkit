@@ -17,6 +17,7 @@ import {
   parsePhoneNumberFromString,
 } from 'libphonenumber-js';
 import examples from 'libphonenumber-js/examples.mobile.json';
+import { normalizeDigits } from '../utils/digits';
 
 /* -----------------------------------------------------------------------------
  * Public types
@@ -77,8 +78,18 @@ export interface PhoneValidationResult {
 }
 
 export type ValidateArgs =
-  | { country: { iso2: string; dial_code?: string } | null | undefined; phone?: undefined }
-  | { country: { iso2: string; dial_code?: string } | null | undefined; phone: string | null };
+  | {
+      country: { iso2: string; dial_code?: string } | null | undefined;
+      phone?: undefined;
+      /** BCP-47 locale — localizes the numerals in the returned `required.format_hint`. */
+      locale?: string;
+    }
+  | {
+      country: { iso2: string; dial_code?: string } | null | undefined;
+      phone: string | null;
+      /** BCP-47 locale — localizes the numerals in the returned `required.format_hint`. */
+      locale?: string;
+    };
 
 const STORAGE_KEY = 'ali_ui_phone_countries_v1';
 const REST_COUNTRIES_URL = 'https://restcountries.com/v3.1/all?fields=name,cca2,idd,flags';
@@ -88,7 +99,23 @@ const EX = examples as unknown as Examples;
 const isBrowser = () => typeof window !== 'undefined';
 
 function toDigits(v: unknown) {
-  return String(v ?? '').replace(/\D/g, '');
+  // Fold alternative numeral systems (Arabic-Indic, Persian, Devanagari, Bengali) down to
+  // ASCII first, so a number typed in the user's own script still validates.
+  return normalizeDigits(String(v ?? '')).replace(/\D/g, '');
+}
+
+/**
+ * Render an ASCII digit string in a locale's numeral system (e.g. `'ar'` → `٠-٩`).
+ * Used only for display hints — falls back to ASCII if the locale is unknown.
+ */
+function localizeDigits(digits: string, locale?: string): string {
+  if (!locale) return digits;
+  try {
+    const fmt = new Intl.NumberFormat(locale, { useGrouping: false });
+    return digits.replace(/[0-9]/g, (d) => fmt.format(Number(d)));
+  } catch {
+    return digits;
+  }
 }
 
 function ensurePlusDial(dial: unknown) {
@@ -128,11 +155,48 @@ function buildDialCode(idd?: RestCountry['idd']): string | null {
 }
 
 function normalizeSearchKey(input: string) {
-  return String(input ?? '')
-    .toLowerCase()
-    .replace(/\s+/g, ' ')
-    .trim()
-    .replace(/[^\da-z+ ]/g, '');
+  return (
+    String(input ?? '')
+      .toLowerCase()
+      .replace(/\s+/g, ' ')
+      .trim()
+      // Keep letters of every script (so localized names — Arabic, etc. — stay searchable),
+      // digits, `+`, and spaces; drop punctuation/symbols.
+      .replace(/[^\p{L}\p{N}+ ]/gu, '')
+  );
+}
+
+/**
+ * Return a copy of the country list with display names localized to `locale` via
+ * `Intl.DisplayNames`. `search_key` is rebuilt (keeping the English name too) so search
+ * still matches either spelling. Unknown locales / regions fall back to the English name.
+ */
+export function localizeCountries(list: CountryOption[], locale?: string): CountryOption[] {
+  if (!locale) return list;
+  let display: Intl.DisplayNames;
+  try {
+    display = new Intl.DisplayNames([locale], { type: 'region' });
+  } catch {
+    return list;
+  }
+  return list.map((c) => {
+    let localized = c.raw_data.name;
+    try {
+      localized = display.of(c.raw_data.iso2) || c.raw_data.name;
+    } catch {
+      /* region not in CLDR data — keep English name */
+    }
+    if (localized === c.raw_data.name) return c;
+    const dial = c.raw_data.dial_code;
+    return {
+      ...c,
+      label: `${localized} (${dial})`,
+      search_key: normalizeSearchKey(
+        `${localized} ${c.raw_data.name} ${dial} ${c.raw_data.iso2} ${c.raw_data.dial_digits}`
+      ),
+      raw_data: { ...c.raw_data, name: localized },
+    };
+  });
 }
 
 /* -----------------------------------------------------------------------------
@@ -192,7 +256,10 @@ export interface UsePhoneValidationReturn {
   searchCountries(keyword: string, limit?: number): CountryOption[];
   getCountryByValue(value: string): CountryOption | null;
   getCountriesByDial(dial: string): CountryOption[];
-  getRequiredInfo(country: { iso2: string; dial_code?: string }): PhoneRequiredInfo | null;
+  getRequiredInfo(
+    country: { iso2: string; dial_code?: string },
+    locale?: string
+  ): PhoneRequiredInfo | null;
   validate(input: ValidateArgs): PhoneValidationResult;
 }
 
@@ -327,10 +394,10 @@ export function usePhoneValidation(): UsePhoneValidationReturn {
     return byDialDigits.value.get(toDigits(dial)) ?? [];
   }
 
-  function getRequiredInfo(country: {
-    iso2: string;
-    dial_code?: string;
-  }): PhoneRequiredInfo | null {
+  function getRequiredInfo(
+    country: { iso2: string; dial_code?: string },
+    locale?: string
+  ): PhoneRequiredInfo | null {
     const iso2 = normalizeIso2(country.iso2);
     if (!iso2) return null;
     try {
@@ -351,7 +418,7 @@ export function usePhoneValidation(): UsePhoneValidationReturn {
         example_national: exampleNational,
         example_e164: exampleE164,
         national_number_length: inferred,
-        format_hint: digitsExample ? `e.g. ${digitsExample}` : '',
+        format_hint: digitsExample ? `e.g. ${localizeDigits(digitsExample, locale)}` : '',
       };
     } catch {
       return null;
@@ -372,7 +439,7 @@ export function usePhoneValidation(): UsePhoneValidationReturn {
     }
 
     const iso2 = normalizeIso2(country.iso2);
-    const required = getRequiredInfo({ iso2, dial_code: country.dial_code });
+    const required = getRequiredInfo({ iso2, dial_code: country.dial_code }, input.locale);
     if (!required) {
       return {
         ok: false,

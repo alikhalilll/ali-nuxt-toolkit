@@ -28,12 +28,62 @@ export const aTellInputVariants = cva(
 
 export type ATellInputVariants = VariantProps<typeof aTellInputVariants>;
 
+/** Text direction for the field. `'auto'` (or omitting the prop) inherits from the
+ *  nearest `[dir]` ancestor / `<html dir>`; `'ltr'` / `'rtl'` force it. */
+export type ATellInputDir = 'ltr' | 'rtl' | 'auto';
+
+/**
+ * Every user-facing string in the tell-input UI, bundled so a consumer can localize the
+ * component in one prop. Each key has an English default in {@link DEFAULT_MESSAGES}.
+ */
+export interface TellInputMessages {
+  /** Placeholder of the country-picker search box. */
+  searchPlaceholder: string;
+  /** Shown when a search yields no countries. */
+  emptyText: string;
+  /** Shown while the country list is loading. */
+  loadingText: string;
+  /** Header of the "Suggested" group (current + recent picks). */
+  suggestedLabel: string;
+  /** Header of the full country list. */
+  allCountriesLabel: string;
+  /** Validation error text, keyed by reason. */
+  errorMessages: Record<PhoneValidationReason, string>;
+  /** Prefix of the country trigger's `aria-label`, e.g. `"Country: Egypt"`. */
+  countryLabel: string;
+  /** `aria-label` of the country trigger when no country is selected. */
+  selectCountryLabel: string;
+  /** `aria-label` of the phone input element. */
+  phoneInputLabel: string;
+}
+
+/** Partial override shape for the `messages` prop — every key (and every error reason) is optional. */
+export type TellInputMessagesInput = Partial<Omit<TellInputMessages, 'errorMessages'>> & {
+  errorMessages?: Partial<Record<PhoneValidationReason, string>>;
+};
+
 export interface ATellInputProps {
   class?: HTMLAttributes['class'];
   placeholder?: string;
   disabled?: boolean;
   loading?: boolean;
   size?: ATellInputSize;
+  /**
+   * Text direction. Omit (or pass `'auto'`) to inherit from the page — RTL pages get an
+   * RTL field automatically. Pass `'ltr'` / `'rtl'` to force it.
+   */
+  dir?: ATellInputDir;
+  /**
+   * BCP-47 locale (e.g. `'ar'`, `'fr'`). When set, country names render localized via
+   * `Intl.DisplayNames` and the format hint uses the locale's numerals.
+   */
+  locale?: string;
+  /**
+   * Localized UI strings. A single bag covering the picker, validation errors, and a11y
+   * labels. Individual props (`searchPlaceholder`, `emptyText`, `loadingText`,
+   * `errorMessages`) take precedence over the matching `messages` key when both are set.
+   */
+  messages?: TellInputMessagesInput;
   /**
    * Whitelist of allowed dial-digit codes (no `+`), e.g. `['20', '966']`.
    * Countries outside this list are still shown in the picker but rendered as disabled.
@@ -84,3 +134,29 @@ export const DEFAULT_ERROR_MESSAGES: Record<PhoneValidationReason, string> = {
   invalid_phone: 'Phone number is invalid.',
   parse_failed: 'Could not parse phone number.',
 };
+
+/** English defaults for every {@link TellInputMessages} key. */
+export const DEFAULT_MESSAGES: TellInputMessages = {
+  searchPlaceholder: 'Search country or +code…',
+  emptyText: 'No countries found.',
+  loadingText: 'Loading countries…',
+  suggestedLabel: 'Suggested',
+  allCountriesLabel: 'All countries',
+  errorMessages: DEFAULT_ERROR_MESSAGES,
+  countryLabel: 'Country',
+  selectCountryLabel: 'Select country',
+  phoneInputLabel: 'Phone number',
+};
+
+/**
+ * Merge a partial `messages` override onto the English defaults. Used internally by
+ * `ATellInput` to resolve a complete {@link TellInputMessages} object.
+ */
+export function resolveMessages(input?: TellInputMessagesInput): TellInputMessages {
+  if (!input) return DEFAULT_MESSAGES;
+  return {
+    ...DEFAULT_MESSAGES,
+    ...input,
+    errorMessages: { ...DEFAULT_ERROR_MESSAGES, ...input.errorMessages },
+  };
+}

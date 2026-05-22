@@ -7,11 +7,19 @@ export { default as ACountryFlag } from './components/ACountryFlag.vue';
 export {
   aTellInputVariants,
   DEFAULT_ERROR_MESSAGES,
+  DEFAULT_MESSAGES,
+  resolveMessages,
   type ATellInputProps,
   type ATellInputSize,
   type ATellInputVariants,
+  type ATellInputDir,
+  type TellInputMessages,
+  type TellInputMessagesInput,
 } from './utils/types';
 export { defaultFlagUrl, type FlagUrlBuilder } from './utils/flag-url';
+
+// i18n — alternative-numeral normalization
+export { normalizeDigits, LOCALE_DIGIT_RANGES } from './utils/digits';
 
 // Composables — co-located with the components since they're tel-input specific.
 export * from './composables/usePhoneValidation';

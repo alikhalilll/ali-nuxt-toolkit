@@ -26,7 +26,6 @@ const dialCode = computed(() => tellRef.value?.selectedDialCode);
     ref="tellRef"
     v-model:phone="phone"
     v-model:country="country"
-    default-country="20"
     show-validation
   />
 </template>`;
@@ -45,7 +44,6 @@ const dialCode = computed(() => tellRef.value?.selectedDialCode);
             ref="tellRef"
             v-model:phone="phone"
             v-model:country="country"
-            default-country="20"
             show-validation
           />
         </div>

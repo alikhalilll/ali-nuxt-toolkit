@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, useId, watch } from 'vue';
 import { useDebounceFn } from '@vueuse/core';
 import { CheckCircle2, AlertCircle } from 'lucide-vue-next';
 import { parsePhoneNumberFromString, type CountryCode } from 'libphonenumber-js';
@@ -11,7 +11,8 @@ import {
 } from '../composables/usePhoneValidation';
 import { detectCountry, type DetectCountryOptions } from '../composables/useCountryDetection';
 import { controlPaddingX, controlTextSize, DEFAULT_SIZE } from '@/utils';
-import { aTellInputVariants, DEFAULT_ERROR_MESSAGES, type ATellInputProps } from '../utils/types';
+import { aTellInputVariants, resolveMessages, type ATellInputProps } from '../utils/types';
+import { normalizeDigits } from '../utils/digits';
 import ACountrySelect from './ACountrySelect.vue';
 
 interface ExtendedProps extends ATellInputProps {
@@ -402,10 +403,28 @@ const detectAndApply = useDebounceFn(
   computed(() => Math.max(0, props.detectDebounceMs))
 );
 
+/** The string shown in the `<input>`. Deliberately decoupled from `phone` (the digits-only
+ *  model) so the visible field is NOT rewritten mid-edit — non-digits / alternative numerals
+ *  are normalized into `phone` immediately, but the displayed value is only cleaned up once
+ *  the user finishes typing (on blur / change). */
+const displayValue = ref<string>(String(phone.value ?? ''));
+
+/** Set when the in-flight `phone` change came from the user typing — tells the `phone`
+ *  watcher to leave `displayValue` alone (the user is still editing it). */
+let phoneEditedByInput = false;
+
+function commitPhone(value: string) {
+  phoneEditedByInput = true;
+  phone.value = value;
+}
+
 function handlePhoneInput(e: Event) {
   const target = e.target as HTMLInputElement;
-  const cleaned = target.value.replace(/\D/g, '');
-  if (cleaned !== target.value) target.value = cleaned;
+  // Keep the visible value exactly as typed — don't rewrite it mid-edit. The model still
+  // receives a normalized, digits-only value so validation + detection stay correct.
+  displayValue.value = target.value;
+  // Fold alternative numerals (Arabic-Indic, Persian, …) to ASCII, then strip non-digits.
+  const cleaned = normalizeDigits(target.value).replace(/\D/g, '');
 
   if (props.detectFromInput) {
     if (!cleaned) {
@@ -413,49 +432,80 @@ function handlePhoneInput(e: Event) {
       // picker hides the moment the input goes empty.
       autoSettingCountry.value = true;
       selectedIso2.value = '';
-      phone.value = '';
+      commitPhone('');
       userPickedCountry.value = false;
       return;
     }
-    phone.value = cleaned;
+    commitPhone(cleaned);
     if (!userPickedCountry.value && !selectedIso2.value) {
       detectAndApply();
     }
     return;
   }
 
-  phone.value = cleaned;
+  commitPhone(cleaned);
+}
+
+/** Fires when the user finishes editing (blur). Now it's safe to normalize the visible
+ *  value — fold alternative numerals to ASCII and drop any stray non-digits. */
+function handlePhoneChange(e: Event) {
+  const target = e.target as HTMLInputElement;
+  displayValue.value = normalizeDigits(target.value).replace(/\D/g, '');
 }
 
 watch(
   () => phone.value,
-  (next, prev) => {
-    const cleaned = String(next ?? '').replace(/\D/g, '');
-    if (cleaned !== next && cleaned !== prev) phone.value = cleaned;
+  (next) => {
+    const cleaned = normalizeDigits(String(next ?? '')).replace(/\D/g, '');
+    // Normalize a programmatic value that arrived non-clean.
+    if (cleaned !== next) {
+      phone.value = cleaned;
+      return;
+    }
+    // The user typing manages `displayValue` itself — don't fight their edit.
+    if (phoneEditedByInput) {
+      phoneEditedByInput = false;
+      return;
+    }
+    // External or detection-driven change → reflect it in the visible input.
+    displayValue.value = cleaned;
   },
   { flush: 'post' }
 );
 
+/** Resolved UI strings — `messages` prop merged onto English defaults. The individual
+ *  string props still win when both are set (see `errorMessage` / template bindings). */
+const messages = computed(() => resolveMessages(props.messages));
+
+/** `dir` of the outer wrapper — drives the hint/error text alignment and the country
+ *  picker popover. Explicit `'ltr'`/`'rtl'` is applied; `'auto'` or an omitted prop yields
+ *  `undefined` so it inherits from the page. The field row itself is always LTR so the
+ *  dial prefix / digits / flag trigger keep a consistent order. */
+const dirAttr = computed<'ltr' | 'rtl' | undefined>(() =>
+  props.dir === 'ltr' || props.dir === 'rtl' ? props.dir : undefined
+);
+
 const required = computed(() =>
-  selectedIso2.value ? getRequiredInfo({ iso2: selectedIso2.value }) : null
+  selectedIso2.value ? getRequiredInfo({ iso2: selectedIso2.value }, props.locale) : null
 );
 
 const validation = computed<PhoneValidationResult>(() =>
   validate({
     country: selectedIso2.value ? { iso2: selectedIso2.value } : null,
     phone: phone.value ?? '',
+    locale: props.locale,
   })
 );
 
 const effectivePlaceholder = computed(
-  () => props.placeholder || required.value?.format_hint || 'Phone number'
+  () => props.placeholder || required.value?.format_hint || messages.value.phoneInputLabel
 );
 
 const errorMessage = computed(() => {
   const v = validation.value;
   if (v.ok || !v.reason) return null;
   if (!phone.value) return null;
-  return props.errorMessages?.[v.reason] ?? DEFAULT_ERROR_MESSAGES[v.reason];
+  return props.errorMessages?.[v.reason] ?? messages.value.errorMessages[v.reason];
 });
 
 const selectedDialCode = computed(() => {
@@ -467,17 +517,36 @@ const inputSizeClasses = computed(
   () => `${controlPaddingX[props.size]} ${controlTextSize[props.size]}`
 );
 
+/** Classes for the inline dial-code prefix — a tight `px-2` so it hugs the input digits. */
+const dialPrefixClasses = computed(() => `px-2 ${controlTextSize[props.size]}`);
+
 const validationState = computed<'idle' | 'valid' | 'error'>(() => {
   if (!phone.value) return 'idle';
   return validation.value.ok ? 'valid' : 'error';
 });
 
+/* ---------------------------------------------------------------
+ * Accessibility — the helper line (hint or error) lives in a single
+ * `aria-live` region; the input's `aria-describedby` points at it
+ * whenever it has content.
+ * ------------------------------------------------------------- */
+const helperId = useId();
+const showError = computed(() => Boolean(props.showValidation && errorMessage.value));
+const showHint = computed(() => !showError.value && !phone.value && !!required.value?.format_hint);
+const describedBy = computed(() => (showError.value || showHint.value ? helperId : undefined));
+
 defineExpose({ validation, required, selectedDialCode, validationState });
 </script>
 
 <template>
-  <div :class="cn('flex w-full flex-col gap-1.5', $attrs.class as string)" data-slot="tell-input">
-    <div class="flex items-center gap-2">
+  <div
+    :class="cn('flex w-full flex-col gap-1.5', $attrs.class as string)"
+    data-slot="tell-input"
+    :dir="dirAttr"
+  >
+    <!-- The field row is forced LTR so its pieces (dial prefix, digits, flag trigger) keep
+         the same order regardless of page direction — phone numbers read left-to-right. -->
+    <div class="flex items-center gap-2" dir="ltr">
       <div
         :class="
           cn(
@@ -493,15 +562,48 @@ defineExpose({ validation, required, selectedDialCode, validationState });
           )
         "
         :data-state="validationState"
-        dir="ltr"
       >
         <slot name="prefix" />
+
+        <span
+          v-if="selectedDialCode"
+          data-slot="tell-input-dial"
+          dir="ltr"
+          aria-hidden="true"
+          :class="cn('text-muted-foreground shrink-0 tabular-nums select-none', dialPrefixClasses)"
+        >
+          {{ selectedDialCode }}
+        </span>
+
+        <input
+          :value="displayValue"
+          type="tel"
+          inputmode="numeric"
+          autocomplete="tel"
+          dir="ltr"
+          data-slot="tell-input-field"
+          :disabled="props.disabled || props.loading"
+          :placeholder="effectivePlaceholder"
+          :aria-label="messages.phoneInputLabel"
+          :aria-invalid="validationState === 'error' || undefined"
+          :aria-describedby="describedBy"
+          :class="
+            cn(
+              'placeholder:text-muted-foreground h-full w-full min-w-0 flex-1 bg-transparent tabular-nums outline-none disabled:cursor-not-allowed',
+              inputSizeClasses,
+              selectedDialCode && 'ps-1',
+              props.inputClass
+            )
+          "
+          @input="handlePhoneInput"
+          @change="handlePhoneChange"
+        />
 
         <Transition
           enter-active-class="transition-all duration-200 ease-out overflow-hidden"
           leave-active-class="transition-all duration-150 ease-in overflow-hidden"
-          enter-from-class="opacity-0 -translate-x-1 max-w-0"
-          leave-to-class="opacity-0 -translate-x-1 max-w-0"
+          enter-from-class="opacity-0 max-w-0"
+          leave-to-class="opacity-0 max-w-0"
           enter-to-class="max-w-[12rem]"
           leave-from-class="max-w-[12rem]"
         >
@@ -511,9 +613,14 @@ defineExpose({ validation, required, selectedDialCode, validationState });
             :allowed-dial-codes="props.allowedDialCodes"
             :disabled="props.disabled || props.loading"
             :size="props.size"
-            :search-placeholder="props.searchPlaceholder"
-            :empty-text="props.emptyText"
-            :loading-text="props.loadingText"
+            :locale="props.locale"
+            :search-placeholder="props.searchPlaceholder ?? messages.searchPlaceholder"
+            :empty-text="props.emptyText ?? messages.emptyText"
+            :loading-text="props.loadingText ?? messages.loadingText"
+            :suggested-label="messages.suggestedLabel"
+            :all-countries-label="messages.allCountriesLabel"
+            :country-label="messages.countryLabel"
+            :select-country-label="messages.selectCountryLabel"
             :flag-url="props.flagUrl"
             :searcher="props.searcher"
             :countries="props.countries"
@@ -548,25 +655,6 @@ defineExpose({ validation, required, selectedDialCode, validationState });
           </ACountrySelect>
         </Transition>
 
-        <input
-          v-model="phone"
-          type="tel"
-          inputmode="numeric"
-          autocomplete="tel"
-          data-slot="tell-input-field"
-          :disabled="props.disabled || props.loading"
-          :placeholder="effectivePlaceholder"
-          :aria-invalid="validationState === 'error' || undefined"
-          :class="
-            cn(
-              'placeholder:text-muted-foreground h-full w-full min-w-0 flex-1 bg-transparent tabular-nums outline-none disabled:cursor-not-allowed',
-              inputSizeClasses,
-              props.inputClass
-            )
-          "
-          @input="handlePhoneInput"
-        />
-
         <slot name="suffix" :validation-state="validationState" :validation="validation" />
       </div>
 
@@ -589,34 +677,36 @@ defineExpose({ validation, required, selectedDialCode, validationState });
       </Transition>
     </div>
 
-    <slot
-      v-if="props.showValidation && errorMessage"
-      name="error"
-      :message="errorMessage"
-      :reason="validation.reason ?? ''"
-      :validation="validation"
-    >
-      <p
-        data-slot="tell-input-error"
-        :class="cn('text-destructive text-xs', props.errorClass)"
-        role="alert"
+    <div :id="helperId" aria-live="polite">
+      <slot
+        v-if="showError"
+        name="error"
+        :message="errorMessage!"
+        :reason="validation.reason ?? ''"
+        :validation="validation"
       >
-        {{ errorMessage }}
-      </p>
-    </slot>
-    <slot
-      v-else-if="!phone && required?.format_hint"
-      name="hint"
-      :country="selectedIso2"
-      :format-hint="required.format_hint"
-      :example="required.example_e164"
-    >
-      <p
-        data-slot="tell-input-hint"
-        :class="cn('text-muted-foreground text-xs tabular-nums', props.hintClass)"
+        <p
+          data-slot="tell-input-error"
+          :class="cn('text-destructive text-xs', props.errorClass)"
+          role="alert"
+        >
+          {{ errorMessage }}
+        </p>
+      </slot>
+      <slot
+        v-else-if="showHint"
+        name="hint"
+        :country="selectedIso2"
+        :format-hint="required!.format_hint"
+        :example="required!.example_e164"
       >
-        {{ required.format_hint }}
-      </p>
-    </slot>
+        <p
+          data-slot="tell-input-hint"
+          :class="cn('text-muted-foreground text-xs tabular-nums', props.hintClass)"
+        >
+          {{ required!.format_hint }}
+        </p>
+      </slot>
+    </div>
   </div>
 </template>

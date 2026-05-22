@@ -8,7 +8,11 @@ import {
   AResponsivePopoverContent,
   AResponsivePopoverTrigger,
 } from '@/entries/responsive-popover';
-import { usePhoneValidation, type CountryOption } from '../composables/usePhoneValidation';
+import {
+  usePhoneValidation,
+  localizeCountries,
+  type CountryOption,
+} from '../composables/usePhoneValidation';
 import { controlPaddingX, controlTextSize, DEFAULT_SIZE, type Size } from '@/utils';
 import ACountryFlag from './ACountryFlag.vue';
 
@@ -48,6 +52,12 @@ const props = withDefaults(
     /** Override the right-side kbd hints. Pass `null` to hide. */
     kbdOpen?: string | null;
     kbdClose?: string | null;
+    /** BCP-47 locale — country names render localized via `Intl.DisplayNames`. */
+    locale?: string;
+    /** Prefix of the trigger's `aria-label` when a country is selected, e.g. `"Country"`. */
+    countryLabel?: string;
+    /** Trigger's `aria-label` when no country is selected. */
+    selectCountryLabel?: string;
   }>(),
   {
     searchPlaceholder: 'Search country or +code…',
@@ -55,6 +65,8 @@ const props = withDefaults(
     loadingText: 'Loading countries…',
     suggestedLabel: 'Suggested',
     allCountriesLabel: 'All countries',
+    countryLabel: 'Country',
+    selectCountryLabel: 'Select country',
     size: DEFAULT_SIZE,
     suggestedLimit: 4,
     maxResults: 80,
@@ -120,20 +132,23 @@ void getCountries();
 
 /* ---------------------------------------------------------------
  * Country source — either the user-supplied list (props.countries)
- * or the internal REST Countries + localStorage cache.
+ * or the internal REST Countries + localStorage cache. A `locale`
+ * localizes the internal list's display names via `Intl.DisplayNames`;
+ * a caller-supplied `countries` list is used verbatim (caller owns names).
  * ------------------------------------------------------------- */
 const effectiveCountries = computed<CountryOption[]>(() =>
-  props.countries && props.countries.length ? props.countries : internalCountries.value
+  props.countries && props.countries.length
+    ? props.countries
+    : localizeCountries(internalCountries.value, props.locale)
 );
 
-const customByValue = computed<Map<string, CountryOption>>(() => {
-  if (!props.countries || !props.countries.length) return new Map();
-  return new Map(props.countries.map((c) => [c.value, c]));
-});
+const effectiveByValue = computed<Map<string, CountryOption>>(
+  () => new Map(effectiveCountries.value.map((c) => [c.value, c]))
+);
 
 function lookup(iso2: string): CountryOption | null {
   if (!iso2) return null;
-  return customByValue.value.get(iso2) ?? lookupInternal(iso2);
+  return effectiveByValue.value.get(iso2) ?? lookupInternal(iso2);
 }
 
 /* ---------------------------------------------------------------
@@ -181,9 +196,10 @@ function defaultSearcher(q: string, c: CountryOption): boolean {
 const filtered = computed<CountryOption[]>(() => {
   if (!isSearching.value) return [];
   // When the caller didn't override the country source, the internal `searchCountries`
-  // is already optimal (uses the precomputed search_key + early break). Only fall back
-  // to a manual filter when we need to honor a custom `searcher` or `countries` source.
-  if (!props.countries && !props.searcher) {
+  // is already optimal (uses the precomputed search_key + early break). Fall back to a
+  // manual filter when we need to honor a custom `searcher`/`countries` source, or a
+  // `locale` (whose localized `search_key` lives only on `effectiveCountries`).
+  if (!props.countries && !props.searcher && !props.locale) {
     return defaultSearch(search.value, props.maxResults);
   }
   const q = search.value.trim();
@@ -282,13 +298,15 @@ defineExpose({
           :data-state="open ? 'open' : 'closed'"
           :class="
             cn(
-              'bg-muted/50 hover:bg-muted focus-visible:bg-muted data-[state=open]:bg-muted focus-visible:ring-ring border-input inline-flex h-full shrink-0 items-center gap-2 border-r transition-colors focus-visible:ring-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50',
+              'bg-transparent hover:bg-muted focus-visible:bg-muted data-[state=open]:bg-muted focus-visible:ring-ring inline-flex h-full shrink-0 items-center gap-1.5 transition-colors focus-visible:ring-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50',
               triggerSizeClasses,
               props.triggerClass
             )
           "
           :aria-label="
-            selectedCountry ? `Country: ${selectedCountry.raw_data.name}` : 'Select country'
+            selectedCountry
+              ? `${props.countryLabel}: ${selectedCountry.raw_data.name}`
+              : props.selectCountryLabel
           "
         >
           <slot v-if="selectedCountry" name="flag" :country="selectedCountry" context="trigger">
@@ -298,9 +316,6 @@ defineExpose({
               :flag-url="props.flagUrl"
             />
           </slot>
-          <span class="text-foreground font-medium tabular-nums">
-            {{ selectedCountry ? selectedCountry.raw_data.dial_code : '+?' }}
-          </span>
           <slot name="chevron" :open="open">
             <ChevronDown
               class="text-muted-foreground size-3.5 shrink-0 transition-transform duration-200"
@@ -312,7 +327,7 @@ defineExpose({
     </AResponsivePopoverTrigger>
 
     <AResponsivePopoverContent
-      align="start"
+      align="end"
       :side-offset="6"
       :class="cn('flex flex-col overflow-hidden p-0', props.contentClass)"
       :popover-class="
@@ -336,7 +351,7 @@ defineExpose({
           >
             <slot name="search-icon">
               <Search
-                class="text-muted-foreground absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2"
+                class="text-muted-foreground absolute top-1/2 start-2.5 size-3.5 -translate-y-1/2"
               />
             </slot>
             <input
@@ -344,17 +359,17 @@ defineExpose({
               type="text"
               data-slot="country-select-search"
               :placeholder="props.searchPlaceholder"
-              class="placeholder:text-muted-foreground h-8 w-full bg-transparent pr-14 pl-8 text-sm outline-none"
+              class="placeholder:text-muted-foreground h-8 w-full bg-transparent pe-14 ps-8 text-sm outline-none"
             />
             <kbd
               v-if="!isSearching && props.kbdOpen"
-              class="bg-background text-muted-foreground border-border absolute top-1/2 right-2 hidden -translate-y-1/2 items-center gap-0.5 rounded border px-1.5 py-0.5 font-mono text-[10px] tracking-tight md:inline-flex"
+              class="bg-background text-muted-foreground border-border absolute top-1/2 end-2 hidden -translate-y-1/2 items-center gap-0.5 rounded border px-1.5 py-0.5 font-mono text-[10px] tracking-tight md:inline-flex"
             >
               {{ props.kbdOpen }}
             </kbd>
             <kbd
               v-else-if="isSearching && props.kbdClose"
-              class="bg-background text-muted-foreground border-border absolute top-1/2 right-2 hidden -translate-y-1/2 rounded border px-1.5 py-0.5 font-mono text-[10px] tracking-tight md:inline-block"
+              class="bg-background text-muted-foreground border-border absolute top-1/2 end-2 hidden -translate-y-1/2 rounded border px-1.5 py-0.5 font-mono text-[10px] tracking-tight md:inline-block"
             >
               {{ props.kbdClose }}
             </kbd>

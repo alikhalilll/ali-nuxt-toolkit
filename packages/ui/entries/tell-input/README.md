@@ -1,6 +1,6 @@
 # `@alikhalilll/ui/tell-input`
 
-Vue 3 phone-number input with smart country detection (libphonenumber-js + IP/timezone/locale hint), a responsive popover/drawer country picker, and a structured `PhoneValidationResult` exposed via template ref.
+Vue 3 phone-number input with smart country detection (libphonenumber-js + IP/timezone/locale hint), a responsive popover/drawer country picker, and a structured `PhoneValidationResult` exposed via template ref. RTL-aware, localisable, and accepts alternative numeral systems.
 
 ## Install
 
@@ -31,7 +31,22 @@ const country = ref<number | null>(null);
 </template>
 ```
 
-The default shape is a plain phone input with the country picker hidden. As the user types or pastes, detection runs (debounced) against known dial codes; on first match the picker slides in pre-filled and `phone` is normalised to the national significant number — `01066105963` becomes `1066105963`, `+447911123456` becomes `7911123456`.
+The default shape is a plain phone input with the country picker hidden. As the user types or pastes, detection runs (debounced) against known dial codes; on first match a flag-only trigger reveals at the **end** of the field, the dial code shows as a static prefix inside the input, and `phone` is normalised to the national significant number — `01066105963` becomes `1066105963`, `+447911123456` becomes `7911123456`.
+
+## Internationalization
+
+- **RTL** — direction inherits from the page (`<div dir="rtl">` / `<html dir="rtl">`), or force it with `dir="ltr"` / `dir="rtl"`. The phone field row stays LTR (dial prefix → digits → flag); only the helper/error text and the country popover follow the page direction.
+- **`locale`** — localises country names (`Intl.DisplayNames`) and the format-hint numerals.
+- **`messages`** — one bag for every UI string (picker labels, validation errors, a11y labels).
+- **Alternative numerals** — digits typed as Arabic-Indic (`٠-٩`), Persian (`۰-۹`), Devanagari, or Bengali are normalised to ASCII. `normalizeDigits` is exported for standalone use.
+
+```vue
+<template>
+  <div dir="rtl">
+    <ATellInput v-model:phone="phone" v-model:country="country" locale="ar" :messages="ar" />
+  </div>
+</template>
+```
 
 ## Variants
 

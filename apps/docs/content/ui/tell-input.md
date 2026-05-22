@@ -7,7 +7,9 @@ order: 1
 
 # ATellInput
 
-A composite phone input. Hides the country picker until your input matches a known dial code, then reveals it pre-filled with the detected country. `v-model:phone` holds the digits-only national number; `v-model:country` holds the **dial number** (`20` for Egypt, `44` for the UK, `1` for the NANP block, `null` for no selection).
+A composite phone input. Hides the country picker until your input matches a known dial code, then reveals it pre-filled with the detected country. The picker sits at the **end** of the field as a flag-only trigger; the selected dial code shows as a static prefix inside the input. `v-model:phone` holds the digits-only national number; `v-model:country` holds the **dial number** (`20` for Egypt, `44` for the UK, `1` for the NANP block, `null` for no selection).
+
+The field is direction-aware (RTL inherits from the page), country names and numerals localise via the `locale` prop, and digits typed in alternative numeral systems (Arabic-Indic `٠-٩`, Persian `۰-۹`, Devanagari, Bengali) are accepted and normalised to ASCII. See [Internationalization](#internationalization).
 
 ::DemoTellInputBasic
 ::
@@ -41,30 +43,33 @@ const country = ref<number | null>(null);
 </template>
 ```
 
-Type `+447911123456`, `01066105963`, or paste any well-formed international number — the picker reveals with the detected country and `phone` normalises to the national significant number (`7911123456`, `1066105963`).
+Type `+447911123456`, `01066105963`, or paste any well-formed international number — the flag trigger reveals at the end of the field with the detected country, the dial code appears as a prefix inside the input, and `phone` normalises to the national significant number (`7911123456`, `1066105963`).
 
 ## Props
 
-| Prop                | Type                                             | Default                      | Description                                                                                                    |
-| ------------------- | ------------------------------------------------ | ---------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `v-model:phone`     | `string`                                         | `''`                         | Digits-only national number — no leading `+`, no dial code.                                                    |
-| `v-model:country`   | `number \| null`                                 | `null`                       | Dial number, e.g. `20` (Egypt), `44` (UK), `1` (NANP).                                                         |
-| `placeholder`       | `string`                                         | `'Phone number'`             | Falls back to the country's example number when empty.                                                         |
-| `disabled`          | `boolean`                                        | `false`                      |                                                                                                                |
-| `loading`           | `boolean`                                        | `false`                      | Disables interaction.                                                                                          |
-| `size`              | `'xs' \| 'sm' \| 'md' \| 'lg' \| 'xl'`           | `'md'` (43 px)               | Height, padding, text size.                                                                                    |
-| `allowedDialCodes`  | `string[]`                                       | _all_                        | Whitelist of dial digits (no `+`). Disallowed countries render disabled.                                       |
-| `showValidation`    | `boolean`                                        | `false`                      | Render an error message below when invalid.                                                                    |
-| `detectCountry`     | `'auto' \| 'locale' \| 'none'`                   | `'auto'`                     | Strategy for the silent environment lookup (parsing hint).                                                     |
-| `defaultCountry`    | `string`                                         | `''`                         | Initial country. Accepts a dial number string (`'20'`) or ISO2 (`'EG'`). When set, picker is visible at mount. |
-| `detectFromInput`   | `boolean`                                        | `true`                       | Default mode. Set `false` for the legacy always-visible picker.                                                |
-| `detectDebounceMs`  | `number`                                         | `150`                        | Debounce window for input-driven detection (ms).                                                               |
-| `ipEndpoint`        | `string`                                         | `'https://ipapi.co/json/'`   | Override the IP geolocation endpoint.                                                                          |
-| `searchPlaceholder` | `string`                                         | `'Search country or +code…'` | Picker search placeholder.                                                                                     |
-| `emptyText`         | `string`                                         | `'No countries found.'`      | Shown when search yields no results.                                                                           |
-| `loadingText`       | `string`                                         | `'Loading countries…'`       | Shown while the country list loads.                                                                            |
-| `errorMessages`     | `Partial<Record<PhoneValidationReason, string>>` | English defaults             | Override the validation error labels.                                                                          |
-| `class`             | `HTMLAttributes['class']`                        | —                            | Merged into the outer wrapper.                                                                                 |
+| Prop                | Type                                             | Default                      | Description                                                                                                             |
+| ------------------- | ------------------------------------------------ | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `v-model:phone`     | `string`                                         | `''`                         | Digits-only national number — no leading `+`, no dial code.                                                             |
+| `v-model:country`   | `number \| null`                                 | `null`                       | Dial number, e.g. `20` (Egypt), `44` (UK), `1` (NANP).                                                                  |
+| `placeholder`       | `string`                                         | `'Phone number'`             | Falls back to the country's example number when empty.                                                                  |
+| `disabled`          | `boolean`                                        | `false`                      |                                                                                                                         |
+| `loading`           | `boolean`                                        | `false`                      | Disables interaction.                                                                                                   |
+| `size`              | `'xs' \| 'sm' \| 'md' \| 'lg' \| 'xl'`           | `'md'` (43 px)               | Height, padding, text size.                                                                                             |
+| `allowedDialCodes`  | `string[]`                                       | _all_                        | Whitelist of dial digits (no `+`). Disallowed countries render disabled.                                                |
+| `showValidation`    | `boolean`                                        | `false`                      | Render an error message below when invalid.                                                                             |
+| `detectCountry`     | `'auto' \| 'locale' \| 'none'`                   | `'auto'`                     | Strategy for the silent environment lookup (parsing hint).                                                              |
+| `defaultCountry`    | `string`                                         | `''`                         | Initial country. Accepts a dial number string (`'20'`) or ISO2 (`'EG'`). When set, picker is visible at mount.          |
+| `detectFromInput`   | `boolean`                                        | `true`                       | Default mode. Set `false` for the legacy always-visible picker.                                                         |
+| `detectDebounceMs`  | `number`                                         | `150`                        | Debounce window for input-driven detection (ms).                                                                        |
+| `ipEndpoint`        | `string`                                         | `'https://ipapi.co/json/'`   | Override the IP geolocation endpoint.                                                                                   |
+| `searchPlaceholder` | `string`                                         | `'Search country or +code…'` | Picker search placeholder.                                                                                              |
+| `emptyText`         | `string`                                         | `'No countries found.'`      | Shown when search yields no results.                                                                                    |
+| `loadingText`       | `string`                                         | `'Loading countries…'`       | Shown while the country list loads.                                                                                     |
+| `errorMessages`     | `Partial<Record<PhoneValidationReason, string>>` | English defaults             | Override the validation error labels.                                                                                   |
+| `dir`               | `'ltr' \| 'rtl' \| 'auto'`                       | `'auto'` (inherits)          | Text direction. `'auto'` / omitted inherits from the page; `'ltr'` / `'rtl'` force it.                                  |
+| `locale`            | `string`                                         | —                            | BCP-47 locale. Localises country names (`Intl.DisplayNames`) and the format-hint numerals.                              |
+| `messages`          | `TellInputMessages` (partial)                    | English defaults             | One bag for every UI string — picker, error labels, and a11y labels. See [Internationalization](#internationalization). |
+| `class`             | `HTMLAttributes['class']`                        | —                            | Merged into the outer wrapper.                                                                                          |
 
 ## Exposed via template ref
 
@@ -171,6 +176,89 @@ Behaviour:
 - A manual pick freezes detection. Clearing the input resets and re-arms it.
 - **Known limitation:** raw-digit input is fundamentally ambiguous. Typing `415` resolves to Switzerland (`+41 5…`), not the US area code. For region-locked apps, pass `default-country` instead.
 
+## Internationalization
+
+`ATellInput` is built for non-English, RTL, and non-ASCII-numeral users.
+
+### RTL
+
+::DemoTellInputRtl
+::
+
+The component is direction-aware. Omit `dir` (or pass `'auto'`) and direction inherits from
+the page — wrap the component in `<div dir="rtl">` or set `<html dir="rtl">`. Pass
+`dir="ltr"` / `dir="rtl"` to force a direction regardless of the page.
+
+The **field row itself always stays left-to-right** — the dial-code prefix, the digits, and
+the flag trigger keep the same order in every direction, because a phone number is
+inherently LTR content. What follows the page direction is the surrounding chrome: the
+helper/error line aligns to the page direction, and the country-picker popover (its search
+bar and list rows) mirrors. So an RTL page gets correctly-aligned Arabic helper text and a
+mirrored picker, without scrambling the phone field.
+
+### Alternative numerals
+
+Digits entered in another script are accepted and normalised to ASCII — typing the
+Arabic-Indic `٠١٠٦٦١٠٥٩٦٣` or the Persian `۰۹۱۲۳۴۵۶۷۸` is the same as typing the ASCII
+equivalent. Detection, validation, and `v-model:phone` always work with ASCII digits.
+Supported systems: Arabic-Indic (`٠-٩`), Extended/Eastern Arabic — Persian & Urdu (`۰-۹`),
+Devanagari, and Bengali.
+
+```ts
+import { normalizeDigits } from '@alikhalilll/ui/tell-input';
+
+normalizeDigits('٠١٠٦٦'); // → '01066'
+```
+
+### Locale & messages
+
+::DemoTellInputI18n
+::
+
+Pass a `locale` and a `messages` bag to fully localise the component:
+
+```vue
+<template>
+  <div dir="rtl">
+    <ATellInput
+      v-model:phone="phone"
+      v-model:country="country"
+      locale="ar"
+      default-country="20"
+      show-validation
+      :messages="{
+        searchPlaceholder: 'ابحث عن دولة أو +رمز…',
+        emptyText: 'لا توجد دول.',
+        loadingText: 'جارٍ تحميل الدول…',
+        suggestedLabel: 'مقترحة',
+        allCountriesLabel: 'كل الدول',
+        phoneInputLabel: 'رقم الهاتف',
+        selectCountryLabel: 'اختر دولة',
+        errorMessages: {
+          too_short: 'الرقم قصير جدًا',
+          invalid_phone: 'الرقم غير صحيح',
+        },
+      }"
+    />
+  </div>
+</template>
+```
+
+- `locale` localises country names via `Intl.DisplayNames` (search matches both the
+  localised and English spelling) and renders the format-hint numerals in that locale.
+- `messages` bundles every UI string — picker labels, validation errors, and screen-reader
+  labels — into one prop. Every key is optional and falls back to its English default.
+- The individual props (`searchPlaceholder`, `emptyText`, `loadingText`, `errorMessages`)
+  still work and take precedence over the matching `messages` key.
+
+### Accessibility
+
+The phone input carries an `aria-label` (`messages.phoneInputLabel`), `aria-invalid` when
+the number fails validation, and an `aria-describedby` pointing at the live helper line.
+The hint and error share an `aria-live="polite"` region, so screen readers announce
+validation changes. The country trigger and every list option are keyboard-reachable and
+labelled.
+
 ## Restricting countries
 
 ::DemoTellInputAllowed
@@ -267,8 +355,8 @@ Three customisation vectors — stack any combination:
 
 | Slot           | Scope                                       | Replaces                                    |
 | -------------- | ------------------------------------------- | ------------------------------------------- |
-| `prefix`       | —                                           | Content before the country trigger.         |
-| `suffix`       | `{ validationState, validation }`           | Content after the input, inside the border. |
+| `prefix`       | —                                           | Content at the start of the field.          |
+| `suffix`       | `{ validationState, validation }`           | Content at the end, after the flag trigger. |
 | `trigger`      | `{ selectedCountry, open, sizeClasses }`    | Entire country picker trigger.              |
 | `chevron`      | `{ open }`                                  | Just the chevron icon.                      |
 | `flag`         | `{ country, context: 'trigger' \| 'item' }` | Flag rendering (trigger + list items).      |

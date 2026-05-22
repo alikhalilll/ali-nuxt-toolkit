@@ -145,7 +145,7 @@ const country = ref<number | null>(null); // dial number, e.g. 20 for Egypt
 </template>
 ```
 
-The picker stays hidden until the user types or pastes something that matches a known dial code, then slides in pre-filled and `phone` is normalised to the national significant number (`01066105963` → `1066105963`, `+447911123456` → `7911123456`).
+The picker stays hidden until the user types or pastes something that matches a known dial code, then a flag-only trigger reveals at the end of the field with the dial code as an inline prefix, and `phone` is normalised to the national significant number (`01066105963` → `1066105963`, `+447911123456` → `7911123456`). RTL-aware, localisable via `locale` / `messages`, and accepts alternative numerals.
 
 Full props, slots, theming recipes, and live demos → [tell-input docs](https://alikhalilll.github.io/ali-nuxt-toolkit/ui/tell-input) or [./entries/tell-input/README.md](./entries/tell-input/README.md).
 

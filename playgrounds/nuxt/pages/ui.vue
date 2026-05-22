@@ -22,6 +22,25 @@ const size = ref<'xs' | 'sm' | 'md' | 'lg' | 'xl'>('md');
 const customPhone = ref('');
 const customCountry = ref('');
 
+/* i18n showcase — Arabic locale, RTL, localized messages. */
+const i18nPhone = ref('');
+const i18nCountry = ref<number | null>(null);
+const arabicMessages = {
+  searchPlaceholder: 'ابحث عن دولة أو +رمز…',
+  emptyText: 'لا توجد دول.',
+  loadingText: 'جارٍ تحميل الدول…',
+  suggestedLabel: 'مقترحة',
+  allCountriesLabel: 'كل الدول',
+  phoneInputLabel: 'رقم الهاتف',
+  selectCountryLabel: 'اختر دولة',
+  countryLabel: 'الدولة',
+  errorMessages: {
+    too_short: 'الرقم قصير جدًا',
+    too_long: 'الرقم طويل جدًا',
+    invalid_phone: 'الرقم غير صحيح',
+  },
+};
+
 const curated: CountryOption[] = [
   mkCountry('EG', 'Egypt', '+20'),
   mkCountry('SA', 'Saudi Arabia', '+966'),
@@ -87,8 +106,10 @@ watch(theme, (t) => applyTheme(t));
   <section>
     <h1 class="mb-2 text-3xl font-semibold tracking-tight">@alikhalilll/ui · ATellInput</h1>
     <p class="mb-8 text-text-dim">
-      Tel input with automatic country detection (IP → timezone → locale → fallback). Country picker
-      is a popover on desktop and a vaul-vue drawer on mobile. Try resizing the window below 768px.
+      Tel input with automatic country detection (IP → timezone → locale → fallback). The country
+      picker is a flag-only trigger at the end of the field — a popover on desktop, a vaul-vue
+      drawer on mobile. RTL-aware, localisable via <code>locale</code> / <code>messages</code>, and
+      it accepts alternative numerals (Arabic-Indic, Persian, …). Try resizing below 768px.
     </p>
 
     <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -106,7 +127,6 @@ watch(theme, (t) => applyTheme(t));
             :detect-country="detectMode"
             :detect-from-input="detectFromInput"
             :size="size"
-            default-country="20"
           />
         </div>
 
@@ -228,7 +248,7 @@ watch(theme, (t) => applyTheme(t));
           :detector="alwaysEgypt"
         >
           <template #prefix>
-            <Phone class="text-muted-foreground mr-1 ml-2 size-4 shrink-0" />
+            <Phone class="text-muted-foreground me-1 ms-2 size-4 shrink-0" />
           </template>
           <template #valid-icon>
             <Sparkles class="size-5 text-amber-400" />
@@ -257,6 +277,28 @@ watch(theme, (t) => applyTheme(t));
           </template>
         </ATellInput>
       </div>
+    </div>
+
+    <h2 class="mt-10 mb-2 text-xl font-semibold tracking-tight">Internationalization · RTL</h2>
+    <p class="mb-4 text-sm text-text-dim">
+      Wrapped in <code>dir="rtl"</code> with <code>locale="ar"</code> and a localized
+      <code>messages</code> bag. The phone field row keeps its LTR order; country names render in
+      Arabic, the helper text and picker follow RTL, and typing the Arabic-Indic digits
+      <code dir="rtl">٠١٠٦٦١٠٥٩٦٣</code> normalises to ASCII in <code>v-model:phone</code>.
+    </p>
+
+    <div class="rounded-xl border border-brand-border bg-surface p-5">
+      <div class="max-w-sm" dir="rtl">
+        <ATellInput
+          v-model:phone="i18nPhone"
+          v-model:country="i18nCountry"
+          locale="ar"
+          default-country="20"
+          show-validation
+          :messages="arabicMessages"
+        />
+      </div>
+      <pre class="mt-4 text-xs">{{ JSON.stringify({ i18nPhone, i18nCountry }, null, 2) }}</pre>
     </div>
 
     <h2 class="mt-10 mb-2 text-xl font-semibold tracking-tight">Public API</h2>
