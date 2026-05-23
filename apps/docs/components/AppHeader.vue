@@ -165,7 +165,7 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
           aria-label="Latest releases"
         >
           <span class="version-chip__dot" />
-          <span class="version-chip__label">v1.3</span>
+          <span class="version-chip__label">Latest</span>
         </a>
 
         <!-- Theme switcher — popover with Light / Dark / System -->
