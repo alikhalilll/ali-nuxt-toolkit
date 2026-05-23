@@ -75,20 +75,20 @@ const social = [
                   A
                 </text>
                 <rect
-                  x="13"
-                  y="2"
-                  width="9"
-                  height="9"
-                  rx="2"
+                  x="13.25"
+                  y="2.25"
+                  width="8.5"
+                  height="8.5"
+                  rx="1.85"
                   fill="url(#footer-brand-grad)"
                   opacity="0.55"
                 />
                 <rect
-                  x="2"
-                  y="13"
-                  width="9"
-                  height="9"
-                  rx="2"
+                  x="2.25"
+                  y="13.25"
+                  width="8.5"
+                  height="8.5"
+                  rx="1.85"
                   fill="url(#footer-brand-grad)"
                   opacity="0.55"
                 />

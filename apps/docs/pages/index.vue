@@ -2043,7 +2043,10 @@ const currentExample = computed(() => codeExamples[currentShowcase.value.id]);
   padding: 6px 8px 0;
   background: color-mix(in oklab, var(--bg) 70%, var(--code-bg));
   border-bottom: 1px solid color-mix(in oklab, var(--border) 50%, transparent);
-  overflow-x: auto;
+  /* Only 4 tabs and they always fit — kill both scrollbars. (Setting only
+     `overflow-x: auto` implicitly enables `overflow-y: auto`, which can leak
+     a vertical scrollbar when the tab content is tall.) */
+  overflow: hidden;
 }
 .code-panel__tab {
   display: inline-flex;
