@@ -1,14 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="12" fill="#0b0d12"/>
-  <rect x="2" y="2" width="60" height="60" rx="10" fill="none" stroke="#7aa2f7" stroke-width="2"/>
-  <text
-    x="32"
-    y="42"
-    font-family="ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, monospace"
-    font-size="26"
-    font-weight="800"
-    letter-spacing="-1"
-    text-anchor="middle"
-    fill="#7aa2f7"
-  >ANT</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#60a5fa"/>
+      <stop offset="0.5" stop-color="#22d3ee"/>
+      <stop offset="1" stop-color="#a78bfa"/>
+    </linearGradient>
+  </defs>
+  <rect width="24" height="24" rx="5" fill="rgba(96,165,250,0.08)"/>
+  <rect x="3" y="3" width="8.5" height="8.5" rx="2" fill="url(#g)"/>
+  <rect x="12.5" y="3" width="8.5" height="8.5" rx="2" fill="url(#g)" opacity="0.5"/>
+  <rect x="3" y="12.5" width="8.5" height="8.5" rx="2" fill="url(#g)" opacity="0.5"/>
+  <rect x="12.5" y="12.5" width="8.5" height="8.5" rx="2" fill="url(#g)"/>
+  <text x="7.25" y="10.4" text-anchor="middle" font-family="ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, monospace" font-size="8.5" font-weight="800" letter-spacing="-0.3" fill="#000000">A</text>
+  <text x="16.75" y="19.9" text-anchor="middle" font-family="ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, monospace" font-size="8.5" font-weight="800" letter-spacing="-0.3" fill="#000000">K</text>
 </svg>

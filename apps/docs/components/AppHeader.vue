@@ -93,8 +93,7 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
           </svg>
         </button>
 
-        <!-- Brand: SVG monogram (2×2 squares for the four packages, brand gradient)
-             + wordmark. The monogram hovers up a touch on hover. -->
+        <!-- Brand: 2×2 brand-gradient mark + wordmark. The mark hovers up a touch. -->
         <NuxtLink to="/" class="brand mr-6 flex items-center gap-2.5 hover:no-underline">
           <span class="brand-mark" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -112,7 +111,21 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
                   <stop offset="1" stop-color="var(--color-brand-3)" />
                 </linearGradient>
               </defs>
+              <!-- Initials on the diagonal — A top-left, K bottom-right. Solid black
+                   to match the site favicon exactly. -->
               <rect x="2" y="2" width="9" height="9" rx="2" fill="url(#brand-grad)" />
+              <text
+                x="6.5"
+                y="10"
+                text-anchor="middle"
+                font-family="ui-monospace, 'JetBrains Mono', monospace"
+                font-size="9"
+                font-weight="800"
+                letter-spacing="-0.3"
+                fill="#000000"
+              >
+                A
+              </text>
               <rect
                 x="13"
                 y="2"
@@ -132,6 +145,18 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
                 opacity="0.55"
               />
               <rect x="13" y="13" width="9" height="9" rx="2" fill="url(#brand-grad)" />
+              <text
+                x="17.5"
+                y="21"
+                text-anchor="middle"
+                font-family="ui-monospace, 'JetBrains Mono', monospace"
+                font-size="9"
+                font-weight="800"
+                letter-spacing="-0.3"
+                fill="#000000"
+              >
+                K
+              </text>
             </svg>
           </span>
           <span class="brand-word">

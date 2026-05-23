@@ -145,6 +145,16 @@ body,
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Guard against horizontal scroll from decorative bleed (animated orbs, soft
+   glows, etc.). `clip` is preferred over `hidden` — it doesn't create a
+   containing block for absolutely-positioned descendants. */
+html {
+  overflow-x: clip;
+}
+body {
+  overflow-x: clip;
+}
+
 /* body / #__nuxt must stay transparent so the fixed gradient layers below show. */
 body,
 #__nuxt {
