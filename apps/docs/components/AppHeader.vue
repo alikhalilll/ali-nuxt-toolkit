@@ -31,11 +31,24 @@ watch(
     mobileNavOpen.value = false;
   }
 );
+
+// Subtle micro-shift to the header background on scroll — denser blur + a hairline
+// shadow once the page has scrolled past the fold, so the bar feels anchored.
+const scrolled = ref(false);
+function onScroll() {
+  scrolled.value = window.scrollY > 4;
+}
+onMounted(() => {
+  onScroll();
+  window.addEventListener('scroll', onScroll, { passive: true });
+});
+onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
 </script>
 
 <template>
   <header
-    class="sticky top-0 z-30 w-full border-b border-border/60 bg-bg/80 backdrop-blur-xl supports-[backdrop-filter]:bg-bg/60"
+    class="app-header sticky top-0 z-30 w-full"
+    :class="scrolled ? 'app-header--scrolled' : 'app-header--top'"
   >
     <div class="mx-auto flex h-16 max-w-[1400px] items-center px-4 sm:px-6">
       <!-- Logo + mobile toggle -->
@@ -80,32 +93,81 @@ watch(
           </svg>
         </button>
 
-        <NuxtLink to="/" class="mr-6 flex items-center gap-2.5 hover:no-underline">
-          <span
-            class="bg-gradient-brand inline-flex h-8 w-9 items-center justify-center rounded text-[11px] font-bold tracking-tight !text-black"
-            aria-hidden="true"
-          >
-            ANT
+        <!-- Brand: SVG monogram (2×2 squares for the four packages, brand gradient)
+             + wordmark. The monogram hovers up a touch on hover. -->
+        <NuxtLink to="/" class="brand mr-6 flex items-center gap-2.5 hover:no-underline">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient
+                  id="brand-grad"
+                  x1="0"
+                  y1="0"
+                  x2="24"
+                  y2="24"
+                  gradientUnits="userSpaceOnUse"
+                >
+                  <stop stop-color="var(--color-brand)" />
+                  <stop offset="0.5" stop-color="var(--color-brand-2)" />
+                  <stop offset="1" stop-color="var(--color-brand-3)" />
+                </linearGradient>
+              </defs>
+              <rect x="2" y="2" width="9" height="9" rx="2" fill="url(#brand-grad)" />
+              <rect
+                x="13"
+                y="2"
+                width="9"
+                height="9"
+                rx="2"
+                fill="url(#brand-grad)"
+                opacity="0.55"
+              />
+              <rect
+                x="2"
+                y="13"
+                width="9"
+                height="9"
+                rx="2"
+                fill="url(#brand-grad)"
+                opacity="0.55"
+              />
+              <rect x="13" y="13" width="9" height="9" rx="2" fill="url(#brand-grad)" />
+            </svg>
           </span>
-          <span class="hidden text-base font-semibold text-text sm:inline">ali-nuxt-toolkit</span>
+          <span class="brand-word">
+            <span class="brand-scope">ali-nuxt</span><span class="brand-sep">/</span
+            ><span class="brand-name">toolkit</span>
+          </span>
         </NuxtLink>
       </div>
 
-      <!-- Inline nav (desktop) -->
-      <nav class="hidden items-center gap-6 text-base md:flex">
+      <!-- Inline nav (desktop) — animated underline on hover/active. -->
+      <nav class="nav-links hidden items-center gap-1 md:flex">
         <NuxtLink
           v-for="link in navLinks"
           :key="link.to"
           :to="link.to"
-          class="font-medium text-text-dim transition-colors hover:text-text hover:no-underline"
-          active-class="!text-accent-2 font-semibold"
+          class="nav-link"
+          active-class="nav-link--active"
         >
           {{ link.label }}
         </NuxtLink>
       </nav>
 
       <!-- Right side -->
-      <div class="ml-auto flex items-center gap-1">
+      <div class="ml-auto flex items-center gap-1.5">
+        <!-- Version chip — links to the changeset releases on GitHub. -->
+        <a
+          href="https://github.com/alikhalilll/ali-nuxt-toolkit/releases"
+          target="_blank"
+          rel="noopener"
+          class="version-chip hidden items-center gap-1 sm:inline-flex"
+          aria-label="Latest releases"
+        >
+          <span class="version-chip__dot" />
+          <span class="version-chip__label">v1.3</span>
+        </a>
+
         <!-- Theme switcher — popover with Light / Dark / System -->
         <APopover v-model:open="themePopoverOpen" :modal="false">
           <APopoverTrigger as-child>
@@ -113,7 +175,7 @@ watch(
               type="button"
               aria-label="Theme settings"
               title="Theme settings"
-              class="inline-flex h-9 w-9 items-center justify-center rounded-md text-text-dim transition-colors hover:bg-surface hover:text-text"
+              class="icon-btn"
             >
               <!-- Sun -->
               <svg
@@ -189,7 +251,6 @@ watch(
               class="flex w-full items-center gap-2 rounded px-2.5 py-1.5 text-left text-sm text-text-dim transition-colors hover:bg-surface-2 hover:text-text data-[active]:bg-surface-2 data-[active]:text-text"
               @click="selectTheme(opt.value)"
             >
-              <!-- Per-option icon -->
               <svg
                 v-if="opt.value === 'light'"
                 xmlns="http://www.w3.org/2000/svg"
@@ -248,7 +309,6 @@ watch(
 
               <span class="flex-1">{{ opt.label }}</span>
 
-              <!-- Active check -->
               <svg
                 v-if="opt.value === pref"
                 xmlns="http://www.w3.org/2000/svg"
@@ -273,7 +333,7 @@ watch(
           target="_blank"
           rel="noopener"
           aria-label="GitHub repository"
-          class="inline-flex h-9 w-9 items-center justify-center rounded-md text-text-dim transition-colors hover:bg-surface hover:text-text hover:no-underline"
+          class="icon-btn"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -293,7 +353,7 @@ watch(
           target="_blank"
           rel="noopener"
           aria-label="LinkedIn"
-          class="inline-flex h-9 w-9 items-center justify-center rounded-md text-text-dim transition-colors hover:bg-surface hover:text-text hover:no-underline"
+          class="icon-btn"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -311,7 +371,7 @@ watch(
       </div>
     </div>
 
-    <!-- Mobile page nav — TOC now lives in MobileTocBar below the main header -->
+    <!-- Mobile page nav -->
     <div v-if="mobileNavOpen" class="border-t border-border bg-bg md:hidden">
       <nav class="mx-auto max-w-[1400px] px-4 py-3 text-sm">
         <ul class="m-0 list-none p-0">
@@ -353,3 +413,190 @@ watch(
     </div>
   </header>
 </template>
+
+<style scoped>
+/* Header chrome — translucent at the top of the page, denser blur + a hairline
+   brand-tinted shadow once the user has scrolled past the fold. */
+.app-header {
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.app-header--top {
+  background: color-mix(in oklab, var(--bg) 40%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid transparent;
+}
+.app-header--scrolled {
+  background: color-mix(in oklab, var(--bg) 70%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid color-mix(in oklab, var(--border) 60%, transparent);
+  box-shadow: 0 1px 0 0 color-mix(in oklab, var(--color-brand) 8%, transparent);
+}
+
+/* Brand monogram — 2×2 squares with the brand gradient. Lifts on hover. */
+.brand-mark {
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--color-brand) 8%, transparent);
+  transition:
+    transform 0.25s ease,
+    background-color 0.2s ease;
+}
+.brand-mark svg {
+  width: 22px;
+  height: 22px;
+  filter: drop-shadow(0 2px 6px color-mix(in oklab, var(--color-brand) 25%, transparent));
+}
+.brand:hover .brand-mark {
+  background: color-mix(in oklab, var(--color-brand) 14%, transparent);
+  transform: translateY(-1px) rotate(-3deg);
+}
+
+/* Wordmark — `ali-nuxt/toolkit` with the slash subtly accented. Collapses
+   to icon only on tight screens (the monogram alone still identifies the brand). */
+.brand-word {
+  display: none;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+@media (min-width: 640px) {
+  .brand-word {
+    display: inline-flex;
+    align-items: baseline;
+  }
+}
+.brand-scope {
+  color: var(--text-dim);
+  font-weight: 500;
+}
+.brand-sep {
+  color: var(--color-brand);
+  margin: 0 1px;
+}
+.brand-name {
+  color: var(--text);
+}
+.brand:hover .brand-scope {
+  color: var(--text);
+}
+
+/* Nav links — animated underline that scales from center on hover/active. */
+.nav-links {
+  font-size: 14px;
+}
+.nav-link {
+  position: relative;
+  padding: 6px 10px;
+  border-radius: 6px;
+  color: var(--text-dim);
+  font-weight: 500;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
+}
+.nav-link:hover {
+  color: var(--text);
+  background: color-mix(in oklab, var(--surface) 60%, transparent);
+}
+.nav-link::after {
+  content: '';
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 2px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--color-brand), var(--color-brand-2));
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.nav-link:hover::after {
+  transform: scaleX(0.6);
+}
+.nav-link--active {
+  color: var(--text);
+}
+.nav-link--active::after {
+  transform: scaleX(1);
+}
+
+/* Generic round icon button — used for theme/GitHub/LinkedIn. Subtle glow halo
+   on hover, matching the brand. */
+.icon-btn {
+  display: inline-flex;
+  height: 36px;
+  width: 36px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: var(--text-dim);
+  background: transparent;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.2s ease;
+}
+.icon-btn:hover {
+  color: var(--text);
+  background: var(--surface);
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--color-brand) 18%, transparent);
+}
+
+/* Version chip — small pulsing dot + version string. Click → GitHub releases. */
+.version-chip {
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: color-mix(in oklab, var(--surface) 50%, transparent);
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  color: var(--text-dim);
+  transition:
+    border-color 0.2s ease,
+    color 0.15s ease;
+  text-decoration: none;
+}
+.version-chip:hover {
+  border-color: color-mix(in oklab, var(--color-brand) 40%, var(--border));
+  color: var(--text);
+  text-decoration: none;
+}
+.version-chip__dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--color-success);
+  box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-success) 70%, transparent);
+  animation: version-pulse 2.4s ease-in-out infinite;
+}
+@keyframes version-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-success) 60%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 5px color-mix(in oklab, var(--color-success) 0%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-mark,
+  .nav-link::after,
+  .version-chip__dot {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+</style>
