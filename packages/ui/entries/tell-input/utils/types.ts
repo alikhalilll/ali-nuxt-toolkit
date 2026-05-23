@@ -89,8 +89,15 @@ export interface ATellInputProps {
    * Countries outside this list are still shown in the picker but rendered as disabled.
    */
   allowedDialCodes?: string[];
-  /** Show validation error text beneath the input when invalid. */
+  /** Light up the field's validation styling — coloured border + ring on the input and the
+   *  error message line below — when the number is valid / invalid. Default `false`, so the
+   *  field stays neutral and validation surfacing is left to the consumer (via the
+   *  `validation` ref exposure). */
   showValidation?: boolean;
+  /** Show the green check / red alert icon at the end of the field. Default `false`; opt
+   *  in with `true`. Independent of `showValidation` — you can show the icon without the
+   *  coloured field, or vice versa. The slots `#valid-icon` / `#error-icon` still apply. */
+  showValidationIcon?: boolean;
   /**
    * Country auto-detect strategy. Defaults to `'auto'` — try IP geolocation first, then
    * timezone, then `navigator.language`, finally `defaultCountry`.

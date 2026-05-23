@@ -13,6 +13,7 @@ const country = ref<number | null>(null);
 const allowedOnly = ref<string[]>([]);
 const allowOnlyEgypt = ref(false);
 const showValidation = ref(true);
+const showValidationIcon = ref(false);
 const detectMode = ref<'auto' | 'locale' | 'none'>('auto');
 const detectFromInput = ref(true);
 const theme = ref<'dark' | 'light'>('dark');
@@ -124,6 +125,7 @@ watch(theme, (t) => applyTheme(t));
             v-model:country="country"
             :allowed-dial-codes="allowedOnly.length ? allowedOnly : undefined"
             :show-validation="showValidation"
+            :show-validation-icon="showValidationIcon"
             :detect-country="detectMode"
             :detect-from-input="detectFromInput"
             :size="size"
@@ -134,6 +136,11 @@ watch(theme, (t) => applyTheme(t));
           <label class="flex items-center gap-2">
             <input v-model="showValidation" type="checkbox" />
             <span>show-validation</span>
+          </label>
+
+          <label class="flex items-center gap-2">
+            <input v-model="showValidationIcon" type="checkbox" />
+            <span>show-validation-icon</span>
           </label>
 
           <label class="flex items-center gap-2">

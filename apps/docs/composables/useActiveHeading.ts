@@ -143,5 +143,15 @@ export function useActiveHeading(ids: Ref<string[]>) {
 
   watch(ids, () => nextTick(setup), { deep: true });
 
+  // Keep the URL hash in sync with the active heading so deep-linking, sharing, and the
+  // back button reflect what the reader is actually looking at. `replaceState` (not push)
+  // so scrolling doesn't pollute browser history. The diff check makes the post-click
+  // smooth-scroll case a no-op — `scrollToHash` already wrote the same hash.
+  watch(active, (id) => {
+    if (!import.meta.client || !id) return;
+    if (location.hash.slice(1) === id) return;
+    history.replaceState(history.state, '', `#${id}`);
+  });
+
   return active;
 }

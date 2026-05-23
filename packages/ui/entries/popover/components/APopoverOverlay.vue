@@ -50,7 +50,7 @@ onBeforeUnmount(() => {
         // `fixed inset-0` covers the entire viewport; `pointer-events-auto` captures every
         // click so it can never reach the page underneath. `z-50` keeps us above any normal
         // page chrome; the popover content sits at `z-[60]`.
-        'fixed inset-0 z-50 bg-black/60 backdrop-blur-sm pointer-events-auto data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
+        'fixed inset-0 z-50 bg-black/70 pointer-events-auto data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
         props.class
       )
     "

@@ -23,7 +23,7 @@ const forwarded = useForwardPropsEmits(delegated, emits);
       v-bind="{ ...$attrs, ...forwarded }"
       :class="
         cn(
-          'bg-background fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[10px] border outline-none',
+          'bg-background fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[10px] shadow-2xl shadow-black/30 outline-none',
           props.class
         )
       "

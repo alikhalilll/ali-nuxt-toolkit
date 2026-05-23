@@ -53,6 +53,7 @@ The default shape is a plain phone input with the country picker hidden. As the 
 - **Picker pre-filled** — pass `default-country="…"` or seed `v-model:country` so the picker renders visible at mount.
 - **Restricted countries** — pass `allowed-dial-codes` (array of dial-digit strings, no `+`). Whitelisted countries surface in the Suggested group at the top; disallowed countries render below as disabled.
 - **Always-visible picker (legacy)** — `:detect-from-input="false"` reverts to the IP/timezone/locale chain auto-filling the picker on mount.
+- **Validation visuals** — both off by default. `:show-validation="true"` lights up the field (coloured border + ring + error text); `:show-validation-icon="true"` adds the trailing green check / red alert icon. They're independent — combine as needed.
 
 ## Exposed via template ref
 

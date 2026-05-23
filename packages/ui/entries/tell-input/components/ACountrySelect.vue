@@ -345,9 +345,9 @@ defineExpose({
         :set-value="(v: string) => (search = v)"
         :is-searching="isSearching"
       >
-        <div class="border-b p-1.5">
+        <div class="border-border/70 border-b p-1.5">
           <div
-            class="bg-muted/40 ring-border focus-within:ring-ring relative flex items-center rounded-md ring-1 transition-shadow focus-within:ring-2"
+            class="bg-muted/40 ring-border/70 focus-within:ring-ring/50 relative flex items-center rounded-md ring-1 transition-shadow"
           >
             <slot name="search-icon">
               <Search
@@ -359,7 +359,7 @@ defineExpose({
               type="text"
               data-slot="country-select-search"
               :placeholder="props.searchPlaceholder"
-              class="placeholder:text-muted-foreground h-8 w-full bg-transparent pe-14 ps-8 text-sm outline-none"
+              class="placeholder:text-muted-foreground h-10 w-full bg-transparent pe-14 ps-8 text-sm outline-none"
             />
             <kbd
               v-if="!isSearching && props.kbdOpen"

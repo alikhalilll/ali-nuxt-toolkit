@@ -50,6 +50,7 @@ const props = withDefaults(defineProps<ExtendedProps>(), {
   ipEndpoint: 'https://ipapi.co/json/',
   detectFromInput: true,
   detectDebounceMs: 150,
+  showValidationIcon: false,
 });
 
 defineSlots<{
@@ -552,10 +553,14 @@ defineExpose({ validation, required, selectedDialCode, validationState });
           cn(
             aTellInputVariants({ size: props.size }),
             'focus-within:ring-2 focus-within:ring-offset-0',
-            validationState === 'idle' && 'focus-within:ring-ring/40',
-            validationState === 'valid' &&
+            // Validation field colors are an opt-in via `showValidation` — by default the
+            // field stays neutral and the consumer drives error rendering from `validation`.
+            (!props.showValidation || validationState === 'idle') && 'focus-within:ring-ring/40',
+            props.showValidation &&
+              validationState === 'valid' &&
               'border-emerald-500/60 ring-1 ring-emerald-500/20 focus-within:ring-emerald-500/40',
-            validationState === 'error' &&
+            props.showValidation &&
+              validationState === 'error' &&
               'border-destructive/80 ring-1 ring-destructive/20 focus-within:ring-destructive/40',
             props.class,
             props.fieldClass
@@ -659,6 +664,7 @@ defineExpose({ validation, required, selectedDialCode, validationState });
       </div>
 
       <Transition
+        v-if="props.showValidationIcon"
         enter-active-class="transition duration-150 ease-out"
         leave-active-class="transition duration-100 ease-in"
         enter-from-class="opacity-0 scale-90"
