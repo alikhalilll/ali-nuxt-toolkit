@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ATellInput } from '@alikhalilll/ui';
+import { ATellInput } from '@alikhalilll/ui/tell-input';
 
 /**
  * Package showcase code panel. Tabbed dark editor with the active package's
@@ -19,7 +19,7 @@ onMounted(() => {
   });
 });
 
-type ShowcaseId = 'ui' | 'api-provider' | 'crypto' | 'auto-middleware';
+type ShowcaseId = 'ui/tell-input' | 'api-provider' | 'crypto' | 'auto-middleware';
 interface ShowcaseTab {
   id: ShowcaseId;
   short: string;
@@ -30,12 +30,12 @@ interface ShowcaseTab {
 }
 const showcaseTabs: ShowcaseTab[] = [
   {
-    id: 'ui',
-    short: 'ui',
+    id: 'ui/tell-input',
+    short: 'ui/tell-input',
     label: '@alikhalilll/ui',
     fn: 'ATellInput',
     tagline: 'Live phone input · 197 countries · NANP-aware',
-    docs: '/ui',
+    docs: '/ui/tell-input',
   },
   {
     id: 'api-provider',
@@ -102,7 +102,7 @@ interface CodeExample {
   code: string;
 }
 const codeExamples: Record<ShowcaseId, CodeExample> = {
-  ui: {
+  'ui/tell-input': {
     filename: 'app/components/SignupForm.vue',
     code:
       '<span class="code-tag">&lt;script setup lang="ts"&gt;</span>\n' +
@@ -177,7 +177,7 @@ const currentExample = computed(() => codeExamples[currentShowcase.value.id]);
           @click="selectShowcase(i)"
         >
           <svg
-            v-if="tab.id === 'ui'"
+            v-if="tab.id === 'ui/tell-input'"
             xmlns="http://www.w3.org/2000/svg"
             width="13"
             height="13"
@@ -264,9 +264,13 @@ const currentExample = computed(() => codeExamples[currentShowcase.value.id]);
           <Transition name="code-fade" mode="out-in">
             <div :key="`vis-${currentShowcase.id}`" class="code-panel__preview-inner">
               <!-- ui · live ATellInput -->
-              <template v-if="currentShowcase.id === 'ui'">
+              <template v-if="currentShowcase.id === 'ui/tell-input'">
                 <ClientOnly>
-                  <ATellInput v-model:phone="heroPhone" v-model:country="heroCountry" />
+                  <ATellInput
+                    v-model:phone="heroPhone"
+                    v-model:country="heroCountry"
+                    show-validation
+                  />
                   <template #fallback>
                     <div class="showcase-skeleton" />
                   </template>

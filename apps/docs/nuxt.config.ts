@@ -29,7 +29,13 @@ export default defineNuxtConfig({
   compatibilityDate: '2026-04-01',
   srcDir: '.',
   modules: ['@nuxt/content', '@alikhalilll/nuxt-api-provider', '@alikhalilll/nuxt-crypto'],
-  css: ['@alikhalilll/ui/styles.css', '~/assets/docs.css'],
+  // Note: @alikhalilll/ui/styles.css is @imported from the top of docs.css instead of
+  // listed here. Vite + pnpm workspaces resolves the same workspace-symlinked CSS via
+  // two different canonical paths when it's referenced both as a Nuxt CSS entry AND
+  // implicitly via the package's subpath — the second copy lands AFTER docs.css in the
+  // <head> cascade and the lib's `.hidden { display: none }` ends up overriding the
+  // docs site's `.md\:flex` responsive utility, breaking the desktop nav + sidebars.
+  css: ['~/assets/docs.css'],
   vite: {
     plugins: [tailwindcss()],
   },
@@ -42,9 +48,29 @@ export default defineNuxtConfig({
   },
   nitro: {
     preset: 'github-pages',
+    // Pre-compress every public asset to .gz + .br at build time. GitHub Pages auto-serves
+    // the negotiated variant when a matching Accept-Encoding hits the request — drops
+    // ~30% off favicons, fonts, and the homepage HTML at zero runtime cost.
+    compressPublicAssets: { brotli: true, gzip: true },
     prerender: {
       crawlLinks: true,
-      routes: ['/', '/sitemap.xml', '/robots.txt'],
+      // Explicit list of known routes is a belt to crawlLinks' braces — guarantees a
+      // generated `.html` for every page even if a link gets temporarily removed during
+      // a refactor (and protects against accidental no-prerender regressions).
+      routes: [
+        '/',
+        '/sitemap.xml',
+        '/robots.txt',
+        '/api-provider',
+        '/crypto',
+        '/auto-middleware',
+        '/ui',
+        '/ui/tell-input',
+        '/ui/input',
+        '/ui/popover',
+        '/ui/drawer',
+        '/ui/responsive-popover',
+      ],
       failOnError: false,
     },
   },
@@ -89,6 +115,10 @@ export default defineNuxtConfig({
         { rel: 'icon', type: 'image/svg+xml', href: withBase('favicon.svg') },
         { rel: 'icon', type: 'image/png', sizes: '32x32', href: withBase('favicon-32.png') },
         { rel: 'apple-touch-icon', sizes: '180x180', href: withBase('apple-touch-icon.png') },
+        // dns-prefetch is cheaper than preconnect and works in older browsers / proxies
+        // that strip the preconnect handshake — small but free win on cold loads.
+        { rel: 'dns-prefetch', href: 'https://fonts.googleapis.com' },
+        { rel: 'dns-prefetch', href: 'https://fonts.gstatic.com' },
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
         { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
         {

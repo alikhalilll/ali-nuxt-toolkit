@@ -25,9 +25,96 @@ A headless, [shadcn-vue](https://www.shadcn-vue.com/) style component library fo
 pnpm add @alikhalilll/ui
 ```
 
-Peer dependency: `vue ^3.5.0`. The library bundles `reka-ui`, `vaul-vue`, `libphonenumber-js`, `lucide-vue-next`, `@vueuse/core`, `class-variance-authority`, `clsx`, and `tailwind-merge`. Works in any Vue 3 app — Nuxt is optional.
+Then import the stylesheet **once** in your app entry — no Tailwind config, no `@theme` block, no `@source` directives. The shipped CSS is fully self-contained: design tokens + every utility class the components actually use are pre-compiled into a single vanilla CSS file (~21 KB minified).
 
-### Subpath imports (recommended)
+### Nuxt 3 / 4
+
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  css: ['@alikhalilll/ui/styles.css'],
+});
+```
+
+### Vue + Vite (no Nuxt)
+
+```ts
+// main.ts
+import { createApp } from 'vue';
+import App from './App.vue';
+import '@alikhalilll/ui/styles.css';
+
+createApp(App).mount('#app');
+```
+
+That's it — your components render styled out of the box.
+
+Peer dependency: `vue ^3.5.0`. The library bundles `reka-ui`, `vaul-vue`, `libphonenumber-js`, `lucide-vue-next`, `@vueuse/core`, `class-variance-authority`, `clsx`, and `tailwind-merge`. Works in any Vue 3 app — Nuxt is optional. **No CSS framework required** at the consumer end: the stylesheet only declares its own utility classes, never a preflight reset, so it coexists with Tailwind v4, UnoCSS, vanilla CSS, or no CSS framework at all.
+
+### UnoCSS
+
+The shipped CSS already contains every utility class the components need, so there is **no UnoCSS preset to install and no `--ak-ui-*` mapping to wire up**. Drop the import in your `nuxt.config.css` (or `main.ts`) exactly like the Nuxt / Vite snippets above, and UnoCSS continues to handle every class _your_ templates write.
+
+```ts
+// nuxt.config.ts — UnoCSS + @alikhalilll/ui
+export default defineNuxtConfig({
+  modules: ['@unocss/nuxt'],
+  css: ['@alikhalilll/ui/styles.css'],
+});
+```
+
+**Class-name compatibility.** UnoCSS uses the same `bg-popover`, `text-muted-foreground`, `border-input` shorthand that this lib emits, so if you write those classes _yourself_ in your templates, UnoCSS will try to generate them too. Add `--ak-ui-*` to your UnoCSS theme so the consumer-side rules resolve to the same tokens the lib uses — this keeps the two outputs in lockstep:
+
+```ts
+// uno.config.ts
+import { defineConfig, presetWind4 } from 'unocss';
+
+export default defineConfig({
+  presets: [presetWind4()],
+  theme: {
+    colors: {
+      background: 'hsl(var(--ak-ui-background))',
+      foreground: 'hsl(var(--ak-ui-foreground))',
+      popover: 'hsl(var(--ak-ui-popover))',
+      'popover-foreground': 'hsl(var(--ak-ui-popover-foreground))',
+      muted: 'hsl(var(--ak-ui-muted))',
+      'muted-foreground': 'hsl(var(--ak-ui-muted-foreground))',
+      accent: 'hsl(var(--ak-ui-accent))',
+      'accent-foreground': 'hsl(var(--ak-ui-accent-foreground))',
+      destructive: 'hsl(var(--ak-ui-destructive))',
+      border: 'hsl(var(--ak-ui-border))',
+      input: 'hsl(var(--ak-ui-input))',
+      ring: 'hsl(var(--ak-ui-ring))',
+    },
+  },
+});
+```
+
+If you don't write those class names yourself, you can skip this entirely — the lib's compiled CSS is enough.
+
+**Preflight / reset.** The lib ships **no** preflight rules. Whatever reset UnoCSS injects (`@unocss/reset/tailwind.css`, `preflights: 'on-demand'`, etc.) wins on the root elements without fighting our components.
+
+### Workspaces / monorepos
+
+If you're a pnpm/yarn workspace consumer and you _also_ use Tailwind v4 in the app, Vite can double-emit the symlinked CSS file (once via `@alikhalilll/ui/styles.css`, once via the resolved filesystem path), which puts the lib's `.hidden { display: none }` after your `md:flex` / `md:block` responsive rules in the cascade and silently hides nav bars and sidebars. Avoid it by `@import`ing the lib stylesheet from inside your own app CSS instead of listing it in `nuxt.config.css`:
+
+```css
+/* app.css */
+@import '@alikhalilll/ui/styles.css';
+@import 'tailwindcss';
+/* …your own rules… */
+```
+
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  css: ['~/assets/app.css'], // <-- only your CSS; no separate lib import
+});
+```
+
+Vite inlines a single copy and the cascade stays sane. Outside a workspace setup this isn't necessary — both forms produce the same output.
+
+### Subpath imports
 
 Each component lives behind its own subpath so consumers pay only for what they import:
 
@@ -41,66 +128,7 @@ import { ATellInput, APopover } from '@alikhalilll/ui';
 
 Each component also ships its own README at `node_modules/@alikhalilll/ui/entries/<name>/README.md`.
 
-## Setup
-
-Components style themselves with Tailwind utility classes (`bg-popover`, `text-muted-foreground`, …) that resolve to CSS variables. Three steps — pick the snippet for your framework.
-
-### 1. Import the tokens
-
-#### Nuxt 3 / 4
-
-```ts
-// nuxt.config.ts
-export default defineNuxtConfig({
-  css: ['@alikhalilll/ui/styles.css', '~/assets/main.css'],
-});
-```
-
-#### Vue + Vite (no Nuxt)
-
-```ts
-// main.ts
-import { createApp } from 'vue';
-import App from './App.vue';
-import '@alikhalilll/ui/styles.css';
-import './assets/main.css';
-
-createApp(App).mount('#app');
-```
-
-Every variable is prefixed `--ak-ui-` — guaranteed not to collide with your CSS.
-
-### 2. Map to Tailwind v4
-
-```css
-@import 'tailwindcss';
-@import '@alikhalilll/ui/styles.css';
-@source '../node_modules/@alikhalilll/ui/dist/index.mjs';
-
-@theme inline {
-  --color-background: hsl(var(--ak-ui-background));
-  --color-foreground: hsl(var(--ak-ui-foreground));
-  --color-popover: hsl(var(--ak-ui-popover));
-  --color-popover-foreground: hsl(var(--ak-ui-popover-foreground));
-  --color-muted: hsl(var(--ak-ui-muted));
-  --color-muted-foreground: hsl(var(--ak-ui-muted-foreground));
-  --color-accent: hsl(var(--ak-ui-accent));
-  --color-accent-foreground: hsl(var(--ak-ui-accent-foreground));
-  --color-destructive: hsl(var(--ak-ui-destructive));
-  --color-destructive-foreground: hsl(var(--ak-ui-destructive-foreground));
-  --color-border: hsl(var(--ak-ui-border));
-  --color-input: hsl(var(--ak-ui-input));
-  --color-ring: hsl(var(--ak-ui-ring));
-}
-```
-
-The `@source` directive tells Tailwind v4 to scan the library's compiled templates (it skips `node_modules` by default). Inside a pnpm workspace, point at the source instead so HMR works:
-
-```css
-@source '../../packages/ui/**/*.{vue,ts}';
-```
-
-### 3. Dark mode
+### Dark mode
 
 The lib ships both `.light` and `.dark` blocks. Toggle the class on `<html>` — portaled popovers and drawers inherit via the cascade.
 
@@ -123,6 +151,20 @@ export default defineNuxtConfig({
 ```
 
 For Light / Dark / System (persisted, OS-aware, no flash of wrong theme), see `apps/docs/composables/useColorMode.ts` in the repo — the pattern is framework-agnostic; the same composable works under Vite once you drop the Nuxt-specific `useState` / `useHead` calls.
+
+### Overriding tokens
+
+Every variable is prefixed `--ak-ui-`. Override any of them globally on `:root`, scoped to a wrapper class, or inline — the components pick up the change at runtime via the CSS cascade.
+
+```css
+.tenant-acme {
+  --ak-ui-popover: 220 70% 8%;
+  --ak-ui-accent: 220 50% 30%;
+  --ak-ui-ring: 220 100% 65%;
+}
+```
+
+Values are HSL **triplets** — no `hsl(…)` wrapper. Full token list + recipes (brand-only, day/night, multi-tenant, server-driven, state-specific) in [the theming section](#theming).
 
 ## Nuxt integration
 

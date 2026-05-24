@@ -177,6 +177,17 @@ Behaviour:
 - A manual pick freezes detection. Clearing the input resets and re-arms it.
 - **Known limitation:** raw-digit input is fundamentally ambiguous. Typing `415` resolves to Switzerland (`+41 5…`), not the US area code. For region-locked apps, pass `default-country` instead.
 
+### Typing-pause UX
+
+While the user is mid-burst, the component holds back validation styling and shows a small spinner in the picker slot — both unblock once `detectDebounceMs` settles. After a failed detection (no dial code recognised), the picker becomes visible with no country selected so the user can pick manually instead of being stranded.
+
+- **Spinner during the debounce window** — replaceable via the `#detecting` slot. It only appears during the _first_ detection attempt; once the picker has rendered (success or revealed-after-miss) the spinner stops re-flashing on every keystroke.
+- **Validation gated by `hasFinishedTyping`** — field tinting (`showValidation`), the validation icon (`showValidationIcon`), the `aria-invalid` attribute, and the error message all stay neutral until the debounce settles. The raw `validationState` is still exposed via the template ref for consumers that want eager state.
+- **Picker reveals after a no-match attempt** — driven by an internal `detectionAttempted` flag. The picker won't disappear again until the input is cleared.
+- **Programmatic `v-model:phone` changes bypass the gate** — a parent setting `phone` is a committed value, not active typing, so validation surfaces immediately.
+
+Exposed via template ref alongside the existing `validation` / `validationState` / `required` / `selectedDialCode`: `visibleValidationState`, `isDetecting`, `hasFinishedTyping`, `detectionAttempted`.
+
 ## Internationalization
 
 `ATellInput` is built for non-English, RTL, and non-ASCII-numeral users.
@@ -354,24 +365,25 @@ Three customisation vectors — stack any combination:
 
 ### Slots
 
-| Slot           | Scope                                       | Replaces                                    |
-| -------------- | ------------------------------------------- | ------------------------------------------- |
-| `prefix`       | —                                           | Content at the start of the field.          |
-| `suffix`       | `{ validationState, validation }`           | Content at the end, after the flag trigger. |
-| `trigger`      | `{ selectedCountry, open, sizeClasses }`    | Entire country picker trigger.              |
-| `chevron`      | `{ open }`                                  | Just the chevron icon.                      |
-| `flag`         | `{ country, context: 'trigger' \| 'item' }` | Flag rendering (trigger + list items).      |
-| `search`       | `{ value, setValue, isSearching }`          | Entire search bar.                          |
-| `search-icon`  | —                                           | Just the leading search icon.               |
-| `loading`      | —                                           | Picker loading state.                       |
-| `empty`        | `{ query }`                                 | Empty / no-results state.                   |
-| `group-header` | `{ label, group: 'suggested' \| 'all' }`    | Section headers in the picker.              |
-| `item`         | `{ country, selected, disabled, select }`   | Entire row in the country list.             |
-| `item-check`   | `{ country }`                               | Right-side check icon for selected row.     |
-| `valid-icon`   | —                                           | Green check shown when valid.               |
-| `error-icon`   | `{ reason }`                                | Warning icon shown when invalid.            |
-| `hint`         | `{ country, formatHint, example }`          | Helper line shown below when empty.         |
-| `error`        | `{ message, reason, validation }`           | Error message shown below when invalid.     |
+| Slot           | Scope                                       | Replaces                                                                  |
+| -------------- | ------------------------------------------- | ------------------------------------------------------------------------- |
+| `prefix`       | —                                           | Content at the start of the field.                                        |
+| `suffix`       | `{ validationState, validation }`           | Content at the end, after the flag trigger.                               |
+| `trigger`      | `{ selectedCountry, open, sizeClasses }`    | Entire country picker trigger.                                            |
+| `chevron`      | `{ open }`                                  | Just the chevron icon.                                                    |
+| `flag`         | `{ country, context: 'trigger' \| 'item' }` | Flag rendering (trigger + list items).                                    |
+| `search`       | `{ value, setValue, isSearching }`          | Entire search bar.                                                        |
+| `search-icon`  | —                                           | Just the leading search icon.                                             |
+| `loading`      | —                                           | Picker loading state.                                                     |
+| `empty`        | `{ query }`                                 | Empty / no-results state.                                                 |
+| `detecting`    | —                                           | Spinner shown in the picker slot during the typing-pause debounce window. |
+| `group-header` | `{ label, group: 'suggested' \| 'all' }`    | Section headers in the picker.                                            |
+| `item`         | `{ country, selected, disabled, select }`   | Entire row in the country list.                                           |
+| `item-check`   | `{ country }`                               | Right-side check icon for selected row.                                   |
+| `valid-icon`   | —                                           | Green check shown when valid.                                             |
+| `error-icon`   | `{ reason }`                                | Warning icon shown when invalid.                                          |
+| `hint`         | `{ country, formatHint, example }`          | Helper line shown below when empty.                                       |
+| `error`        | `{ message, reason, validation }`           | Error message shown below when invalid.                                   |
 
 ### Data props
 

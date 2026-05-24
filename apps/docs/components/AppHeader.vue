@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import { APopover, APopoverContent, APopoverTrigger } from '@alikhalilll/ui';
+import {
+  APopover,
+  APopoverContent,
+  APopoverTrigger,
+  AResponsivePopover,
+  AResponsivePopoverContent,
+  AResponsivePopoverTrigger,
+} from '@alikhalilll/ui';
+import { ChevronDown } from 'lucide-vue-next';
 
 const route = useRoute();
 const mobileNavOpen = useMobileNavOpen();
@@ -9,8 +17,19 @@ const navLinks = [
   { to: '/api-provider', label: 'api-provider' },
   { to: '/crypto', label: 'crypto' },
   { to: '/auto-middleware', label: 'auto-middleware' },
-  { to: '/ui', label: 'ui' },
 ];
+
+const uiNavItems = [
+  { to: '/ui', label: 'Overview' },
+  { to: '/ui/tell-input', label: 'ATellInput' },
+  { to: '/ui/input', label: 'AInput' },
+  { to: '/ui/popover', label: 'APopover' },
+  { to: '/ui/drawer', label: 'ADrawer' },
+  { to: '/ui/responsive-popover', label: 'AResponsivePopover' },
+];
+
+const uiNavOpen = ref(false);
+const uiIsActive = computed(() => route.fullPath.startsWith('/ui'));
 
 const themeOptions = [
   { value: 'light' as const, label: 'Light', desc: 'Locked light theme' },
@@ -29,6 +48,7 @@ watch(
   () => route.fullPath,
   () => {
     mobileNavOpen.value = false;
+    uiNavOpen.value = false;
   }
 );
 
@@ -177,6 +197,67 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
         >
           {{ link.label }}
         </NuxtLink>
+
+        <!--
+          Wrapped in <ClientOnly> because AResponsivePopover uses useMediaQuery to swap
+          between popover (desktop) and drawer (mobile) AND reka-ui generates random IDs
+          at hydration time. Both produce SSR ↔ client mismatches that, in Vue 3.5+,
+          can leave the parent nav in a partially-broken layout state. SSR renders an
+          identically-styled non-interactive placeholder so the row width stays stable;
+          the real trigger swaps in on the client. Fallback button mirrors the active
+          state from the route so the gradient underline lights up in SSR too.
+        -->
+        <ClientOnly>
+          <AResponsivePopover v-model:open="uiNavOpen" :modal="false">
+            <AResponsivePopoverTrigger as-child>
+              <button
+                type="button"
+                class="nav-link nav-link--trigger"
+                :class="uiIsActive && 'nav-link--active'"
+                :aria-expanded="uiNavOpen"
+                aria-haspopup="menu"
+              >
+                ui
+                <ChevronDown
+                  class="ml-0.5 inline size-3 transition-transform"
+                  :class="uiNavOpen && 'rotate-180'"
+                  aria-hidden="true"
+                />
+              </button>
+            </AResponsivePopoverTrigger>
+
+            <AResponsivePopoverContent
+              align="start"
+              :side-offset="8"
+              popover-class="w-56 rounded-md border border-border bg-surface shadow-lg"
+              drawer-class="pb-4"
+              class="p-1"
+            >
+              <NuxtLink
+                v-for="item in uiNavItems"
+                :key="item.to"
+                :to="item.to"
+                class="ui-menu-item"
+                active-class="ui-menu-item--active"
+                @click="uiNavOpen = false"
+              >
+                {{ item.label }}
+              </NuxtLink>
+            </AResponsivePopoverContent>
+          </AResponsivePopover>
+
+          <template #fallback>
+            <NuxtLink
+              to="/ui"
+              class="nav-link nav-link--trigger"
+              :class="uiIsActive && 'nav-link--active'"
+              aria-haspopup="menu"
+            >
+              ui
+              <ChevronDown class="ml-0.5 inline size-3" aria-hidden="true" />
+            </NuxtLink>
+          </template>
+        </ClientOnly>
       </nav>
 
       <!-- Right side -->
@@ -421,6 +502,25 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
               {{ link.label }}
             </NuxtLink>
           </li>
+          <li>
+            <div
+              class="mt-1 px-3 pt-2 pb-1 text-[11px] font-medium tracking-wider text-text-dim uppercase"
+            >
+              ui
+            </div>
+            <ul class="m-0 list-none p-0">
+              <li v-for="item in uiNavItems" :key="item.to">
+                <NuxtLink
+                  :to="item.to"
+                  class="block rounded-md px-3 py-2 text-text-dim transition-colors hover:bg-surface hover:text-text hover:no-underline"
+                  active-class="!text-accent-2 font-medium"
+                  @click="mobileNavOpen = false"
+                >
+                  {{ item.label }}
+                </NuxtLink>
+              </li>
+            </ul>
+          </li>
         </ul>
 
         <div class="mt-4 border-t border-border pt-3">
@@ -553,6 +653,45 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
 }
 .nav-link--active::after {
   transform: scaleX(1);
+}
+
+/* The dropdown trigger reuses .nav-link styling so it sits identically alongside
+   the NuxtLink siblings. Strip default button chrome. */
+.nav-link--trigger {
+  display: inline-flex;
+  align-items: center;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+.nav-link--trigger:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--color-brand) 50%, transparent);
+  outline-offset: 2px;
+}
+
+/* Dropdown menu rows — matched to nav-link tones for visual continuity. */
+.ui-menu-item {
+  display: block;
+  padding: 8px 10px;
+  border-radius: 6px;
+  color: var(--text-dim);
+  font-size: 13px;
+  text-decoration: none;
+  transition:
+    color 0.12s ease,
+    background 0.12s ease;
+}
+.ui-menu-item:hover,
+.ui-menu-item:focus-visible {
+  color: var(--text);
+  background: color-mix(in oklab, var(--surface-2, var(--surface)) 60%, transparent);
+  text-decoration: none;
+  outline: none;
+}
+.ui-menu-item--active {
+  color: var(--text);
+  background: color-mix(in oklab, var(--surface-2, var(--surface)) 50%, transparent);
 }
 
 /* Generic round icon button — used for theme/GitHub/LinkedIn. Subtle glow halo
