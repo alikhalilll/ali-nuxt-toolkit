@@ -1,6 +1,6 @@
 {
   "name": "@alikhalilll/ui",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Headless, shadcn-vue style Vue 3 component library — every component is its own importable subpath (`@alikhalilll/ui/tell-input`, `@alikhalilll/ui/popover`, …) so users pay only for what they actually use.",
   "license": "MIT",
   "author": "alikhalilll",
