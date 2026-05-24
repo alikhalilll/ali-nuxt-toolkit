@@ -39,27 +39,27 @@
       "import": "./dist/index.mjs"
     },
     "./tell-input": {
-      "types": "./dist/tell-input.d.ts",
+      "types": "./dist/entries/tell-input/index.d.ts",
       "import": "./dist/tell-input.mjs"
     },
     "./input": {
-      "types": "./dist/input.d.ts",
+      "types": "./dist/entries/input/index.d.ts",
       "import": "./dist/input.mjs"
     },
     "./popover": {
-      "types": "./dist/popover.d.ts",
+      "types": "./dist/entries/popover/index.d.ts",
       "import": "./dist/popover.mjs"
     },
     "./drawer": {
-      "types": "./dist/drawer.d.ts",
+      "types": "./dist/entries/drawer/index.d.ts",
       "import": "./dist/drawer.mjs"
     },
     "./responsive-popover": {
-      "types": "./dist/responsive-popover.d.ts",
+      "types": "./dist/entries/responsive-popover/index.d.ts",
       "import": "./dist/responsive-popover.mjs"
     },
     "./utils": {
-      "types": "./dist/utils.d.ts",
+      "types": "./dist/utils/index.d.ts",
       "import": "./dist/utils.mjs"
     },
     "./assets/styles.css": "./dist/assets/styles.css",
@@ -78,7 +78,10 @@
   },
   "scripts": {
     "clean": "rimraf dist",
-    "build": "pnpm clean && vite build && node -e \"const fs=require('node:fs'); fs.mkdirSync('dist/assets',{recursive:true}); fs.copyFileSync('assets/styles.css','dist/assets/styles.css');\"",
+    "build:css": "tailwindcss -i assets/styles.src.css -o dist/assets/styles.css --minify",
+    "build:js": "vite build",
+    "build:types": "vue-tsc -p tsconfig.dist.json --declaration --emitDeclarationOnly --outDir dist && node scripts/build/fix-dts-imports.mjs && node scripts/build/validate-dts.mjs",
+    "build": "pnpm clean && pnpm build:js && pnpm build:types && pnpm build:css",
     "typecheck": "vue-tsc --noEmit -p tsconfig.json",
     "prepack": "pnpm build"
   },
@@ -96,13 +99,14 @@
     "vaul-vue": "^0.4.0"
   },
   "devDependencies": {
+    "@tailwindcss/cli": "^4.0.0",
     "@types/node": "^22.13.0",
     "@vitejs/plugin-vue": "^5.2.0",
     "rimraf": "^6.0.1",
+    "tailwindcss": "^4.0.0",
     "typescript": "^5.9.2",
     "vite": "^5.4.0",
-    "vite-plugin-dts": "^4.5.0",
     "vue": "^3.5.0",
-    "vue-tsc": "^2.2.0"
+    "vue-tsc": "^3.2.4"
   }
 }

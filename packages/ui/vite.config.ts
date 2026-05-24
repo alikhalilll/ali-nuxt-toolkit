@@ -2,7 +2,6 @@ import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
-import dts from 'vite-plugin-dts';
 
 const here = fileURLToPath(new URL('.', import.meta.url));
 const r = (p: string) => resolve(here, p);
@@ -10,6 +9,15 @@ const r = (p: string) => resolve(here, p);
 // Each entry becomes its own subpath import: `@alikhalilll/ui/<name>` →
 // `dist/<name>.mjs`. The main entry re-exports everything for users who don't
 // care about per-component installs.
+//
+// .d.ts files are NOT emitted by Vite — see `pnpm build:types`, which runs
+// vue-tsc 3.x directly + `scripts/build/fix-dts-imports.mjs` to rewrite the
+// `@/*` alias in emitted declarations to sibling-relative paths. vite-plugin-dts
+// was dropped because its vue-tsc 2.x output wrapped SFC defaults in
+// `__VLS_WithTemplateSlots<…>`, an intersection Volar in consumer projects
+// fails to peer through to recover prop types — killing template prop
+// autocomplete on `<ATellInput :|`. vue-tsc 3.x emits a plain
+// `DefineComponent<__VLS_PublicProps, …>` that Volar reads directly.
 export default defineConfig({
   resolve: {
     // Internal alias — mirrors the `@/*` path in tsconfig.json. Component source files
@@ -17,22 +25,7 @@ export default defineConfig({
     // instead of long `../../../` relative chains.
     alias: { '@': here },
   },
-  plugins: [
-    vue(),
-    dts({
-      rollupTypes: true,
-      include: [
-        'index.ts',
-        'entries/**/index.ts',
-        'entries/**/components/*.vue',
-        'entries/**/components/*.ts',
-        'entries/**/composables/*.ts',
-        'entries/**/utils/*.ts',
-        'utils/**/*.ts',
-      ],
-      exclude: ['**/*.test.ts', '**/*.spec.ts'],
-    }),
-  ],
+  plugins: [vue()],
   build: {
     lib: {
       entry: {
