@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { checkbox, confirm, select } from '@inquirer/prompts';
+import { checkbox, confirm, password, select } from '@inquirer/prompts';
 import { parseArgs, validateBump } from './cli.mjs';
 import {
   BUMP_TYPES,
@@ -61,6 +61,25 @@ async function pickInteractive(cliPackages, cliBump, cliTag) {
     }));
 
   return { packages, bump, distTag };
+}
+
+// .npmrc contains `//registry.npmjs.org/:_authToken=${NPM_TOKEN}` — pnpm publish
+// fails (and prints noisy warnings on every pnpm invocation) when the env var is
+// unset. In interactive runs, prompt for it so users don't need a separately
+// exported shell var. CI sets NPM_TOKEN directly and skips this path.
+async function ensureNpmToken({ interactive, skipPublish, dryRun }) {
+  if (skipPublish || dryRun) return;
+  if (process.env.NPM_TOKEN && process.env.NPM_TOKEN.trim() !== '') return;
+  if (!interactive) {
+    die('NPM_TOKEN is not set. Export it or re-run with --interactive to be prompted.');
+  }
+  const token = await password({
+    message: 'npm publish token (input hidden):',
+    mask: '*',
+    validate: (v) => (v && v.trim() !== '' ? true : 'Token cannot be empty.'),
+  });
+  process.env.NPM_TOKEN = token.trim();
+  success('NPM_TOKEN captured for this run');
 }
 
 async function releasePackage({ dir, bump, distTag, skipGit, skipPublish, forceTag, dryRun }) {
@@ -189,6 +208,12 @@ async function main() {
   info(`tag:      ${distTag}`);
   info(`branch:   ${branch}`);
   info(`cwd:      ${ROOT}`);
+
+  await ensureNpmToken({
+    interactive: flags.interactive,
+    skipPublish: flags.skipPublish,
+    dryRun: flags.dryRun,
+  });
 
   if (flags.interactive && !flags.dryRun) {
     const ok = await confirm({ message: 'Proceed?', default: true });
