@@ -58,6 +58,13 @@ const props = withDefaults(
     countryLabel?: string;
     /** Trigger's `aria-label` when no country is selected. */
     selectCountryLabel?: string;
+    /**
+     * How page scroll is blocked while the popover is open. Defaults to `'events'` — an
+     * event-based lock that keeps the page scrollbar visible and `position: sticky` working.
+     * Pass `'body'` for the legacy `body { overflow: hidden }` lock, or `'none'` to allow
+     * the page to scroll freely.
+     */
+    scrollLock?: 'events' | 'body' | 'none';
   }>(),
   {
     searchPlaceholder: 'Search country or +code…',
@@ -283,7 +290,7 @@ defineExpose({
 </script>
 
 <template>
-  <AResponsivePopover v-model:open="open">
+  <AResponsivePopover v-model:open="open" :scroll-lock="props.scrollLock">
     <AResponsivePopoverTrigger as-child>
       <slot
         name="trigger"

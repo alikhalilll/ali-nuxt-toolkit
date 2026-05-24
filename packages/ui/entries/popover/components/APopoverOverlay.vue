@@ -5,11 +5,20 @@ import { cn } from '@/utils';
 
 defineOptions({ inheritAttrs: false });
 
-const props = defineProps<{ class?: HTMLAttributes['class'] }>();
+const props = withDefaults(
+  defineProps<{
+    class?: HTMLAttributes['class'];
+    /**
+     * When true, set `body { overflow: hidden; touchAction: none }` for the lifetime of
+     * the overlay. Off by default because it breaks `position: sticky` on the host page.
+     * Prefer the event-based lock (see `AResponsivePopover`'s `scrollLock` prop) which
+     * keeps the page scrollbar in place.
+     */
+    lockScroll?: boolean;
+  }>(),
+  { lockScroll: false }
+);
 
-// Body-scroll-lock for the lifetime of the overlay. Mounted = lock; unmounted = restore.
-// Because this component is only rendered when `<APopoverContent :overlay="true">` is
-// inside the open popover portal, mount/unmount tracks visibility 1:1.
 let prevBodyOverflow = '';
 let prevBodyTouchAction = '';
 let prevPaddingRight = '';
@@ -20,6 +29,7 @@ function getScrollbarWidth() {
 }
 
 onMounted(() => {
+  if (!props.lockScroll) return;
   if (typeof document === 'undefined') return;
   const body = document.body;
   const sbw = getScrollbarWidth();
@@ -33,6 +43,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  if (!props.lockScroll) return;
   if (typeof document === 'undefined') return;
   const body = document.body;
   body.style.overflow = prevBodyOverflow;

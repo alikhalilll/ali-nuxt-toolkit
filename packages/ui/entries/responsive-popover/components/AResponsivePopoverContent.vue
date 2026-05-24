@@ -2,8 +2,9 @@
 import type { HTMLAttributes } from 'vue';
 import { computed } from 'vue';
 import { useMediaQuery } from '@vueuse/core';
-import { APopoverContent } from '@/entries/popover';
+import { APopoverContent, useEventScrollLock } from '@/entries/popover';
 import { ADrawerContent } from '@/entries/drawer';
+import { useResponsivePopoverContext } from '../composables/useResponsivePopoverContext';
 
 const props = withDefaults(
   defineProps<{
@@ -31,22 +32,45 @@ const props = withDefaults(
   }
 );
 
-const isDesktop = useMediaQuery(() => props.breakpoint);
+const ctx = useResponsivePopoverContext();
+
+// Prefer the root's media query (so both layers agree). Fall back to a local one when this
+// component is used outside `AResponsivePopover` (unusual but supported).
+const fallbackIsDesktop = useMediaQuery(() => props.breakpoint);
+const isDesktop = computed(() => ctx?.isDesktop.value ?? fallbackIsDesktop.value);
+
+const scrollLockMode = computed(() => ctx?.scrollLock.value ?? 'events');
+const overlayLockScroll = computed(() => scrollLockMode.value === 'body');
 
 const mergedClass = computed(() => [
   props.class,
   isDesktop.value ? props.popoverClass : props.drawerClass,
 ]);
+
+// Sticky-safe scroll lock — only active while the popover is open on desktop and the root
+// asked for the event-based strategy. The getter resolves every responsive popover content
+// element currently in the DOM, which lets stacked popovers share the lock cleanly.
+useEventScrollLock({
+  allowedScrollContainer: () => {
+    if (typeof document === 'undefined') return [];
+    return Array.from(
+      document.querySelectorAll<HTMLElement>('[data-responsive-popover-scroll-container="true"]')
+    );
+  },
+  active: computed(() => !!ctx?.open.value && isDesktop.value && scrollLockMode.value === 'events'),
+});
 </script>
 
 <template>
   <APopoverContent
     v-if="isDesktop"
     :overlay="props.overlay"
+    :overlay-lock-scroll="overlayLockScroll"
     :align="props.align"
     :side-offset="props.sideOffset"
     :class="mergedClass"
     data-slot="responsive-popover-content"
+    data-responsive-popover-scroll-container="true"
   >
     <slot />
   </APopoverContent>

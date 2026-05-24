@@ -18,16 +18,21 @@ const props = withDefaults(
     PopoverContentProps & {
       class?: HTMLAttributes['class'];
       /** Dim the entire viewport behind the popover and block all interaction with the
-       *  page (clicks are captured by the overlay; body scroll is locked while open).
-       *  Pair with `<APopover :modal="true">` (the default) for the full modal behaviour. */
+       *  page (clicks are captured by the overlay). Pair with `<APopover :modal="true">`
+       *  (the default) for the full modal behaviour. */
       overlay?: boolean;
       overlayClass?: HTMLAttributes['class'];
+      /**
+       * When true, the overlay also locks page scroll via `body { overflow: hidden }`.
+       * Off by default — `AResponsivePopover` opts in to this when `scrollLock="body"`.
+       */
+      overlayLockScroll?: boolean;
     }
   >(),
-  { align: 'center', sideOffset: 4, overlay: false }
+  { align: 'center', sideOffset: 4, overlay: false, overlayLockScroll: false }
 );
 const emits = defineEmits<PopoverContentEmits>();
-const delegated = reactiveOmit(props, 'class', 'overlay', 'overlayClass');
+const delegated = reactiveOmit(props, 'class', 'overlay', 'overlayClass', 'overlayLockScroll');
 const forwarded = useForwardPropsEmits(delegated, emits);
 </script>
 
@@ -39,7 +44,11 @@ const forwarded = useForwardPropsEmits(delegated, emits);
       so clicking the overlay closes the popover for free. The overlay component
       locks body scroll on mount and restores it on unmount.
     -->
-    <APopoverOverlay v-if="props.overlay" :class="props.overlayClass" />
+    <APopoverOverlay
+      v-if="props.overlay"
+      :class="props.overlayClass"
+      :lock-scroll="props.overlayLockScroll"
+    />
     <PopoverContent
       data-slot="popover-content"
       v-bind="{ ...$attrs, ...forwarded }"

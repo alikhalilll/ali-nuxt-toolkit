@@ -24,3 +24,6 @@ export { normalizeDigits, LOCALE_DIGIT_RANGES } from './utils/digits';
 // Composables — co-located with the components since they're tel-input specific.
 export * from './composables/usePhoneValidation';
 export * from './composables/useCountryDetection';
+export * from './composables/useCountryMatching';
+export * from './composables/useTypingPhase';
+export * from './composables/useTellInputValidation';

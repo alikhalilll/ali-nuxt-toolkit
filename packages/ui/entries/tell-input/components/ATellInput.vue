@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, useId, watch } from 'vue';
-import { useDebounceFn } from '@vueuse/core';
-import { CheckCircle2, AlertCircle } from 'lucide-vue-next';
-import { parsePhoneNumberFromString, type CountryCode } from 'libphonenumber-js';
+import { CheckCircle2, AlertCircle, Loader2 } from 'lucide-vue-next';
 import { cn } from '@/utils';
 import {
   usePhoneValidation,
@@ -10,6 +8,9 @@ import {
   type PhoneValidationResult,
 } from '../composables/usePhoneValidation';
 import { detectCountry, type DetectCountryOptions } from '../composables/useCountryDetection';
+import { useCountryMatching } from '../composables/useCountryMatching';
+import { useTypingPhase } from '../composables/useTypingPhase';
+import { useTellInputValidation } from '../composables/useTellInputValidation';
 import { controlPaddingX, controlTextSize, DEFAULT_SIZE } from '@/utils';
 import { aTellInputVariants, resolveMessages, type ATellInputProps } from '../utils/types';
 import { normalizeDigits } from '../utils/digits';
@@ -40,6 +41,12 @@ interface ExtendedProps extends ATellInputProps {
   hintClass?: string;
   /** Classes for the error message line. */
   errorClass?: string;
+  /**
+   * How page scroll is blocked while the country popover is open. Defaults to `'events'`
+   * (sticky-safe document-level lock). Pass `'body'` for the legacy
+   * `body { overflow: hidden }` lock, or `'none'` to leave page scrolling alone.
+   */
+  scrollLock?: 'events' | 'body' | 'none';
 }
 
 const props = withDefaults(defineProps<ExtendedProps>(), {
@@ -49,7 +56,7 @@ const props = withDefaults(defineProps<ExtendedProps>(), {
   defaultCountry: '',
   ipEndpoint: 'https://ipapi.co/json/',
   detectFromInput: true,
-  detectDebounceMs: 150,
+  detectDebounceMs: 800,
   showValidationIcon: false,
 });
 
@@ -100,6 +107,8 @@ defineSlots<{
   }) => unknown;
   loading?: () => unknown;
   empty?: (props: { query: string }) => unknown;
+  /** Replace the spinner shown in the picker slot during the debounce window. */
+  detecting?: () => unknown;
 }>();
 
 const phone = defineModel<string>('phone', { default: '' });
@@ -115,173 +124,58 @@ const selectedIso2 = ref<string>('');
 
 const { getCountries, validate, getRequiredInfo, getCountryByValue, getCountriesByDial } =
   usePhoneValidation();
+// Pass the loaded lookups in — useCountryMatching can't call usePhoneValidation() itself
+// because each invocation creates a fresh, empty country index.
+const { resolveCountryIdentifier, dialNumberFor, matchLeadingDialCode } = useCountryMatching({
+  getCountryByValue,
+  getCountriesByDial,
+});
 
 void getCountries();
 
 const userPickedCountry = ref(false);
 const autoSettingCountry = ref(false);
 
-/** Synchronous dial-digit → ISO2 fallback for common countries, in case the async REST
- *  Countries fetch hasn't populated `getCountriesByDial`'s index yet during setup. */
-const DIAL_TO_ISO2_FALLBACK: Record<string, string> = {
-  '1': 'US',
-  '7': 'RU',
-  '20': 'EG',
-  '27': 'ZA',
-  '30': 'GR',
-  '31': 'NL',
-  '32': 'BE',
-  '33': 'FR',
-  '34': 'ES',
-  '39': 'IT',
-  '44': 'GB',
-  '46': 'SE',
-  '47': 'NO',
-  '48': 'PL',
-  '49': 'DE',
-  '52': 'MX',
-  '54': 'AR',
-  '55': 'BR',
-  '60': 'MY',
-  '61': 'AU',
-  '62': 'ID',
-  '63': 'PH',
-  '64': 'NZ',
-  '65': 'SG',
-  '66': 'TH',
-  '81': 'JP',
-  '82': 'KR',
-  '84': 'VN',
-  '86': 'CN',
-  '90': 'TR',
-  '91': 'IN',
-  '92': 'PK',
-  '95': 'MM',
-  '212': 'MA',
-  '213': 'DZ',
-  '216': 'TN',
-  '218': 'LY',
-  '234': 'NG',
-  '254': 'KE',
-  '352': 'LU',
-  '353': 'IE',
-  '358': 'FI',
-  '359': 'BG',
-  '380': 'UA',
-  '420': 'CZ',
-  '421': 'SK',
-  '961': 'LB',
-  '962': 'JO',
-  '963': 'SY',
-  '964': 'IQ',
-  '965': 'KW',
-  '966': 'SA',
-  '967': 'YE',
-  '968': 'OM',
-  '970': 'PS',
-  '971': 'AE',
-  '972': 'IL',
-  '973': 'BH',
-  '974': 'QA',
-};
-
-/** Accept either an ISO2 code (`'EG'`) or a dial-digit string (`'20'`, `'+20'`).
- *  Returns the canonical ISO2 for downstream consumers, or `''` if it can't resolve. */
-function resolveCountryIdentifier(raw: string | undefined | null): string {
-  const v = String(raw ?? '').trim();
-  if (!v) return '';
-  if (/^[A-Za-z]{2}$/.test(v)) return v.toUpperCase();
-  const dial = v.replace(/^\+/, '');
-  if (!/^\d+$/.test(dial)) return '';
-  // Prefer the loaded country index (gives the right answer when multiple share a dial);
-  // fall back to the synchronous table when the async list hasn't arrived yet.
-  const match = getCountriesByDial(dial)[0];
-  if (match) return match.value;
-  return DIAL_TO_ISO2_FALLBACK[dial] ?? '';
-}
-
 /** Silently resolved via IP/timezone/locale when `detectFromInput` is on — used as a hint
  *  so local-format numbers (e.g. Egyptian `01066105963`) can be parsed without a `+` prefix.
  *  Seeded from `defaultCountry` so it has a usable value before async detection resolves. */
 const inferredCountry = ref<string>(resolveCountryIdentifier(props.defaultCountry));
 
-const RECENTS_KEY = 'ali_ui_country_recents_v1';
-function readRecents(): string[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = localStorage.getItem(RECENTS_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.filter((v): v is string => typeof v === 'string') : [];
-  } catch {
-    return [];
-  }
+/** Closure passed everywhere the matcher needs typing context (hint country + current
+ *  selection for tier-3 tie-breaks). Avoids re-reading `selectedIso2`/`inferredCountry`
+ *  at every call site. */
+function tryMatchPhone(digits: string) {
+  return matchLeadingDialCode(digits, {
+    hintCountry: inferredCountry.value,
+    currentIso2: selectedIso2.value,
+  });
 }
 
-interface DialMatch {
-  country: CountryOption;
-  /** The national significant number — what `phone` should become, with both dial code
-   *  and national prefix (e.g. Egyptian leading `0`) stripped. */
-  nationalNumber: string;
-}
+/* ---------------------------------------------------------------
+ * Typing-phase state machine — owns `isDetecting`, `hasFinishedTyping`,
+ * `detectionAttempted` and the debounce timer. The `onSettle` callback
+ * runs at the end of every debounce window: it short-circuits when
+ * detection is disabled / the user already picked / input is empty,
+ * otherwise marks a detection attempt and applies any match.
+ * ------------------------------------------------------------- */
+const typing = useTypingPhase({
+  debounceMs: computed(() => Math.max(0, props.detectDebounceMs)),
+  onSettle: () => {
+    if (!props.detectFromInput) return;
+    if (userPickedCountry.value || selectedIso2.value) return;
+    const current = phone.value;
+    if (!current) return;
 
-function matchLeadingDialCode(digits: string): DialMatch | null {
-  if (!digits) return null;
+    typing.markDetectionAttempt();
 
-  // Tier 1: international parse — disambiguates NANP (+1 ... area code → US/CA/etc.) and
-  // returns the canonical NSN with the country calling code already stripped.
-  try {
-    const parsed = parsePhoneNumberFromString(`+${digits}`);
-    if (parsed?.country && parsed.countryCallingCode) {
-      const parsedCountry = getCountryByValue(parsed.country);
-      if (parsedCountry) {
-        return { country: parsedCountry, nationalNumber: String(parsed.nationalNumber ?? '') };
-      }
-    }
-  } catch {
-    /* libphonenumber throws on partial input — fall through */
-  }
-
-  // Tier 2: national-format parse using the silently-inferred country (IP/timezone/locale)
-  // as a hint. Catches local formats like Egyptian `01066105963` where there's no leading
-  // dial code to match against. libphonenumber strips the national prefix (the leading 0
-  // for EG, etc.) so the resulting `nationalNumber` is the canonical NSN.
-  const hint = inferredCountry.value;
-  if (hint && digits.length >= 4) {
-    try {
-      const parsed = parsePhoneNumberFromString(digits, hint as CountryCode);
-      if (parsed?.isValid()) {
-        const matched = getCountryByValue(parsed.country || hint);
-        if (matched) {
-          return { country: matched, nationalNumber: String(parsed.nationalNumber ?? '') };
-        }
-      }
-    } catch {
-      /* fall through */
-    }
-  }
-
-  // Tier 3: longest-prefix match over our own dial-digits index — handles partial
-  // international input like `44` or `20` before libphonenumber can disambiguate.
-  for (let len = Math.min(3, digits.length); len >= 1; len--) {
-    const prefix = digits.slice(0, len);
-    const group = getCountriesByDial(prefix);
-    if (!group.length) continue;
-    const nationalNumber = digits.slice(prefix.length);
-    if (group.length === 1) return { country: group[0], nationalNumber };
-    const current = selectedIso2.value
-      ? group.find((c) => c.value === selectedIso2.value.toUpperCase())
-      : null;
-    if (current) return { country: current, nationalNumber };
-    const recents = readRecents();
-    const recentHit = recents
-      .map((iso2) => group.find((c) => c.value === iso2))
-      .find((c): c is CountryOption => Boolean(c));
-    if (recentHit) return { country: recentHit, nationalNumber };
-    return { country: group[0], nationalNumber };
-  }
-  return null;
-}
+    const match = tryMatchPhone(current);
+    if (!match) return;
+    autoSettingCountry.value = true;
+    selectedIso2.value = match.country.value;
+    phone.value = match.nationalNumber;
+  },
+});
+const { isDetecting, hasFinishedTyping, detectionAttempted } = typing;
 
 onMounted(async () => {
   if (selectedIso2.value) return; // v-model has an initial value — respect it.
@@ -324,7 +218,7 @@ onMounted(async () => {
     // If the user has already typed something while detection was resolving, re-attempt
     // matching now that we have a hint country for the libphonenumber national-format pass.
     if (phone.value && !userPickedCountry.value && !selectedIso2.value) {
-      const match = matchLeadingDialCode(phone.value);
+      const match = tryMatchPhone(phone.value);
       if (match) {
         autoSettingCountry.value = true;
         selectedIso2.value = match.country.value;
@@ -338,18 +232,6 @@ onMounted(async () => {
     selectedIso2.value = iso2;
   }
 });
-
-/** Compute the dial digits (as a number) for an ISO2 code. Falls back to the synchronous
- *  dial table if the async country list hasn't populated yet. */
-function dialNumberFor(iso2: string): number | null {
-  if (!iso2) return null;
-  const fromIndex = getCountryByValue(iso2)?.raw_data?.dial_digits;
-  const digits =
-    fromIndex ?? Object.entries(DIAL_TO_ISO2_FALLBACK).find(([, v]) => v === iso2)?.[0];
-  if (!digits) return null;
-  const n = Number(digits);
-  return Number.isFinite(n) ? n : null;
-}
 
 /** External → internal: when the caller mutates `v-model:country` (dial number), resolve
  *  it to an ISO2. If the current ISO2 already maps to this dial (e.g. user has Canada
@@ -387,23 +269,6 @@ watch(
   { flush: 'sync' }
 );
 
-/** Debounced detection — re-evaluates `phone.value` at the time the timer fires (not the
- *  value captured when scheduled), so a burst of keystrokes collapses into one parse. */
-const detectAndApply = useDebounceFn(
-  () => {
-    if (!props.detectFromInput) return;
-    if (userPickedCountry.value || selectedIso2.value) return;
-    const current = phone.value;
-    if (!current) return;
-    const match = matchLeadingDialCode(current);
-    if (!match) return;
-    autoSettingCountry.value = true;
-    selectedIso2.value = match.country.value;
-    phone.value = match.nationalNumber;
-  },
-  computed(() => Math.max(0, props.detectDebounceMs))
-);
-
 /** The string shown in the `<input>`. Deliberately decoupled from `phone` (the digits-only
  *  model) so the visible field is NOT rewritten mid-edit — non-digits / alternative numerals
  *  are normalized into `phone` immediately, but the displayed value is only cleaned up once
@@ -427,23 +292,20 @@ function handlePhoneInput(e: Event) {
   // Fold alternative numerals (Arabic-Indic, Persian, …) to ASCII, then strip non-digits.
   const cleaned = normalizeDigits(target.value).replace(/\D/g, '');
 
-  if (props.detectFromInput) {
-    if (!cleaned) {
-      // Always reset on clear — even after a manual pick. Instant (not debounced) so the
-      // picker hides the moment the input goes empty.
+  if (!cleaned) {
+    // Always reset on clear — even after a manual pick. Instant (not debounced) so the
+    // picker + spinner hide the moment the input goes empty.
+    typing.reset();
+    if (props.detectFromInput) {
       autoSettingCountry.value = true;
       selectedIso2.value = '';
-      commitPhone('');
       userPickedCountry.value = false;
-      return;
     }
-    commitPhone(cleaned);
-    if (!userPickedCountry.value && !selectedIso2.value) {
-      detectAndApply();
-    }
+    commitPhone('');
     return;
   }
 
+  typing.markTyping();
   commitPhone(cleaned);
 }
 
@@ -486,33 +348,33 @@ const dirAttr = computed<'ltr' | 'rtl' | undefined>(() =>
   props.dir === 'ltr' || props.dir === 'rtl' ? props.dir : undefined
 );
 
-const required = computed(() =>
-  selectedIso2.value ? getRequiredInfo({ iso2: selectedIso2.value }, props.locale) : null
-);
-
-const validation = computed<PhoneValidationResult>(() =>
-  validate({
-    country: selectedIso2.value ? { iso2: selectedIso2.value } : null,
-    phone: phone.value ?? '',
-    locale: props.locale,
-  })
+/* ---------------------------------------------------------------
+ * Validation facade — wraps the raw `usePhoneValidation` calls and
+ * produces the view-layer surface (visible state gated by the typing
+ * pause, localised error message, conditional show flags, etc.).
+ * ------------------------------------------------------------- */
+const {
+  validation,
+  required,
+  validationState,
+  visibleValidationState,
+  errorMessage,
+  showError,
+  showHint,
+  selectedDialCode,
+} = useTellInputValidation(
+  { validate, getRequiredInfo, getCountryByValue },
+  { phone, selectedIso2, hasFinishedTyping, messages },
+  {
+    locale: () => props.locale,
+    showValidation: () => props.showValidation,
+    errorMessages: () => props.errorMessages,
+  }
 );
 
 const effectivePlaceholder = computed(
   () => props.placeholder || required.value?.format_hint || messages.value.phoneInputLabel
 );
-
-const errorMessage = computed(() => {
-  const v = validation.value;
-  if (v.ok || !v.reason) return null;
-  if (!phone.value) return null;
-  return props.errorMessages?.[v.reason] ?? messages.value.errorMessages[v.reason];
-});
-
-const selectedDialCode = computed(() => {
-  if (!selectedIso2.value) return null;
-  return getCountryByValue(selectedIso2.value)?.raw_data.dial_code ?? null;
-});
 
 const inputSizeClasses = computed(
   () => `${controlPaddingX[props.size]} ${controlTextSize[props.size]}`
@@ -521,22 +383,24 @@ const inputSizeClasses = computed(
 /** Classes for the inline dial-code prefix — a tight `px-2` so it hugs the input digits. */
 const dialPrefixClasses = computed(() => `px-2 ${controlTextSize[props.size]}`);
 
-const validationState = computed<'idle' | 'valid' | 'error'>(() => {
-  if (!phone.value) return 'idle';
-  return validation.value.ok ? 'valid' : 'error';
-});
-
 /* ---------------------------------------------------------------
  * Accessibility — the helper line (hint or error) lives in a single
  * `aria-live` region; the input's `aria-describedby` points at it
  * whenever it has content.
  * ------------------------------------------------------------- */
 const helperId = useId();
-const showError = computed(() => Boolean(props.showValidation && errorMessage.value));
-const showHint = computed(() => !showError.value && !phone.value && !!required.value?.format_hint);
 const describedBy = computed(() => (showError.value || showHint.value ? helperId : undefined));
 
-defineExpose({ validation, required, selectedDialCode, validationState });
+defineExpose({
+  validation,
+  required,
+  selectedDialCode,
+  validationState,
+  visibleValidationState,
+  isDetecting,
+  hasFinishedTyping,
+  detectionAttempted,
+});
 </script>
 
 <template>
@@ -555,18 +419,19 @@ defineExpose({ validation, required, selectedDialCode, validationState });
             'focus-within:ring-2 focus-within:ring-offset-0',
             // Validation field colors are an opt-in via `showValidation` — by default the
             // field stays neutral and the consumer drives error rendering from `validation`.
-            (!props.showValidation || validationState === 'idle') && 'focus-within:ring-ring/40',
+            (!props.showValidation || visibleValidationState === 'idle') &&
+              'focus-within:ring-ring/40',
             props.showValidation &&
-              validationState === 'valid' &&
+              visibleValidationState === 'valid' &&
               'border-emerald-500/60 ring-1 ring-emerald-500/20 focus-within:ring-emerald-500/40',
             props.showValidation &&
-              validationState === 'error' &&
+              visibleValidationState === 'error' &&
               'border-destructive/80 ring-1 ring-destructive/20 focus-within:ring-destructive/40',
             props.class,
             props.fieldClass
           )
         "
-        :data-state="validationState"
+        :data-state="visibleValidationState"
       >
         <slot name="prefix" />
 
@@ -590,7 +455,7 @@ defineExpose({ validation, required, selectedDialCode, validationState });
           :disabled="props.disabled || props.loading"
           :placeholder="effectivePlaceholder"
           :aria-label="messages.phoneInputLabel"
-          :aria-invalid="validationState === 'error' || undefined"
+          :aria-invalid="visibleValidationState === 'error' || undefined"
           :aria-describedby="describedBy"
           :class="
             cn(
@@ -604,6 +469,29 @@ defineExpose({ validation, required, selectedDialCode, validationState });
           @change="handlePhoneChange"
         />
 
+        <!-- Detection-in-flight spinner — shown only during the first debounce window,
+             before the picker has appeared. Once the picker is visible (success OR a failed
+             attempt that revealed the empty picker) we stop re-flashing on every keystroke. -->
+        <Transition
+          enter-active-class="transition-all duration-200 ease-out overflow-hidden"
+          leave-active-class="transition-all duration-150 ease-in overflow-hidden"
+          enter-from-class="opacity-0 max-w-0"
+          leave-to-class="opacity-0 max-w-0"
+          enter-to-class="max-w-[2.5rem]"
+          leave-from-class="max-w-[2.5rem]"
+        >
+          <div
+            v-if="isDetecting && !selectedIso2 && !detectionAttempted"
+            class="text-muted-foreground inline-flex h-full shrink-0 items-center px-2"
+            aria-hidden="true"
+            data-slot="tell-input-detecting"
+          >
+            <slot name="detecting">
+              <Loader2 class="size-4 animate-spin" />
+            </slot>
+          </div>
+        </Transition>
+
         <Transition
           enter-active-class="transition-all duration-200 ease-out overflow-hidden"
           leave-active-class="transition-all duration-150 ease-in overflow-hidden"
@@ -612,52 +500,62 @@ defineExpose({ validation, required, selectedDialCode, validationState });
           enter-to-class="max-w-[12rem]"
           leave-from-class="max-w-[12rem]"
         >
-          <ACountrySelect
-            v-if="!props.detectFromInput || selectedIso2"
-            v-model:selected="selectedIso2"
-            :allowed-dial-codes="props.allowedDialCodes"
-            :disabled="props.disabled || props.loading"
-            :size="props.size"
-            :locale="props.locale"
-            :search-placeholder="props.searchPlaceholder ?? messages.searchPlaceholder"
-            :empty-text="props.emptyText ?? messages.emptyText"
-            :loading-text="props.loadingText ?? messages.loadingText"
-            :suggested-label="messages.suggestedLabel"
-            :all-countries-label="messages.allCountriesLabel"
-            :country-label="messages.countryLabel"
-            :select-country-label="messages.selectCountryLabel"
-            :flag-url="props.flagUrl"
-            :searcher="props.searcher"
-            :countries="props.countries"
-            :content-class="props.contentClass"
-            :popover-class="props.popoverClass"
-            :drawer-class="props.drawerClass"
+          <!-- Wrapper div gives the <Transition> a single element root to animate.
+               ACountrySelect's root is the AResponsivePopover fragment (Popover/Drawer
+               swap), which a Transition can't animate directly — without this wrapper
+               Vue logs "Component inside <Transition> renders non-element root node". -->
+          <div
+            v-if="!props.detectFromInput || selectedIso2 || detectionAttempted"
+            class="inline-flex h-full shrink-0 items-center"
+            data-slot="tell-input-country-wrapper"
           >
-            <template v-if="$slots.trigger" #trigger="slotProps">
-              <slot name="trigger" v-bind="slotProps" />
-            </template>
-            <template v-if="$slots.chevron" #chevron="slotProps">
-              <slot name="chevron" v-bind="slotProps" />
-            </template>
-            <template v-if="$slots.flag" #flag="slotProps">
-              <slot name="flag" v-bind="slotProps" />
-            </template>
-            <template v-if="$slots.item" #item="slotProps">
-              <slot name="item" v-bind="slotProps" />
-            </template>
-            <template v-if="$slots['group-header']" #group-header="slotProps">
-              <slot name="group-header" v-bind="slotProps" />
-            </template>
-            <template v-if="$slots.search" #search="slotProps">
-              <slot name="search" v-bind="slotProps" />
-            </template>
-            <template v-if="$slots.loading" #loading>
-              <slot name="loading" />
-            </template>
-            <template v-if="$slots.empty" #empty="slotProps">
-              <slot name="empty" v-bind="slotProps" />
-            </template>
-          </ACountrySelect>
+            <ACountrySelect
+              v-model:selected="selectedIso2"
+              :allowed-dial-codes="props.allowedDialCodes"
+              :disabled="props.disabled || props.loading"
+              :size="props.size"
+              :locale="props.locale"
+              :search-placeholder="props.searchPlaceholder ?? messages.searchPlaceholder"
+              :empty-text="props.emptyText ?? messages.emptyText"
+              :loading-text="props.loadingText ?? messages.loadingText"
+              :suggested-label="messages.suggestedLabel"
+              :all-countries-label="messages.allCountriesLabel"
+              :country-label="messages.countryLabel"
+              :select-country-label="messages.selectCountryLabel"
+              :flag-url="props.flagUrl"
+              :searcher="props.searcher"
+              :countries="props.countries"
+              :content-class="props.contentClass"
+              :popover-class="props.popoverClass"
+              :drawer-class="props.drawerClass"
+              :scroll-lock="props.scrollLock"
+            >
+              <template v-if="$slots.trigger" #trigger="slotProps">
+                <slot name="trigger" v-bind="slotProps" />
+              </template>
+              <template v-if="$slots.chevron" #chevron="slotProps">
+                <slot name="chevron" v-bind="slotProps" />
+              </template>
+              <template v-if="$slots.flag" #flag="slotProps">
+                <slot name="flag" v-bind="slotProps" />
+              </template>
+              <template v-if="$slots.item" #item="slotProps">
+                <slot name="item" v-bind="slotProps" />
+              </template>
+              <template v-if="$slots['group-header']" #group-header="slotProps">
+                <slot name="group-header" v-bind="slotProps" />
+              </template>
+              <template v-if="$slots.search" #search="slotProps">
+                <slot name="search" v-bind="slotProps" />
+              </template>
+              <template v-if="$slots.loading" #loading>
+                <slot name="loading" />
+              </template>
+              <template v-if="$slots.empty" #empty="slotProps">
+                <slot name="empty" v-bind="slotProps" />
+              </template>
+            </ACountrySelect>
+          </div>
         </Transition>
 
         <slot name="suffix" :validation-state="validationState" :validation="validation" />
@@ -670,11 +568,11 @@ defineExpose({ validation, required, selectedDialCode, validationState });
         enter-from-class="opacity-0 scale-90"
         leave-to-class="opacity-0 scale-90"
       >
-        <slot v-if="validationState === 'valid'" name="valid-icon">
+        <slot v-if="visibleValidationState === 'valid'" name="valid-icon">
           <CheckCircle2 class="size-5 shrink-0 text-emerald-500" aria-hidden="true" />
         </slot>
         <slot
-          v-else-if="validationState === 'error'"
+          v-else-if="visibleValidationState === 'error'"
           name="error-icon"
           :reason="validation.reason ?? ''"
         >
