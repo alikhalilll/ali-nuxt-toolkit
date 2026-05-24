@@ -138,6 +138,37 @@ function rewriteParentBarrelImports(filePath, content) {
   return { content: replaced, changed };
 }
 
+/**
+ * vue-tsc 3.x wraps SFC defaults that call `defineSlots()` in an intersection:
+ *
+ *     type __VLS_WithSlots<T, S> = T & { new (): { $slots: S } };
+ *     declare const _default: __VLS_WithSlots<typeof __VLS_base, __VLS_Slots>;
+ *
+ * That intersects two constructable signatures. `InstanceType<…>` resolves the
+ * LAST overload — `{ $slots: S }` — which has no `$props`, no `$emit`. Volar's
+ * template-side prop introspection in consumers reads it and concludes the
+ * component accepts no props. Autocomplete dies; bogus props pass silently.
+ *
+ * Rewrite the helper body so the LAST constructor signature returns the rich
+ * `DefineComponent` instance with `$slots` merged in. Order matters — the
+ * constructor returning the merged instance must come last for `InstanceType`
+ * to pick it. The `T` constructor signature is kept (first) so static-style
+ * access on `typeof Component` still works.
+ *
+ * Manual conditional avoids the `T extends new (...args:any)=>any` constraint
+ * on TS's built-in `InstanceType` (T here is `typeof __VLS_base`, which is
+ * `DefineComponent<…>` — has construct signatures but the constraint isn't
+ * always inferrable in this context).
+ */
+function rewriteVlsWithSlots(content) {
+  const re = /type __VLS_WithSlots<T, S> = T & \{\s*new \(\): \{\s*\$slots: S;\s*\};\s*\};/;
+  if (!re.test(content)) return { content, changed: false };
+  const replacement =
+    'type __VLS_WithSlots<T, S> = T & ' +
+    '(new () => (T extends new (...args: any) => infer R ? R : {}) & { $slots: S });';
+  return { content: content.replace(re, replacement), changed: true };
+}
+
 async function main() {
   const files = await walk(distDir);
   if (files.length === 0) {
@@ -148,6 +179,7 @@ async function main() {
 
   let aliasTouched = 0;
   let parentTouched = 0;
+  let slotsTouched = 0;
 
   for (const file of files) {
     const original = await fs.readFile(file, 'utf8');
@@ -170,6 +202,12 @@ async function main() {
       parentTouched++;
     }
 
+    const slots = rewriteVlsWithSlots(content);
+    if (slots.changed) {
+      content = slots.content;
+      slotsTouched++;
+    }
+
     if (content !== original) {
       await fs.writeFile(file, content, 'utf8');
     }
@@ -177,7 +215,7 @@ async function main() {
 
   console.log(
     `fix-dts-imports: scanned ${files.length} files — rewrote @/ in ${aliasTouched}, ` +
-      `rewrote parent-barrel in ${parentTouched}`
+      `rewrote parent-barrel in ${parentTouched}, rewrote __VLS_WithSlots in ${slotsTouched}`
   );
 }
 
