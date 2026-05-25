@@ -36,31 +36,48 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs"
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     },
     "./tell-input": {
-      "types": "./dist/entries/tell-input/index.d.ts",
-      "import": "./dist/tell-input.mjs"
+      "types": "./dist/tell-input.d.ts",
+      "import": "./dist/tell-input.js",
+      "require": "./dist/tell-input.cjs"
     },
     "./input": {
-      "types": "./dist/entries/input/index.d.ts",
-      "import": "./dist/input.mjs"
+      "types": "./dist/input.d.ts",
+      "import": "./dist/input.js",
+      "require": "./dist/input.cjs"
     },
     "./popover": {
-      "types": "./dist/entries/popover/index.d.ts",
-      "import": "./dist/popover.mjs"
+      "types": "./dist/popover.d.ts",
+      "import": "./dist/popover.js",
+      "require": "./dist/popover.cjs"
     },
     "./drawer": {
-      "types": "./dist/entries/drawer/index.d.ts",
-      "import": "./dist/drawer.mjs"
+      "types": "./dist/drawer.d.ts",
+      "import": "./dist/drawer.js",
+      "require": "./dist/drawer.cjs"
     },
     "./responsive-popover": {
-      "types": "./dist/entries/responsive-popover/index.d.ts",
-      "import": "./dist/responsive-popover.mjs"
+      "types": "./dist/responsive-popover.d.ts",
+      "import": "./dist/responsive-popover.js",
+      "require": "./dist/responsive-popover.cjs"
     },
     "./utils": {
-      "types": "./dist/utils/index.d.ts",
-      "import": "./dist/utils.mjs"
+      "types": "./dist/utils.d.ts",
+      "import": "./dist/utils.js",
+      "require": "./dist/utils.cjs"
+    },
+    "./nuxt": {
+      "types": "./dist/nuxt.d.ts",
+      "import": "./dist/nuxt.js",
+      "require": "./dist/nuxt.cjs"
+    },
+    "./resolver": {
+      "types": "./dist/resolver.d.ts",
+      "import": "./dist/resolver.js",
+      "require": "./dist/resolver.cjs"
     },
     "./assets/styles.css": "./dist/assets/styles.css",
     "./styles.css": "./dist/assets/styles.css",
@@ -89,7 +106,17 @@
     "prepack": "pnpm build"
   },
   "peerDependencies": {
-    "vue": "^3.5.0"
+    "vue": "^3.5.0",
+    "@nuxt/kit": "^3.0.0 || ^4.0.0",
+    "unplugin-vue-components": "^28.0.0 || ^29.0.0 || ^30.0.0 || ^31.0.0 || ^32.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@nuxt/kit": {
+      "optional": true
+    },
+    "unplugin-vue-components": {
+      "optional": true
+    }
   },
   "dependencies": {
     "@vueuse/core": "^14.0.0",
@@ -102,6 +129,7 @@
     "vaul-vue": "^0.4.0"
   },
   "devDependencies": {
+    "@nuxt/kit": "^4.4.2",
     "@tailwindcss/cli": "^4.0.0",
     "@types/node": "^22.13.0",
     "rimraf": "^6.0.1",
@@ -109,6 +137,7 @@
     "tsdown": "0.22.0",
     "typescript": "^5.9.2",
     "unplugin-vue": "7.2.0",
+    "unplugin-vue-components": "^32.1.0",
     "vue": "^3.5.0",
     "vue-tsc": "^3.2.4"
   }

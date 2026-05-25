@@ -18,6 +18,8 @@ export default defineConfig({
     drawer: 'entries/drawer/index.ts',
     'responsive-popover': 'entries/responsive-popover/index.ts',
     utils: 'utils/index.ts',
+    nuxt: 'nuxt/index.ts',
+    resolver: 'resolver/index.ts',
   },
   format: ['esm', 'cjs'],
   outDir: 'dist',
@@ -39,6 +41,9 @@ export default defineConfig({
     'class-variance-authority',
     'clsx',
     'tailwind-merge',
+    // Consumer brings these when they use the matching subpath; do not bundle.
+    '@nuxt/kit',
+    'unplugin-vue-components',
   ],
   platform: 'neutral',
   target: 'es2022',
