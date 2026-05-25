@@ -65,4 +65,27 @@ ref.value.selectedDialCode; // '+20' | null
 ref.value.validationState; // 'idle' | 'valid' | 'error'
 ```
 
+## Named type exports
+
+The entry surfaces each component's prop, slot, and emit shape as importable interfaces:
+
+```ts
+import type {
+  ATellInputProps,
+  ATellInputSlots,
+  ATellInputEmits,
+  ATellInputSize,
+  ACountrySelectProps,
+  ACountrySelectSlots,
+  ACountrySelectEmits,
+  CountryOption,
+  PhoneValidationResult,
+  PhoneValidationReason,
+  TellInputMessages,
+} from '@alikhalilll/ui/tell-input';
+
+// Slot prop inference — `validationState` is correctly typed to the union literal.
+type SuffixProps = Parameters<NonNullable<ATellInputSlots['suffix']>>[0];
+```
+
 Full prop reference, customization recipes, slot catalogue, and theming guide live in the [main library docs](https://alikhalilll.github.io/ali-nuxt-toolkit/ui/tell-input).

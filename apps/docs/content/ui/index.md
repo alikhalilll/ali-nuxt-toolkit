@@ -126,6 +126,20 @@ import { APopover } from '@alikhalilll/ui/popover';
 import { ATellInput, APopover } from '@alikhalilll/ui';
 ```
 
+Available subpaths:
+
+| Subpath                              | What it exports                                                              |
+| ------------------------------------ | ---------------------------------------------------------------------------- |
+| `@alikhalilll/ui/tell-input`         | `ATellInput`, `ACountrySelect`, `ACountryFlag` + composables + types         |
+| `@alikhalilll/ui/input`              | `AInput` + types                                                             |
+| `@alikhalilll/ui/popover`            | `APopover` + `Trigger` / `Content` / `Overlay` + types (re-exported reka-ui) |
+| `@alikhalilll/ui/drawer`             | `ADrawer` + `Trigger` / `Content` / `Overlay` + types (re-exported vaul-vue) |
+| `@alikhalilll/ui/responsive-popover` | `AResponsivePopover` + `Trigger` / `Content` + types                         |
+| `@alikhalilll/ui/utils`              | `cn`, `SIZES`, `controlHeight`, `controlPaddingX`, `controlTextSize`         |
+| `@alikhalilll/ui/nuxt`               | Nuxt module — register in `nuxt.config.ts` for auto-import                   |
+| `@alikhalilll/ui/resolver`           | `unplugin-vue-components` resolver factory for Vite consumers                |
+| `@alikhalilll/ui/styles.css`         | Pre-compiled stylesheet (design tokens + utility classes)                    |
+
 Each component also ships its own README at `node_modules/@alikhalilll/ui/entries/<name>/README.md`.
 
 ### Dark mode
@@ -194,18 +208,47 @@ const country = ref<number | null>(null);
 </template>
 ```
 
-### Auto-imports (optional)
+### Auto-imports (the bundled Nuxt module)
 
-To skip the explicit `import` in every component, register the library as a global component source:
+`@alikhalilll/ui` ships its own Nuxt module under the `/nuxt` subpath. Register it and every component is auto-imported, code-split per subpath:
 
 ```ts
 // nuxt.config.ts
+export default defineNuxtConfig({
+  modules: ['@alikhalilll/ui/nuxt'],
+  css: ['@alikhalilll/ui/styles.css'],
+  alikhalilllUi: { prefix: '' }, // optional; default is no prefix
+});
+```
+
+`<ATellInput />`, `<APopover />`, `<ADrawer />`, etc. are usable in any template with no `import` statement. The module registers each component with its **subpath** (e.g. `@alikhalilll/ui/tell-input`) rather than the main entry, so Nuxt still code-splits per-subpath — a page that only uses `<ATellInput>` does not pull in Drawer/Popover code.
+
+If you'd rather not use the module, the older `components.dirs`-style global registration still works:
+
+```ts
+// nuxt.config.ts (alternative, no module)
 export default defineNuxtConfig({
   components: [{ path: '@alikhalilll/ui', pathPrefix: false, global: true }],
 });
 ```
 
-`<ATellInput />`, `<APopover />`, etc. become available in templates without any import. Subpath imports still tree-shake better when you opt out of this and import per component.
+This pulls from the main entry — slightly worse code-splitting than the module path above.
+
+#### Vite (non-Nuxt) auto-imports
+
+For Vue + Vite consumers, the toolkit ships an [`unplugin-vue-components`](https://github.com/unplugin/unplugin-vue-components) resolver under the `/resolver` subpath:
+
+```ts
+// vite.config.ts
+import Components from 'unplugin-vue-components/vite';
+import AlikhalilllUiResolver from '@alikhalilll/ui/resolver';
+
+export default {
+  plugins: [Components({ resolvers: [AlikhalilllUiResolver()] })],
+};
+```
+
+`<ATellInput>` resolves automatically in any `.vue` template, with the same per-subpath code-splitting as the Nuxt module.
 
 ### SSR behaviour
 
@@ -328,13 +371,62 @@ import { SIZES, controlHeight, controlPaddingX, controlTextSize, type Size } fro
 
 ## Public API
 
-**Components** — `ATellInput`, `ACountrySelect`, `ACountryFlag`, `AInput`, `APopover` + `Trigger` + `Content`, `ADrawer` + `Trigger` + `Content` + `Overlay`, `AResponsivePopover` + `Trigger` + `Content`.
+**Components** — `ATellInput`, `ACountrySelect`, `ACountryFlag`, `AInput`, `APopover` + `Trigger` + `Content` + `Overlay`, `ADrawer` + `Trigger` + `Content` + `Overlay`, `AResponsivePopover` + `Trigger` + `Content`.
 
-**Composables** — `usePhoneValidation`, `useCountryDetection`, imperative `detectCountry`.
+**Composables** — `usePhoneValidation`, `useCountryDetection`, imperative `detectCountry`, `useTellInputValidation`, `useTypingPhase`, `useCountryMatching`, `useEventScrollLock`.
 
-**Helpers** — `cn`, `SIZES`, `DEFAULT_SIZE`, `controlHeight`, `controlPaddingX`, `controlTextSize`, `controlHeightPx`, `aTellInputVariants`, `DEFAULT_ERROR_MESSAGES`, `defaultFlagUrl`.
+**Helpers** — `cn`, `SIZES`, `DEFAULT_SIZE`, `controlHeight`, `controlPaddingX`, `controlTextSize`, `aTellInputVariants`, `DEFAULT_ERROR_MESSAGES`, `defaultFlagUrl`, `normalizeDigits`.
 
-**Types** — `ATellInputProps`, `Size`, `CountryOption`, `PhoneValidationResult`, `PhoneValidationReason`, `PhoneRequiredInfo`, `DetectionStrategy`, `DetectCountryOptions`, `FlagUrlBuilder`.
+**Per-component prop / slot / emit interfaces** — every entry exposes its `*Props`, `*Slots`, and `*Emits` interfaces as named type exports. Useful when wrapping a component, typing slot props, or referencing the emit map:
+
+```ts
+// from /tell-input
+import type { ATellInputProps, ATellInputSlots, ATellInputEmits } from '@alikhalilll/ui/tell-input';
+import type {
+  ACountrySelectProps,
+  ACountrySelectSlots,
+  ACountrySelectEmits,
+} from '@alikhalilll/ui/tell-input';
+
+// from /input
+import type { AInputProps, AInputSlots, AInputEmits } from '@alikhalilll/ui/input';
+
+// from /popover (re-exported from reka-ui)
+import type {
+  APopoverProps,
+  APopoverEmits,
+  APopoverContentProps,
+  APopoverContentEmits,
+  APopoverTriggerProps,
+} from '@alikhalilll/ui/popover';
+
+// from /drawer (re-exported from vaul-vue + reka-ui)
+import type {
+  ADrawerProps,
+  ADrawerEmits,
+  ADrawerContentProps,
+  ADrawerContentEmits,
+} from '@alikhalilll/ui/drawer';
+
+// from /responsive-popover
+import type {
+  AResponsivePopoverProps,
+  AResponsivePopoverEmits,
+  ScrollLockMode,
+} from '@alikhalilll/ui/responsive-popover';
+```
+
+Slot prop type inference example — when overriding a slot, infer the slot's prop bag from the `*Slots` interface:
+
+```vue
+<script setup lang="ts">
+import type { ATellInputSlots } from '@alikhalilll/ui/tell-input';
+type SuffixProps = Parameters<NonNullable<ATellInputSlots['suffix']>>[0];
+//   ↑ { validationState: 'idle' | 'valid' | 'error'; validation: PhoneValidationResult }
+</script>
+```
+
+**Domain types** — `Size`, `CountryOption`, `PhoneValidationResult`, `PhoneValidationReason`, `PhoneRequiredInfo`, `DetectionStrategy`, `DetectCountryOptions`, `FlagUrlBuilder`, `TellInputMessages`, `TellInputMessagesInput`.
 
 ## Notes
 

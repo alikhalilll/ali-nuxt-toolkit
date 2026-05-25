@@ -1,6 +1,6 @@
 # Nuxt playground
 
-Integration playground for the three packages in this monorepo. This is what you run while developing — it imports the packages via `workspace:*`, so your `.ts` changes under `packages/*/src` are reflected live.
+Integration playground for the four packages in this monorepo. This is what you run while developing — it imports the packages via `workspace:*`, so your `.ts`/`.vue` changes under `packages/*` are reflected live.
 
 ## Run it
 
@@ -21,8 +21,9 @@ You only need to re-run `pnpm build` when you change `package.json` exports or h
 | `@alikhalilll/nuxt-api-provider` — basic client, retry, progress                                      | `pages/api-*.vue`, `composables/useApi.ts`                  |
 | `@alikhalilll/nuxt-crypto` — encrypt/decrypt round-trip, server-only mode, device-fingerprint binding | `pages/crypto.vue`, `server/api/*`                          |
 | `@alikhalilll/nuxt-auto-middleware` — layout rules, groups, per-page overrides                        | `middleware/*.ts`, `layouts/*.vue`, `pages/dashboard/*.vue` |
+| `@alikhalilll/ui` — tell-input + popover/drawer/responsive-popover via the bundled Nuxt module        | `pages/ui.vue` (module wired in `nuxt.config.ts`)           |
 
-Every module is configured in `nuxt.config.ts` — that's also the canonical example of how a downstream user would wire all three together.
+Every module is configured in `nuxt.config.ts` — that's also the canonical example of how a downstream user would wire all four together. `@alikhalilll/ui/nuxt` registers every component for auto-import, so a page can use `<ATellInput>` directly without an explicit `import` statement.
 
 ## Adding coverage
 

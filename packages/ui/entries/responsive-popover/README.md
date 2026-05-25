@@ -44,4 +44,14 @@ import {
 
 This component is what powers the country picker inside [`@alikhalilll/ui/tell-input`](../tell-input).
 
+## Named type exports
+
+```ts
+import type {
+  AResponsivePopoverProps,
+  AResponsivePopoverEmits,
+  ScrollLockMode,
+} from '@alikhalilll/ui/responsive-popover';
+```
+
 Full docs: [@alikhalilll/ui — Responsive Popover](https://alikhalilll.github.io/ali-nuxt-toolkit/ui/responsive-popover).

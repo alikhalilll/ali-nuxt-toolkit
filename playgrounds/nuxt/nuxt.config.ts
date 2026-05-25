@@ -16,6 +16,11 @@ export default defineNuxtConfig({
     '@alikhalilll/nuxt-api-provider',
     '@alikhalilll/nuxt-crypto',
     '@alikhalilll/nuxt-auto-middleware',
+    // UI auto-import: `<ATellInput>` / `<APopover>` / etc. resolve without
+    // explicit `import` statements in <script setup>. Each is code-split by
+    // subpath, so a page using only `<ATellInput>` still ships only the
+    // tell-input chunk.
+    '@alikhalilll/ui/nuxt',
   ],
   apiProvider: {
     baseURL: 'https://jsonplaceholder.typicode.com',

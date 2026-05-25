@@ -51,7 +51,7 @@ pnpm add @alikhalilll/nuxt-auto-middleware
 pnpm add @alikhalilll/ui
 ```
 
-Register the Nuxt modules in `nuxt.config.ts`; `@alikhalilll/ui` is a component library, not a module, so it's imported directly in your code:
+Register the Nuxt modules in `nuxt.config.ts`. `@alikhalilll/ui` ships its own Nuxt module (`@alikhalilll/ui/nuxt`) that auto-imports every component code-split by subpath — register it alongside the others:
 
 ```ts
 export default defineNuxtConfig({
@@ -59,12 +59,13 @@ export default defineNuxtConfig({
     '@alikhalilll/nuxt-api-provider',
     '@alikhalilll/nuxt-crypto',
     '@alikhalilll/nuxt-auto-middleware',
+    '@alikhalilll/ui/nuxt', // <ATellInput> / <APopover> / … auto-imported
   ],
-  css: ['@alikhalilll/ui/styles.css'], // expose the lib's CSS variables
+  css: ['@alikhalilll/ui/styles.css'], // expose the lib's CSS variables + utility classes
 });
 ```
 
-Each module reads its own config key (`apiProvider`, `crypto`, `autoMiddleware`).
+Each module reads its own config key (`apiProvider`, `crypto`, `autoMiddleware`, `alikhalilllUi`). For non-Nuxt Vue + Vite consumers, `@alikhalilll/ui` also ships an [`unplugin-vue-components`](https://github.com/unplugin/unplugin-vue-components) resolver at `@alikhalilll/ui/resolver` — same auto-import DX without Nuxt.
 
 ---
 

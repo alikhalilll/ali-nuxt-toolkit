@@ -39,4 +39,10 @@ const value = ref('');
 
 All other `<input>` attributes are forwarded.
 
+## Named type exports
+
+```ts
+import type { AInputProps, AInputSlots, AInputEmits } from '@alikhalilll/ui/input';
+```
+
 Full docs: [@alikhalilll/ui — Input](https://alikhalilll.github.io/ali-nuxt-toolkit/ui/input).

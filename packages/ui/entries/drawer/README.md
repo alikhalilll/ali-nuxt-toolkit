@@ -36,4 +36,17 @@ Every prop on `vaul-vue`'s `DrawerRoot`, `DrawerTrigger`, `DrawerContent`, and `
 
 Pairs with [`@alikhalilll/ui/popover`](../popover) under [`@alikhalilll/ui/responsive-popover`](../responsive-popover), which swaps between the two based on viewport size.
 
+## Named type exports
+
+The vaul-vue + reka-ui prop and emit shapes are re-exported under our `A*` naming:
+
+```ts
+import type {
+  ADrawerProps,
+  ADrawerEmits,
+  ADrawerContentProps,
+  ADrawerContentEmits,
+} from '@alikhalilll/ui/drawer';
+```
+
 Full docs: [@alikhalilll/ui — Drawer](https://alikhalilll.github.io/ali-nuxt-toolkit/ui/drawer).

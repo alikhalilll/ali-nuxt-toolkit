@@ -34,4 +34,18 @@ import { APopover, APopoverTrigger, APopoverContent } from '@alikhalilll/ui/popo
 
 Every prop on `reka-ui`'s `PopoverRoot`, `PopoverTrigger`, and `PopoverContent` is forwarded — see the [reka-ui Popover docs](https://reka-ui.com/docs/components/popover) for the full API.
 
+## Named type exports
+
+The reka-ui prop and emit shapes are re-exported under our `A*` naming so consumers don't need a separate `reka-ui` import for type access:
+
+```ts
+import type {
+  APopoverProps,
+  APopoverEmits,
+  APopoverContentProps,
+  APopoverContentEmits,
+  APopoverTriggerProps,
+} from '@alikhalilll/ui/popover';
+```
+
 Full docs: [@alikhalilll/ui — Popover](https://alikhalilll.github.io/ali-nuxt-toolkit/ui/popover).
