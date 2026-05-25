@@ -142,31 +142,56 @@ function rewriteParentBarrelImports(filePath, content) {
  * vue-tsc 3.x wraps SFC defaults that call `defineSlots()` in an intersection:
  *
  *     type __VLS_WithSlots<T, S> = T & { new (): { $slots: S } };
- *     declare const _default: __VLS_WithSlots<typeof __VLS_base, __VLS_Slots>;
+ *     declare const __VLS_export: __VLS_WithSlots<typeof __VLS_base, __VLS_Slots>;
+ *     declare const _default: typeof __VLS_export;
  *
- * That intersects two constructable signatures. `InstanceType<…>` resolves the
- * LAST overload — `{ $slots: S }` — which has no `$props`, no `$emit`. Volar's
- * template-side prop introspection in consumers reads it and concludes the
- * component accepts no props. Autocomplete dies; bogus props pass silently.
+ * The intersection causes two cascading problems for consumers' Volar:
  *
- * Rewrite the helper body so the LAST constructor signature returns the rich
- * `DefineComponent` instance with `$slots` merged in. Order matters — the
- * constructor returning the merged instance must come last for `InstanceType`
- * to pick it. The `T` constructor signature is kept (first) so static-style
- * access on `typeof Component` still works.
+ *  1. `InstanceType<typeof Comp>` picks the LAST construct signature, which is
+ *     `{ $slots: S }` — no `$props`, no `$emit`. Breaks `ref<InstanceType<…>>`
+ *     and template-side prop introspection.
+ *  2. Even with a conditional-`infer` rewrite that recovers `$props` in the
+ *     last overload, Volar's *Go to Definition* on individual props in a
+ *     consumer's template returns "Cannot find declaration to go to" — the
+ *     intersection-with-constructor obscures the canonical position of each
+ *     prop's declaration so ts-server can't resolve a source span.
  *
- * Manual conditional avoids the `T extends new (...args:any)=>any` constraint
- * on TS's built-in `InstanceType` (T here is `typeof __VLS_base`, which is
- * `DefineComponent<…>` — has construct signatures but the constraint isn't
- * always inferrable in this context).
+ * Strip the wrapper entirely: alias `__VLS_export` to plain `typeof __VLS_base`
+ * (a clean `DefineComponent<…>`) and drop the unused `__VLS_WithSlots` alias.
+ * `_default` then resolves to a canonical `DefineComponent`, which is what
+ * every well-behaved Vue library ships — props, emits, expose, and
+ * `InstanceType<…>` all work, and Cmd+Click on a prop walks straight to the
+ * declaration in the `.vue` source via the existing `.d.ts.map`.
+ *
+ * Trade-off: slot prop types from `defineSlots()` are not exposed on the
+ * public `$slots` shape. Slots still work at runtime; only the per-slot prop
+ * signature is dropped from the public API. This matches the pattern used by
+ * Vuetify, Element Plus, Naive UI, and Headless UI Vue.
  */
-function rewriteVlsWithSlots(content) {
-  const re = /type __VLS_WithSlots<T, S> = T & \{\s*new \(\): \{\s*\$slots: S;\s*\};\s*\};/;
-  if (!re.test(content)) return { content, changed: false };
-  const replacement =
-    'type __VLS_WithSlots<T, S> = T & ' +
-    '(new () => (T extends new (...args: any) => infer R ? R : {}) & { $slots: S });';
-  return { content: content.replace(re, replacement), changed: true };
+function stripVlsWithSlots(content) {
+  let changed = false;
+  let next = content;
+
+  const exportRe = /declare const __VLS_export: __VLS_WithSlots<typeof __VLS_base, __VLS_Slots>;/;
+  if (exportRe.test(next)) {
+    next = next.replace(exportRe, 'declare const __VLS_export: typeof __VLS_base;');
+    changed = true;
+  }
+
+  // Strip both the vue-tsc default form and any prior rewritten form.
+  const aliasReDefault =
+    /\s*type __VLS_WithSlots<T, S> = T & \{\s*new \(\): \{\s*\$slots: S;\s*\};\s*\};/;
+  const aliasRePrev =
+    /\s*type __VLS_WithSlots<T, S> = T & \(new \(\) => \(T extends new \(\.\.\.args: any\) => infer R \? R : \{\}\) & \{ \$slots: S \}\);/;
+  if (aliasReDefault.test(next)) {
+    next = next.replace(aliasReDefault, '');
+    changed = true;
+  } else if (aliasRePrev.test(next)) {
+    next = next.replace(aliasRePrev, '');
+    changed = true;
+  }
+
+  return { content: next, changed };
 }
 
 async function main() {
@@ -202,7 +227,7 @@ async function main() {
       parentTouched++;
     }
 
-    const slots = rewriteVlsWithSlots(content);
+    const slots = stripVlsWithSlots(content);
     if (slots.changed) {
       content = slots.content;
       slotsTouched++;
@@ -215,7 +240,7 @@ async function main() {
 
   console.log(
     `fix-dts-imports: scanned ${files.length} files — rewrote @/ in ${aliasTouched}, ` +
-      `rewrote parent-barrel in ${parentTouched}, rewrote __VLS_WithSlots in ${slotsTouched}`
+      `rewrote parent-barrel in ${parentTouched}, stripped __VLS_WithSlots in ${slotsTouched}`
   );
 }
 
