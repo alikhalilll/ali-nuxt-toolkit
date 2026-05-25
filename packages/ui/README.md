@@ -126,7 +126,7 @@ import { ATellInput } from '@alikhalilll/ui/tell-input';
 import { ATellInput, APopover } from '@alikhalilll/ui';
 ```
 
-Available subpaths: `/tell-input`, `/input`, `/popover`, `/drawer`, `/responsive-popover`, `/utils`.
+Available subpaths: `/tell-input`, `/input`, `/popover`, `/drawer`, `/responsive-popover`, `/utils`, `/nuxt` (Nuxt module), `/resolver` (unplugin-vue-components resolver).
 
 ### Dark mode
 
@@ -174,7 +174,34 @@ Full props, slots, theming recipes, and live demos → [tell-input docs](https:/
 
 ## Nuxt integration
 
-`@alikhalilll/ui` is a plain Vue 3 library — works in Nuxt 3 / 4 without a module wrapper. Full guide (auto-imports, SSR behaviour, source globs) on the [docs site](https://alikhalilll.github.io/ali-nuxt-toolkit/ui#nuxt-integration).
+Two paths — pick one:
+
+**1. Plain dependency.** `@alikhalilll/ui` is a plain Vue 3 library — works in Nuxt 3 / 4 with explicit imports.
+
+**2. Auto-import via the bundled Nuxt module.** Register the module and every component the toolkit ships is auto-imported in templates (`<ATellInput>` with no `import` statement):
+
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  modules: ['@alikhalilll/ui/nuxt'],
+  css: ['@alikhalilll/ui/styles.css'],
+  alikhalilllUi: { prefix: '' }, // optional; default is no prefix
+});
+```
+
+Nuxt code-splits per-subpath, so a page that only uses `<ATellInput>` still doesn't pull in Drawer/Popover code.
+
+For non-Nuxt Vite consumers, there's an [`unplugin-vue-components`](https://github.com/unplugin/unplugin-vue-components) resolver:
+
+```ts
+// vite.config.ts
+import Components from 'unplugin-vue-components/vite';
+import AlikhalilllUiResolver from '@alikhalilll/ui/resolver';
+
+export default { plugins: [Components({ resolvers: [AlikhalilllUiResolver()] })] };
+```
+
+Full guide (SSR behaviour, source globs) on the [docs site](https://alikhalilll.github.io/ali-nuxt-toolkit/ui#nuxt-integration).
 
 ```ts
 // nuxt.config.ts — optional auto-import
@@ -248,22 +275,42 @@ import {
 
 ## Exported types
 
+Every component exposes named `*Props` / `*Slots` / `*Emits` interfaces from its subpath. Use them in your own template type inference, refs, or to wrap a component:
+
 ```ts
 import type {
+  // ATellInput
   ATellInputProps,
+  ATellInputSlots,
+  ATellInputEmits,
   ATellInputSize,
-  ATellInputVariants,
+  // ACountrySelect
+  ACountrySelectProps,
+  ACountrySelectSlots,
+  ACountrySelectEmits,
+  // shared
   CountryOption,
   PhoneValidationResult,
   PhoneValidationReason,
   PhoneRequiredInfo,
   DetectionStrategy,
-  DetectCountryOptions,
-  UseCountryDetectionReturn,
-  UsePhoneValidationReturn,
-  FlagUrlBuilder,
-  Size,
-} from '@alikhalilll/ui';
+} from '@alikhalilll/ui/tell-input';
+
+import type { AInputProps, AInputSlots, AInputEmits } from '@alikhalilll/ui/input';
+import type { APopoverProps, APopoverContentProps } from '@alikhalilll/ui/popover';
+import type { ADrawerProps, ADrawerContentProps } from '@alikhalilll/ui/drawer';
+import type { AResponsivePopoverProps, ScrollLockMode } from '@alikhalilll/ui/responsive-popover';
+import type { Size, FlagUrlBuilder } from '@alikhalilll/ui';
+```
+
+Slot-prop type inference example (useful when overriding a slot):
+
+```vue
+<script setup lang="ts">
+import type { ATellInputSlots } from '@alikhalilll/ui/tell-input';
+type SuffixProps = Parameters<NonNullable<ATellInputSlots['suffix']>>[0];
+//   ↑ { validationState: 'idle' | 'valid' | 'error'; validation: PhoneValidationResult }
+</script>
 ```
 
 ## Notes
