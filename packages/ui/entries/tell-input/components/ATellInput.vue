@@ -12,7 +12,12 @@ import { useCountryMatching } from '../composables/useCountryMatching';
 import { useTypingPhase } from '../composables/useTypingPhase';
 import { useTellInputValidation } from '../composables/useTellInputValidation';
 import { controlPaddingX, controlTextSize, DEFAULT_SIZE } from '@/utils';
-import { aTellInputVariants, resolveMessages, type ATellInputProps } from '../utils/types';
+import {
+  aTellInputVariants,
+  resolveMessages,
+  type ATellInputProps,
+  type ATellInputSlots,
+} from '../utils/types';
 import { normalizeDigits } from '../utils/digits';
 import ACountrySelect from './ACountrySelect.vue';
 
@@ -60,56 +65,7 @@ const props = withDefaults(defineProps<ExtendedProps>(), {
   showValidationIcon: false,
 });
 
-defineSlots<{
-  /** Content before the country select trigger (e.g. an icon). */
-  prefix?: () => unknown;
-  /** Content between the input and the validation icons. */
-  suffix?: (props: {
-    validationState: 'idle' | 'valid' | 'error';
-    validation: PhoneValidationResult;
-  }) => unknown;
-  /** Replace the green check shown when the number validates. */
-  'valid-icon'?: () => unknown;
-  /** Replace the warning icon shown when the number fails validation. */
-  'error-icon'?: (props: { reason: string }) => unknown;
-  /** Replace the dim helper line shown below the input when empty. */
-  hint?: (props: { country: string; formatHint: string; example: string | null }) => unknown;
-  /** Replace the error message rendered when invalid. */
-  error?: (props: {
-    message: string;
-    reason: string;
-    validation: PhoneValidationResult;
-  }) => unknown;
-  /** Forwarded to ACountrySelect — replace the trigger button. */
-  trigger?: (props: {
-    selectedCountry: CountryOption | null;
-    open: boolean;
-    sizeClasses: string;
-  }) => unknown;
-  /** Forwarded to ACountrySelect — replace the chevron. */
-  chevron?: (props: { open: boolean }) => unknown;
-  /** Forwarded — replace any flag rendering. */
-  flag?: (props: { country: CountryOption; context: 'trigger' | 'item' }) => unknown;
-  /** Forwarded — replace each country list row. */
-  item?: (props: {
-    country: CountryOption;
-    selected: boolean;
-    disabled: boolean;
-    select: () => void;
-  }) => unknown;
-  /** Forwarded — section header. */
-  'group-header'?: (props: { label: string; group: 'suggested' | 'all' }) => unknown;
-  /** Forwarded — search bar. */
-  search?: (props: {
-    value: string;
-    setValue: (v: string) => void;
-    isSearching: boolean;
-  }) => unknown;
-  loading?: () => unknown;
-  empty?: (props: { query: string }) => unknown;
-  /** Replace the spinner shown in the picker slot during the debounce window. */
-  detecting?: () => unknown;
-}>();
+defineSlots<ATellInputSlots>();
 
 const phone = defineModel<string>('phone', { default: '' });
 /** Public `v-model:country` — the **dial number** (e.g. `20` for Egypt, `44` for the UK,

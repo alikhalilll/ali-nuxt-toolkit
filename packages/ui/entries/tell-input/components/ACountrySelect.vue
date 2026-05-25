@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from 'vue';
 import { computed, onMounted, ref, watch } from 'vue';
 import { Check, ChevronDown, Search } from 'lucide-vue-next';
 import { cn } from '@/utils';
@@ -13,110 +12,26 @@ import {
   localizeCountries,
   type CountryOption,
 } from '../composables/usePhoneValidation';
-import { controlPaddingX, controlTextSize, DEFAULT_SIZE, type Size } from '@/utils';
+import { controlPaddingX, controlTextSize, DEFAULT_SIZE } from '@/utils';
+import type { ACountrySelectProps, ACountrySelectSlots } from '../utils/types';
 import ACountryFlag from './ACountryFlag.vue';
 
-const props = withDefaults(
-  defineProps<{
-    class?: HTMLAttributes['class'];
-    triggerClass?: HTMLAttributes['class'];
-    contentClass?: HTMLAttributes['class'];
-    popoverClass?: HTMLAttributes['class'];
-    drawerClass?: HTMLAttributes['class'];
-    searchPlaceholder?: string;
-    emptyText?: string;
-    loadingText?: string;
-    suggestedLabel?: string;
-    allCountriesLabel?: string;
-    /** ISO2 codes that are selectable. Others are listed but disabled. */
-    allowedDialCodes?: string[];
-    disabled?: boolean;
-    /** Drives the trigger button padding + text size. Matches ATellInput's `size`. */
-    size?: Size;
-    /** Max items rendered under the "Suggested" header (current + recents, deduped). */
-    suggestedLimit?: number;
-    /** Cap the number of matching countries shown in search results. */
-    maxResults?: number;
-    /** Override the flag URL builder, e.g. `(iso, w) => \`/flags/${iso}.svg\``. */
-    flagUrl?: (iso2: string, width: number) => string;
-    /**
-     * Custom search predicate. Default: substring match on the precomputed `search_key`.
-     * Return `true` to keep the country in results.
-     */
-    searcher?: (query: string, country: CountryOption) => boolean;
-    /**
-     * Provide your own country list (bypasses the REST Countries fetch). Useful when you
-     * already have a curated subset, an i18n'd list, or want to avoid the network call.
-     */
-    countries?: CountryOption[];
-    /** Override the right-side kbd hints. Pass `null` to hide. */
-    kbdOpen?: string | null;
-    kbdClose?: string | null;
-    /** BCP-47 locale — country names render localized via `Intl.DisplayNames`. */
-    locale?: string;
-    /** Prefix of the trigger's `aria-label` when a country is selected, e.g. `"Country"`. */
-    countryLabel?: string;
-    /** Trigger's `aria-label` when no country is selected. */
-    selectCountryLabel?: string;
-    /**
-     * How page scroll is blocked while the popover is open. Defaults to `'events'` — an
-     * event-based lock that keeps the page scrollbar visible and `position: sticky` working.
-     * Pass `'body'` for the legacy `body { overflow: hidden }` lock, or `'none'` to allow
-     * the page to scroll freely.
-     */
-    scrollLock?: 'events' | 'body' | 'none';
-  }>(),
-  {
-    searchPlaceholder: 'Search country or +code…',
-    emptyText: 'No countries found.',
-    loadingText: 'Loading countries…',
-    suggestedLabel: 'Suggested',
-    allCountriesLabel: 'All countries',
-    countryLabel: 'Country',
-    selectCountryLabel: 'Select country',
-    size: DEFAULT_SIZE,
-    suggestedLimit: 4,
-    maxResults: 80,
-    kbdOpen: '⌘K',
-    kbdClose: 'Esc',
-  }
-);
+const props = withDefaults(defineProps<ACountrySelectProps>(), {
+  searchPlaceholder: 'Search country or +code…',
+  emptyText: 'No countries found.',
+  loadingText: 'Loading countries…',
+  suggestedLabel: 'Suggested',
+  allCountriesLabel: 'All countries',
+  countryLabel: 'Country',
+  selectCountryLabel: 'Select country',
+  size: DEFAULT_SIZE,
+  suggestedLimit: 4,
+  maxResults: 80,
+  kbdOpen: '⌘K',
+  kbdClose: 'Esc',
+});
 
-defineSlots<{
-  /** Replace the entire country picker trigger button. */
-  trigger?: (props: {
-    selectedCountry: CountryOption | null;
-    open: boolean;
-    sizeClasses: string;
-  }) => unknown;
-  /** Replace the chevron icon. */
-  chevron?: (props: { open: boolean }) => unknown;
-  /** Replace just the flag rendered in the trigger and items. */
-  flag?: (props: { country: CountryOption; context: 'trigger' | 'item' }) => unknown;
-  /** Replace the entire search bar (input + icon + kbd). */
-  search?: (props: {
-    value: string;
-    setValue: (v: string) => void;
-    isSearching: boolean;
-  }) => unknown;
-  /** Replace the search-bar leading icon. */
-  'search-icon'?: () => unknown;
-  /** Replace the loading state. */
-  loading?: () => unknown;
-  /** Replace the empty/no-results state. */
-  empty?: (props: { query: string }) => unknown;
-  /** Replace a section header. */
-  'group-header'?: (props: { label: string; group: 'suggested' | 'all' }) => unknown;
-  /** Replace each country list row. Default render still available via &lt;ACountrySelectItem /&gt;. */
-  item?: (props: {
-    country: CountryOption;
-    selected: boolean;
-    disabled: boolean;
-    select: () => void;
-  }) => unknown;
-  /** Replace just the right-side check icon for the selected row. */
-  'item-check'?: (props: { country: CountryOption }) => unknown;
-}>();
+defineSlots<ACountrySelectSlots>();
 
 const triggerSizeClasses = computed(
   () => `${controlPaddingX[props.size]} ${controlTextSize[props.size]}`

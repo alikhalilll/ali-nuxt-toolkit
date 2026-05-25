@@ -4,33 +4,13 @@ import { useMediaQuery } from '@vueuse/core';
 import { APopover } from '@/entries/popover';
 import { ADrawer } from '@/entries/drawer';
 import { provideResponsivePopoverContext } from '../composables/useResponsivePopoverContext';
+import type { AResponsivePopoverProps } from '../types';
 
-export type ScrollLockMode = 'events' | 'body' | 'none';
-
-const props = withDefaults(
-  defineProps<{
-    /** CSS media query for the desktop break. Below this width we render a vaul drawer. */
-    breakpoint?: string;
-    /**
-     * @deprecated prefer `scrollLock`. Kept for back-compat: `modal=false` is a shorthand
-     * for `scrollLock="none"` (tooltip-style popover). `modal=true` (default) defers to
-     * `scrollLock`, which controls how page scroll is blocked.
-     */
-    modal?: boolean;
-    /**
-     * How desktop page scroll is blocked while the popover is open:
-     * - `'events'` (default) — wheel/touch/keyboard intercepted at document level.
-     *   Page scrollbar stays visible; `position: sticky` keeps working.
-     * - `'body'` — legacy `document.body.style.overflow='hidden'` lock. Use when the
-     *   page must reflow as the scrollbar goes away.
-     * - `'none'` — no page-scroll lock at all.
-     *
-     * Drawer (mobile) branch is unaffected — vaul-vue owns its own lock.
-     */
-    scrollLock?: ScrollLockMode;
-  }>(),
-  { breakpoint: '(min-width: 768px)', modal: true, scrollLock: 'events' }
-);
+const props = withDefaults(defineProps<AResponsivePopoverProps>(), {
+  breakpoint: '(min-width: 768px)',
+  modal: true,
+  scrollLock: 'events',
+});
 
 const open = defineModel<boolean>('open');
 

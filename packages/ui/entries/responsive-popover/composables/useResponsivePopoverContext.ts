@@ -1,5 +1,5 @@
 import { inject, provide, type ComputedRef, type InjectionKey } from 'vue';
-import type { ScrollLockMode } from '../components/AResponsivePopover.vue';
+import type { ScrollLockMode } from '../types';
 
 export interface ResponsivePopoverContext {
   open: ComputedRef<boolean>;

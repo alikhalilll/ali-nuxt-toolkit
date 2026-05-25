@@ -1,36 +1,13 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from 'vue';
 import { computed, useSlots } from 'vue';
 import { useVModel } from '@vueuse/core';
 import { cn } from '@/utils';
-import { controlHeight, controlPaddingX, controlTextSize, DEFAULT_SIZE, type Size } from '@/utils';
+import { controlHeight, controlPaddingX, controlTextSize, DEFAULT_SIZE } from '@/utils';
+import type { AInputEmits, AInputProps, AInputSlots } from '../types';
 
-const props = withDefaults(
-  defineProps<{
-    defaultValue?: string | number;
-    modelValue?: string | number;
-    class?: HTMLAttributes['class'];
-    /** Classes for the inner &lt;input&gt; element (useful when prefix/suffix are present). */
-    inputClass?: HTMLAttributes['class'];
-    /** Classes for the prefix wrapper. */
-    prefixClass?: HTMLAttributes['class'];
-    /** Classes for the suffix wrapper. */
-    suffixClass?: HTMLAttributes['class'];
-    size?: Size;
-  }>(),
-  { size: DEFAULT_SIZE }
-);
-
-const emits = defineEmits<{
-  (e: 'update:modelValue', payload: string | number): void;
-}>();
-
-defineSlots<{
-  /** Content rendered inside the input's border, left of the field. */
-  prefix?: () => unknown;
-  /** Content rendered inside the input's border, right of the field. */
-  suffix?: () => unknown;
-}>();
+const props = withDefaults(defineProps<AInputProps>(), { size: DEFAULT_SIZE });
+const emits = defineEmits<AInputEmits>();
+defineSlots<AInputSlots>();
 
 const slots = useSlots();
 const hasPrefix = computed(() => !!slots.prefix);
