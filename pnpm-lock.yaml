@@ -231,7 +231,7 @@ importers:
         version: 4.2.2
       tsdown:
         specifier: 0.22.0
-        version: 0.22.0(@arethetypeswrong/core@0.18.2)(typescript@5.9.3)(vue-tsc@3.3.1(typescript@5.9.3))
+        version: 0.22.0(@arethetypeswrong/core@0.18.2)(typescript@5.9.3)(unrun@0.3.0(synckit@0.11.12))(vue-tsc@3.3.1(typescript@5.9.3))
       typescript:
         specifier: ^5.9.2
         version: 5.9.3
@@ -241,6 +241,9 @@ importers:
       unplugin-vue-components:
         specifier: ^32.1.0
         version: 32.1.0(@nuxt/kit@4.4.2(magicast@0.5.2))(vue@3.5.32(typescript@5.9.3))
+      unrun:
+        specifier: 0.3.0
+        version: 0.3.0(synckit@0.11.12)
       vue:
         specifier: ^3.5.0
         version: 3.5.32(typescript@5.9.3)
@@ -6063,6 +6066,16 @@ packages:
 
   unrouting@0.1.7:
     resolution: {integrity: sha512-+0hfD+CVWtD636rc5Fn9VEjjTEDhdqgMpbwAuVoUmydSHDaMNiFW93SJG4LV++RoGSEAyvQN5uABAscYpDphpQ==}
+
+  unrun@0.3.0:
+    resolution: {integrity: sha512-5xw2AIVS2WR9Lqhz76qDIQLxipKRidf7Nq+Iz5SZ8shk1OmRlxnc6FyI/1Q2m99WLj6cbqaKFdESfWE99KPzlA==}
+    engines: {node: ^22.13.0 || >=24.0.0}
+    hasBin: true
+    peerDependencies:
+      synckit: ^0.11.11
+    peerDependenciesMeta:
+      synckit:
+        optional: true
 
   unstorage@1.17.5:
     resolution: {integrity: sha512-0i3iqvRfx29hkNntHyQvJTpf5W9dQ9ZadSoRU8+xVlhVtT7jAX57fazYO9EHvcRCfBCyi5YRya7XCDOsbTgkPg==}
@@ -13154,7 +13167,7 @@ snapshots:
 
   ts-interface-checker@0.1.13: {}
 
-  tsdown@0.22.0(@arethetypeswrong/core@0.18.2)(typescript@5.9.3)(vue-tsc@3.3.1(typescript@5.9.3)):
+  tsdown@0.22.0(@arethetypeswrong/core@0.18.2)(typescript@5.9.3)(unrun@0.3.0(synckit@0.11.12))(vue-tsc@3.3.1(typescript@5.9.3)):
     dependencies:
       ansis: 4.2.0
       cac: 7.0.0
@@ -13174,6 +13187,7 @@ snapshots:
     optionalDependencies:
       '@arethetypeswrong/core': 0.18.2
       typescript: 5.9.3
+      unrun: 0.3.0(synckit@0.11.12)
     transitivePeerDependencies:
       - '@ts-macro/tsc'
       - '@typescript/native-preview'
@@ -13404,6 +13418,12 @@ snapshots:
     dependencies:
       escape-string-regexp: 5.0.0
       ufo: 1.6.3
+
+  unrun@0.3.0(synckit@0.11.12):
+    dependencies:
+      rolldown: 1.0.2
+    optionalDependencies:
+      synckit: 0.11.12
 
   unstorage@1.17.5(db0@0.3.4(better-sqlite3@12.9.0))(ioredis@5.10.1):
     dependencies:
