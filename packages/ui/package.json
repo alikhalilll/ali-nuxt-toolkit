@@ -82,9 +82,9 @@
   "scripts": {
     "clean": "rimraf dist",
     "build:css": "tailwindcss -i assets/styles.src.css -o dist/assets/styles.css --minify",
-    "build:js": "vite build",
-    "build:types": "vue-tsc -p tsconfig.dist.json --declaration --emitDeclarationOnly --outDir dist && node scripts/build/fix-dts-imports.mjs && node scripts/build/validate-dts.mjs",
-    "build": "pnpm clean && pnpm build:js && pnpm build:types && pnpm build:css",
+    "build:bundle": "tsdown",
+    "build:strip": "node scripts/build/strip-vls-wrapper.mjs",
+    "build": "pnpm clean && pnpm build:bundle && pnpm build:strip && pnpm build:css",
     "typecheck": "vue-tsc --noEmit -p tsconfig.json",
     "prepack": "pnpm build"
   },
@@ -104,11 +104,11 @@
   "devDependencies": {
     "@tailwindcss/cli": "^4.0.0",
     "@types/node": "^22.13.0",
-    "@vitejs/plugin-vue": "^5.2.0",
     "rimraf": "^6.0.1",
     "tailwindcss": "^4.0.0",
+    "tsdown": "0.22.0",
     "typescript": "^5.9.2",
-    "vite": "^5.4.0",
+    "unplugin-vue": "7.2.0",
     "vue": "^3.5.0",
     "vue-tsc": "^3.2.4"
   }
