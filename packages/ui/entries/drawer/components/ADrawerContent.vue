@@ -1,16 +1,15 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from 'vue';
 import { DrawerContent, DrawerPortal } from 'vaul-vue';
-import type { DialogContentEmits, DialogContentProps } from 'reka-ui';
 import { reactiveOmit } from '@vueuse/core';
 import { useForwardPropsEmits } from 'reka-ui';
 import { cn } from '@/utils';
 import ADrawerOverlay from './ADrawerOverlay.vue';
+import type { ADrawerContentProps, ADrawerContentEmits } from '../types';
 
 defineOptions({ inheritAttrs: false });
 
-const props = defineProps<DialogContentProps & { class?: HTMLAttributes['class'] }>();
-const emits = defineEmits<DialogContentEmits>();
+const props = defineProps<ADrawerContentProps>();
+const emits = defineEmits<ADrawerContentEmits>();
 const delegated = reactiveOmit(props, 'class');
 const forwarded = useForwardPropsEmits(delegated, emits);
 </script>

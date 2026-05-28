@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { DrawerTrigger, type DrawerTriggerProps } from 'vaul-vue';
+import { DrawerTrigger } from 'vaul-vue';
 import { useForwardProps } from 'reka-ui';
+import type { ADrawerTriggerProps } from '../types';
 
-const props = defineProps<DrawerTriggerProps>();
+const props = defineProps<ADrawerTriggerProps>();
 const forwarded = useForwardProps(props);
 </script>
 

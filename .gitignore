@@ -11,6 +11,13 @@ dist
 coverage
 *.tgz
 artifacts/
+.packs/
+playgrounds/nuxt/.tarballs/
+playgrounds/nuxt/pnpm-lock.yaml
+
+# Validation artifacts emitted by scripts/lib/validate-dist.mjs
+.attw-report.json
+packages/*/.attw-report.json
 
 # Personal notes — not public docs
 WALKTHROUGH.md

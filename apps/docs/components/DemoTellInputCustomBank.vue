@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { BadgeAlert, BadgeCheck, ShieldCheck, Smartphone } from 'lucide-vue-next';
+import {
+  BadgeAlertIcon,
+  BadgeCheckIcon,
+  ShieldCheckIcon,
+  SmartphoneIcon,
+} from '~/components/icons';
 import { ATellInput } from '@alikhalilll/ui';
 
 const phone = ref('');
@@ -23,7 +28,7 @@ const bankTheme = {
 
 const source = `<script setup lang="ts">
 import { ref } from 'vue';
-import { BadgeAlert, BadgeCheck, ShieldCheck, Smartphone } from 'lucide-vue-next';
+import { BadgeAlertIcon, BadgeCheckIcon, ShieldCheckIcon, SmartphoneIcon } from '~/components/icons';
 import { ATellInput } from '@alikhalilll/ui';
 
 const phone = ref('');
@@ -49,7 +54,7 @@ const bankTheme = {
 <template>
   <div :style="bankTheme" class="text-foreground p-6 rounded-xl bg-background">
     <label class="mb-2 flex items-center gap-1.5 text-sm font-medium">
-      <ShieldCheck class="size-3.5 text-emerald-400" />
+      <ShieldCheckIcon class="size-3.5 text-emerald-400" />
       Verify your phone
     </label>
 
@@ -62,15 +67,15 @@ const bankTheme = {
     >
       <!-- Smartphone = "this is a phone field"; Lock would imply password input -->
       <template #prefix>
-        <Smartphone class="ml-3 size-4 text-muted-foreground" />
+        <SmartphoneIcon class="ml-3 size-4 text-muted-foreground" />
       </template>
 
       <!-- BadgeCheck/BadgeAlert match identity-verification context -->
       <template #valid-icon>
-        <BadgeCheck class="size-5 text-emerald-400" />
+        <BadgeCheckIcon class="size-5 text-emerald-400" />
       </template>
       <template #error-icon>
-        <BadgeAlert class="size-5 text-destructive" />
+        <BadgeAlertIcon class="size-5 text-destructive" />
       </template>
 
       <!-- Reason code badge + message -->
@@ -105,7 +110,7 @@ const bankTheme = {
       >
         <div class="max-w-md">
           <label class="text-foreground mb-2 flex items-center gap-1.5 text-sm font-medium">
-            <ShieldCheck class="size-3.5" style="color: hsl(152 70% 60%)" aria-hidden="true" />
+            <ShieldCheckIcon class="size-3.5" style="color: hsl(152 70% 60%)" aria-hidden="true" />
             Verify your phone
           </label>
 
@@ -117,15 +122,18 @@ const bankTheme = {
             placeholder="5XXXXXXXX"
           >
             <template #prefix>
-              <Smartphone class="text-muted-foreground ml-3 size-4 shrink-0" aria-hidden="true" />
+              <SmartphoneIcon
+                class="text-muted-foreground ml-3 size-4 shrink-0"
+                aria-hidden="true"
+              />
             </template>
 
             <template #valid-icon>
-              <BadgeCheck class="size-5 shrink-0" style="color: hsl(152 70% 60%)" />
+              <BadgeCheckIcon class="size-5 shrink-0" style="color: hsl(152 70% 60%)" />
             </template>
 
             <template #error-icon>
-              <BadgeAlert class="text-destructive size-5 shrink-0" />
+              <BadgeAlertIcon class="text-destructive size-5 shrink-0" />
             </template>
 
             <template #error="{ message, reason }">

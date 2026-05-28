@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { Phone, Search, ShieldCheck, ShieldX, Sparkles } from 'lucide-vue-next';
+import {
+  PhoneIcon,
+  SearchIcon,
+  ShieldCheckIcon,
+  ShieldXIcon,
+  SparklesIcon,
+} from '~/components/icons';
 import {
   ATellInput,
   defaultFlagUrl,
@@ -55,7 +61,7 @@ async function alwaysEgypt() {
 
 const source = `<script setup lang="ts">
 import { computed, ref } from 'vue';
-import { Phone, Search, ShieldCheck, ShieldX, Sparkles } from 'lucide-vue-next';
+import { PhoneIcon, SearchIcon, ShieldCheckIcon, ShieldXIcon, SparklesIcon } from '~/components/icons';
 import {
   ATellInput,
   defaultFlagUrl,
@@ -115,20 +121,20 @@ async function alwaysEgypt() { return 'EG'; }
     :detector="alwaysEgypt"
   >
     <template #prefix>
-      <Phone class="ml-3 size-4 text-muted-foreground" />
+      <PhoneIcon class="ml-3 size-4 text-muted-foreground" />
     </template>
 
     <template #valid-icon>
-      <Sparkles class="size-5 text-amber-400" />
+      <SparklesIcon class="size-5 text-amber-400" />
     </template>
 
     <template #error-icon>
-      <ShieldX class="size-5 text-destructive" />
+      <ShieldXIcon class="size-5 text-destructive" />
     </template>
 
     <template #hint="{ formatHint }">
       <p class="flex items-center gap-1.5 text-xs text-muted-foreground">
-        <ShieldCheck class="size-3" />
+        <ShieldCheckIcon class="size-3" />
         <span>Example · </span>
         <span class="tabular-nums">{{ formatHint }}</span>
       </p>
@@ -144,7 +150,7 @@ async function alwaysEgypt() { return 'EG'; }
     </template>
 
     <template #item-check>
-      <Sparkles class="size-3.5 text-amber-400" />
+      <SparklesIcon class="size-3.5 text-amber-400" />
     </template>
 
     <template #group-header="{ label, group }">
@@ -153,7 +159,7 @@ async function alwaysEgypt() { return 'EG'; }
         :class="group === 'suggested' ? 'text-amber-400' : 'text-muted-foreground'"
       >
         <span class="flex items-center gap-1.5">
-          <Sparkles v-if="group === 'suggested'" class="size-3" />
+          <SparklesIcon v-if="group === 'suggested'" class="size-3" />
           {{ label }}
         </span>
         <span class="font-mono text-muted-foreground/60 normal-case tracking-normal">{{ group }}</span>
@@ -162,7 +168,7 @@ async function alwaysEgypt() { return 'EG'; }
 
     <template #empty="{ query }">
       <div class="flex flex-col items-center gap-2 px-4 py-8 text-center text-muted-foreground">
-        <Search class="size-6 text-muted-foreground/40" />
+        <SearchIcon class="size-6 text-muted-foreground/40" />
         <p class="text-sm">No matches for <span class="font-mono text-foreground">"{{ query }}"</span></p>
         <p class="text-xs">Try a country name or +code.</p>
       </div>
@@ -195,20 +201,20 @@ async function alwaysEgypt() { return 'EG'; }
             :detector="alwaysEgypt"
           >
             <template #prefix>
-              <Phone class="text-muted-foreground ml-3 size-4 shrink-0" aria-hidden="true" />
+              <PhoneIcon class="text-muted-foreground ml-3 size-4 shrink-0" aria-hidden="true" />
             </template>
 
             <template #valid-icon>
-              <Sparkles class="size-5 shrink-0 text-amber-400" aria-hidden="true" />
+              <SparklesIcon class="size-5 shrink-0 text-amber-400" aria-hidden="true" />
             </template>
 
             <template #error-icon>
-              <ShieldX class="text-destructive size-5 shrink-0" aria-hidden="true" />
+              <ShieldXIcon class="text-destructive size-5 shrink-0" aria-hidden="true" />
             </template>
 
             <template #hint="{ formatHint }">
               <p class="text-muted-foreground flex items-center gap-1.5 text-xs">
-                <ShieldCheck class="size-3 shrink-0" aria-hidden="true" />
+                <ShieldCheckIcon class="size-3 shrink-0" aria-hidden="true" />
                 <span>Example </span>
                 <span class="tabular-nums">· {{ formatHint }}</span>
               </p>
@@ -226,7 +232,7 @@ async function alwaysEgypt() { return 'EG'; }
             </template>
 
             <template #item-check>
-              <Sparkles class="size-3.5 shrink-0 text-amber-400" aria-hidden="true" />
+              <SparklesIcon class="size-3.5 shrink-0 text-amber-400" aria-hidden="true" />
             </template>
 
             <template #group-header="{ label, group }">
@@ -235,7 +241,7 @@ async function alwaysEgypt() { return 'EG'; }
                 :class="group === 'suggested' ? 'text-amber-400' : 'text-muted-foreground'"
               >
                 <span class="flex items-center gap-1.5">
-                  <Sparkles v-if="group === 'suggested'" class="size-3" />
+                  <SparklesIcon v-if="group === 'suggested'" class="size-3" />
                   {{ label }}
                 </span>
                 <span class="text-muted-foreground/60 font-mono tracking-normal normal-case">
@@ -248,7 +254,7 @@ async function alwaysEgypt() { return 'EG'; }
               <div
                 class="text-muted-foreground flex flex-col items-center justify-center gap-2 px-4 py-8 text-center"
               >
-                <Search class="text-muted-foreground/40 size-6" aria-hidden="true" />
+                <SearchIcon class="text-muted-foreground/40 size-6" aria-hidden="true" />
                 <p class="text-sm">
                   No matches for <span class="text-foreground font-mono">"{{ query }}"</span>
                 </p>

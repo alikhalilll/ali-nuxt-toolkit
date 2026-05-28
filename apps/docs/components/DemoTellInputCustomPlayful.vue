@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { ChevronDown, Frown, PartyPopper, Sparkles, Smile } from 'lucide-vue-next';
+import {
+  ChevronDownIcon,
+  FrownIcon,
+  PartyPopperIcon,
+  SparklesIcon,
+  SmileIcon,
+} from '~/components/icons';
 import { ATellInput } from '@alikhalilll/ui';
 
 const phone = ref('');
@@ -23,7 +29,7 @@ const playfulTheme = {
 
 const source = `<script setup lang="ts">
 import { ref } from 'vue';
-import { ChevronDown, Frown, PartyPopper, Sparkles, Smile } from 'lucide-vue-next';
+import { ChevronDownIcon, FrownIcon, PartyPopperIcon, SparklesIcon, SmileIcon } from '~/components/icons';
 import { ATellInput } from '@alikhalilll/ui';
 
 const phone = ref('');
@@ -79,31 +85,31 @@ const playfulTheme = {
           <span class="text-sm font-semibold tabular-nums">
             {{ selectedCountry?.raw_data.dial_code ?? '+?' }}
           </span>
-          <ChevronDown class="size-4 transition-transform" :class="open && 'rotate-180'" />
+          <ChevronDownIcon class="size-4 transition-transform" :class="open && 'rotate-180'" />
         </button>
       </template>
 
       <!-- Friendly icons -->
       <template #suffix>
-        <Smile class="mr-3 size-5" style="color: hsl(28 100% 60%)" />
+        <SmileIcon class="mr-3 size-5" style="color: hsl(28 100% 60%)" />
       </template>
 
       <template #valid-icon>
-        <PartyPopper class="size-6 text-amber-400" />
+        <PartyPopperIcon class="size-6 text-amber-400" />
       </template>
 
       <template #error-icon>
-        <Frown class="size-6 text-destructive" />
+        <FrownIcon class="size-6 text-destructive" />
       </template>
 
       <template #item-check>
-        <Sparkles class="size-4 text-amber-400" />
+        <SparklesIcon class="size-4 text-amber-400" />
       </template>
 
       <!-- Sparkle + example number hint -->
       <template #hint="{ formatHint }">
         <p class="flex items-center gap-1.5 pl-2 text-xs text-muted-foreground">
-          <Sparkles class="size-3" style="color: hsl(28 100% 60%)" />
+          <SparklesIcon class="size-3" style="color: hsl(28 100% 60%)" />
           <span class="tabular-nums">{{ formatHint }}</span>
         </p>
       </template>
@@ -180,20 +186,20 @@ const playfulTheme = {
             </template>
 
             <template #valid-icon>
-              <PartyPopper class="size-6 shrink-0 text-amber-400" />
+              <PartyPopperIcon class="size-6 shrink-0 text-amber-400" />
             </template>
 
             <template #error-icon>
-              <Frown class="text-destructive size-6 shrink-0" />
+              <FrownIcon class="text-destructive size-6 shrink-0" />
             </template>
 
             <template #item-check>
-              <Sparkles class="size-4 shrink-0 text-amber-400" />
+              <SparklesIcon class="size-4 shrink-0 text-amber-400" />
             </template>
 
             <template #hint="{ formatHint }">
               <p class="text-muted-foreground flex items-center gap-1.5 pl-2 text-xs">
-                <Sparkles class="size-3" style="color: hsl(28 100% 60%)" />
+                <SparklesIcon class="size-3" style="color: hsl(28 100% 60%)" />
                 <span class="tabular-nums">{{ formatHint }}</span>
               </p>
             </template>

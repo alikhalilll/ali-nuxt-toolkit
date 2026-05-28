@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from 'vue';
 import { DrawerOverlay } from 'vaul-vue';
-import type { DialogOverlayProps } from 'reka-ui';
 import { reactiveOmit } from '@vueuse/core';
 import { useForwardProps } from 'reka-ui';
 import { cn } from '@/utils';
+import type { ADrawerOverlayProps } from '../types';
 
-const props = defineProps<DialogOverlayProps & { class?: HTMLAttributes['class'] }>();
+const props = defineProps<ADrawerOverlayProps>();
 const delegated = reactiveOmit(props, 'class');
 const forwarded = useForwardProps(delegated);
 </script>

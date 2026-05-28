@@ -18,6 +18,8 @@ export {
   type ACountrySelectProps,
   type ACountrySelectSlots,
   type ACountrySelectEmits,
+  type ACountryFlagProps,
+  type ACountryFlagSlots,
   type TellInputMessages,
   type TellInputMessagesInput,
 } from './utils/types';

@@ -10,16 +10,20 @@ import Vue from 'unplugin-vue/rolldown';
 // `vue-tsc --noEmit -p tsconfig.json` stays in `scripts.typecheck` as the
 // type-correctness gate; tsdown handles emission.
 export default defineConfig({
+  // Each subpath gets its own folder under `dist/<subpath>/index.{js,cjs,d.ts,d.cts}`
+  // — a layout readers can skim (one folder per exports key) instead of a flat
+  // soup of 30+ files at the dist root. The package.json `exports` map mirrors
+  // these paths verbatim.
   entry: {
     index: 'index.ts',
-    'tell-input': 'entries/tell-input/index.ts',
-    input: 'entries/input/index.ts',
-    popover: 'entries/popover/index.ts',
-    drawer: 'entries/drawer/index.ts',
-    'responsive-popover': 'entries/responsive-popover/index.ts',
-    utils: 'utils/index.ts',
-    nuxt: 'nuxt/index.ts',
-    resolver: 'resolver/index.ts',
+    'tell-input/index': 'entries/tell-input/index.ts',
+    'input/index': 'entries/input/index.ts',
+    'popover/index': 'entries/popover/index.ts',
+    'drawer/index': 'entries/drawer/index.ts',
+    'responsive-popover/index': 'entries/responsive-popover/index.ts',
+    'utils/index': 'utils/index.ts',
+    'nuxt/index': 'nuxt/index.ts',
+    'resolver/index': 'resolver/index.ts',
   },
   format: ['esm', 'cjs'],
   outDir: 'dist',
@@ -29,32 +33,53 @@ export default defineConfig({
     '@': new URL('.', import.meta.url).pathname,
   },
   // Stay flat: every dep that a consumer is expected to bring is external.
-  // Mirrors `vite.config.ts` exactly so chunk layout doesn't drift.
-  external: [
-    'vue',
-    '@vueuse/core',
-    'reka-ui',
-    'vaul-vue',
-    'libphonenumber-js',
-    'libphonenumber-js/examples.mobile.json',
-    'lucide-vue-next',
-    'class-variance-authority',
-    'clsx',
-    'tailwind-merge',
-    // Consumer brings these when they use the matching subpath; do not bundle.
-    '@nuxt/kit',
-    'unplugin-vue-components',
-  ],
+  // Mirrors `vite.config.ts` exactly so chunk layout doesn't drift. Uses the
+  // modern `deps.neverBundle` API — top-level `external` is deprecated in
+  // tsdown 0.22+.
+  deps: {
+    neverBundle: [
+      'vue',
+      '@vueuse/core',
+      'reka-ui',
+      'vaul-vue',
+      'libphonenumber-js',
+      'libphonenumber-js/examples.mobile.json',
+      'class-variance-authority',
+      'clsx',
+      'tailwind-merge',
+      // Consumer brings these when they use the matching subpath; do not bundle.
+      '@nuxt/kit',
+      'unplugin-vue-components',
+    ],
+  },
   platform: 'neutral',
   target: 'es2022',
   sourcemap: true,
   treeshake: true,
-  // tsdown handles dts emission via rolldown-plugin-dts under the hood.
-  // `vue: true` flips on @vue/language-tools integration for SFC types.
-  // `declarationMap: true` emits `.d.ts.map` files whose `sources` reference
-  // the original `.vue` / `.ts` — this is what enables Cmd+Click on a prop
-  // in a consumer's template to walk into the actual SFC source.
-  dts: { vue: true, compilerOptions: { declarationMap: true } },
+  // Deterministic chunk names — no rolldown content hash. Each shared chunk
+  // lives under `dist/_chunks/` (underscore prefix signals "internal", same
+  // convention used by vite/rollup app builds) so they're visually separated
+  // from the per-subpath entry folders. We deliberately do NOT override
+  // `entryFileNames` here — tsdown computes that per-format (`.js` for ESM
+  // chunks, `.cjs` for CJS chunks) using the `outExtensions` defaults, and
+  // overriding it forces all formats to share one extension which silently
+  // drops the CJS output.
+  hash: false,
+  outputOptions: {
+    chunkFileNames: '_chunks/[name].js',
+  },
+  // Declaration emission is handled separately by `vue-tsc` (see `build:dts`)
+  // which produces a per-source mirror under `dist/runtime/` — one `.d.ts` per
+  // `.vue` / `.ts` source file, alongside the original source copied via
+  // `build:copy-sources`. This mirror pattern is what gives consumer IDEs full
+  // Cmd+Click navigation into the actual `.vue` source (via the matching
+  // `.d.ts.map`), matching the proven `shadcn-vue` / Nuxt-module convention.
+  //
+  // We tried tsdown's bundled `dts: { vue: true }` earlier — it produced a
+  // single flat `.d.ts` per entry, which Volar resolved but couldn't navigate
+  // into. The mirror pattern fixes that without giving up the per-entry JS
+  // bundles tsdown still emits below.
+  dts: false,
   plugins: [Vue()],
   // We manage `exports` in package.json explicitly. tsdown's auto-export
   // generator would otherwise overwrite our subpath map.

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { ChevronDown, Smartphone } from 'lucide-vue-next';
+import { ChevronDownIcon, SmartphoneIcon } from '~/components/icons';
 import { ATellInput } from '@alikhalilll/ui';
 
 const phone = ref('234567890');
@@ -23,7 +23,7 @@ const creamTheme = {
 
 const source = `<script setup lang="ts">
 import { ref } from 'vue';
-import { ChevronDown, Smartphone } from 'lucide-vue-next';
+import { ChevronDownIcon, SmartphoneIcon } from '~/components/icons';
 import { ATellInput } from '@alikhalilll/ui';
 
 const phone = ref('');
@@ -81,7 +81,7 @@ const creamTheme = {
 
       <!-- Phone icon anchored to the right edge -->
       <template #suffix>
-        <Smartphone class="mr-3 size-5 shrink-0" />
+        <SmartphoneIcon class="mr-3 size-5 shrink-0" />
       </template>
 
       <!-- Hide the example-number hint for a cleaner aesthetic -->

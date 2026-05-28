@@ -1,4 +1,4 @@
-import { capture, run } from './exec.mjs';
+import { capture, run } from '../lib/exec.ts';
 
 export function ghAvailable() {
   if (!capture('gh', ['--version'])) return { ok: false, reason: 'gh CLI not installed' };

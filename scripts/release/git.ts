@@ -1,5 +1,5 @@
-import { capture, run } from './exec.mjs';
-import { die } from './logger.mjs';
+import { capture, run } from '../lib/exec.ts';
+import { die } from '../lib/logger.ts';
 
 export function currentBranch() {
   return capture('git', ['rev-parse', '--abbrev-ref', 'HEAD']);

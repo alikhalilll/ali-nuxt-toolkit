@@ -74,9 +74,13 @@
   },
   "scripts": {
     "clean": "rimraf dist",
-    "build": "pnpm clean && tsup",
+    "build": "tsdown",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "prepack": "pnpm build"
+    "validate-dist": "tsx ../../scripts/validate/dist-validate.ts --pkg crypto",
+    "validate-consumer": "tsx ../../scripts/validate/consumer-validate.ts --pkg crypto",
+    "validate": "pnpm build && pnpm validate-dist && pnpm validate-consumer",
+    "prepack": "pnpm build",
+    "prepublishOnly": "pnpm validate"
   },
   "peerDependencies": {
     "@nuxt/kit": "^3.0.0 || ^4.0.0",
@@ -96,7 +100,8 @@
     "@types/node": "^22.13.0",
     "h3": "^1.13.0",
     "rimraf": "^6.0.1",
-    "tsup": "^8.5.0",
-    "typescript": "^5.9.2"
+    "tsdown": "0.22.0",
+    "typescript": "^5.9.2",
+    "unrun": "0.3.0"
   }
 }

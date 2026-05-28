@@ -1,34 +1,27 @@
 import type { HTMLAttributes } from 'vue';
 import { cva, type VariantProps } from 'class-variance-authority';
-import type { DetectionStrategy } from '../composables/useCountryDetection';
+import type { DetectionStrategy, DetectCountryOptions } from '../composables/useCountryDetection';
 import type {
   CountryOption,
   PhoneValidationReason,
   PhoneValidationResult,
 } from '../composables/usePhoneValidation';
-import { controlHeight, controlTextSize, type Size } from '@/utils';
+import type { FlagUrlBuilder } from './flag-url';
+import type { Size } from '@/utils';
 
 /** Alias for the shared `Size` scale — kept for backwards-friendly naming. */
 export type ATellInputSize = Size;
 
-export const aTellInputVariants = cva(
-  // items-center (not items-stretch) so #prefix/#suffix icons centre vertically without distortion.
-  // The country trigger button and the input element both carry `h-full`, so they still fill the
-  // field height regardless of this setting.
-  'border-input bg-background ring-offset-background focus-within:ring-ring flex w-full items-center overflow-hidden rounded-md border shadow-sm transition-colors focus-within:ring-1 has-[input:disabled]:cursor-not-allowed has-[input:disabled]:opacity-50',
-  {
-    variants: {
-      size: {
-        xs: `${controlHeight.xs} ${controlTextSize.xs}`,
-        sm: `${controlHeight.sm} ${controlTextSize.sm}`,
-        md: `${controlHeight.md} ${controlTextSize.md}`,
-        lg: `${controlHeight.lg} ${controlTextSize.lg}`,
-        xl: `${controlHeight.xl} ${controlTextSize.xl}`,
-      },
-    },
-    defaultVariants: { size: 'md' },
-  }
-);
+// Field styling now lives entirely in ATellInput.vue's scoped CSS — sizes/states are driven
+// by the `data-size` / `data-state` attributes set in the template. The cva wrapper survives
+// so consumers can still call `aTellInputVariants({ size: 'md' })` (returns the field class);
+// the per-size class slots are empty placeholders that exist only to preserve the type.
+export const aTellInputVariants = cva('a-tell-input__field', {
+  variants: {
+    size: { xs: '', sm: '', md: '', lg: '', xl: '' },
+  },
+  defaultVariants: { size: 'md' },
+});
 
 export type ATellInputVariants = VariantProps<typeof aTellInputVariants>;
 
@@ -134,6 +127,66 @@ export interface ATellInputProps {
    * Clearing the input is not debounced — the picker hides immediately. Default 150ms.
    */
   detectDebounceMs?: number;
+  /** Override the flag URL builder, forwarded to ACountrySelect. */
+  flagUrl?: (iso2: string, width: number) => string;
+  /** Custom search predicate, forwarded to ACountrySelect. */
+  searcher?: (query: string, country: CountryOption) => boolean;
+  /** Provide your own country list, forwarded to ACountrySelect. */
+  countries?: CountryOption[];
+  /**
+   * Fully custom country detection. When provided, this function runs in place of the
+   * built-in chain — `detectCountry`-style options are still honored but the function
+   * receives them and is free to ignore them.
+   */
+  detector?: (options: DetectCountryOptions) => Promise<string | null | undefined>;
+  /** Forwarded to ACountrySelect: classes for the popover content surface. */
+  contentClass?: string;
+  /** Forwarded to ACountrySelect: classes for the desktop popover surface. */
+  popoverClass?: string;
+  /** Forwarded to ACountrySelect: classes for the mobile drawer surface. */
+  drawerClass?: string;
+  /** Classes for the inner phone field input element. */
+  inputClass?: string;
+  /** Classes for the outer wrapper that holds country select + input. */
+  fieldClass?: string;
+  /** Classes for the helper hint line. */
+  hintClass?: string;
+  /** Classes for the error message line. */
+  errorClass?: string;
+  /**
+   * How page scroll is blocked while the country popover is open. Defaults to `'events'`
+   * (sticky-safe document-level lock). Pass `'body'` for the legacy
+   * `body { overflow: hidden }` lock, or `'none'` to leave page scrolling alone.
+   */
+  scrollLock?: 'events' | 'body' | 'none';
+}
+
+/**
+ * Props for {@link ACountryFlag} — the standalone flag image component. Renders a
+ * `flagcdn` image for an ISO2 code with an automatic text-badge fallback when the
+ * image fails to load. Surface separately so it can be used outside `ATellInput`
+ * (e.g., in a custom country picker).
+ */
+export interface ACountryFlagProps {
+  /** ISO 3166-1 alpha-2 country code, case-insensitive. */
+  iso2: string;
+  /** Pixel width served by flagcdn. 40 is crisp at retina up to ~24px wide. */
+  width?: number;
+  /** Optional explicit URL override. When set, `iso2` / `width` / `flagUrl` are ignored. */
+  src?: string | null;
+  /** Function `(iso2, width) => string` — fully replace the URL builder. */
+  flagUrl?: FlagUrlBuilder;
+  alt?: string;
+  class?: HTMLAttributes['class'];
+}
+
+/**
+ * Slot prop shape for {@link ACountryFlag}. The `empty` slot is rendered when no
+ * flag URL is available and no ISO2 fallback can be derived.
+ */
+export interface ACountryFlagSlots {
+  /** Rendered when the flag URL is unavailable and no ISO2 text fallback can be derived. */
+  empty?: () => unknown;
 }
 
 export const DEFAULT_ERROR_MESSAGES: Record<PhoneValidationReason, string> = {

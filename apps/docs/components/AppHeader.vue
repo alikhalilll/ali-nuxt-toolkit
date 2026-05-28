@@ -7,7 +7,7 @@ import {
   AResponsivePopoverContent,
   AResponsivePopoverTrigger,
 } from '@alikhalilll/ui';
-import { ChevronDown } from 'lucide-vue-next';
+import { ChevronDownIcon } from '~/components/icons';
 
 const route = useRoute();
 const mobileNavOpen = useMobileNavOpen();
@@ -254,7 +254,7 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
               aria-haspopup="menu"
             >
               ui
-              <ChevronDown class="ml-0.5 inline size-3" aria-hidden="true" />
+              <ChevronDownIcon class="ml-0.5 inline size-3" aria-hidden="true" />
             </NuxtLink>
           </template>
         </ClientOnly>

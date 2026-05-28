@@ -35,49 +35,94 @@
   ],
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     },
     "./tell-input": {
-      "types": "./dist/tell-input.d.ts",
-      "import": "./dist/tell-input.js",
-      "require": "./dist/tell-input.cjs"
+      "import": {
+        "types": "./dist/tell-input/index.d.ts",
+        "default": "./dist/tell-input/index.js"
+      },
+      "require": {
+        "types": "./dist/tell-input/index.d.cts",
+        "default": "./dist/tell-input/index.cjs"
+      }
     },
     "./input": {
-      "types": "./dist/input.d.ts",
-      "import": "./dist/input.js",
-      "require": "./dist/input.cjs"
+      "import": {
+        "types": "./dist/input/index.d.ts",
+        "default": "./dist/input/index.js"
+      },
+      "require": {
+        "types": "./dist/input/index.d.cts",
+        "default": "./dist/input/index.cjs"
+      }
     },
     "./popover": {
-      "types": "./dist/popover.d.ts",
-      "import": "./dist/popover.js",
-      "require": "./dist/popover.cjs"
+      "import": {
+        "types": "./dist/popover/index.d.ts",
+        "default": "./dist/popover/index.js"
+      },
+      "require": {
+        "types": "./dist/popover/index.d.cts",
+        "default": "./dist/popover/index.cjs"
+      }
     },
     "./drawer": {
-      "types": "./dist/drawer.d.ts",
-      "import": "./dist/drawer.js",
-      "require": "./dist/drawer.cjs"
+      "import": {
+        "types": "./dist/drawer/index.d.ts",
+        "default": "./dist/drawer/index.js"
+      },
+      "require": {
+        "types": "./dist/drawer/index.d.cts",
+        "default": "./dist/drawer/index.cjs"
+      }
     },
     "./responsive-popover": {
-      "types": "./dist/responsive-popover.d.ts",
-      "import": "./dist/responsive-popover.js",
-      "require": "./dist/responsive-popover.cjs"
+      "import": {
+        "types": "./dist/responsive-popover/index.d.ts",
+        "default": "./dist/responsive-popover/index.js"
+      },
+      "require": {
+        "types": "./dist/responsive-popover/index.d.cts",
+        "default": "./dist/responsive-popover/index.cjs"
+      }
     },
     "./utils": {
-      "types": "./dist/utils.d.ts",
-      "import": "./dist/utils.js",
-      "require": "./dist/utils.cjs"
+      "import": {
+        "types": "./dist/utils/index.d.ts",
+        "default": "./dist/utils/index.js"
+      },
+      "require": {
+        "types": "./dist/utils/index.d.cts",
+        "default": "./dist/utils/index.cjs"
+      }
     },
     "./nuxt": {
-      "types": "./dist/nuxt.d.ts",
-      "import": "./dist/nuxt.js",
-      "require": "./dist/nuxt.cjs"
+      "import": {
+        "types": "./dist/nuxt/index.d.ts",
+        "default": "./dist/nuxt/index.js"
+      },
+      "require": {
+        "types": "./dist/nuxt/index.d.cts",
+        "default": "./dist/nuxt/index.cjs"
+      }
     },
     "./resolver": {
-      "types": "./dist/resolver.d.ts",
-      "import": "./dist/resolver.js",
-      "require": "./dist/resolver.cjs"
+      "import": {
+        "types": "./dist/resolver/index.d.ts",
+        "default": "./dist/resolver/index.js"
+      },
+      "require": {
+        "types": "./dist/resolver/index.d.cts",
+        "default": "./dist/resolver/index.cjs"
+      }
     },
     "./assets/styles.css": "./dist/assets/styles.css",
     "./styles.css": "./dist/assets/styles.css",
@@ -100,11 +145,20 @@
     "clean": "rimraf dist",
     "build:css": "tailwindcss -i assets/styles.src.css -o dist/assets/styles.css --minify",
     "build:bundle": "tsdown",
-    "build:strip": "node scripts/build/strip-vls-wrapper.mjs",
-    "build:verify": "node scripts/build/verify-exports.mjs",
-    "build": "pnpm clean && pnpm build:bundle && pnpm build:strip && pnpm build:css && pnpm build:verify",
+    "build:dts": "vue-tsc -p tsconfig.dist.json",
+    "build:copy-sources": "tsx scripts/build/copy-sources.ts",
+    "build:fix-dts": "tsx scripts/build/fix-dts-imports.ts",
+    "build:entry-dts": "tsx scripts/build/generate-entry-dts.ts",
+    "build:strip": "tsx scripts/build/strip-vls-wrapper.ts",
+    "build:merge-css": "tsx scripts/build/merge-sfc-styles.ts",
+    "build:verify": "tsx scripts/build/verify-exports.ts",
+    "build": "pnpm clean && pnpm build:bundle && pnpm build:dts && pnpm build:copy-sources && pnpm build:fix-dts && pnpm build:entry-dts && pnpm build:strip && pnpm build:css && pnpm build:merge-css && pnpm build:verify",
     "typecheck": "vue-tsc --noEmit -p tsconfig.json",
-    "prepack": "pnpm build"
+    "validate-dist": "tsx ../../scripts/validate/dist-validate.ts --pkg ui",
+    "validate-consumer": "tsx ../../scripts/validate/consumer-validate.ts --pkg ui",
+    "validate": "pnpm build && pnpm validate-dist && pnpm validate-consumer",
+    "prepack": "pnpm build",
+    "prepublishOnly": "pnpm validate"
   },
   "peerDependencies": {
     "@nuxt/kit": "^3.0.0 || ^4.0.0",
@@ -124,16 +178,18 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "libphonenumber-js": "^1.12.0",
-    "lucide-vue-next": "^0.460.0",
     "reka-ui": "^2.9.0",
     "tailwind-merge": "^2.6.0",
     "vaul-vue": "^0.4.0"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "0.18.2",
+    "@ampproject/remapping": "^2.3.0",
     "@nuxt/kit": "^4.4.2",
+    "@nuxt/schema": "^4.4.2",
     "@tailwindcss/cli": "^4.0.0",
+    "@tsdown/css": "0.22.0",
     "@types/node": "^22.13.0",
+    "magic-string": "^0.30.21",
     "rimraf": "^6.0.1",
     "tailwindcss": "^4.0.0",
     "tsdown": "0.22.0",

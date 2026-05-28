@@ -8,7 +8,7 @@
  * to re-implement tabs + clipboard handling.
  */
 import { ref } from 'vue';
-import { Check, Copy } from 'lucide-vue-next';
+import { CheckIcon, CopyIcon } from '~/components/icons';
 
 const props = withDefaults(
   defineProps<{
@@ -80,8 +80,8 @@ async function copy() {
           :aria-label="copied ? 'Copied' : 'Copy code'"
           @click="copy"
         >
-          <Check v-if="copied" class="size-3" />
-          <Copy v-else class="size-3" />
+          <CheckIcon v-if="copied" class="size-3" />
+          <CopyIcon v-else class="size-3" />
           {{ copied ? 'Copied' : 'Copy' }}
         </button>
       </div>

@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { PopoverTriggerProps } from 'reka-ui';
 import { PopoverTrigger, useForwardProps } from 'reka-ui';
+import type { APopoverTriggerProps } from '../types';
 
-const props = defineProps<PopoverTriggerProps>();
+const props = defineProps<APopoverTriggerProps>();
 const forwarded = useForwardProps(props);
 </script>
 

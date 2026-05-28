@@ -7,13 +7,11 @@ export {
   type UseEventScrollLockOptions,
 } from './composables/useEventScrollLock';
 
-// Reka-ui passes-through. The toolkit's `A*` wrappers forward these unchanged,
-// so consumers get the same prop/emit surface re-exported under our naming
-// convention without the extra `reka-ui` import.
 export type {
-  PopoverRootProps as APopoverProps,
-  PopoverRootEmits as APopoverEmits,
-  PopoverContentProps as APopoverContentProps,
-  PopoverContentEmits as APopoverContentEmits,
-  PopoverTriggerProps as APopoverTriggerProps,
-} from 'reka-ui';
+  APopoverProps,
+  APopoverEmits,
+  APopoverTriggerProps,
+  APopoverContentProps,
+  APopoverContentEmits,
+  APopoverOverlayProps,
+} from './types';

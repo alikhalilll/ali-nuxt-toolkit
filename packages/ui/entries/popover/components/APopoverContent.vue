@@ -1,37 +1,19 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from 'vue';
 import { reactiveOmit } from '@vueuse/core';
-import {
-  PopoverContent,
-  type PopoverContentEmits,
-  type PopoverContentProps,
-  PopoverPortal,
-  useForwardPropsEmits,
-} from 'reka-ui';
+import { PopoverContent, PopoverPortal, useForwardPropsEmits } from 'reka-ui';
 import { cn } from '@/utils';
 import APopoverOverlay from './APopoverOverlay.vue';
+import type { APopoverContentProps, APopoverContentEmits } from '../types';
 
 defineOptions({ inheritAttrs: false });
 
-const props = withDefaults(
-  defineProps<
-    PopoverContentProps & {
-      class?: HTMLAttributes['class'];
-      /** Dim the entire viewport behind the popover and block all interaction with the
-       *  page (clicks are captured by the overlay). Pair with `<APopover :modal="true">`
-       *  (the default) for the full modal behaviour. */
-      overlay?: boolean;
-      overlayClass?: HTMLAttributes['class'];
-      /**
-       * When true, the overlay also locks page scroll via `body { overflow: hidden }`.
-       * Off by default — `AResponsivePopover` opts in to this when `scrollLock="body"`.
-       */
-      overlayLockScroll?: boolean;
-    }
-  >(),
-  { align: 'center', sideOffset: 4, overlay: false, overlayLockScroll: false }
-);
-const emits = defineEmits<PopoverContentEmits>();
+const props = withDefaults(defineProps<APopoverContentProps>(), {
+  align: 'center',
+  sideOffset: 4,
+  overlay: false,
+  overlayLockScroll: false,
+});
+const emits = defineEmits<APopoverContentEmits>();
 const delegated = reactiveOmit(props, 'class', 'overlay', 'overlayClass', 'overlayLockScroll');
 const forwarded = useForwardPropsEmits(delegated, emits);
 </script>

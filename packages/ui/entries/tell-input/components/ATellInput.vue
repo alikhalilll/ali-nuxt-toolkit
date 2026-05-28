@@ -1,60 +1,18 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, useId, watch } from 'vue';
-import { CheckCircle2, AlertCircle, Loader2 } from 'lucide-vue-next';
 import { cn } from '@/utils';
-import {
-  usePhoneValidation,
-  type CountryOption,
-  type PhoneValidationResult,
-} from '../composables/usePhoneValidation';
+import { usePhoneValidation } from '../composables/usePhoneValidation';
 import { detectCountry, type DetectCountryOptions } from '../composables/useCountryDetection';
 import { useCountryMatching } from '../composables/useCountryMatching';
 import { useTypingPhase } from '../composables/useTypingPhase';
 import { useTellInputValidation } from '../composables/useTellInputValidation';
-import { controlPaddingX, controlTextSize, DEFAULT_SIZE } from '@/utils';
-import {
-  aTellInputVariants,
-  resolveMessages,
-  type ATellInputProps,
-  type ATellInputSlots,
-} from '../utils/types';
+import { DEFAULT_SIZE } from '@/utils';
+import { resolveMessages, type ATellInputProps, type ATellInputSlots } from '../utils/types';
 import { normalizeDigits } from '../utils/digits';
 import ACountrySelect from './ACountrySelect.vue';
+import { CheckCircleIcon, AlertCircleIcon, SpinnerIcon } from '../icons';
 
-interface ExtendedProps extends ATellInputProps {
-  /** Override the flag URL builder, forwarded to ACountrySelect. */
-  flagUrl?: (iso2: string, width: number) => string;
-  /** Custom search predicate, forwarded to ACountrySelect. */
-  searcher?: (query: string, country: CountryOption) => boolean;
-  /** Provide your own country list, forwarded to ACountrySelect. */
-  countries?: CountryOption[];
-  /**
-   * Fully custom country detection. When provided, this function runs in place of the
-   * built-in chain — `detectCountry`-style options are still honored but the function
-   * receives them and is free to ignore them.
-   */
-  detector?: (options: DetectCountryOptions) => Promise<string | null | undefined>;
-  /** Forwarded to ACountrySelect: classes for the popover content surface. */
-  contentClass?: string;
-  popoverClass?: string;
-  drawerClass?: string;
-  /** Classes for the inner phone field input element. */
-  inputClass?: string;
-  /** Classes for the outer wrapper that holds country select + input. */
-  fieldClass?: string;
-  /** Classes for the helper hint line. */
-  hintClass?: string;
-  /** Classes for the error message line. */
-  errorClass?: string;
-  /**
-   * How page scroll is blocked while the country popover is open. Defaults to `'events'`
-   * (sticky-safe document-level lock). Pass `'body'` for the legacy
-   * `body { overflow: hidden }` lock, or `'none'` to leave page scrolling alone.
-   */
-  scrollLock?: 'events' | 'body' | 'none';
-}
-
-const props = withDefaults(defineProps<ExtendedProps>(), {
+const props = withDefaults(defineProps<ATellInputProps>(), {
   placeholder: 'Phone number',
   size: DEFAULT_SIZE,
   detectCountry: 'auto',
@@ -332,13 +290,6 @@ const effectivePlaceholder = computed(
   () => props.placeholder || required.value?.format_hint || messages.value.phoneInputLabel
 );
 
-const inputSizeClasses = computed(
-  () => `${controlPaddingX[props.size]} ${controlTextSize[props.size]}`
-);
-
-/** Classes for the inline dial-code prefix — a tight `px-2` so it hugs the input digits. */
-const dialPrefixClasses = computed(() => `px-2 ${controlTextSize[props.size]}`);
-
 /* ---------------------------------------------------------------
  * Accessibility — the helper line (hint or error) lives in a single
  * `aria-live` region; the input's `aria-describedby` points at it
@@ -361,32 +312,18 @@ defineExpose({
 
 <template>
   <div
-    :class="cn('flex w-full flex-col gap-1.5', $attrs.class as string)"
+    :class="cn('a-tell-input', $attrs.class as string)"
+    :data-size="props.size"
+    :data-state="visibleValidationState"
+    :data-show-validation="props.showValidation ? '' : undefined"
     data-slot="tell-input"
     :dir="dirAttr"
   >
     <!-- The field row is forced LTR so its pieces (dial prefix, digits, flag trigger) keep
          the same order regardless of page direction — phone numbers read left-to-right. -->
-    <div class="flex items-center gap-2" dir="ltr">
+    <div class="a-tell-input__row" dir="ltr">
       <div
-        :class="
-          cn(
-            aTellInputVariants({ size: props.size }),
-            'focus-within:ring-2 focus-within:ring-offset-0',
-            // Validation field colors are an opt-in via `showValidation` — by default the
-            // field stays neutral and the consumer drives error rendering from `validation`.
-            (!props.showValidation || visibleValidationState === 'idle') &&
-              'focus-within:ring-ring/40',
-            props.showValidation &&
-              visibleValidationState === 'valid' &&
-              'border-emerald-500/60 ring-1 ring-emerald-500/20 focus-within:ring-emerald-500/40',
-            props.showValidation &&
-              visibleValidationState === 'error' &&
-              'border-destructive/80 ring-1 ring-destructive/20 focus-within:ring-destructive/40',
-            props.class,
-            props.fieldClass
-          )
-        "
+        :class="cn('a-tell-input__field', props.class, props.fieldClass)"
         :data-state="visibleValidationState"
       >
         <slot name="prefix" />
@@ -396,7 +333,7 @@ defineExpose({
           data-slot="tell-input-dial"
           dir="ltr"
           aria-hidden="true"
-          :class="cn('text-muted-foreground shrink-0 tabular-nums select-none', dialPrefixClasses)"
+          class="a-tell-input__dial"
         >
           {{ selectedDialCode }}
         </span>
@@ -413,14 +350,8 @@ defineExpose({
           :aria-label="messages.phoneInputLabel"
           :aria-invalid="visibleValidationState === 'error' || undefined"
           :aria-describedby="describedBy"
-          :class="
-            cn(
-              'placeholder:text-muted-foreground h-full w-full min-w-0 flex-1 bg-transparent tabular-nums outline-none disabled:cursor-not-allowed',
-              inputSizeClasses,
-              selectedDialCode && 'ps-1',
-              props.inputClass
-            )
-          "
+          :class="cn('a-tell-input__input', props.inputClass)"
+          :data-has-dial="selectedDialCode ? '' : undefined"
           @input="handlePhoneInput"
           @change="handlePhoneChange"
         />
@@ -428,41 +359,27 @@ defineExpose({
         <!-- Detection-in-flight spinner — shown only during the first debounce window,
              before the picker has appeared. Once the picker is visible (success OR a failed
              attempt that revealed the empty picker) we stop re-flashing on every keystroke. -->
-        <Transition
-          enter-active-class="transition-all duration-200 ease-out overflow-hidden"
-          leave-active-class="transition-all duration-150 ease-in overflow-hidden"
-          enter-from-class="opacity-0 max-w-0"
-          leave-to-class="opacity-0 max-w-0"
-          enter-to-class="max-w-[2.5rem]"
-          leave-from-class="max-w-[2.5rem]"
-        >
+        <Transition name="a-tell-detect">
           <div
             v-if="isDetecting && !selectedIso2 && !detectionAttempted"
-            class="text-muted-foreground inline-flex h-full shrink-0 items-center px-2"
+            class="a-tell-input__detecting"
             aria-hidden="true"
             data-slot="tell-input-detecting"
           >
             <slot name="detecting">
-              <Loader2 class="size-4 animate-spin" />
+              <SpinnerIcon class="a-tell-input__detecting-icon" />
             </slot>
           </div>
         </Transition>
 
-        <Transition
-          enter-active-class="transition-all duration-200 ease-out overflow-hidden"
-          leave-active-class="transition-all duration-150 ease-in overflow-hidden"
-          enter-from-class="opacity-0 max-w-0"
-          leave-to-class="opacity-0 max-w-0"
-          enter-to-class="max-w-[12rem]"
-          leave-from-class="max-w-[12rem]"
-        >
+        <Transition name="a-tell-country">
           <!-- Wrapper div gives the <Transition> a single element root to animate.
                ACountrySelect's root is the AResponsivePopover fragment (Popover/Drawer
                swap), which a Transition can't animate directly — without this wrapper
                Vue logs "Component inside <Transition> renders non-element root node". -->
           <div
             v-if="!props.detectFromInput || selectedIso2 || detectionAttempted"
-            class="inline-flex h-full shrink-0 items-center"
+            class="a-tell-input__country-wrapper"
             data-slot="tell-input-country-wrapper"
           >
             <ACountrySelect
@@ -517,22 +434,16 @@ defineExpose({
         <slot name="suffix" :validation-state="validationState" :validation="validation" />
       </div>
 
-      <Transition
-        v-if="props.showValidationIcon"
-        enter-active-class="transition duration-150 ease-out"
-        leave-active-class="transition duration-100 ease-in"
-        enter-from-class="opacity-0 scale-90"
-        leave-to-class="opacity-0 scale-90"
-      >
+      <Transition v-if="props.showValidationIcon" name="a-tell-icon">
         <slot v-if="visibleValidationState === 'valid'" name="valid-icon">
-          <CheckCircle2 class="size-5 shrink-0 text-emerald-500" aria-hidden="true" />
+          <CheckCircleIcon class="a-tell-input__icon a-tell-input__icon--valid" />
         </slot>
         <slot
           v-else-if="visibleValidationState === 'error'"
           name="error-icon"
           :reason="validation.reason ?? ''"
         >
-          <AlertCircle class="text-destructive size-5 shrink-0" aria-hidden="true" />
+          <AlertCircleIcon class="a-tell-input__icon a-tell-input__icon--error" />
         </slot>
       </Transition>
     </div>
@@ -547,7 +458,7 @@ defineExpose({
       >
         <p
           data-slot="tell-input-error"
-          :class="cn('text-destructive text-xs', props.errorClass)"
+          :class="cn('a-tell-input__error', props.errorClass)"
           role="alert"
         >
           {{ errorMessage }}
@@ -560,13 +471,272 @@ defineExpose({
         :format-hint="required!.format_hint"
         :example="required!.example_e164"
       >
-        <p
-          data-slot="tell-input-hint"
-          :class="cn('text-muted-foreground text-xs tabular-nums', props.hintClass)"
-        >
+        <p data-slot="tell-input-hint" :class="cn('a-tell-input__hint', props.hintClass)">
           {{ required!.format_hint }}
         </p>
       </slot>
     </div>
   </div>
 </template>
+
+<style scoped>
+/* ------------------------------------------------------------
+ * ATellInput — scoped CSS. All colors map to the global
+ * --ak-ui-* design tokens (defined in assets/styles.src.css) so
+ * dark mode + consumer theme overrides keep working.
+ * ---------------------------------------------------------- */
+.a-tell-input {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.a-tell-input__row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.a-tell-input__field {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  overflow: hidden;
+  border: 1px solid hsl(var(--ak-ui-input));
+  background: hsl(var(--ak-ui-background));
+  border-radius: calc(var(--ak-ui-radius) - 2px);
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  transition:
+    border-color 150ms,
+    box-shadow 150ms;
+}
+
+.a-tell-input__field:focus-within {
+  outline: none;
+  box-shadow: 0 0 0 2px hsl(var(--ak-ui-ring) / 0.4);
+}
+
+.a-tell-input__field:has(input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Validation field colors — opt-in via `data-show-validation` on the root. */
+.a-tell-input[data-show-validation] .a-tell-input__field[data-state='valid'] {
+  border-color: rgb(16 185 129 / 0.6);
+  box-shadow: 0 0 0 1px rgb(16 185 129 / 0.2);
+}
+.a-tell-input[data-show-validation] .a-tell-input__field[data-state='valid']:focus-within {
+  box-shadow: 0 0 0 2px rgb(16 185 129 / 0.4);
+}
+.a-tell-input[data-show-validation] .a-tell-input__field[data-state='error'] {
+  border-color: hsl(var(--ak-ui-destructive) / 0.8);
+  box-shadow: 0 0 0 1px hsl(var(--ak-ui-destructive) / 0.2);
+}
+.a-tell-input[data-show-validation] .a-tell-input__field[data-state='error']:focus-within {
+  box-shadow: 0 0 0 2px hsl(var(--ak-ui-destructive) / 0.4);
+}
+
+/* Size variants — values mirror the shared Size scale (see utils/sizes.ts). */
+.a-tell-input[data-size='xs'] .a-tell-input__field {
+  height: 1.75rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+.a-tell-input[data-size='sm'] .a-tell-input__field {
+  height: 2.25rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+.a-tell-input[data-size='md'] .a-tell-input__field {
+  height: 43px;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+.a-tell-input[data-size='lg'] .a-tell-input__field {
+  height: 52px;
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+.a-tell-input[data-size='xl'] .a-tell-input__field {
+  height: 60px;
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+
+.a-tell-input__dial {
+  flex-shrink: 0;
+  color: hsl(var(--ak-ui-muted-foreground));
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+  padding: 0 0.5rem;
+}
+.a-tell-input[data-size='xs'] .a-tell-input__dial {
+  font-size: 0.75rem;
+}
+.a-tell-input[data-size='sm'] .a-tell-input__dial,
+.a-tell-input[data-size='md'] .a-tell-input__dial {
+  font-size: 0.875rem;
+}
+.a-tell-input[data-size='lg'] .a-tell-input__dial,
+.a-tell-input[data-size='xl'] .a-tell-input__dial {
+  font-size: 1rem;
+}
+
+.a-tell-input__input {
+  height: 100%;
+  width: 100%;
+  min-width: 0;
+  flex: 1;
+  background: transparent;
+  font-variant-numeric: tabular-nums;
+  outline: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+}
+
+.a-tell-input__input::placeholder {
+  color: hsl(var(--ak-ui-muted-foreground));
+}
+.a-tell-input__input:disabled {
+  cursor: not-allowed;
+}
+.a-tell-input__input[data-has-dial] {
+  padding-inline-start: 0.25rem;
+}
+
+/* Per-size horizontal padding for the input itself. */
+.a-tell-input[data-size='xs'] .a-tell-input__input {
+  padding-inline: 0.5rem;
+}
+.a-tell-input[data-size='sm'] .a-tell-input__input {
+  padding-inline: 0.625rem;
+}
+.a-tell-input[data-size='md'] .a-tell-input__input {
+  padding-inline: 0.75rem;
+}
+.a-tell-input[data-size='lg'] .a-tell-input__input {
+  padding-inline: 0.875rem;
+}
+.a-tell-input[data-size='xl'] .a-tell-input__input {
+  padding-inline: 1rem;
+}
+/* When the dial prefix is present, the input already inherits ps-1 via [data-has-dial]; collapse start padding. */
+.a-tell-input__input[data-has-dial] {
+  padding-inline-start: 0.25rem;
+}
+
+.a-tell-input__detecting {
+  display: inline-flex;
+  height: 100%;
+  flex-shrink: 0;
+  align-items: center;
+  padding: 0 0.5rem;
+  color: hsl(var(--ak-ui-muted-foreground));
+}
+.a-tell-input__detecting-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.a-tell-input__country-wrapper {
+  display: inline-flex;
+  height: 100%;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.a-tell-input__icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+}
+.a-tell-input__icon--valid {
+  color: rgb(16 185 129);
+}
+.a-tell-input__icon--error {
+  color: hsl(var(--ak-ui-destructive));
+}
+
+.a-tell-input__error {
+  color: hsl(var(--ak-ui-destructive));
+  font-size: 0.75rem;
+  line-height: 1rem;
+  margin: 0;
+}
+
+.a-tell-input__hint {
+  color: hsl(var(--ak-ui-muted-foreground));
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-variant-numeric: tabular-nums;
+  margin: 0;
+}
+
+/* Detecting spinner transition (collapsible width + fade). */
+.a-tell-detect-enter-active {
+  transition:
+    opacity 200ms ease-out,
+    max-width 200ms ease-out;
+  overflow: hidden;
+}
+.a-tell-detect-leave-active {
+  transition:
+    opacity 150ms ease-in,
+    max-width 150ms ease-in;
+  overflow: hidden;
+}
+.a-tell-detect-enter-from,
+.a-tell-detect-leave-to {
+  opacity: 0;
+  max-width: 0;
+}
+.a-tell-detect-enter-to,
+.a-tell-detect-leave-from {
+  opacity: 1;
+  max-width: 2.5rem;
+}
+
+/* Country picker reveal/hide transition. */
+.a-tell-country-enter-active {
+  transition:
+    opacity 200ms ease-out,
+    max-width 200ms ease-out;
+  overflow: hidden;
+}
+.a-tell-country-leave-active {
+  transition:
+    opacity 150ms ease-in,
+    max-width 150ms ease-in;
+  overflow: hidden;
+}
+.a-tell-country-enter-from,
+.a-tell-country-leave-to {
+  opacity: 0;
+  max-width: 0;
+}
+.a-tell-country-enter-to,
+.a-tell-country-leave-from {
+  opacity: 1;
+  max-width: 12rem;
+}
+
+/* Validation icon swap. */
+.a-tell-icon-enter-active {
+  transition:
+    opacity 150ms ease-out,
+    transform 150ms ease-out;
+}
+.a-tell-icon-leave-active {
+  transition:
+    opacity 100ms ease-in,
+    transform 100ms ease-in;
+}
+.a-tell-icon-enter-from,
+.a-tell-icon-leave-to {
+  opacity: 0;
+  transform: scale(0.9);
+}
+</style>

@@ -4,13 +4,15 @@ import { useMediaQuery } from '@vueuse/core';
 import { APopover } from '@/entries/popover';
 import { ADrawer } from '@/entries/drawer';
 import { provideResponsivePopoverContext } from '../composables/useResponsivePopoverContext';
-import type { AResponsivePopoverProps } from '../types';
+import type { AResponsivePopoverProps, AResponsivePopoverSlots } from '../types';
 
 const props = withDefaults(defineProps<AResponsivePopoverProps>(), {
   breakpoint: '(min-width: 768px)',
   modal: true,
   scrollLock: 'events',
 });
+
+defineSlots<AResponsivePopoverSlots>();
 
 const open = defineModel<boolean>('open');
 

@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
-import { Phone, ShieldCheck, ShieldX, Sparkles } from 'lucide-vue-next';
+import { PhoneIcon, ShieldCheckIcon, ShieldXIcon, SparklesIcon } from '~/components/icons';
 import {
   ATellInput,
   defaultFlagUrl,
   type CountryOption,
   type FlagUrlBuilder,
-} from '@alikhalilll/ui';
+} from '@alikhalilll/ui/tell-input';
 
 const phone = ref('');
 const country = ref<number | null>(null);
@@ -21,7 +21,7 @@ const size = ref<'xs' | 'sm' | 'md' | 'lg' | 'xl'>('md');
 
 /* Customization showcase — second instance demonstrating slots + override props. */
 const customPhone = ref('');
-const customCountry = ref('');
+const customCountry = ref<number | null>(null);
 
 /* i18n showcase — Arabic locale, RTL, localized messages. */
 const i18nPhone = ref('');
@@ -255,17 +255,17 @@ watch(theme, (t) => applyTheme(t));
           :detector="alwaysEgypt"
         >
           <template #prefix>
-            <Phone class="text-muted-foreground me-1 ms-2 size-4 shrink-0" />
+            <PhoneIcon class="text-muted-foreground me-1 ms-2 size-4 shrink-0" />
           </template>
           <template #valid-icon>
-            <Sparkles class="size-5 text-amber-400" />
+            <SparklesIcon class="size-5 text-amber-400" />
           </template>
           <template #error-icon>
-            <ShieldX class="text-destructive size-5" />
+            <ShieldXIcon class="text-destructive size-5" />
           </template>
           <template #hint="{ formatHint }">
             <p class="text-muted-foreground flex items-center gap-1 text-xs">
-              <ShieldCheck class="size-3" />
+              <ShieldCheckIcon class="size-3" />
               <span>Example · </span>
               <span class="tabular-nums">{{ formatHint }}</span>
             </p>
@@ -280,7 +280,7 @@ watch(theme, (t) => applyTheme(t));
             </p>
           </template>
           <template #item-check>
-            <Sparkles class="size-3.5 text-amber-400" />
+            <SparklesIcon class="size-3.5 text-amber-400" />
           </template>
         </ATellInput>
       </div>

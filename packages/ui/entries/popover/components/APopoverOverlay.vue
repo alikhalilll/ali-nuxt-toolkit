@@ -1,23 +1,11 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from 'vue';
 import { onBeforeUnmount, onMounted } from 'vue';
 import { cn } from '@/utils';
+import type { APopoverOverlayProps } from '../types';
 
 defineOptions({ inheritAttrs: false });
 
-const props = withDefaults(
-  defineProps<{
-    class?: HTMLAttributes['class'];
-    /**
-     * When true, set `body { overflow: hidden; touchAction: none }` for the lifetime of
-     * the overlay. Off by default because it breaks `position: sticky` on the host page.
-     * Prefer the event-based lock (see `AResponsivePopover`'s `scrollLock` prop) which
-     * keeps the page scrollbar in place.
-     */
-    lockScroll?: boolean;
-  }>(),
-  { lockScroll: false }
-);
+const props = withDefaults(defineProps<APopoverOverlayProps>(), { lockScroll: false });
 
 let prevBodyOverflow = '';
 let prevBodyTouchAction = '';

@@ -28,3 +28,12 @@ export interface AResponsivePopoverProps {
 export type AResponsivePopoverEmits = {
   'update:open': [value: boolean | undefined];
 };
+
+/**
+ * Slot prop shape for {@link AResponsivePopover}. The default slot receives
+ * `isDesktop` so consumers can branch content on the active breakpoint without
+ * a separate `useMediaQuery` call.
+ */
+export interface AResponsivePopoverSlots {
+  default?: (props: { isDesktop: boolean }) => unknown;
+}

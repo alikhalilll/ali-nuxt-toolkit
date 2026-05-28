@@ -1,18 +1,16 @@
 /**
- * verify-exports.mjs
+ * verify-exports.ts
  *
  * Lightweight gate that proves the published `exports` map is consumer-clean:
  *   1. Every subpath listed in package.json's `exports` resolves to files
  *      that actually exist on disk (no broken `./dist/foo.d.ts` references).
  *   2. Every `.d.ts` reachable through `exports` is non-empty and contains
  *      at least one `export` keyword.
- *   3. The bundled .d.ts chunks are free of `__VLS_WithSlots` (re-asserts
- *      the strip-vls-wrapper.mjs gate after a build).
+ *   3. The emitted `.d.ts` files are free of `__VLS_WithSlots` (re-asserts
+ *      the strip-vls-wrapper.ts gate after a build).
  *
  * Run after `pnpm build`. Designed to be cheap (no `tsc` invocation) so it
- * can sit in `prepack` without adding seconds. Replaces what was previously
- * `validate-dts.mjs` — now broader (covers exports, not just emitted `.d.ts`)
- * and works against the new tsdown layout.
+ * can sit in `prepack` without adding seconds.
  *
  * NOTE: this is NOT a full replacement for `attw`. When @arethetypeswrong/cli
  * is unblocked in this env we should add it as an additional gate. For now,

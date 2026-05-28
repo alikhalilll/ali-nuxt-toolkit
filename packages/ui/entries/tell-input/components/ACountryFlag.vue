@@ -1,24 +1,11 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from 'vue';
 import { computed, ref, watch } from 'vue';
 import { cn } from '@/utils';
-import { defaultFlagUrl, type FlagUrlBuilder } from '../utils/flag-url';
+import { defaultFlagUrl } from '../utils/flag-url';
+import type { ACountryFlagProps, ACountryFlagSlots } from '../utils/types';
 
-const props = withDefaults(
-  defineProps<{
-    /** ISO 3166-1 alpha-2 country code, case-insensitive. */
-    iso2: string;
-    /** Pixel width served by flagcdn. 40 is crisp at retina up to ~24px wide. */
-    width?: number;
-    /** Optional explicit URL override. When set, `iso2` / `width` / `flagUrl` are ignored. */
-    src?: string | null;
-    /** Function `(iso2, width) => string` — fully replace the URL builder. */
-    flagUrl?: FlagUrlBuilder;
-    alt?: string;
-    class?: HTMLAttributes['class'];
-  }>(),
-  { width: 40 }
-);
+const props = withDefaults(defineProps<ACountryFlagProps>(), { width: 40 });
+defineSlots<ACountryFlagSlots>();
 
 const url = computed(() => {
   if (props.src) return props.src;
@@ -43,26 +30,49 @@ const iso2Label = computed(() => (props.iso2 ?? '').slice(0, 2).toUpperCase());
     :alt="props.alt ?? `${props.iso2} flag`"
     loading="lazy"
     data-slot="country-flag"
-    :class="cn('ring-border/40 inline-block h-4 w-6 rounded-sm object-cover ring-1', props.class)"
+    :class="cn('a-country-flag', props.class)"
     @error="failed = true"
   />
   <span
     v-else-if="iso2Label"
     data-slot="country-flag-fallback"
     :aria-label="props.alt ?? `${props.iso2} flag`"
-    :class="
-      cn(
-        'ring-border/40 bg-muted text-muted-foreground inline-flex h-4 w-6 items-center justify-center rounded-sm text-[8px] font-semibold leading-none tracking-tight ring-1',
-        props.class
-      )
-    "
+    :class="cn('a-country-flag a-country-flag--fallback', props.class)"
   >
     {{ iso2Label }}
   </span>
   <slot v-else name="empty">
     <span
       data-slot="country-flag-empty"
-      :class="cn('bg-muted inline-block h-4 w-6 rounded-sm', props.class)"
+      :class="cn('a-country-flag a-country-flag--empty', props.class)"
     />
   </slot>
 </template>
+
+<style scoped>
+.a-country-flag {
+  display: inline-block;
+  width: 1.5rem;
+  height: 1rem;
+  border-radius: 0.125rem;
+  object-fit: cover;
+  box-shadow: 0 0 0 1px hsl(var(--ak-ui-border) / 0.4);
+}
+
+.a-country-flag--fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: hsl(var(--ak-ui-muted));
+  color: hsl(var(--ak-ui-muted-foreground));
+  font-size: 8px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.025em;
+}
+
+.a-country-flag--empty {
+  background: hsl(var(--ak-ui-muted));
+  box-shadow: none;
+}
+</style>

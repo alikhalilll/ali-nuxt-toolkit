@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { ChevronDown } from 'lucide-vue-next';
+import { ChevronDownIcon } from '~/components/icons';
 import { ATellInput } from '@alikhalilll/ui';
 
 const phone = ref('');
@@ -23,7 +23,7 @@ const minimalTheme = {
 
 const source = `<script setup lang="ts">
 import { ref } from 'vue';
-import { ChevronDown } from 'lucide-vue-next';
+import { ChevronDownIcon } from '~/components/icons';
 import { ATellInput } from '@alikhalilll/ui';
 
 const phone = ref('');
@@ -68,7 +68,7 @@ const minimalTheme = {
           class="inline-flex h-full items-center gap-1 border-r border-input bg-transparent px-2 font-mono text-[11px] tracking-wider transition-colors hover:bg-muted"
         >
           <span class="font-semibold">{{ selectedCountry?.raw_data.iso2 ?? '??' }}</span>
-          <ChevronDown class="size-3 transition-transform" :class="open && 'rotate-180'" />
+          <ChevronDownIcon class="size-3 transition-transform" :class="open && 'rotate-180'" />
         </button>
       </template>
     </ATellInput>

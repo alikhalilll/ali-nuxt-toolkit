@@ -62,6 +62,14 @@ export default [
       'no-debugger': 'error',
       'no-unused-vars': 'off',
 
+      // `interface AFoo extends BarProps {}` is a deliberate pattern for the
+      // toolkit's wrapper components — it gives consumers a first-class named
+      // type they can declaration-merge into, instead of a bare `type` alias.
+      '@typescript-eslint/no-empty-object-type': [
+        'error',
+        { allowInterfaces: 'with-single-extends' },
+      ],
+
       '@typescript-eslint/no-unused-vars': [
         'warn',
         {
@@ -79,7 +87,7 @@ export default [
 
   // 5. Node.js ESM scripts — process/global are available, console is intentional
   {
-    files: ['scripts/**/*.{js,mjs}', '**/scripts/**/*.{js,mjs}'],
+    files: ['scripts/**/*.{js,mjs,ts}', '**/scripts/**/*.{js,mjs,ts}'],
     languageOptions: {
       globals: { ...globals.node },
     },

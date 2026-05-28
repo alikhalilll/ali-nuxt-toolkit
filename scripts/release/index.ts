@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 import { checkbox, confirm, password, select } from '@inquirer/prompts';
-import { parseArgs, validateBump } from './cli.mjs';
+import { parseArgs, validateBump } from './cli.ts';
 import {
   BUMP_TYPES,
   DEFAULT_BRANCH,
   DEFAULT_DIST_TAG,
   PUBLISHABLE_PACKAGES,
   ROOT,
-} from './constants.mjs';
-import { capture } from './exec.mjs';
+} from '../lib/constants.ts';
+import { capture } from '../lib/exec.ts';
 import {
   commitAll,
   createTag,
@@ -18,9 +18,9 @@ import {
   pushBranch,
   pushTag,
   tagExists,
-} from './git.mjs';
-import { createGithubRelease, ghAvailable } from './github.mjs';
-import { die, divider, fail, header, info, step, success, warn } from './logger.mjs';
+} from './git.ts';
+import { createGithubRelease, ghAvailable } from './github.ts';
+import { die, divider, fail, header, info, step, success, warn } from '../lib/logger.ts';
 import {
   bumpVersion,
   packagePath,
@@ -28,7 +28,7 @@ import {
   runPnpm,
   setVersion,
   versionPublished,
-} from './package.mjs';
+} from './package.ts';
 
 async function pickInteractive(cliPackages, cliBump, cliTag) {
   const packages =

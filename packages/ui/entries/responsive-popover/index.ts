@@ -2,4 +2,9 @@ export { default as AResponsivePopover } from './components/AResponsivePopover.v
 export { default as AResponsivePopoverTrigger } from './components/AResponsivePopoverTrigger.vue';
 export { default as AResponsivePopoverContent } from './components/AResponsivePopoverContent.vue';
 
-export type { AResponsivePopoverProps, AResponsivePopoverEmits, ScrollLockMode } from './types';
+export type {
+  AResponsivePopoverProps,
+  AResponsivePopoverEmits,
+  AResponsivePopoverSlots,
+  ScrollLockMode,
+} from './types';

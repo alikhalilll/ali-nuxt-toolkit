@@ -4,8 +4,8 @@ import {
   DEFAULT_BRANCH,
   DEFAULT_DIST_TAG,
   PUBLISHABLE_PACKAGES,
-} from './constants.mjs';
-import { die } from './logger.mjs';
+} from '../lib/constants.ts';
+import { die } from '../lib/logger.ts';
 
 export function parseArgs(argv = process.argv.slice(2)) {
   const parsed = minimist(argv, {

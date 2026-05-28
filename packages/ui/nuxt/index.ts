@@ -1,4 +1,5 @@
-import { defineNuxtModule, addComponent, type NuxtModule } from '@nuxt/kit';
+import { defineNuxtModule, addComponent } from '@nuxt/kit';
+import type { NuxtModule } from '@nuxt/schema';
 
 /**
  * `@alikhalilll/ui/nuxt` — registers every component shipped by the toolkit
@@ -53,9 +54,10 @@ const COMPONENTS: Record<string, string> = {
   AResponsivePopoverTrigger: 'responsive-popover',
 };
 
-// Explicit annotation: `defineNuxtModule` infers a return type that references
-// `@nuxt/schema` symbols that aren't part of `@nuxt/kit`'s public exports. Without
-// the annotation, rolldown-plugin-dts (TS2742) refuses to portably emit the .d.ts.
+// Explicit annotation: without it TS2742 — `defineNuxtModule`'s inferred return
+// type names symbols from `@nuxt/schema` via its transitive types, and `vue-tsc`
+// refuses to emit a portable declaration when the inferred name isn't directly
+// importable. The local re-import resolves to the same shape `@nuxt/kit` ships.
 const module: NuxtModule<ModuleOptions> = defineNuxtModule<ModuleOptions>({
   meta: {
     name: '@alikhalilll/ui',
