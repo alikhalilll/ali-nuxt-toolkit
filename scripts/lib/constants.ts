@@ -8,8 +8,38 @@ export const ROOT = path.resolve(here, '..', '..');
 export const PACKAGES_DIR = path.join(ROOT, 'packages');
 
 /** Directory names under `packages/` that are publishable. */
-export const PUBLISHABLE_PACKAGES = ['api-provider', 'crypto', 'auto-middleware', 'ui'] as const;
+export const PUBLISHABLE_PACKAGES = [
+  'api-provider',
+  'crypto',
+  'auto-middleware',
+  'a-ui-base',
+  'a-input',
+  'a-popover',
+  'a-drawer',
+  'a-responsive-popover',
+  'a-tel-input',
+] as const;
 export type PublishablePackage = (typeof PUBLISHABLE_PACKAGES)[number];
+
+/**
+ * Packages nested under `packages/ui-components/`, mapping the publishable npm
+ * name (kebab, what consumers import) → on-disk folder name. Component folders
+ * are PascalCase (`ATelInput`) while the package stays `@alikhalilll/a-tel-input`.
+ */
+const UI_COMPONENT_DIRS: Record<string, string> = {
+  'a-ui-base': 'AUiBase',
+  'a-input': 'AInput',
+  'a-popover': 'APopover',
+  'a-drawer': 'ADrawer',
+  'a-responsive-popover': 'AResponsivePopover',
+  'a-tel-input': 'ATelInput',
+};
+
+/** Absolute directory for a publishable package, accounting for the nested ui-components set. */
+export function packageDir(name: string): string {
+  const nested = UI_COMPONENT_DIRS[name];
+  return nested ? path.join(PACKAGES_DIR, 'ui-components', nested) : path.join(PACKAGES_DIR, name);
+}
 
 /**
  * Per-package `attw` ignore lists for `runDistValidation`. Side-effect-only
@@ -22,7 +52,12 @@ export const ATTW_IGNORE_NO_RESOLUTION: Record<PublishablePackage, string[]> = {
   'api-provider': [],
   'auto-middleware': [],
   crypto: [],
-  ui: ['./styles.css', './assets/styles.css'],
+  'a-ui-base': ['./tokens.css', './theme.css'],
+  'a-input': ['./styles.css'],
+  'a-popover': ['./styles.css'],
+  'a-drawer': ['./styles.css'],
+  'a-responsive-popover': ['./styles.css'],
+  'a-tel-input': ['./styles.css'],
 };
 
 export const BUMP_TYPES = ['patch', 'minor', 'major', 'prerelease', 'none'] as const;

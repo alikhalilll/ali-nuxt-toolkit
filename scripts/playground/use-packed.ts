@@ -106,10 +106,20 @@ async function rewriteToFileDeps(tarballs) {
     }
   }
 
+  // Internal packages depend on each other (e.g. a-tel-input → a-ui-base) via the
+  // version pnpm bakes into the tarball — those transitive specifiers would hit the
+  // (unpublished) npm registry and 404. pnpm.overrides forces every internal package
+  // to resolve to its local tarball, transitively included.
+  const overrides = Object.fromEntries(
+    Object.entries(tarballs).map(([name, t]) => [name, `file:./.tarballs/${t.filename}`])
+  );
+  pkg.pnpm = { ...pkg.pnpm, overrides: { ...(pkg.pnpm?.overrides ?? {}), ...overrides } };
+
   await writeJson(PLAYGROUND_PKG, pkg);
   console.log(
     pc.green('✓') +
-      ` Rewrote ${changed} dep(s) in ${path.relative(ROOT, PLAYGROUND_PKG)} → file:./.tarballs/...`
+      ` Rewrote ${changed} dep(s) + ${Object.keys(overrides).length} override(s) in ` +
+      `${path.relative(ROOT, PLAYGROUND_PKG)} → file:./.tarballs/...`
   );
 }
 
@@ -126,6 +136,15 @@ async function rewriteToWorkspaceDeps() {
       deps[name] = 'workspace:*';
       changed++;
     }
+  }
+
+  // Drop the file: overrides added by --use-packed.
+  if (pkg.pnpm?.overrides) {
+    for (const name of Object.keys(pkg.pnpm.overrides)) {
+      if (name.startsWith(INTERNAL_PREFIX)) delete pkg.pnpm.overrides[name];
+    }
+    if (Object.keys(pkg.pnpm.overrides).length === 0) delete pkg.pnpm.overrides;
+    if (pkg.pnpm && Object.keys(pkg.pnpm).length === 0) delete pkg.pnpm;
   }
 
   await writeJson(PLAYGROUND_PKG, pkg);

@@ -8,7 +8,7 @@
  *
  * Each package's local `scripts/validate/validate-dist.mjs` is a 5-line wrapper
  * that calls `runDistValidation({ pkgRoot })`. Package-specific quirks (e.g.
- * extra ignored entrypoints like `./styles.css` for @alikhalilll/ui) are passed
+ * extra ignored entrypoints like `./styles.css` for @alikhalilll/a-*) are passed
  * in via the `ignoreNoResolutionEntrypoints` option.
  */
 import fs from 'node:fs/promises';
@@ -124,14 +124,32 @@ async function runAttw(pkgRoot, { ignoreNoResolutionEntrypoints }) {
   console.log('\n' + pc.green('  ✓') + ' ' + pc.bold('attw passed.'));
 }
 
+/**
+ * publint and `attw --pack` each run `pnpm pack`, which drops a `<name>-<ver>.tgz`
+ * in the package dir — and attw doesn't clean it up when it crashes on the fflate
+ * gunzip bug. Remove any stray tarballs so they don't pile up in the working tree.
+ */
+async function removeStrayTarballs(pkgRoot) {
+  const entries = await fs.readdir(pkgRoot);
+  await Promise.all(
+    entries
+      .filter((f) => f.endsWith('.tgz'))
+      .map((f) => fs.rm(path.join(pkgRoot, f), { force: true }))
+  );
+}
+
 export async function runDistValidation({ pkgRoot, ignoreNoResolutionEntrypoints = [] } = {}) {
   if (!pkgRoot) throw new Error('runDistValidation: `pkgRoot` is required');
 
   const pkgJson = JSON.parse(await fs.readFile(path.join(pkgRoot, 'package.json'), 'utf8'));
   console.log('\n' + pc.bold(pc.blue(`🔍 ${pkgJson.name}@${pkgJson.version} — dist validation`)));
 
-  await runPublint(pkgRoot);
-  await runAttw(pkgRoot, { ignoreNoResolutionEntrypoints });
+  try {
+    await runPublint(pkgRoot);
+    await runAttw(pkgRoot, { ignoreNoResolutionEntrypoints });
+  } finally {
+    await removeStrayTarballs(pkgRoot);
+  }
 
   console.log('\n' + pc.bold(pc.green('═'.repeat(60))));
   console.log(pc.bold(pc.green('  ✓  All dist checks passed.')));

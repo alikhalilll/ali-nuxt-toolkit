@@ -8,6 +8,9 @@ importers:
 
   .:
     devDependencies:
+      '@ampproject/remapping':
+        specifier: ^2.3.0
+        version: 2.3.0
       '@arethetypeswrong/cli':
         specifier: 0.18.2
         version: 0.18.2
@@ -59,6 +62,9 @@ importers:
       lint-staged:
         specifier: ^15.5.0
         version: 15.5.2
+      magic-string:
+        specifier: ^0.30.21
+        version: 0.30.21
       minimist:
         specifier: ^1.2.8
         version: 1.2.8
@@ -86,6 +92,24 @@ importers:
 
   apps/docs:
     dependencies:
+      '@alikhalilll/a-drawer':
+        specifier: workspace:*
+        version: link:../../packages/ui-components/ADrawer
+      '@alikhalilll/a-input':
+        specifier: workspace:*
+        version: link:../../packages/ui-components/AInput
+      '@alikhalilll/a-popover':
+        specifier: workspace:*
+        version: link:../../packages/ui-components/APopover
+      '@alikhalilll/a-responsive-popover':
+        specifier: workspace:*
+        version: link:../../packages/ui-components/AResponsivePopover
+      '@alikhalilll/a-tel-input':
+        specifier: workspace:*
+        version: link:../../packages/ui-components/ATelInput
+      '@alikhalilll/a-ui-base':
+        specifier: workspace:*
+        version: link:../../packages/ui-components/AUiBase
       '@alikhalilll/nuxt-api-provider':
         specifier: workspace:*
         version: link:../../packages/api-provider
@@ -95,9 +119,6 @@ importers:
       '@alikhalilll/nuxt-crypto':
         specifier: workspace:*
         version: link:../../packages/crypto
-      '@alikhalilll/ui':
-        specifier: workspace:*
-        version: link:../../packages/ui
       '@nuxt/content':
         specifier: ^3.0.0
         version: 3.13.0(better-sqlite3@12.9.0)(magicast@0.5.2)
@@ -202,26 +223,14 @@ importers:
         specifier: 0.3.0
         version: 0.3.0(synckit@0.11.12)
 
-  packages/ui:
+  packages/ui-components/ADrawer:
     dependencies:
-      '@vueuse/core':
-        specifier: ^14.0.0
-        version: 14.3.0(vue@3.5.32(typescript@5.9.3))
-      class-variance-authority:
-        specifier: ^0.7.1
-        version: 0.7.1
-      clsx:
-        specifier: ^2.1.1
-        version: 2.1.1
-      libphonenumber-js:
-        specifier: ^1.12.0
-        version: 1.13.2
+      '@alikhalilll/a-ui-base':
+        specifier: workspace:*
+        version: link:../AUiBase
       reka-ui:
         specifier: ^2.9.0
         version: 2.9.7(vue@3.5.32(typescript@5.9.3))
-      tailwind-merge:
-        specifier: ^2.6.0
-        version: 2.6.1
       vaul-vue:
         specifier: ^0.4.0
         version: 0.4.1(reka-ui@2.9.7(vue@3.5.32(typescript@5.9.3)))(vue@3.5.32(typescript@5.9.3))
@@ -244,6 +253,9 @@ importers:
       '@types/node':
         specifier: ^22.13.0
         version: 22.19.17
+      '@vueuse/core':
+        specifier: ^14.0.0
+        version: 14.3.0(vue@3.5.32(typescript@5.9.3))
       magic-string:
         specifier: ^0.30.21
         version: 0.30.21
@@ -252,7 +264,7 @@ importers:
         version: 6.1.3
       tailwindcss:
         specifier: ^4.0.0
-        version: 4.2.2
+        version: 4.3.0
       tsdown:
         specifier: 0.22.0
         version: 0.22.0(@arethetypeswrong/core@0.18.2)(@tsdown/css@0.22.0)(publint@0.3.21)(tsx@4.22.3)(typescript@5.9.3)(unrun@0.3.0(synckit@0.11.12))(vue-tsc@3.3.1(typescript@5.9.3))
@@ -265,9 +277,6 @@ importers:
       unplugin-vue-components:
         specifier: ^32.1.0
         version: 32.1.0(@nuxt/kit@4.4.2(magicast@0.5.2))(vue@3.5.32(typescript@5.9.3))
-      unrun:
-        specifier: 0.3.0
-        version: 0.3.0(synckit@0.11.12)
       vue:
         specifier: ^3.5.0
         version: 3.5.32(typescript@5.9.3)
@@ -275,8 +284,286 @@ importers:
         specifier: ^3.2.4
         version: 3.3.1(typescript@5.9.3)
 
+  packages/ui-components/AInput:
+    dependencies:
+      '@alikhalilll/a-ui-base':
+        specifier: workspace:*
+        version: link:../AUiBase
+    devDependencies:
+      '@ampproject/remapping':
+        specifier: ^2.3.0
+        version: 2.3.0
+      '@nuxt/kit':
+        specifier: ^4.4.2
+        version: 4.4.2(magicast@0.5.2)
+      '@nuxt/schema':
+        specifier: ^4.4.2
+        version: 4.4.2
+      '@tailwindcss/cli':
+        specifier: ^4.0.0
+        version: 4.3.0
+      '@tsdown/css':
+        specifier: 0.22.0
+        version: 0.22.0(jiti@2.6.1)(postcss@8.5.15)(tsdown@0.22.0)(tsx@4.22.3)(yaml@2.8.3)
+      '@types/node':
+        specifier: ^22.13.0
+        version: 22.19.17
+      '@vueuse/core':
+        specifier: ^14.0.0
+        version: 14.3.0(vue@3.5.32(typescript@5.9.3))
+      magic-string:
+        specifier: ^0.30.21
+        version: 0.30.21
+      rimraf:
+        specifier: ^6.0.1
+        version: 6.1.3
+      tailwindcss:
+        specifier: ^4.0.0
+        version: 4.3.0
+      tsdown:
+        specifier: 0.22.0
+        version: 0.22.0(@arethetypeswrong/core@0.18.2)(@tsdown/css@0.22.0)(publint@0.3.21)(tsx@4.22.3)(typescript@5.9.3)(unrun@0.3.0(synckit@0.11.12))(vue-tsc@3.3.1(typescript@5.9.3))
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.3
+      unplugin-vue:
+        specifier: 7.2.0
+        version: 7.2.0(@types/node@22.19.17)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.1)(tsx@4.22.3)(vue@3.5.32(typescript@5.9.3))(yaml@2.8.3)
+      unplugin-vue-components:
+        specifier: ^32.1.0
+        version: 32.1.0(@nuxt/kit@4.4.2(magicast@0.5.2))(vue@3.5.32(typescript@5.9.3))
+      vue:
+        specifier: ^3.5.0
+        version: 3.5.32(typescript@5.9.3)
+      vue-tsc:
+        specifier: ^3.2.4
+        version: 3.3.1(typescript@5.9.3)
+
+  packages/ui-components/APopover:
+    dependencies:
+      '@alikhalilll/a-ui-base':
+        specifier: workspace:*
+        version: link:../AUiBase
+      reka-ui:
+        specifier: ^2.9.0
+        version: 2.9.7(vue@3.5.32(typescript@5.9.3))
+    devDependencies:
+      '@ampproject/remapping':
+        specifier: ^2.3.0
+        version: 2.3.0
+      '@nuxt/kit':
+        specifier: ^4.4.2
+        version: 4.4.2(magicast@0.5.2)
+      '@nuxt/schema':
+        specifier: ^4.4.2
+        version: 4.4.2
+      '@tailwindcss/cli':
+        specifier: ^4.0.0
+        version: 4.3.0
+      '@tsdown/css':
+        specifier: 0.22.0
+        version: 0.22.0(jiti@2.6.1)(postcss@8.5.15)(tsdown@0.22.0)(tsx@4.22.3)(yaml@2.8.3)
+      '@types/node':
+        specifier: ^22.13.0
+        version: 22.19.17
+      '@vueuse/core':
+        specifier: ^14.0.0
+        version: 14.3.0(vue@3.5.32(typescript@5.9.3))
+      magic-string:
+        specifier: ^0.30.21
+        version: 0.30.21
+      rimraf:
+        specifier: ^6.0.1
+        version: 6.1.3
+      tailwindcss:
+        specifier: ^4.0.0
+        version: 4.3.0
+      tsdown:
+        specifier: 0.22.0
+        version: 0.22.0(@arethetypeswrong/core@0.18.2)(@tsdown/css@0.22.0)(publint@0.3.21)(tsx@4.22.3)(typescript@5.9.3)(unrun@0.3.0(synckit@0.11.12))(vue-tsc@3.3.1(typescript@5.9.3))
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.3
+      unplugin-vue:
+        specifier: 7.2.0
+        version: 7.2.0(@types/node@22.19.17)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.1)(tsx@4.22.3)(vue@3.5.32(typescript@5.9.3))(yaml@2.8.3)
+      unplugin-vue-components:
+        specifier: ^32.1.0
+        version: 32.1.0(@nuxt/kit@4.4.2(magicast@0.5.2))(vue@3.5.32(typescript@5.9.3))
+      vue:
+        specifier: ^3.5.0
+        version: 3.5.32(typescript@5.9.3)
+      vue-tsc:
+        specifier: ^3.2.4
+        version: 3.3.1(typescript@5.9.3)
+
+  packages/ui-components/AResponsivePopover:
+    dependencies:
+      '@alikhalilll/a-drawer':
+        specifier: workspace:*
+        version: link:../ADrawer
+      '@alikhalilll/a-popover':
+        specifier: workspace:*
+        version: link:../APopover
+      '@alikhalilll/a-ui-base':
+        specifier: workspace:*
+        version: link:../AUiBase
+    devDependencies:
+      '@ampproject/remapping':
+        specifier: ^2.3.0
+        version: 2.3.0
+      '@nuxt/kit':
+        specifier: ^4.4.2
+        version: 4.4.2(magicast@0.5.2)
+      '@nuxt/schema':
+        specifier: ^4.4.2
+        version: 4.4.2
+      '@tailwindcss/cli':
+        specifier: ^4.0.0
+        version: 4.3.0
+      '@tsdown/css':
+        specifier: 0.22.0
+        version: 0.22.0(jiti@2.6.1)(postcss@8.5.15)(tsdown@0.22.0)(tsx@4.22.3)(yaml@2.8.3)
+      '@types/node':
+        specifier: ^22.13.0
+        version: 22.19.17
+      '@vueuse/core':
+        specifier: ^14.0.0
+        version: 14.3.0(vue@3.5.32(typescript@5.9.3))
+      magic-string:
+        specifier: ^0.30.21
+        version: 0.30.21
+      rimraf:
+        specifier: ^6.0.1
+        version: 6.1.3
+      tailwindcss:
+        specifier: ^4.0.0
+        version: 4.3.0
+      tsdown:
+        specifier: 0.22.0
+        version: 0.22.0(@arethetypeswrong/core@0.18.2)(@tsdown/css@0.22.0)(publint@0.3.21)(tsx@4.22.3)(typescript@5.9.3)(unrun@0.3.0(synckit@0.11.12))(vue-tsc@3.3.1(typescript@5.9.3))
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.3
+      unplugin-vue:
+        specifier: 7.2.0
+        version: 7.2.0(@types/node@22.19.17)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.1)(tsx@4.22.3)(vue@3.5.32(typescript@5.9.3))(yaml@2.8.3)
+      unplugin-vue-components:
+        specifier: ^32.1.0
+        version: 32.1.0(@nuxt/kit@4.4.2(magicast@0.5.2))(vue@3.5.32(typescript@5.9.3))
+      vue:
+        specifier: ^3.5.0
+        version: 3.5.32(typescript@5.9.3)
+      vue-tsc:
+        specifier: ^3.2.4
+        version: 3.3.1(typescript@5.9.3)
+
+  packages/ui-components/ATelInput:
+    dependencies:
+      '@alikhalilll/a-responsive-popover':
+        specifier: workspace:*
+        version: link:../AResponsivePopover
+      '@alikhalilll/a-ui-base':
+        specifier: workspace:*
+        version: link:../AUiBase
+      class-variance-authority:
+        specifier: ^0.7.1
+        version: 0.7.1
+      libphonenumber-js:
+        specifier: ^1.12.0
+        version: 1.13.2
+    devDependencies:
+      '@ampproject/remapping':
+        specifier: ^2.3.0
+        version: 2.3.0
+      '@nuxt/kit':
+        specifier: ^4.4.2
+        version: 4.4.2(magicast@0.5.2)
+      '@nuxt/schema':
+        specifier: ^4.4.2
+        version: 4.4.2
+      '@tailwindcss/cli':
+        specifier: ^4.0.0
+        version: 4.3.0
+      '@tsdown/css':
+        specifier: 0.22.0
+        version: 0.22.0(jiti@2.6.1)(postcss@8.5.15)(tsdown@0.22.0)(tsx@4.22.3)(yaml@2.8.3)
+      '@types/node':
+        specifier: ^22.13.0
+        version: 22.19.17
+      '@vueuse/core':
+        specifier: ^14.0.0
+        version: 14.3.0(vue@3.5.32(typescript@5.9.3))
+      magic-string:
+        specifier: ^0.30.21
+        version: 0.30.21
+      rimraf:
+        specifier: ^6.0.1
+        version: 6.1.3
+      tailwindcss:
+        specifier: ^4.0.0
+        version: 4.3.0
+      tsdown:
+        specifier: 0.22.0
+        version: 0.22.0(@arethetypeswrong/core@0.18.2)(@tsdown/css@0.22.0)(publint@0.3.21)(tsx@4.22.3)(typescript@5.9.3)(unrun@0.3.0(synckit@0.11.12))(vue-tsc@3.3.1(typescript@5.9.3))
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.3
+      unplugin-vue:
+        specifier: 7.2.0
+        version: 7.2.0(@types/node@22.19.17)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.1)(tsx@4.22.3)(vue@3.5.32(typescript@5.9.3))(yaml@2.8.3)
+      unplugin-vue-components:
+        specifier: ^32.1.0
+        version: 32.1.0(@nuxt/kit@4.4.2(magicast@0.5.2))(vue@3.5.32(typescript@5.9.3))
+      vue:
+        specifier: ^3.5.0
+        version: 3.5.32(typescript@5.9.3)
+      vue-tsc:
+        specifier: ^3.2.4
+        version: 3.3.1(typescript@5.9.3)
+
+  packages/ui-components/AUiBase:
+    dependencies:
+      clsx:
+        specifier: ^2.1.1
+        version: 2.1.1
+      tailwind-merge:
+        specifier: ^3.6.0
+        version: 3.6.0
+    devDependencies:
+      '@types/node':
+        specifier: ^22.13.0
+        version: 22.19.17
+      rimraf:
+        specifier: ^6.0.1
+        version: 6.1.3
+      tsdown:
+        specifier: 0.22.0
+        version: 0.22.0(@arethetypeswrong/core@0.18.2)(@tsdown/css@0.22.0)(publint@0.3.21)(tsx@4.22.3)(typescript@5.9.3)(unrun@0.3.0(synckit@0.11.12))(vue-tsc@3.3.1(typescript@5.9.3))
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.3
+
   playgrounds/nuxt:
     dependencies:
+      '@alikhalilll/a-drawer':
+        specifier: workspace:*
+        version: link:../../packages/ui-components/ADrawer
+      '@alikhalilll/a-input':
+        specifier: workspace:*
+        version: link:../../packages/ui-components/AInput
+      '@alikhalilll/a-popover':
+        specifier: workspace:*
+        version: link:../../packages/ui-components/APopover
+      '@alikhalilll/a-responsive-popover':
+        specifier: workspace:*
+        version: link:../../packages/ui-components/AResponsivePopover
+      '@alikhalilll/a-tel-input':
+        specifier: workspace:*
+        version: link:../../packages/ui-components/ATelInput
+      '@alikhalilll/a-ui-base':
+        specifier: workspace:*
+        version: link:../../packages/ui-components/AUiBase
       '@alikhalilll/nuxt-api-provider':
         specifier: workspace:*
         version: link:../../packages/api-provider
@@ -286,9 +573,6 @@ importers:
       '@alikhalilll/nuxt-crypto':
         specifier: workspace:*
         version: link:../../packages/crypto
-      '@alikhalilll/ui':
-        specifier: workspace:*
-        version: link:../../packages/ui
     devDependencies:
       '@tailwindcss/vite':
         specifier: ^4.0.0
@@ -5876,8 +6160,8 @@ packages:
     resolution: {integrity: sha512-yEFYrVhod+hdNyx7g5Bnkkb0G6si8HJurOoOEgC8B/O0uXLHlaey/65KRv6cuWBNhBgHKAROVpc7QyYqE5gFng==}
     engines: {node: '>=20'}
 
-  tailwind-merge@2.6.1:
-    resolution: {integrity: sha512-Oo6tHdpZsGpkKG88HJ8RR1rg/RdnEkQEfMoEk2x1XRI3F1AxeU+ijRXpiVUF4UbLfcxxRGw6TbUINKYdWVsQTQ==}
+  tailwind-merge@3.6.0:
+    resolution: {integrity: sha512-uxL7qAVQriqRQPAyK3pj66VqskWqoZ37PW94jwOTwNfq/z9oyu1V+eqrZqtR2+fCiXdYOZe/Modt8GtvqNzu+w==}
 
   tailwindcss@4.2.2:
     resolution: {integrity: sha512-KWBIxs1Xb6NoLdMVqhbhgwZf2PGBpPEiwOqgI4pFIYbNTfBXiKYyWoTsXgBQ9WFg/OlhnvHaY+AEpW7wSmFo2Q==}
@@ -13122,7 +13406,7 @@ snapshots:
 
   tagged-tag@1.0.0: {}
 
-  tailwind-merge@2.6.1: {}
+  tailwind-merge@3.6.0: {}
 
   tailwindcss@4.2.2: {}
 

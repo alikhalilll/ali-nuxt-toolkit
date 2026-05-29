@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
 import minimist from 'minimist';
-import { PACKAGES_DIR, PUBLISHABLE_PACKAGES, ROOT } from '../lib/constants.ts';
+import { packageDir, PUBLISHABLE_PACKAGES, ROOT } from '../lib/constants.ts';
 import { run } from '../lib/exec.ts';
 import { die, info, step, success } from '../lib/logger.ts';
 
@@ -48,7 +48,7 @@ async function main() {
   };
 
   for (const dir of packages) {
-    const cwd = path.join(PACKAGES_DIR, dir);
+    const cwd = packageDir(dir);
     step(`Packing ${dir}`);
 
     if (!argv['skip-build']) {

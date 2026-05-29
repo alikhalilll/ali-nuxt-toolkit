@@ -8,19 +8,19 @@
  * lists, etc.) lives in `scripts/lib/constants.ts`.
  *
  * Usage:
- *   tsx scripts/validate/dist-validate.ts --pkg ui
- *   tsx scripts/validate/dist-validate.ts --pkg ui,crypto
+ *   tsx scripts/validate/dist-validate.ts --pkg a-tel-input
+ *   tsx scripts/validate/dist-validate.ts --pkg a-tel-input,crypto
  *   tsx scripts/validate/dist-validate.ts --all
  *
  * Wired into each package via `scripts.validate-dist` in `package.json`:
- *   "validate-dist": "tsx ../../scripts/validate/dist-validate.ts --pkg ui"
+ *   "validate-dist": "tsx ../../scripts/validate/dist-validate.ts --pkg a-tel-input"
  */
 import path from 'node:path';
 import minimist from 'minimist';
 import { runDistValidation } from '../lib/validate-dist.ts';
 import {
   ATTW_IGNORE_NO_RESOLUTION,
-  PACKAGES_DIR,
+  packageDir,
   PUBLISHABLE_PACKAGES,
   type PublishablePackage,
 } from '../lib/constants.ts';
@@ -53,7 +53,7 @@ function pickPkgs(): PublishablePackage[] {
 const picked = pickPkgs();
 for (const name of picked) {
   await runDistValidation({
-    pkgRoot: path.join(PACKAGES_DIR, name),
+    pkgRoot: packageDir(name),
     ignoreNoResolutionEntrypoints: ATTW_IGNORE_NO_RESOLUTION[name],
   });
 }

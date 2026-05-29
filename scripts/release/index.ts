@@ -31,14 +31,46 @@ import {
 } from './package.ts';
 
 async function pickInteractive(cliPackages, cliBump, cliTag) {
-  const packages =
-    cliPackages.length > 0
-      ? cliPackages
-      : await checkbox({
-          message: 'Which packages should be released?',
-          choices: PUBLISHABLE_PACKAGES.map((name) => ({ name, value: name })),
-          validate: (arr) => (arr.length > 0 ? true : 'Pick at least one package.'),
-        });
+  let packages;
+  if (cliPackages.length > 0) {
+    packages = cliPackages;
+  } else {
+    // Single- vs multi-select based on the case the user is in: a one-off patch
+    // (single) vs a coordinated release (multi) vs everything (all).
+    const scope = await select({
+      message: 'Release scope?',
+      choices: [
+        { name: 'Single package', value: 'single', description: 'Pick exactly one package.' },
+        {
+          name: 'Multiple packages',
+          value: 'multi',
+          description: 'Tick several packages to release together.',
+        },
+        {
+          name: 'All packages',
+          value: 'all',
+          description: `Release all ${PUBLISHABLE_PACKAGES.length} publishable packages.`,
+        },
+      ],
+      default: 'single',
+    });
+
+    if (scope === 'all') {
+      packages = [...PUBLISHABLE_PACKAGES];
+    } else if (scope === 'single') {
+      const one = await select({
+        message: 'Which package?',
+        choices: PUBLISHABLE_PACKAGES.map((name) => ({ name, value: name })),
+      });
+      packages = [one];
+    } else {
+      packages = await checkbox({
+        message: 'Which packages should be released?',
+        choices: PUBLISHABLE_PACKAGES.map((name) => ({ name, value: name })),
+        validate: (arr) => (arr.length > 0 ? true : 'Pick at least one package.'),
+      });
+    }
+  }
 
   const bump =
     cliBump ??
@@ -53,9 +85,21 @@ async function pickInteractive(cliPackages, cliBump, cliTag) {
     (await select({
       message: 'Which dist-tag should be published?',
       choices: [
-        { name: 'latest', value: 'latest' },
-        { name: 'next', value: 'next' },
-        { name: 'beta', value: 'beta' },
+        {
+          name: 'latest',
+          value: 'latest',
+          description: 'Default install tag — what `npm i <pkg>` resolves to.',
+        },
+        {
+          name: 'stable',
+          value: 'stable',
+          description: 'Stable release line, parallel to latest.',
+        },
+        {
+          name: 'current',
+          value: 'current',
+          description: 'Rolling "current" tag for the newest published build.',
+        },
       ],
       default: DEFAULT_DIST_TAG,
     }));
@@ -255,7 +299,8 @@ async function main() {
         info('Install with: brew install gh  (then: gh auth login)');
         info('Or pass --skip-github to silence this.');
       } else {
-        const isPrerelease = distTag !== 'latest';
+        // `latest` and `stable` are full releases; any other tag (e.g. `current`) is a prerelease.
+        const isPrerelease = !['latest', 'stable'].includes(distTag);
         for (const r of results) {
           if (!tagExists(r.tag)) continue;
           try {

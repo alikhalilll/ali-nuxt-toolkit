@@ -17,8 +17,8 @@
  *
  * Usage:
  *   node scripts/consumer-validate.mjs            # validates ALL publishable packages
- *   node scripts/consumer-validate.mjs --pkg ui   # one package
- *   node scripts/consumer-validate.mjs --pkg ui,crypto
+ *   node scripts/consumer-validate.mjs --pkg a-tel-input   # one package
+ *   node scripts/consumer-validate.mjs --pkg a-tel-input,crypto
  *   node scripts/consumer-validate.mjs --keep     # keep tmp dir on success (for debugging)
  */
 import fs from 'node:fs/promises';
@@ -108,6 +108,19 @@ async function rewriteInternalDeps(pkgJsonPath, manifestTarballs, allInternalNam
     pkgJson.pnpm = { ...pkgJson.pnpm, onlyBuiltDependencies: onlyBuilt };
   }
 
+  // Internal packages depend on each other (e.g. a-tel-input → a-ui-base) via the
+  // version baked into the tarball — transitive specifiers that would 404 against
+  // the (unpublished) registry. Override every packed package to its local tarball.
+  const overrides = Object.fromEntries(
+    Object.entries(manifestTarballs).map(([name, t]) => [name, `file:.tarballs/${t.filename}`])
+  );
+  if (Object.keys(overrides).length) {
+    pkgJson.pnpm = {
+      ...pkgJson.pnpm,
+      overrides: { ...(pkgJson.pnpm?.overrides ?? {}), ...overrides },
+    };
+  }
+
   await fs.writeFile(pkgJsonPath, JSON.stringify(pkgJson, null, 2) + '\n');
 }
 
@@ -155,7 +168,7 @@ async function stripMissingModulesFromNuxtConfig(tmpPlayground, missingModuleNam
     let src = await fs.readFile(fullPath, 'utf8');
     for (const mod of missingModuleNames) {
       // Remove the module string from the `modules: [...]` array. The module
-      // path may carry a subpath (`@alikhalilll/ui/nuxt`); match either form.
+      // path may carry a subpath (`@alikhalilll/a-tel-input/nuxt`); match either form.
       const escaped = mod.replace(/[/-]/g, (m) => `\\${m}`);
       src = src.replace(new RegExp(`['"]${escaped}(?:/[^'"]+)?['"]\\s*,?`, 'g'), '');
       // Per-module config block keyed by the camelCased short identifier.
@@ -179,7 +192,7 @@ async function stripMissingModulesFromNuxtConfig(tmpPlayground, missingModuleNam
  * Derive a package's "short identifier" for filename/auto-import-helper matching.
  * `@alikhalilll/nuxt-crypto` → `crypto`
  * `@alikhalilll/nuxt-api-provider` → `api-provider`
- * `@alikhalilll/ui` → `ui`
+ * `@alikhalilll/a-tel-input` → `a-tel-input`
  */
 function shortIdentifier(pkgName) {
   return pkgName.replace(/^@[^/]+\//, '').replace(/^nuxt-/, '');
@@ -279,8 +292,8 @@ async function ensureNuxtTypecheckReady(tmpPlayground) {
 /**
  * Auto-import / auto-completion gate.
  *
- * When `@alikhalilll/ui` is part of the validation set, every component its
- * `@alikhalilll/ui/nuxt` module registers must show up in the consumer's
+ * When the full @alikhalilll/a-* component set is validated, every component its
+ * `@alikhalilll/a-tel-input/nuxt` module registers must show up in the consumer's
  * `.nuxt/components.d.ts`. That file is the source of truth for editor
  * auto-completion in `<script setup>` — if a component is missing here,
  * IDEs won't suggest it, even though it might still render at runtime.
@@ -289,8 +302,16 @@ async function ensureNuxtTypecheckReady(tmpPlayground) {
  * catches this too via vue-tsc, but this explicit grep gives a sharper error
  * before the typecheck stage so the failure is easy to diagnose.
  */
+const UI_COMPONENT_PACKAGES = [
+  'a-input',
+  'a-popover',
+  'a-drawer',
+  'a-responsive-popover',
+  'a-tel-input',
+];
+
 const UI_AUTO_IMPORTED_COMPONENTS = [
-  'ATellInput',
+  'ATelInput',
   'ACountrySelect',
   'ACountryFlag',
   'AInput',
@@ -420,7 +441,9 @@ async function main() {
   // 6. nuxi prepare → verify auto-imports → typecheck → build
   await ensureNuxtTypecheckReady(tmpPlayground);
 
-  const includesUi = picked.includes('ui');
+  // The 15-component auto-import gate only makes sense when the whole component
+  // set is present (each component package ships its own Nuxt module).
+  const includesUi = UI_COMPONENT_PACKAGES.every((p) => picked.includes(p));
   await verifyAutoImports(tmpPlayground, includesUi);
 
   const childEnv = { ...process.env, PNPM_CONFIG_STRICT_DEP_BUILDS: 'false' };

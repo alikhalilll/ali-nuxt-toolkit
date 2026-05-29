@@ -7,9 +7,9 @@
     "node": ">=20.19.0"
   },
   "scripts": {
-    "build": "pnpm -r --filter \"./packages/*\" build",
-    "typecheck": "pnpm -r --filter \"./packages/*\" typecheck",
-    "clean": "pnpm -r --filter \"./packages/*\" clean",
+    "build": "pnpm -r --filter \"./packages/*\" --filter \"./packages/ui-components/*\" build",
+    "typecheck": "pnpm -r --filter \"./packages/*\" --filter \"./packages/ui-components/*\" typecheck",
+    "clean": "pnpm -r --filter \"./packages/*\" --filter \"./packages/ui-components/*\" clean",
     "tk": "tsx scripts/tk.ts",
     "play": "pnpm -C playgrounds/nuxt dev",
     "play:packed": "tsx scripts/playground/use-packed.ts --use-packed",
@@ -24,9 +24,8 @@
     "pack:api-provider": "tsx scripts/pack/pack-all.ts --pkg api-provider",
     "pack:crypto": "tsx scripts/pack/pack-all.ts --pkg crypto",
     "pack:auto-middleware": "tsx scripts/pack/pack-all.ts --pkg auto-middleware",
-    "pack:ui": "tsx scripts/pack/pack-all.ts --pkg ui",
-    "validate": "pnpm build && pnpm -r --filter \"./packages/*\" run validate-dist && tsx scripts/validate/consumer-validate.ts --all",
-    "validate:ui": "pnpm -C packages/ui validate",
+    "pack:ui-components": "tsx scripts/pack/pack-all.ts --pkg a-ui-base,a-input,a-popover,a-drawer,a-responsive-popover,a-tel-input",
+    "validate": "pnpm build && pnpm -r --filter \"./packages/*\" --filter \"./packages/ui-components/*\" run validate-dist && tsx scripts/validate/consumer-validate.ts --all",
     "validate:api-provider": "pnpm -C packages/api-provider validate",
     "validate:crypto": "pnpm -C packages/crypto validate",
     "validate:auto-middleware": "pnpm -C packages/auto-middleware validate",
@@ -36,7 +35,6 @@
     "release:api-provider": "tsx scripts/release/index.ts --pkg api-provider --interactive",
     "release:crypto": "tsx scripts/release/index.ts --pkg crypto --interactive",
     "release:auto-middleware": "tsx scripts/release/index.ts --pkg auto-middleware --interactive",
-    "release:ui": "tsx scripts/release/index.ts --pkg ui --interactive",
     "release:dry": "tsx scripts/release/index.ts --interactive --dry-run",
     "changeset": "changeset",
     "changeset:version": "changeset version",
@@ -44,6 +42,7 @@
     "changeset:status": "changeset status --verbose"
   },
   "devDependencies": {
+    "@ampproject/remapping": "^2.3.0",
     "@arethetypeswrong/cli": "0.18.2",
     "@changesets/changelog-github": "^0.5.0",
     "@changesets/cli": "^2.27.0",
@@ -53,6 +52,7 @@
     "@inquirer/prompts": "^8.3.2",
     "@types/minimist": "^1.2.5",
     "@types/node": "^22.13.0",
+    "magic-string": "^0.30.21",
     "eslint": "^9.0.0",
     "eslint-config-prettier": "^10.0.0",
     "eslint-plugin-prettier": "^5.0.0",

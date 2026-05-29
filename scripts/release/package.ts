@@ -1,10 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { PACKAGES_DIR } from '../lib/constants.ts';
+import { packageDir } from '../lib/constants.ts';
 import { capture, run } from '../lib/exec.ts';
 
 export function packagePath(dir) {
-  return path.join(PACKAGES_DIR, dir);
+  return packageDir(dir);
 }
 
 export function readPackageJson(dir) {
