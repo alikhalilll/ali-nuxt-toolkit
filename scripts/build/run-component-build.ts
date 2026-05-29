@@ -19,6 +19,9 @@
  *                         `dist/styles.css` and append its bundled SFC styles.
  *   - gen-web-types     — emit `web-types.json` for JetBrains IDEs.
  *   - verify-exports    — gate: every exports path exists, dts non-empty, no __VLS leak.
+ *   - verify-go-to-def  — gate: every public export resolves to a navigable declaration
+ *                         and no emitted specifier ends in a literal `.d.ts` (which
+ *                         would break Volar's "go to definition").
  *
  * `.d.ts.map` sources point at the package-root source (shipped via `files`), so
  * go-to-definition lands on the real `.vue`/`.ts` — no need to copy sources into dist.
@@ -43,6 +46,7 @@ const steps: string[][] = [
   step('merge-sfc-styles.ts'),
   step('gen-web-types.ts'),
   step('verify-exports.ts'),
+  step('verify-go-to-def.ts'),
 ];
 
 for (const [bin, ...args] of steps) {

@@ -5,7 +5,10 @@
  * `.d.ts` under `dist/` so the published declarations resolve in consumers
  * (including `node16`/`nodenext` moduleResolution):
  *   1. Bare relative refs without extension (`'./foo'`) → append `.js`.
- *   2. `.vue` extension → `.vue.d.ts` (the companion declaration vue-tsc emits).
+ *   2. `.vue` extension → `.vue.js` — TS/Volar resolve this to the companion
+ *      `.vue.d.ts` exactly like a normal `.js` → `.d.ts` import, so go-to-definition
+ *      works. (A literal `.vue.d.ts` specifier resolves the type but yields no
+ *      navigable declaration in Volar — "Cannot find declaration to go to".)
  *   3. Bare directory refs (`'.'`, `'..'`) → `./index.js` / `../index.js`.
  *   4. Non-relative specifiers (bare package names) → unchanged.
  *
@@ -32,7 +35,7 @@ async function fixExtension(specifier: string, fileDir: string): Promise<string>
   if (specifier === '.') return './index.js';
   if (specifier === '..') return '../index.js';
   if (specifier.endsWith('.d.ts')) return specifier;
-  if (specifier.endsWith('.vue')) return `${specifier}.d.ts`;
+  if (specifier.endsWith('.vue')) return `${specifier}.js`;
 
   const bare = specifier.replace(/\.js$/, '');
   const abs = path.resolve(fileDir, bare);
