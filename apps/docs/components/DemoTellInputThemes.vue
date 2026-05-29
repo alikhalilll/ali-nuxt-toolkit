@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { ATellInput } from '@alikhalilll/ui';
+import { ATelInput } from '@alikhalilll/a-tel-input';
 
 const phone = ref('');
 const country = ref<number | null>(null);
@@ -8,7 +8,7 @@ const country = ref<number | null>(null);
 /**
  * Each theme is a pure CSS-variable rewrite — no component prop changes, no rebuild.
  * Variables override the `:root, .light` / `.dark` defaults that ship in
- * `@alikhalilll/ui/styles.css`, scoped to a wrapper div via the `:style` binding.
+ * `@alikhalilll/a-ui-base/tokens.css`, scoped to a wrapper div via the `:style` binding.
  *
  * The `swatch` is a short visual signature (3 hsl strings) used for the thumbnail row.
  */
@@ -259,7 +259,7 @@ async function copyCss() {
       class="text-foreground mt-5 rounded-lg border border-border bg-background p-5 transition-colors"
     >
       <div class="max-w-sm">
-        <ATellInput
+        <ATelInput
           v-model:phone="phone"
           v-model:country="country"
           default-country="20"

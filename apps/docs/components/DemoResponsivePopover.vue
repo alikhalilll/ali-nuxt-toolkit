@@ -4,7 +4,7 @@ import {
   AResponsivePopover,
   AResponsivePopoverTrigger,
   AResponsivePopoverContent,
-} from '@alikhalilll/ui';
+} from '@alikhalilll/a-responsive-popover';
 
 const open = ref(false);
 </script>

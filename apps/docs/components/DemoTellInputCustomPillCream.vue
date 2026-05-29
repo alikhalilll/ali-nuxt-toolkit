@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { ChevronDownIcon, SmartphoneIcon } from '~/components/icons';
-import { ATellInput } from '@alikhalilll/ui';
+import { ATelInput } from '@alikhalilll/a-tel-input';
 
 const phone = ref('234567890');
 const country = ref<number | null>(1);
@@ -24,7 +24,7 @@ const creamTheme = {
 const source = `<script setup lang="ts">
 import { ref } from 'vue';
 import { ChevronDownIcon, SmartphoneIcon } from '~/components/icons';
-import { ATellInput } from '@alikhalilll/ui';
+import { ATelInput } from '@alikhalilll/a-tel-input';
 
 const phone = ref('');
 const country = ref<number | null>(1);
@@ -50,7 +50,7 @@ const creamTheme = {
   <div :style="creamTheme" class="text-foreground p-8 rounded-2xl bg-[hsl(36_50%_94%)]">
     <label class="mb-3 block text-lg font-bold tracking-tight">Phone Number</label>
 
-    <ATellInput
+    <ATelInput
       v-model:phone="phone"
       v-model:country="country"
       default-country="1"
@@ -86,7 +86,7 @@ const creamTheme = {
 
       <!-- Hide the example-number hint for a cleaner aesthetic -->
       <template #hint><span /></template>
-    </ATellInput>
+    </ATelInput>
   </div>
 </template>`;
 </script>
@@ -109,7 +109,7 @@ const creamTheme = {
         <div class="max-w-md">
           <label class="mb-3 block text-lg font-bold tracking-tight">Phone Number</label>
 
-          <ATellInput
+          <ATelInput
             v-model:phone="phone"
             v-model:country="country"
             default-country="1"
@@ -152,7 +152,7 @@ const creamTheme = {
             </template>
 
             <template #hint><span /></template>
-          </ATellInput>
+          </ATelInput>
         </div>
       </div>
     </DemoTabs>

@@ -1,12 +1,10 @@
 <script setup lang="ts">
+import { APopover, APopoverContent, APopoverTrigger } from '@alikhalilll/a-popover';
 import {
-  APopover,
-  APopoverContent,
-  APopoverTrigger,
   AResponsivePopover,
   AResponsivePopoverContent,
   AResponsivePopoverTrigger,
-} from '@alikhalilll/ui';
+} from '@alikhalilll/a-responsive-popover';
 import { ChevronDownIcon } from '~/components/icons';
 
 const route = useRoute();
@@ -21,7 +19,7 @@ const navLinks = [
 
 const uiNavItems = [
   { to: '/ui', label: 'Overview' },
-  { to: '/ui/tell-input', label: 'ATellInput' },
+  { to: '/ui/tell-input', label: 'ATelInput' },
   { to: '/ui/input', label: 'AInput' },
   { to: '/ui/popover', label: 'APopover' },
   { to: '/ui/drawer', label: 'ADrawer' },

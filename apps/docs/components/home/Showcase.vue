@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { ATellInput } from '@alikhalilll/ui/tell-input';
+import { ATelInput } from '@alikhalilll/a-tel-input';
 
 /**
  * Package showcase code panel. Tabbed dark editor with the active package's
  * code on the left and a live/animated preview on the right.
  *
- *   ui          → live `ATellInput`
+ *   ui          → live `ATelInput`
  *   api         → animated request log
  *   crypto      → animated lock + cipher chip
  *   middleware  → layout→middleware mapping
@@ -32,8 +32,8 @@ const showcaseTabs: ShowcaseTab[] = [
   {
     id: 'ui/tell-input',
     short: 'ui/tell-input',
-    label: '@alikhalilll/ui',
-    fn: 'ATellInput',
+    label: '@alikhalilll/a-tel-input',
+    fn: 'ATelInput',
     tagline: 'Live phone input · 197 countries · NANP-aware',
     docs: '/ui/tell-input',
   },
@@ -92,7 +92,7 @@ function resumeShowcase() {
 
 const currentShowcase = computed(() => showcaseTabs[showcaseIndex.value]);
 
-// Live ATellInput state — owned here since it lives inside the ui exhibit.
+// Live ATelInput state — owned here since it lives inside the ui exhibit.
 const heroPhone = ref('');
 const heroCountry = ref<number | null>(null);
 
@@ -106,14 +106,14 @@ const codeExamples: Record<ShowcaseId, CodeExample> = {
     filename: 'app/components/SignupForm.vue',
     code:
       '<span class="code-tag">&lt;script setup lang="ts"&gt;</span>\n' +
-      '<span class="code-kw">import</span> { <span class="code-fn">ATellInput</span> } <span class="code-kw">from</span> <span class="code-str">\'@alikhalilll/ui\'</span>;\n' +
+      '<span class="code-kw">import</span> { <span class="code-fn">ATelInput</span> } <span class="code-kw">from</span> <span class="code-str">\'@alikhalilll/a-tel-input\'</span>;\n' +
       '\n' +
       '<span class="code-kw">const</span> phone = <span class="code-fn">ref</span>(<span class="code-str">\'\'</span>);\n' +
       '<span class="code-kw">const</span> country = <span class="code-fn">ref</span>&lt;<span class="code-type">number</span> | <span class="code-type">null</span>&gt;(<span class="code-type">null</span>);\n' +
       '<span class="code-tag">&lt;/script&gt;</span>\n' +
       '\n' +
       '<span class="code-tag">&lt;template&gt;</span>\n' +
-      '  <span class="code-tag">&lt;</span><span class="code-fn">ATellInput</span>\n' +
+      '  <span class="code-tag">&lt;</span><span class="code-fn">ATelInput</span>\n' +
       '    <span class="code-kw">v-model:phone</span>=<span class="code-str">"phone"</span>\n' +
       '    <span class="code-kw">v-model:country</span>=<span class="code-str">"country"</span>\n' +
       '  <span class="code-tag">/&gt;</span>\n' +
@@ -263,10 +263,10 @@ const currentExample = computed(() => codeExamples[currentShowcase.value.id]);
         <div class="code-panel__preview">
           <Transition name="code-fade" mode="out-in">
             <div :key="`vis-${currentShowcase.id}`" class="code-panel__preview-inner">
-              <!-- ui · live ATellInput -->
+              <!-- ui · live ATelInput -->
               <template v-if="currentShowcase.id === 'ui/tell-input'">
                 <ClientOnly>
-                  <ATellInput
+                  <ATelInput
                     v-model:phone="heroPhone"
                     v-model:country="heroCountry"
                     show-validation
@@ -575,7 +575,7 @@ const currentExample = computed(() => codeExamples[currentShowcase.value.id]);
   transform: translateY(-4px);
 }
 
-/* Hint line beneath the live ATellInput in the ui exhibit. */
+/* Hint line beneath the live ATelInput in the ui exhibit. */
 .preview-hint {
   font-size: 11.5px;
   color: var(--text-muted);

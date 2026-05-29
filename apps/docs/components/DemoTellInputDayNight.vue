@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { ATellInput } from '@alikhalilll/ui';
+import { ATelInput } from '@alikhalilll/a-tel-input';
 
 const phone = ref('');
 const country = ref<number | null>(null);
@@ -8,7 +8,7 @@ const mode = ref<'dark' | 'light'>('dark');
 
 const source = `<script setup lang="ts">
 import { ref } from 'vue';
-import { ATellInput } from '@alikhalilll/ui';
+import { ATelInput } from '@alikhalilll/a-tel-input';
 
 const phone = ref('');
 const country = ref<number | null>(null);
@@ -21,7 +21,7 @@ const mode = ref<'dark' | 'light'>('dark');
     Toggle one class on a wrapper (or on <html>) and every component swaps modes.
   -->
   <div :class="mode" class="text-foreground p-5 rounded-lg bg-background">
-    <ATellInput
+    <ATelInput
       v-model:phone="phone"
       v-model:country="country"
       default-country="20"
@@ -75,7 +75,7 @@ const mode = ref<'dark' | 'light'>('dark');
           class="text-foreground rounded-lg border border-border bg-background p-5 transition-colors"
         >
           <div class="max-w-sm">
-            <ATellInput
+            <ATelInput
               v-model:phone="phone"
               v-model:country="country"
               default-country="20"

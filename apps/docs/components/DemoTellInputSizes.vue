@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { ATellInput, SIZES, controlHeightPx, type Size } from '@alikhalilll/ui';
+import { SIZES, controlHeightPx, type Size } from '@alikhalilll/a-ui-base';
+import { ATelInput } from '@alikhalilll/a-tel-input';
 
 interface Row {
   size: Size;
@@ -11,7 +12,8 @@ interface Row {
 const rows = ref<Row[]>(SIZES.map((s) => ({ size: s, phone: '', country: null })));
 
 const source = `<script setup lang="ts">
-import { ATellInput, SIZES, controlHeightPx, type Size } from '@alikhalilll/ui';
+import { SIZES, controlHeightPx, type Size } from '@alikhalilll/a-ui-base';
+import { ATelInput } from '@alikhalilll/a-tel-input';
 \u003c/script>
 
 <template>
@@ -19,7 +21,7 @@ import { ATellInput, SIZES, controlHeightPx, type Size } from '@alikhalilll/ui';
     <div class="w-24 pt-2 font-mono text-xs">
       {{ size }} · {{ controlHeightPx[size] }}px
     </div>
-    <ATellInput :size="size" default-country="20" />
+    <ATelInput :size="size" default-country="20" />
   </div>
 </template>`;
 </script>
@@ -40,7 +42,7 @@ import { ATellInput, SIZES, controlHeightPx, type Size } from '@alikhalilll/ui';
             {{ row.size }} · {{ controlHeightPx[row.size] }}px
           </div>
           <div class="max-w-sm flex-1">
-            <ATellInput
+            <ATelInput
               v-model:phone="row.phone"
               v-model:country="row.country"
               :size="row.size"

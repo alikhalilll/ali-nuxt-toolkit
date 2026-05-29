@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { APopover, APopoverTrigger, APopoverContent } from '@alikhalilll/ui';
+import { APopover, APopoverTrigger, APopoverContent } from '@alikhalilll/a-popover';
 
 const open = ref(false);
 const modal = ref(true);

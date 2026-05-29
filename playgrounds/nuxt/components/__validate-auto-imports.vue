@@ -1,5 +1,5 @@
 <!--
-  Validation fixture: every auto-imported component from `@alikhalilll/ui/nuxt`
+  Validation fixture: every auto-imported component from `@alikhalilll/a-tel-input/nuxt`
   is used here WITHOUT an explicit `import`. If a consumer's editor would fail
   to surface a component via auto-completion (i.e. it's missing from the Nuxt
   module's registry), vue-tsc fails on this file with "Cannot find name"
@@ -24,7 +24,7 @@ const text = ref('');
 <template>
   <div>
     <!-- tell-input subpath -->
-    <ATellInput
+    <ATelInput
       v-model:phone="phone"
       v-model:country="country"
       size="md"

@@ -2,11 +2,11 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { PhoneIcon, ShieldCheckIcon, ShieldXIcon, SparklesIcon } from '~/components/icons';
 import {
-  ATellInput,
+  ATelInput,
   defaultFlagUrl,
   type CountryOption,
   type FlagUrlBuilder,
-} from '@alikhalilll/ui/tell-input';
+} from '@alikhalilll/a-tel-input';
 
 const phone = ref('');
 const country = ref<number | null>(null);
@@ -82,7 +82,7 @@ async function alwaysEgypt() {
   return 'EG';
 }
 
-const tellRef = ref<InstanceType<typeof ATellInput> | null>(null);
+const tellRef = ref<InstanceType<typeof ATelInput> | null>(null);
 
 const validation = computed(() => tellRef.value?.validation);
 const required = computed(() => tellRef.value?.required);
@@ -105,7 +105,7 @@ watch(theme, (t) => applyTheme(t));
 
 <template>
   <section>
-    <h1 class="mb-2 text-3xl font-semibold tracking-tight">@alikhalilll/ui · ATellInput</h1>
+    <h1 class="mb-2 text-3xl font-semibold tracking-tight">@alikhalilll/a-tel-input · ATelInput</h1>
     <p class="mb-8 text-text-dim">
       Tel input with automatic country detection (IP → timezone → locale → fallback). The country
       picker is a flag-only trigger at the end of the field — a popover on desktop, a vaul-vue
@@ -119,7 +119,7 @@ watch(theme, (t) => applyTheme(t));
         <h2 class="mb-4 border-l-[3px] border-brand pl-2 text-lg font-semibold">Component</h2>
 
         <div class="max-w-sm">
-          <ATellInput
+          <ATelInput
             ref="tellRef"
             v-model:phone="phone"
             v-model:country="country"
@@ -244,7 +244,7 @@ watch(theme, (t) => applyTheme(t));
 
     <div class="rounded-xl border border-brand-border bg-surface p-5">
       <div class="max-w-sm">
-        <ATellInput
+        <ATelInput
           v-model:phone="customPhone"
           v-model:country="customCountry"
           default-country="20"
@@ -282,7 +282,7 @@ watch(theme, (t) => applyTheme(t));
           <template #item-check>
             <SparklesIcon class="size-3.5 text-amber-400" />
           </template>
-        </ATellInput>
+        </ATelInput>
       </div>
     </div>
 
@@ -296,7 +296,7 @@ watch(theme, (t) => applyTheme(t));
 
     <div class="rounded-xl border border-brand-border bg-surface p-5">
       <div class="max-w-sm" dir="rtl">
-        <ATellInput
+        <ATelInput
           v-model:phone="i18nPhone"
           v-model:country="i18nCountry"
           locale="ar"

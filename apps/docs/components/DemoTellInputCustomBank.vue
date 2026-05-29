@@ -6,7 +6,7 @@ import {
   ShieldCheckIcon,
   SmartphoneIcon,
 } from '~/components/icons';
-import { ATellInput } from '@alikhalilll/ui';
+import { ATelInput } from '@alikhalilll/a-tel-input';
 
 const phone = ref('');
 const country = ref<number | null>(null);
@@ -29,7 +29,7 @@ const bankTheme = {
 const source = `<script setup lang="ts">
 import { ref } from 'vue';
 import { BadgeAlertIcon, BadgeCheckIcon, ShieldCheckIcon, SmartphoneIcon } from '~/components/icons';
-import { ATellInput } from '@alikhalilll/ui';
+import { ATelInput } from '@alikhalilll/a-tel-input';
 
 const phone = ref('');
 const country = ref<number | null>(null);
@@ -58,7 +58,7 @@ const bankTheme = {
       Verify your phone
     </label>
 
-    <ATellInput
+    <ATelInput
       v-model:phone="phone"
       v-model:country="country"
       default-country="20"
@@ -87,7 +87,7 @@ const bankTheme = {
           <span>{{ message }}</span>
         </p>
       </template>
-    </ATellInput>
+    </ATelInput>
   </div>
 </template>`;
 </script>
@@ -114,7 +114,7 @@ const bankTheme = {
             Verify your phone
           </label>
 
-          <ATellInput
+          <ATelInput
             v-model:phone="phone"
             v-model:country="country"
             default-country="20"
@@ -146,7 +146,7 @@ const bankTheme = {
                 <span class="leading-tight">{{ message }}</span>
               </p>
             </template>
-          </ATellInput>
+          </ATelInput>
         </div>
       </div>
     </DemoTabs>

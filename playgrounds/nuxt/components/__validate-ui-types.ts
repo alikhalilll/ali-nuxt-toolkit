@@ -1,5 +1,5 @@
 /**
- * Validation fixture: hard type-test gate for `@alikhalilll/ui` consumers.
+ * Validation fixture: hard type-test gate for `@alikhalilll/a-*` consumers.
  *
  * Every public `*Props` / `*Emits` / `*Slots` interface is imported and bound
  * to a concrete-shaped value. If an interface goes missing from a subpath, is
@@ -13,20 +13,20 @@
  * the workspace symlink, so the assertions cover the actual published surface.
  */
 import type {
-  ATellInputProps,
-  ATellInputEmits,
-  ATellInputSlots,
+  ATelInputProps,
+  ATelInputEmits,
+  ATelInputSlots,
   ACountrySelectProps,
   ACountrySelectEmits,
   ACountrySelectSlots,
   ACountryFlagProps,
   ACountryFlagSlots,
-  TellInputMessages,
-  TellInputMessagesInput,
-} from '@alikhalilll/ui/tell-input';
-import type { ATellInput } from '@alikhalilll/ui/tell-input';
+  TelInputMessages,
+  TelInputMessagesInput,
+} from '@alikhalilll/a-tel-input';
+import type { ATelInput } from '@alikhalilll/a-tel-input';
 
-import type { AInputProps, AInputEmits, AInputSlots } from '@alikhalilll/ui/input';
+import type { AInputProps, AInputEmits, AInputSlots } from '@alikhalilll/a-input';
 
 import type {
   APopoverProps,
@@ -35,7 +35,7 @@ import type {
   APopoverContentEmits,
   APopoverTriggerProps,
   APopoverOverlayProps,
-} from '@alikhalilll/ui/popover';
+} from '@alikhalilll/a-popover';
 
 import type {
   ADrawerProps,
@@ -44,18 +44,18 @@ import type {
   ADrawerContentEmits,
   ADrawerTriggerProps,
   ADrawerOverlayProps,
-} from '@alikhalilll/ui/drawer';
+} from '@alikhalilll/a-drawer';
 
 import type {
   AResponsivePopoverProps,
   AResponsivePopoverEmits,
   AResponsivePopoverSlots,
   ScrollLockMode,
-} from '@alikhalilll/ui/responsive-popover';
+} from '@alikhalilll/a-responsive-popover';
 
 // ── Required-only construction. If a previously-optional prop becomes required,
 // or a key disappears, this trips.
-const _tellInputProps: ATellInputProps = {};
+const _tellInputProps: ATelInputProps = {};
 const _countrySelectProps: ACountrySelectProps = {};
 const _countryFlagProps: ACountryFlagProps = { iso2: 'EG' };
 const _inputProps: AInputProps = {};
@@ -79,7 +79,7 @@ const _lockScroll: boolean | undefined = _popoverOverlayProps.lockScroll;
 const _respScrollLock: ScrollLockMode | undefined = _respPopoverProps.scrollLock;
 
 // ── Slot-prop derivation. The shape consumers use for typed `#suffix` slots.
-type _SuffixCtx = Parameters<NonNullable<ATellInputSlots['suffix']>>[0];
+type _SuffixCtx = Parameters<NonNullable<ATelInputSlots['suffix']>>[0];
 const _suffixCtx: _SuffixCtx = {} as _SuffixCtx;
 const _validationState: 'idle' | 'valid' | 'error' = _suffixCtx.validationState;
 
@@ -87,7 +87,7 @@ type _AResponsivePopoverDefault = Parameters<NonNullable<AResponsivePopoverSlots
 const _respDefault: _AResponsivePopoverDefault = { isDesktop: true };
 
 // ── Emit map presence.
-const _tellInputEmits = {} as ATellInputEmits;
+const _tellInputEmits = {} as ATelInputEmits;
 const _countrySelectEmits = {} as ACountrySelectEmits;
 const _inputEmits = {} as AInputEmits;
 const _popoverEmits = {} as APopoverEmits;
@@ -97,20 +97,20 @@ const _drawerContentEmits = {} as ADrawerContentEmits;
 const _respPopoverEmits = {} as AResponsivePopoverEmits;
 
 // ── Slot type presence (shape varies; just confirm the interface resolves).
-const _tellInputSlots = {} as ATellInputSlots;
+const _tellInputSlots = {} as ATelInputSlots;
 const _countrySelectSlots = {} as ACountrySelectSlots;
 const _countryFlagSlots = {} as ACountryFlagSlots;
 const _inputSlots = {} as AInputSlots;
 const _respPopoverSlots = {} as AResponsivePopoverSlots;
 
 // ── Messages bag — public, used in localisation paths.
-const _messages: TellInputMessages = {} as TellInputMessages;
-const _messagesInput: TellInputMessagesInput = {};
+const _messages: TelInputMessages = {} as TelInputMessages;
+const _messagesInput: TelInputMessagesInput = {};
 
 // ── InstanceType resolves to a clean DefineComponent (the strip-vls-wrapper
 //    contract). Picks up the cleanly stripped DefineComponent generics so
 //    `$props` is visible — this is the regression catcher for the strip step.
-type _Inst = InstanceType<typeof ATellInput>;
+type _Inst = InstanceType<typeof ATelInput>;
 const _inst = {} as _Inst;
 const _instProps: _Inst['$props'] = _inst.$props;
 

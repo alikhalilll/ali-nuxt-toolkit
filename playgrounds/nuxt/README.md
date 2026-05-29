@@ -21,9 +21,9 @@ You only need to re-run `pnpm build` when you change `package.json` exports or h
 | `@alikhalilll/nuxt-api-provider` — basic client, retry, progress                                      | `pages/api-*.vue`, `composables/useApi.ts`                  |
 | `@alikhalilll/nuxt-crypto` — encrypt/decrypt round-trip, server-only mode, device-fingerprint binding | `pages/crypto.vue`, `server/api/*`                          |
 | `@alikhalilll/nuxt-auto-middleware` — layout rules, groups, per-page overrides                        | `middleware/*.ts`, `layouts/*.vue`, `pages/dashboard/*.vue` |
-| `@alikhalilll/ui` — tell-input + popover/drawer/responsive-popover via the bundled Nuxt module        | `pages/ui.vue` (module wired in `nuxt.config.ts`)           |
+| `@alikhalilll/a-*` — tell-input + popover/drawer/responsive-popover via per-package Nuxt modules      | `pages/ui.vue` (module wired in `nuxt.config.ts`)           |
 
-Every module is configured in `nuxt.config.ts` — that's also the canonical example of how a downstream user would wire all four together. `@alikhalilll/ui/nuxt` registers every component for auto-import, so a page can use `<ATellInput>` directly without an explicit `import` statement.
+Every module is configured in `nuxt.config.ts` — that's also the canonical example of how a downstream user would wire all four together. `@alikhalilll/a-tel-input/nuxt` (and the other @alikhalilll/a-\*/nuxt modules) register their components for auto-import, so a page can use `<ATelInput>` directly without an explicit `import` statement.
 
 ## Adding coverage
 

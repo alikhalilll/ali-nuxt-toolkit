@@ -1,20 +1,20 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { ATellInput } from '@alikhalilll/ui';
+import { ATelInput } from '@alikhalilll/a-tel-input';
 
 const phone = ref('');
 const country = ref<number | null>(null);
 
 const source = `<script setup lang="ts">
 import { ref } from 'vue';
-import { ATellInput } from '@alikhalilll/ui';
+import { ATelInput } from '@alikhalilll/a-tel-input';
 
 const phone = ref('');
 const country = ref<number | null>(null);
 \u003c/script>
 
 <template>
-  <ATellInput
+  <ATelInput
     v-model:phone="phone"
     v-model:country="country"
     :allowed-dial-codes="['20', '966', '971']"
@@ -38,7 +38,7 @@ const country = ref<number | null>(null);
     <DemoTabs :code="source">
       <div class="p-5">
         <div class="max-w-sm">
-          <ATellInput
+          <ATelInput
             v-model:phone="phone"
             v-model:country="country"
             :allowed-dial-codes="['20', '966', '971']"

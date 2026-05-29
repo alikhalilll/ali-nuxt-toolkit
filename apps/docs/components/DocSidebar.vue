@@ -50,11 +50,11 @@ const modules: ModuleEntry[] = [
       },
       {
         // The `A` prefix is dropped in the sidebar — the "Components" group context
-        // already implies the @alikhalilll/ui component family. Page H1s + imports
-        // still carry the prefix (ATellInput, AInput, …). Keeps long labels readable.
+        // already implies the @alikhalilll/a-* component family. Page H1s + imports
+        // still carry the prefix (ATelInput, AInput, …). Keeps long labels readable.
         label: 'Components',
         items: [
-          { path: '/ui/tell-input', title: 'TellInput', kind: 'page' },
+          { path: '/ui/tell-input', title: 'TelInput', kind: 'page' },
           { path: '/ui/input', title: 'Input', kind: 'page' },
           { path: '/ui/popover', title: 'Popover', kind: 'page' },
           { path: '/ui/drawer', title: 'Drawer', kind: 'page' },
@@ -140,7 +140,7 @@ function scrollTo(id: string, e: MouseEvent) {
         <!--
           Modules with grouped subpages: render an uppercase group header above each
           set of items. Each item still acts as its own parent — when active, its
-          in-page TOC nests under it as a third level (ui → Components → ATellInput → §).
+          in-page TOC nests under it as a third level (ui → Components → ATelInput → §).
         -->
         <div v-if="mod.groups && isModuleActive(mod)" class="ml-4 mb-3">
           <!--

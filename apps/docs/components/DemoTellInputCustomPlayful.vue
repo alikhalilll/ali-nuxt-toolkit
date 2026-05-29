@@ -7,7 +7,7 @@ import {
   SparklesIcon,
   SmileIcon,
 } from '~/components/icons';
-import { ATellInput } from '@alikhalilll/ui';
+import { ATelInput } from '@alikhalilll/a-tel-input';
 
 const phone = ref('');
 const country = ref<number | null>(null);
@@ -30,7 +30,7 @@ const playfulTheme = {
 const source = `<script setup lang="ts">
 import { ref } from 'vue';
 import { ChevronDownIcon, FrownIcon, PartyPopperIcon, SparklesIcon, SmileIcon } from '~/components/icons';
-import { ATellInput } from '@alikhalilll/ui';
+import { ATelInput } from '@alikhalilll/a-tel-input';
 
 const phone = ref('');
 const country = ref<number | null>(null);
@@ -61,7 +61,7 @@ const playfulTheme = {
       We'll only use it to text the confirmation code.
     </p>
 
-    <ATellInput
+    <ATelInput
       v-model:phone="phone"
       v-model:country="country"
       default-country="20"
@@ -113,7 +113,7 @@ const playfulTheme = {
           <span class="tabular-nums">{{ formatHint }}</span>
         </p>
       </template>
-    </ATellInput>
+    </ATelInput>
   </div>
 </template>`;
 </script>
@@ -141,7 +141,7 @@ const playfulTheme = {
             We'll only use it to text the confirmation code.
           </p>
 
-          <ATellInput
+          <ATelInput
             v-model:phone="phone"
             v-model:country="country"
             default-country="20"
@@ -203,7 +203,7 @@ const playfulTheme = {
                 <span class="tabular-nums">{{ formatHint }}</span>
               </p>
             </template>
-          </ATellInput>
+          </ATelInput>
         </div>
       </div>
     </DemoTabs>

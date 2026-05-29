@@ -15,13 +15,13 @@ const installCommands = [
   'pnpm add @alikhalilll/nuxt-api-provider',
   'pnpm add @alikhalilll/nuxt-crypto',
   'pnpm add @alikhalilll/nuxt-auto-middleware',
-  'pnpm add @alikhalilll/ui',
+  'pnpm add @alikhalilll/a-tel-input',
 ];
 const installPkgs = [
   '@alikhalilll/nuxt-api-provider',
   '@alikhalilll/nuxt-crypto',
   '@alikhalilll/nuxt-auto-middleware',
-  '@alikhalilll/ui',
+  '@alikhalilll/a-tel-input',
 ];
 const installShorts = ['api', 'crypto', 'middleware', 'ui'];
 const installIndex = ref(0);

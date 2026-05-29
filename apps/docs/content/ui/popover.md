@@ -1,7 +1,7 @@
 ---
 title: APopover
 description: Themed reka-ui popover. Modal by default, optional dimmed overlay, full props/emits forwarding.
-package: '@alikhalilll/ui'
+package: '@alikhalilll/a-popover'
 order: 3
 ---
 
@@ -15,21 +15,21 @@ Wraps reka-ui's `PopoverRoot` / `Trigger` / `Content` with the shared design tok
 ## Install
 
 ```bash
-pnpm add @alikhalilll/ui
+pnpm add @alikhalilll/a-popover
 ```
 
 ```ts
-import { APopover, APopoverTrigger, APopoverContent } from '@alikhalilll/ui/popover';
+import { APopover, APopoverTrigger, APopoverContent } from '@alikhalilll/a-popover';
 ```
 
-First time using `@alikhalilll/ui`? Run the [one-time setup](/ui#setup).
+First time using `@alikhalilll/a-popover`? Run the [one-time setup](/ui#setup).
 
 ## Usage
 
 ```vue
 <script setup lang="ts">
 import { ref } from 'vue';
-import { APopover, APopoverTrigger, APopoverContent } from '@alikhalilll/ui/popover';
+import { APopover, APopoverTrigger, APopoverContent } from '@alikhalilll/a-popover';
 
 const open = ref(false);
 </script>

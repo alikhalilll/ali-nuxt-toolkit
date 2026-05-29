@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { ATellInput } from '@alikhalilll/ui';
+import { ATelInput } from '@alikhalilll/a-tel-input';
 
 const phone = ref('');
 const country = ref<number | null>(null);
 
 const source = `<script setup lang="ts">
 import { ref } from 'vue';
-import { ATellInput } from '@alikhalilll/ui';
+import { ATelInput } from '@alikhalilll/a-tel-input';
 
 const phone = ref('');
 const country = ref<number | null>(null);
@@ -16,7 +16,7 @@ const country = ref<number | null>(null);
 <template>
   <!-- Direction inherits from the page — no \`dir\` prop needed. -->
   <div dir="rtl">
-    <ATellInput
+    <ATelInput
       v-model:phone="phone"
       v-model:country="country"
       default-country="20"
@@ -41,7 +41,7 @@ const country = ref<number | null>(null);
     <DemoTabs :code="source">
       <div class="p-5">
         <div class="max-w-sm" dir="rtl">
-          <ATellInput
+          <ATelInput
             v-model:phone="phone"
             v-model:country="country"
             default-country="20"

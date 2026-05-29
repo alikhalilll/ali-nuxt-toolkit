@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { ADrawer, ADrawerTrigger, ADrawerContent } from '@alikhalilll/ui';
+import { ADrawer, ADrawerTrigger, ADrawerContent } from '@alikhalilll/a-drawer';
 
 const open = ref(false);
 </script>

@@ -29,7 +29,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2026-04-01',
   srcDir: '.',
   modules: ['@nuxt/content', '@alikhalilll/nuxt-api-provider', '@alikhalilll/nuxt-crypto'],
-  // Note: @alikhalilll/ui/styles.css is @imported from the top of docs.css instead of
+  // Note: @alikhalilll/a-ui-base/tokens.css is @imported from the top of docs.css instead of
   // listed here. Vite + pnpm workspaces resolves the same workspace-symlinked CSS via
   // two different canonical paths when it's referenced both as a Nuxt CSS entry AND
   // implicitly via the package's subpath — the second copy lands AFTER docs.css in the

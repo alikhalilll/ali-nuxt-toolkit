@@ -55,7 +55,7 @@
         <h2 class="mb-2 border-l-[3px] border-brand pl-2 text-lg font-semibold">ui</h2>
         <p class="mb-3 text-sm text-text-dim">
           Headless, shadcn-vue style components. First component:
-          <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-brand-2">ATellInput</code>
+          <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-brand-2">ATelInput</code>
           with automatic country detection and a vaul-vue drawer on mobile.
         </p>
         <NuxtLink to="/ui">

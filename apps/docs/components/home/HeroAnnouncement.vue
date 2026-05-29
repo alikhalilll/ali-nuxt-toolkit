@@ -27,7 +27,7 @@ onMounted(() => {
       >
         New
       </span>
-      <span>ATellInput is now international + accessible</span>
+      <span>ATelInput is now international + accessible</span>
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="12"

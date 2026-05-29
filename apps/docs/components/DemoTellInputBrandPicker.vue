@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { ATellInput } from '@alikhalilll/ui';
+import { ATelInput } from '@alikhalilll/a-tel-input';
 
 const phone = ref('');
 const country = ref<number | null>(null);
@@ -37,7 +37,7 @@ ${lines.join('\n')}
 
 const source = `<script setup lang="ts">
 import { computed, ref } from 'vue';
-import { ATellInput } from '@alikhalilll/ui';
+import { ATelInput } from '@alikhalilll/a-tel-input';
 
 const phone = ref('');
 const country = ref<number | null>(null);
@@ -63,7 +63,7 @@ const theme = computed(() => {
 
 <template>
   <div :style="theme" class="text-foreground p-5 rounded-lg bg-background">
-    <ATellInput
+    <ATelInput
       v-model:phone="phone"
       v-model:country="country"
       default-country="20"
@@ -156,7 +156,7 @@ const theme = computed(() => {
           class="text-foreground rounded-lg border border-border bg-background p-5 transition-colors"
         >
           <div class="max-w-sm">
-            <ATellInput
+            <ATelInput
               v-model:phone="phone"
               v-model:country="country"
               default-country="20"

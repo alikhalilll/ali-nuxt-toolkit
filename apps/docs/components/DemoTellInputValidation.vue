@@ -1,22 +1,22 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { ATellInput } from '@alikhalilll/ui';
+import { ATelInput } from '@alikhalilll/a-tel-input';
 
 const phone = ref('');
 const country = ref<number | null>(null);
 
-const tellRef = ref<InstanceType<typeof ATellInput> | null>(null);
+const tellRef = ref<InstanceType<typeof ATelInput> | null>(null);
 const validation = computed(() => tellRef.value?.validation);
 const required = computed(() => tellRef.value?.required);
 
 const source = `<script setup lang="ts">
 import { computed, ref } from 'vue';
-import { ATellInput } from '@alikhalilll/ui';
+import { ATelInput } from '@alikhalilll/a-tel-input';
 
 const phone = ref('');
 const country = ref<number | null>(null);
 
-const tellRef = ref<InstanceType<typeof ATellInput> | null>(null);
+const tellRef = ref<InstanceType<typeof ATelInput> | null>(null);
 
 // Reactive validation result + country metadata
 const validation = computed(() => tellRef.value?.validation);
@@ -24,7 +24,7 @@ const required   = computed(() => tellRef.value?.required);
 \u003c/script>
 
 <template>
-  <ATellInput
+  <ATelInput
     ref="tellRef"
     v-model:phone="phone"
     v-model:country="country"
@@ -49,7 +49,7 @@ const required   = computed(() => tellRef.value?.required);
     <DemoTabs :code="source">
       <div class="p-5">
         <div class="max-w-sm">
-          <ATellInput
+          <ATelInput
             ref="tellRef"
             v-model:phone="phone"
             v-model:country="country"

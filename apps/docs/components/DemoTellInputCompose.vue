@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { AInput, ACountrySelect, usePhoneValidation, cn } from '@alikhalilll/ui';
+import { cn } from '@alikhalilll/a-ui-base';
+import { AInput } from '@alikhalilll/a-input';
+import { ACountrySelect, usePhoneValidation } from '@alikhalilll/a-tel-input';
 
 const country = ref('EG');
 const phone = ref('');
@@ -15,7 +17,9 @@ const result = computed(() =>
 
 const source = `<script setup lang="ts">
 import { computed, ref } from 'vue';
-import { AInput, ACountrySelect, usePhoneValidation, cn } from '@alikhalilll/ui';
+import { cn } from '@alikhalilll/a-ui-base';
+import { AInput } from '@alikhalilll/a-input';
+import { ACountrySelect, usePhoneValidation } from '@alikhalilll/a-tel-input';
 
 const country = ref('EG');
 const phone = ref('');
@@ -70,7 +74,7 @@ const result = computed(() =>
     </h4>
 
     <p class="mb-4 text-sm text-text-dim">
-      Same primitives as the default <code>ATellInput</code>, recombined: full-width country trigger
+      Same primitives as the default <code>ATelInput</code>, recombined: full-width country trigger
       on top, plain <code>AInput</code> below, E.164 chip on the right.
     </p>
 

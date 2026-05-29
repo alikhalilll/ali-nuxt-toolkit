@@ -1,17 +1,11 @@
 @import 'tailwindcss';
 
 /*
- * Make Tailwind v4 scan the @alikhalilll/ui package for utility classes.
- * Without this, every `bg-popover`, `text-muted-foreground`, etc. used inside the lib's
- * .vue files is silently dropped and the components render unstyled.
- *
- * Local workspace dev: scan source for HMR.
- * For consumers installing from npm, the equivalent is:
- *   @source '../node_modules/@alikhalilll/ui/dist/index.mjs';
+ * No @source for the component packages: each @alikhalilll/a-* package ships its own
+ * prebuilt stylesheet (`a-<name>/styles.css`), imported via `nuxt.config.ts > css`
+ * alongside `@alikhalilll/a-ui-base/tokens.css`. Tailwind here only generates the
+ * playground's own utilities.
  */
-@source '../../../packages/ui/index.ts';
-@source '../../../packages/ui/entries/**/*.{vue,ts}';
-@source '../../../packages/ui/utils/**/*.ts';
 
 /* Playground-only tokens (renamed to avoid collisions with lib tokens) */
 @theme {
@@ -33,8 +27,8 @@
 }
 
 /*
- * Expose @alikhalilll/ui design tokens as Tailwind utility classes.
- * `hsl(var(--foo))` resolves the HSL triplets shipped in @alikhalilll/ui/styles.css.
+ * Expose @alikhalilll/a-* design tokens as Tailwind utility classes.
+ * `hsl(var(--foo))` resolves the HSL triplets shipped in @alikhalilll/a-ui-base/tokens.css.
  * The lib ships both `:root, .light { ... }` and `.dark { ... }`, so we just toggle
  * the `.dark` class on <html> and the popover/drawer/tell input swap themes for free.
  */

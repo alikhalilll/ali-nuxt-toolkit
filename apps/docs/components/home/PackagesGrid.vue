@@ -48,11 +48,11 @@ const packages: PackageCard[] = [
     modeLabel: 'Nuxt-only (middleware is a Nuxt primitive)',
   },
   {
-    name: '@alikhalilll/ui',
+    name: '@alikhalilll/a-* (UI)',
     docs: '/ui',
-    npm: 'https://www.npmjs.com/package/@alikhalilll/ui',
+    npm: 'https://www.npmjs.com/package/@alikhalilll/a-tel-input',
     description:
-      'Headless Vue 3 components — ATellInput, APopover, ADrawer, AResponsivePopover, AInput. Each lives behind its own subpath import (`@alikhalilll/ui/tell-input`, …) so you only ship the components you use.',
+      'Headless Vue 3 components — ATelInput, APopover, ADrawer, AResponsivePopover, AInput. Each lives behind its own package (`@alikhalilll/a-tel-input`, …) so you only ship the components you use.',
     accent: 'ui',
     mode: 'vue',
     modeLabel: 'Vue 3 (Nuxt + non-Nuxt)',

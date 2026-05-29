@@ -1,7 +1,7 @@
 ---
 title: ADrawer
 description: Themed bottom-sheet drawer built on vaul-vue + reka-ui. Drag-to-dismiss with overlay and scroll-lock.
-package: '@alikhalilll/ui'
+package: '@alikhalilll/a-drawer'
 order: 4
 ---
 
@@ -15,21 +15,21 @@ Wraps [vaul-vue](https://github.com/unovue/vaul-vue) — a bottom-anchored sheet
 ## Install
 
 ```bash
-pnpm add @alikhalilll/ui
+pnpm add @alikhalilll/a-drawer
 ```
 
 ```ts
-import { ADrawer, ADrawerTrigger, ADrawerContent } from '@alikhalilll/ui/drawer';
+import { ADrawer, ADrawerTrigger, ADrawerContent } from '@alikhalilll/a-drawer';
 ```
 
-First time using `@alikhalilll/ui`? Run the [one-time setup](/ui#setup).
+First time using `@alikhalilll/a-drawer`? Run the [one-time setup](/ui#setup).
 
 ## Usage
 
 ```vue
 <script setup lang="ts">
 import { ref } from 'vue';
-import { ADrawer, ADrawerTrigger, ADrawerContent } from '@alikhalilll/ui/drawer';
+import { ADrawer, ADrawerTrigger, ADrawerContent } from '@alikhalilll/a-drawer';
 
 const open = ref(false);
 </script>

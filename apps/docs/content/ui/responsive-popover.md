@@ -1,7 +1,7 @@
 ---
 title: AResponsivePopover
 description: Popover on desktop, vaul-vue drawer on mobile. Same API, swaps surfaces at the breakpoint.
-package: '@alikhalilll/ui'
+package: '@alikhalilll/a-responsive-popover'
 order: 5
 ---
 
@@ -12,12 +12,12 @@ Renders as an [`APopover`](/ui/popover) at ≥ 768 px and an [`ADrawer`](/ui/dra
 ::DemoResponsivePopover
 ::
 
-This is the surface powering the country picker in [`ATellInput`](/ui/tell-input).
+This is the surface powering the country picker in [`ATelInput`](/ui/tell-input).
 
 ## Install
 
 ```bash
-pnpm add @alikhalilll/ui
+pnpm add @alikhalilll/a-responsive-popover
 ```
 
 ```ts
@@ -25,10 +25,10 @@ import {
   AResponsivePopover,
   AResponsivePopoverTrigger,
   AResponsivePopoverContent,
-} from '@alikhalilll/ui/responsive-popover';
+} from '@alikhalilll/a-responsive-popover';
 ```
 
-First time using `@alikhalilll/ui`? Run the [one-time setup](/ui#setup).
+First time using `@alikhalilll/a-responsive-popover`? Run the [one-time setup](/ui#setup).
 
 ## Usage
 
@@ -39,7 +39,7 @@ import {
   AResponsivePopover,
   AResponsivePopoverTrigger,
   AResponsivePopoverContent,
-} from '@alikhalilll/ui/responsive-popover';
+} from '@alikhalilll/a-responsive-popover';
 
 const open = ref(false);
 </script>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { ChevronDownIcon } from '~/components/icons';
-import { ATellInput } from '@alikhalilll/ui';
+import { ATelInput } from '@alikhalilll/a-tel-input';
 
 const phone = ref('');
 const country = ref<number | null>(null);
@@ -24,7 +24,7 @@ const minimalTheme = {
 const source = `<script setup lang="ts">
 import { ref } from 'vue';
 import { ChevronDownIcon } from '~/components/icons';
-import { ATellInput } from '@alikhalilll/ui';
+import { ATelInput } from '@alikhalilll/a-tel-input';
 
 const phone = ref('');
 const country = ref<number | null>(null);
@@ -52,7 +52,7 @@ const minimalTheme = {
       Phone
     </label>
 
-    <ATellInput
+    <ATelInput
       v-model:phone="phone"
       v-model:country="country"
       default-country="GB"
@@ -71,7 +71,7 @@ const minimalTheme = {
           <ChevronDownIcon class="size-3 transition-transform" :class="open && 'rotate-180'" />
         </button>
       </template>
-    </ATellInput>
+    </ATelInput>
   </div>
 </template>`;
 </script>
@@ -98,7 +98,7 @@ const minimalTheme = {
             Phone
           </label>
 
-          <ATellInput
+          <ATelInput
             v-model:phone="phone"
             v-model:country="country"
             default-country="GB"
@@ -123,7 +123,7 @@ const minimalTheme = {
                 />
               </button>
             </template>
-          </ATellInput>
+          </ATelInput>
         </div>
       </div>
     </DemoTabs>

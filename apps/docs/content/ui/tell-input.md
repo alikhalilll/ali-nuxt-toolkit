@@ -1,45 +1,45 @@
 ---
-title: ATellInput
+title: ATelInput
 description: Phone-number input with smart country detection, libphonenumber-js validation, and a responsive popover/drawer picker.
-package: '@alikhalilll/ui'
+package: '@alikhalilll/a-tel-input'
 order: 1
 ---
 
-# ATellInput
+# ATelInput
 
 A composite phone input. Hides the country picker until your input matches a known dial code, then reveals it pre-filled with the detected country. The picker sits at the **end** of the field as a flag-only trigger; the selected dial code shows as a static prefix inside the input. `v-model:phone` holds the digits-only national number; `v-model:country` holds the **dial number** (`20` for Egypt, `44` for the UK, `1` for the NANP block, `null` for no selection).
 
 The field is direction-aware (RTL inherits from the page), country names and numerals localise via the `locale` prop, and digits typed in alternative numeral systems (Arabic-Indic `٠-٩`, Persian `۰-۹`, Devanagari, Bengali) are accepted and normalised to ASCII. See [Internationalization](#internationalization).
 
-::DemoTellInputBasic
+::DemoTelInputBasic
 ::
 
 ## Install
 
 ```bash
-pnpm add @alikhalilll/ui
+pnpm add @alikhalilll/a-tel-input
 ```
 
 ```ts
-import { ATellInput } from '@alikhalilll/ui/tell-input'; // tree-shaken subpath
-// or: import { ATellInput } from '@alikhalilll/ui';
+import { ATelInput } from '@alikhalilll/a-tel-input'; // tree-shaken subpath
+// or: import { ATelInput } from '@alikhalilll/a-tel-input';
 ```
 
-First time using `@alikhalilll/ui`? Run the [one-time setup](/ui#setup).
+First time using `@alikhalilll/a-tel-input`? Run the [one-time setup](/ui#setup).
 
 ## Usage
 
 ```vue
 <script setup lang="ts">
 import { ref } from 'vue';
-import { ATellInput } from '@alikhalilll/ui/tell-input';
+import { ATelInput } from '@alikhalilll/a-tel-input';
 
 const phone = ref('');
 const country = ref<number | null>(null);
 </script>
 
 <template>
-  <ATellInput v-model:phone="phone" v-model:country="country" show-validation />
+  <ATelInput v-model:phone="phone" v-model:country="country" show-validation />
 </template>
 ```
 
@@ -69,13 +69,13 @@ Type `+447911123456`, `01066105963`, or paste any well-formed international numb
 | `errorMessages`      | `Partial<Record<PhoneValidationReason, string>>` | English defaults             | Override the validation error labels.                                                                                   |
 | `dir`                | `'ltr' \| 'rtl' \| 'auto'`                       | `'auto'` (inherits)          | Text direction. `'auto'` / omitted inherits from the page; `'ltr'` / `'rtl'` force it.                                  |
 | `locale`             | `string`                                         | —                            | BCP-47 locale. Localises country names (`Intl.DisplayNames`) and the format-hint numerals.                              |
-| `messages`           | `TellInputMessages` (partial)                    | English defaults             | One bag for every UI string — picker, error labels, and a11y labels. See [Internationalization](#internationalization). |
+| `messages`           | `TelInputMessages` (partial)                     | English defaults             | One bag for every UI string — picker, error labels, and a11y labels. See [Internationalization](#internationalization). |
 | `class`              | `HTMLAttributes['class']`                        | —                            | Merged into the outer wrapper.                                                                                          |
 
 ## Exposed via template ref
 
 ```ts
-const tellRef = ref<InstanceType<typeof ATellInput>>();
+const tellRef = ref<InstanceType<typeof ATelInput>>();
 tellRef.value.validation; // PhoneValidationResult — reactive
 tellRef.value.required; // PhoneRequiredInfo | null — example, length range, format hint
 tellRef.value.selectedDialCode; // '+20' | null
@@ -84,14 +84,14 @@ tellRef.value.validationState; // 'idle' | 'valid' | 'error'
 
 ## Sizes
 
-::DemoTellInputSizes
+::DemoTelInputSizes
 ::
 
 Five sizes — `xs` 28 / `sm` 36 / `md` **43 default** / `lg` 52 / `xl` 60 px. See [Size scale](/ui#size-scale) for the shared exported maps.
 
 ## Validation
 
-::DemoTellInputValidation
+::DemoTelInputValidation
 ::
 
 Validation runs on every keystroke via `usePhoneValidation()` (a `libphonenumber-js` wrapper) and produces:
@@ -119,7 +119,7 @@ type PhoneValidationReason =
 Localise the messages with `errorMessages`:
 
 ```vue
-<ATellInput
+<ATelInput
   v-model:phone="phone"
   v-model:country="country"
   :error-messages="{
@@ -145,28 +145,28 @@ On mount, the component runs an IP → timezone → locale chain (default strate
 Run detection imperatively from anywhere:
 
 ```ts
-import { detectCountry } from '@alikhalilll/ui/tell-input';
+import { detectCountry } from '@alikhalilll/a-tel-input';
 
 const iso2 = await detectCountry({ strategy: 'auto', defaultCountry: 'EG' });
 ```
 
 ### From user input (default)
 
-::DemoTellInputDetectFromInput
+::DemoTelInputDetectFromInput
 ::
 
 `detect-from-input` is `true` by default. The picker is hidden until typing or pasting matches a known dial code — debounced by `detectDebounceMs` (default 150 ms). On match, the picker reveals and `phone` is normalised to the national significant number (dial code + national prefix stripped).
 
 ```vue
 <!-- Default — picker hidden until detected -->
-<ATellInput v-model:phone="phone" v-model:country="country" show-validation />
+<ATelInput v-model:phone="phone" v-model:country="country" show-validation />
 
 <!-- Variants -->
-<ATellInput default-country="20" />
+<ATelInput default-country="20" />
 <!-- Pre-filled picker -->
-<ATellInput v-model:country="myInitial" />
+<ATelInput v-model:country="myInitial" />
 <!-- Pre-filled via v-model -->
-<ATellInput :detect-from-input="false" />
+<ATelInput :detect-from-input="false" />
 <!-- Legacy always-visible picker -->
 ```
 
@@ -190,11 +190,11 @@ Exposed via template ref alongside the existing `validation` / `validationState`
 
 ## Internationalization
 
-`ATellInput` is built for non-English, RTL, and non-ASCII-numeral users.
+`ATelInput` is built for non-English, RTL, and non-ASCII-numeral users.
 
 ### RTL
 
-::DemoTellInputRtl
+::DemoTelInputRtl
 ::
 
 The component is direction-aware. Omit `dir` (or pass `'auto'`) and direction inherits from
@@ -217,14 +217,14 @@ Supported systems: Arabic-Indic (`٠-٩`), Extended/Eastern Arabic — Persian &
 Devanagari, and Bengali.
 
 ```ts
-import { normalizeDigits } from '@alikhalilll/ui/tell-input';
+import { normalizeDigits } from '@alikhalilll/a-tel-input';
 
 normalizeDigits('٠١٠٦٦'); // → '01066'
 ```
 
 ### Locale & messages
 
-::DemoTellInputI18n
+::DemoTelInputI18n
 ::
 
 Pass a `locale` and a `messages` bag to fully localise the component:
@@ -232,7 +232,7 @@ Pass a `locale` and a `messages` bag to fully localise the component:
 ```vue
 <template>
   <div dir="rtl">
-    <ATellInput
+    <ATelInput
       v-model:phone="phone"
       v-model:country="country"
       locale="ar"
@@ -273,11 +273,11 @@ labelled.
 
 ## Restricting countries
 
-::DemoTellInputAllowed
+::DemoTelInputAllowed
 ::
 
 ```vue
-<ATellInput
+<ATelInput
   v-model:phone="phone"
   v-model:country="country"
   :allowed-dial-codes="['20', '971', '966']"
@@ -289,7 +289,7 @@ Disallowed countries still render in the picker but as disabled rows. The whitel
 
 ## Theming
 
-::DemoTellInputThemes
+::DemoTelInputThemes
 ::
 
 The component is themed entirely with the shared `--ak-ui-*` CSS variables — no component props, no rebuild. Three placement patterns:
@@ -313,21 +313,21 @@ Values are HSL **triplets** (no `hsl(…)` wrapper). Full token list and recipes
 
 ### Brand-color via a single hue
 
-::DemoTellInputBrandPicker
+::DemoTelInputBrandPicker
 ::
 
 Vary lightness on one hue: `7%` (background) → `9%` (popover) → `14%` (muted) → `18%` (border) → `22%` (accent) → `60%+` (ring). The component handles the rest.
 
 ### Day / night
 
-::DemoTellInputDayNight
+::DemoTelInputDayNight
 ::
 
 The lib ships both `.light` and `.dark` blocks — toggle the class on `<html>` (or any wrapper). Portaled popovers/drawers inherit via the cascade.
 
 ### Multi-tenant
 
-::DemoTellInputMultiTenant
+::DemoTelInputMultiTenant
 ::
 
 ```css
@@ -358,7 +358,7 @@ The lib ships both `.light` and `.dark` blocks — toggle the class on `<html>` 
 
 ## Full customisation
 
-::DemoTellInputCustomPillCream
+::DemoTelInputCustomPillCream
 ::
 
 Three customisation vectors — stack any combination:
@@ -402,23 +402,23 @@ Three customisation vectors — stack any combination:
 
 ### Live gallery
 
-::DemoTellInputCustomBank
+::DemoTelInputCustomBank
 ::
 
-::DemoTellInputCustomPlayful
+::DemoTelInputCustomPlayful
 ::
 
-::DemoTellInputCustomMinimal
+::DemoTelInputCustomMinimal
 ::
 
 Stacking every vector — curated countries, hi-res flags, custom searcher, custom detector, slot overrides:
 
-::DemoTellInputCustomization
+::DemoTelInputCustomization
 ::
 
 ## Composing your own variant
 
-::DemoTellInputCompose
+::DemoTelInputCompose
 ::
 
 Every primitive, composable, and helper is re-exported — fork-free composition:
@@ -426,8 +426,8 @@ Every primitive, composable, and helper is re-exported — fork-free composition
 ```vue
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { AInput } from '@alikhalilll/ui/input';
-import { ACountrySelect, usePhoneValidation } from '@alikhalilll/ui/tell-input';
+import { AInput } from '@alikhalilll/a-input';
+import { ACountrySelect, usePhoneValidation } from '@alikhalilll/a-tel-input';
 
 const country = ref('EG');
 const phone = ref('');

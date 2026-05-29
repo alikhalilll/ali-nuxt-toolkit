@@ -3,7 +3,15 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineNuxtConfig({
   compatibilityDate: '2026-04-01',
   srcDir: '.',
-  css: ['@alikhalilll/ui/styles.css', '~/assets/main.css'],
+  css: [
+    '@alikhalilll/a-ui-base/tokens.css',
+    '@alikhalilll/a-popover/styles.css',
+    '@alikhalilll/a-drawer/styles.css',
+    '@alikhalilll/a-responsive-popover/styles.css',
+    '@alikhalilll/a-input/styles.css',
+    '@alikhalilll/a-tel-input/styles.css',
+    '~/assets/main.css',
+  ],
   app: {
     head: {
       htmlAttrs: { class: 'dark' },
@@ -16,11 +24,15 @@ export default defineNuxtConfig({
     '@alikhalilll/nuxt-api-provider',
     '@alikhalilll/nuxt-crypto',
     '@alikhalilll/nuxt-auto-middleware',
-    // UI auto-import: `<ATellInput>` / `<APopover>` / etc. resolve without
-    // explicit `import` statements in <script setup>. Each is code-split by
-    // subpath, so a page using only `<ATellInput>` still ships only the
-    // tell-input chunk.
-    '@alikhalilll/ui/nuxt',
+    // UI auto-import: `<ATelInput>` / `<APopover>` / etc. resolve without
+    // explicit `import` statements in <script setup>. Each component package
+    // ships its own Nuxt module, so a page using only `<ATelInput>` still ships
+    // only that component's chunk.
+    '@alikhalilll/a-input/nuxt',
+    '@alikhalilll/a-popover/nuxt',
+    '@alikhalilll/a-drawer/nuxt',
+    '@alikhalilll/a-responsive-popover/nuxt',
+    '@alikhalilll/a-tel-input/nuxt',
   ],
   apiProvider: {
     baseURL: 'https://jsonplaceholder.typicode.com',

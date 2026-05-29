@@ -14,7 +14,12 @@
     "@alikhalilll/nuxt-api-provider": "workspace:*",
     "@alikhalilll/nuxt-crypto": "workspace:*",
     "@alikhalilll/nuxt-auto-middleware": "workspace:*",
-    "@alikhalilll/ui": "workspace:*",
+    "@alikhalilll/a-ui-base": "workspace:*",
+    "@alikhalilll/a-input": "workspace:*",
+    "@alikhalilll/a-popover": "workspace:*",
+    "@alikhalilll/a-drawer": "workspace:*",
+    "@alikhalilll/a-responsive-popover": "workspace:*",
+    "@alikhalilll/a-tel-input": "workspace:*",
     "@nuxt/content": "^3.0.0",
     "better-sqlite3": "^12.0.0"
   },

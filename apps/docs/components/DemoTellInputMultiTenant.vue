@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { ATellInput } from '@alikhalilll/ui';
+import { ATelInput } from '@alikhalilll/a-tel-input';
 
 const acmePhone = ref('');
 const acmeCountry = ref<number | null>(null);
@@ -55,11 +55,11 @@ const source = `<style>
 
 <template>
   <div class="tenant-acme">
-    <ATellInput v-model:phone="acme.phone" v-model:country="acme.country" />
+    <ATelInput v-model:phone="acme.phone" v-model:country="acme.country" />
   </div>
 
   <div class="tenant-nova">
-    <ATellInput v-model:phone="nova.phone" v-model:country="nova.country" />
+    <ATelInput v-model:phone="nova.phone" v-model:country="nova.country" />
   </div>
 </template>`;
 </script>
@@ -87,7 +87,7 @@ const source = `<style>
           >
             Acme Inc.
           </h5>
-          <ATellInput
+          <ATelInput
             v-model:phone="acmePhone"
             v-model:country="acmeCountry"
             default-country="20"
@@ -105,7 +105,7 @@ const source = `<style>
           >
             Nova Labs
           </h5>
-          <ATellInput
+          <ATelInput
             v-model:phone="novaPhone"
             v-model:country="novaCountry"
             default-country="20"

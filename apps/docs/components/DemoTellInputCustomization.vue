@@ -8,11 +8,11 @@ import {
   SparklesIcon,
 } from '~/components/icons';
 import {
-  ATellInput,
+  ATelInput,
   defaultFlagUrl,
   type CountryOption,
   type FlagUrlBuilder,
-} from '@alikhalilll/ui';
+} from '@alikhalilll/a-tel-input';
 
 const phone = ref('');
 const country = ref<number | null>(null);
@@ -63,11 +63,11 @@ const source = `<script setup lang="ts">
 import { computed, ref } from 'vue';
 import { PhoneIcon, SearchIcon, ShieldCheckIcon, ShieldXIcon, SparklesIcon } from '~/components/icons';
 import {
-  ATellInput,
+  ATelInput,
   defaultFlagUrl,
   type CountryOption,
   type FlagUrlBuilder,
-} from '@alikhalilll/ui';
+} from '@alikhalilll/a-tel-input';
 
 const phone = ref('');
 const country = ref<number | null>(null);
@@ -110,7 +110,7 @@ async function alwaysEgypt() { return 'EG'; }
 \u003c/script>
 
 <template>
-  <ATellInput
+  <ATelInput
     v-model:phone="phone"
     v-model:country="country"
     default-country="20"
@@ -173,7 +173,7 @@ async function alwaysEgypt() { return 'EG'; }
         <p class="text-xs">Try a country name or +code.</p>
       </div>
     </template>
-  </ATellInput>
+  </ATelInput>
 </template>`;
 </script>
 
@@ -190,7 +190,7 @@ async function alwaysEgypt() { return 'EG'; }
     <DemoTabs :code="source">
       <div class="rounded-xl border border-brand-border bg-surface-2/40 p-6">
         <div class="max-w-md">
-          <ATellInput
+          <ATelInput
             v-model:phone="phone"
             v-model:country="country"
             default-country="20"
@@ -261,7 +261,7 @@ async function alwaysEgypt() { return 'EG'; }
                 <p class="text-text-muted text-xs">Try a country name or +code.</p>
               </div>
             </template>
-          </ATellInput>
+          </ATelInput>
         </div>
       </div>
     </DemoTabs>

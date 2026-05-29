@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { AInput, SIZES, controlHeightPx, type Size } from '@alikhalilll/ui';
+import { SIZES, controlHeightPx, type Size } from '@alikhalilll/a-ui-base';
+import { AInput } from '@alikhalilll/a-input';
 
 interface Row {
   size: Size;
