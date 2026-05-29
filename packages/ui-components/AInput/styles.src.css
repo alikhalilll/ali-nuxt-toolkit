@@ -1,0 +1,14 @@
+/*
+ * @alikhalilll/a-input — compiled stylesheet source.
+ *
+ * Tailwind compiles this into `dist/styles.css` (utilities this component uses +
+ * its bundled SFC styles). Imports the shared build-time theme from a-ui-base so
+ * `bg-background`, `border-input`, etc. resolve; the runtime `--ak-ui-*` values
+ * come from `@alikhalilll/a-ui-base/tokens.css`, imported once by the app.
+ *
+ *   import '@alikhalilll/a-ui-base/tokens.css';
+ *   import '@alikhalilll/a-input/styles.css';
+ */
+@import '@alikhalilll/a-ui-base/theme.css';
+
+@source './**/*.{vue,ts}';

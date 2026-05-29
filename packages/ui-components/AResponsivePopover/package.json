@@ -1,0 +1,130 @@
+{
+  "name": "@alikhalilll/a-responsive-popover",
+  "version": "1.0.0",
+  "description": "Vue 3 responsive popover: a reka-ui popover on desktop that becomes a vaul drawer on mobile. Part of the @alikhalilll/a-* toolkit.",
+  "license": "MIT",
+  "author": "alikhalilll",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alikhalilll/ali-nuxt-toolkit.git",
+    "directory": "packages/ui-components/AResponsivePopover"
+  },
+  "homepage": "https://alikhalilll.github.io/ali-nuxt-toolkit/ui",
+  "bugs": {
+    "url": "https://github.com/alikhalilll/ali-nuxt-toolkit/issues"
+  },
+  "type": "module",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "vue",
+    "vue3",
+    "nuxt",
+    "popover",
+    "drawer",
+    "responsive",
+    "headless",
+    "shadcn"
+  ],
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./nuxt": {
+      "import": {
+        "types": "./dist/nuxt/index.d.ts",
+        "default": "./dist/nuxt/index.js"
+      },
+      "require": {
+        "types": "./dist/nuxt/index.d.cts",
+        "default": "./dist/nuxt/index.cjs"
+      }
+    },
+    "./resolver": {
+      "import": {
+        "types": "./dist/resolver/index.d.ts",
+        "default": "./dist/resolver/index.js"
+      },
+      "require": {
+        "types": "./dist/resolver/index.d.cts",
+        "default": "./dist/resolver/index.cjs"
+      }
+    },
+    "./styles.css": "./dist/styles.css",
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/index.d.ts",
+  "web-types": "./web-types.json",
+  "files": [
+    "dist",
+    "components/**/*.vue",
+    "components/**/*.ts",
+    "composables/**/*.ts",
+    "types.ts",
+    "index.ts",
+    "web-types.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "clean": "rimraf dist web-types.json",
+    "build": "tsx ../../../scripts/build/run-component-build.ts",
+    "typecheck": "vue-tsc --noEmit -p tsconfig.json",
+    "validate-dist": "tsx ../../../scripts/validate/dist-validate.ts --pkg a-responsive-popover",
+    "validate-consumer": "tsx ../../../scripts/validate/consumer-validate.ts --pkg a-responsive-popover",
+    "validate": "pnpm build && pnpm validate-dist && pnpm validate-consumer",
+    "prepack": "pnpm build",
+    "prepublishOnly": "pnpm validate"
+  },
+  "peerDependencies": {
+    "@nuxt/kit": "^3.0.0 || ^4.0.0",
+    "@vueuse/core": "^14.0.0",
+    "unplugin-vue-components": "^28.0.0 || ^29.0.0 || ^30.0.0 || ^31.0.0 || ^32.0.0",
+    "vue": "^3.5.0"
+  },
+  "peerDependenciesMeta": {
+    "@nuxt/kit": {
+      "optional": true
+    },
+    "unplugin-vue-components": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "@alikhalilll/a-ui-base": "workspace:*",
+    "@alikhalilll/a-popover": "workspace:*",
+    "@alikhalilll/a-drawer": "workspace:*"
+  },
+  "devDependencies": {
+    "@ampproject/remapping": "^2.3.0",
+    "@nuxt/kit": "^4.4.2",
+    "@nuxt/schema": "^4.4.2",
+    "@tailwindcss/cli": "^4.0.0",
+    "@tsdown/css": "0.22.0",
+    "@types/node": "^22.13.0",
+    "@vueuse/core": "^14.0.0",
+    "magic-string": "^0.30.21",
+    "rimraf": "^6.0.1",
+    "tailwindcss": "^4.0.0",
+    "tsdown": "0.22.0",
+    "typescript": "^5.9.2",
+    "unplugin-vue": "7.2.0",
+    "unplugin-vue-components": "^32.1.0",
+    "vue": "^3.5.0",
+    "vue-tsc": "^3.2.4"
+  }
+}

@@ -1,0 +1,37 @@
+/*
+ * @alikhalilll/a-ui-base — build-time Tailwind theme.
+ *
+ * NOT for consumers to import. Each @alikhalilll/a-* component's `styles.src.css`
+ * `@import`s this file so its Tailwind build knows the `--ak-ui-*` → `--color-*`
+ * mapping and pulls in Tailwind's default theme + utilities layer. Preflight is
+ * deliberately skipped so the components don't ship base resets that clobber the
+ * consumer's page styles.
+ *
+ * The `--ak-ui-*` runtime values live in `tokens.css` (imported once by the app);
+ * `inline` keeps these mappings build-time so generated utilities contain the
+ * resolved `var(--ak-ui-*)` reference, which is what makes `.dark` theming work.
+ */
+@import 'tailwindcss/theme.css';
+@import 'tailwindcss/utilities.css';
+
+@theme inline {
+  --color-background: hsl(var(--ak-ui-background));
+  --color-foreground: hsl(var(--ak-ui-foreground));
+  --color-card: hsl(var(--ak-ui-card));
+  --color-card-foreground: hsl(var(--ak-ui-card-foreground));
+  --color-popover: hsl(var(--ak-ui-popover));
+  --color-popover-foreground: hsl(var(--ak-ui-popover-foreground));
+  --color-primary: hsl(var(--ak-ui-primary));
+  --color-primary-foreground: hsl(var(--ak-ui-primary-foreground));
+  --color-secondary: hsl(var(--ak-ui-secondary));
+  --color-secondary-foreground: hsl(var(--ak-ui-secondary-foreground));
+  --color-muted: hsl(var(--ak-ui-muted));
+  --color-muted-foreground: hsl(var(--ak-ui-muted-foreground));
+  --color-accent: hsl(var(--ak-ui-accent));
+  --color-accent-foreground: hsl(var(--ak-ui-accent-foreground));
+  --color-destructive: hsl(var(--ak-ui-destructive));
+  --color-destructive-foreground: hsl(var(--ak-ui-destructive-foreground));
+  --color-border: hsl(var(--ak-ui-border));
+  --color-input: hsl(var(--ak-ui-input));
+  --color-ring: hsl(var(--ak-ui-ring));
+}

@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json.schemastore.org/web-types",
+  "name": "@alikhalilll/a-input",
+  "version": "1.0.0",
+  "js-types-syntax": "typescript",
+  "description-markup": "markdown",
+  "framework": "vue",
+  "framework-config": {
+    "enable-when": {
+      "node-packages": ["vue"]
+    }
+  },
+  "contributions": {
+    "html": {
+      "vue-components": [
+        {
+          "name": "AInput",
+          "source": {
+            "module": "@alikhalilll/a-input",
+            "symbol": "AInput"
+          },
+          "props": [
+            {
+              "name": "class",
+              "type": "ClassValue",
+              "required": false
+            },
+            {
+              "name": "defaultValue",
+              "type": "string | number",
+              "required": false
+            },
+            {
+              "name": "inputClass",
+              "type": "ClassValue",
+              "required": false,
+              "description": "Classes for the inner `<input>` element (useful when prefix/suffix are present)."
+            },
+            {
+              "name": "modelValue",
+              "type": "string | number",
+              "required": false
+            },
+            {
+              "name": "prefixClass",
+              "type": "ClassValue",
+              "required": false,
+              "description": "Classes for the prefix wrapper."
+            },
+            {
+              "name": "size",
+              "type": "Size",
+              "required": false
+            },
+            {
+              "name": "suffixClass",
+              "type": "ClassValue",
+              "required": false,
+              "description": "Classes for the suffix wrapper."
+            }
+          ],
+          "slots": [
+            {
+              "name": "prefix",
+              "description": "Content rendered inside the input's border, left of the field."
+            },
+            {
+              "name": "suffix",
+              "description": "Content rendered inside the input's border, right of the field."
+            }
+          ],
+          "js": {
+            "events": [
+              {
+                "name": "update:modelValue"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

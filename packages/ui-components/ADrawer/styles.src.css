@@ -1,0 +1,8 @@
+/*
+ * @alikhalilll/a-drawer — compiled stylesheet source. See a-ui-base for the model.
+ *   import '@alikhalilll/a-ui-base/tokens.css';
+ *   import '@alikhalilll/a-drawer/styles.css';
+ */
+@import '@alikhalilll/a-ui-base/theme.css';
+
+@source './**/*.{vue,ts}';

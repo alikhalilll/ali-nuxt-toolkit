@@ -1,0 +1,11 @@
+/*
+ * @alikhalilll/a-tel-input — compiled stylesheet source. See a-ui-base for the model.
+ * Renders the responsive country picker (a-popover/a-drawer), so also import those stylesheets.
+ *   import '@alikhalilll/a-ui-base/tokens.css';
+ *   import '@alikhalilll/a-popover/styles.css';
+ *   import '@alikhalilll/a-drawer/styles.css';
+ *   import '@alikhalilll/a-tel-input/styles.css';
+ */
+@import '@alikhalilll/a-ui-base/theme.css';
+
+@source './**/*.{vue,ts}';
