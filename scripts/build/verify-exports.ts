@@ -5,7 +5,8 @@
  * published `exports` map is consumer-clean:
  *   1. Every file referenced by `exports` exists on disk.
  *   2. Every reachable `.d.ts`/`.d.cts` is non-empty and has an `export`.
- *   3. No `__VLS_WithSlots` leaked into any emitted declaration under dist/.
+ *
+ * (`__VLS_WithSlots` leaks are already a hard failure in `strip-vls-wrapper`.)
  */
 
 import fs from 'node:fs/promises';
@@ -67,31 +68,8 @@ async function main(): Promise<void> {
     );
   }
 
-  const distDir = path.join(pkgRoot, 'dist');
-  const leaked: string[] = [];
-  async function walk(dir: string): Promise<void> {
-    let entries;
-    try {
-      entries = await fs.readdir(dir, { withFileTypes: true });
-    } catch {
-      return;
-    }
-    for (const entry of entries) {
-      const full = path.join(dir, entry.name);
-      if (entry.isDirectory()) await walk(full);
-      else if (entry.isFile() && /\.d\.c?ts$/.test(full)) {
-        const content = await fs.readFile(full, 'utf8');
-        if (content.includes('__VLS_WithSlots')) leaked.push(path.relative(pkgRoot, full));
-      }
-    }
-  }
-  await walk(distDir);
-  if (leaked.length) {
-    throw new Error(`verify-exports: __VLS_WithSlots leaked into:\n  - ${leaked.join('\n  - ')}`);
-  }
-
   console.log(
-    `verify-exports: ok — ${referenced.length} files referenced by exports, ${dtsRefs.length} .d.ts validated, 0 __VLS_WithSlots leaks.`
+    `verify-exports: ok — ${referenced.length} files referenced by exports, ${dtsRefs.length} .d.ts validated.`
   );
 }
 

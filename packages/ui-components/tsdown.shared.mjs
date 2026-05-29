@@ -1,19 +1,21 @@
+import fs from 'node:fs';
+import path from 'node:path';
+
 /**
- * Shared tsdown config for every `@alikhalilll/a-*` component package. They all
- * bundle the same three entries (`.`, `./nuxt`, `./resolver`) as ESM+CJS with
- * identical options; only the externalized deps differ. Each package's
- * `tsdown.config.ts` becomes:
+ * Shared tsdown config for the `@alikhalilll/a-*` component packages. They all
+ * bundle to ESM+CJS with identical options; only the externalized deps differ.
+ * Each package's `tsdown.config.ts` becomes:
  *
  *   import { defineConfig } from 'tsdown';
  *   import Vue from 'unplugin-vue/rolldown';
  *   import { componentTsdownConfig } from '../tsdown.shared.mjs';
  *   export default defineConfig(componentTsdownConfig({ plugins: [Vue()], extraExternals: ['reka-ui'] }));
  *
- * Plain `.mjs` (not `.ts`) so tsdown's native config loader can import it
- * without a `--config-loader` flag. The Vue plugin is passed in (not imported
- * here) so `unplugin-vue` resolves from each package's own node_modules.
- * `dts: false` — declarations come from the vue-tsc source-mirror pipeline.
- * `@` aliases to the package root via `process.cwd()` (tsdown runs per-package).
+ * Entries are derived from the package's own `exports` map (every subpath whose
+ * `import.default` is a `./dist/<x>.js` → entry `<x>` from source `<x>.ts`), so
+ * this is generic — no hardcoded `index` / `nuxt` / `resolver` list. The Vue
+ * plugin is passed in (not imported here) so `unplugin-vue` resolves from each
+ * package's own node_modules. `dts: false` — declarations come from vue-tsc.
  */
 const COMMON_EXTERNALS = [
   'vue',
@@ -23,13 +25,22 @@ const COMMON_EXTERNALS = [
   'unplugin-vue-components',
 ];
 
+/** `{ index: 'index.ts', 'nuxt/index': 'nuxt/index.ts', … }` derived from exports. */
+function entriesFromExports() {
+  const pkg = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf8'));
+  const entry = {};
+  for (const cond of Object.values(pkg.exports ?? {})) {
+    const def = cond && typeof cond === 'object' ? cond.import?.default : undefined;
+    if (typeof def !== 'string' || !def.endsWith('.js')) continue;
+    const key = def.replace(/^\.\/dist\//, '').replace(/\.js$/, '');
+    entry[key] = `${key}.ts`;
+  }
+  return entry;
+}
+
 export function componentTsdownConfig({ plugins, extraExternals = [] }) {
   return {
-    entry: {
-      index: 'index.ts',
-      'nuxt/index': 'nuxt/index.ts',
-      'resolver/index': 'resolver/index.ts',
-    },
+    entry: entriesFromExports(),
     format: ['esm', 'cjs'],
     outDir: 'dist',
     deps: { neverBundle: [...COMMON_EXTERNALS, ...extraExternals] },

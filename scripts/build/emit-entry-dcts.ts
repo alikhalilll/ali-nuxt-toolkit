@@ -1,32 +1,44 @@
 /**
- * emit-entry-dcts.ts (shared, package-aware)
+ * emit-entry-dcts.ts (shared, package-aware, generic)
  *
- * Run from a package directory, after vue-tsc emits the declaration tree straight
- * into `dist/` (flat — no `runtime/` mirror, no re-export stub) and after the dts
- * post-processing (fix-dts, strip-vls). For each entry the `exports` map exposes
- * under a `require` condition (`.`, `./nuxt`, `./resolver`), copy the emitted
- * `dist/<entry>.d.ts` → `dist/<entry>.d.cts` so CJS consumers get types too.
+ * Run from a package directory, after vue-tsc emits the declaration tree into
+ * `dist/` and after dts post-processing. For every `exports` subpath that has
+ * both an `import.types` (`.d.ts`) and a `require.types` (`.d.cts`), copy the
+ * emitted `.d.ts` → `.d.cts` so CJS consumers get types too. Fully driven by the
+ * package's own exports map — no hardcoded entry list.
  *
  * The CJS copy drops the `sourceMappingURL` (go-to-definition of a re-exported
- * symbol follows the re-export to the original declaration's own map; the entry
- * map isn't needed, and a `.d.cts` referencing a `.d.ts.map` would be wrong).
+ * symbol follows the re-export to the original declaration's own map; a `.d.cts`
+ * referencing a `.d.ts.map` would be wrong).
  */
 
 import fs from 'node:fs';
 import path from 'node:path';
 
-const distDir = path.join(process.cwd(), 'dist');
-const ENTRIES = ['index.d.ts', 'nuxt/index.d.ts', 'resolver/index.d.ts'];
+const pkgRoot = process.cwd();
+const pkg = JSON.parse(fs.readFileSync(path.join(pkgRoot, 'package.json'), 'utf8'));
+
+/** Every (importTypes .d.ts → requireTypes .d.cts) pair declared in the exports map. */
+function dtsPairs(): Array<{ dts: string; dcts: string }> {
+  const pairs: Array<{ dts: string; dcts: string }> = [];
+  for (const cond of Object.values(pkg.exports ?? {})) {
+    if (!cond || typeof cond !== 'object') continue;
+    const c = cond as { import?: { types?: string }; require?: { types?: string } };
+    const dts = c.import?.types;
+    const dcts = c.require?.types;
+    if (dts?.endsWith('.d.ts') && dcts?.endsWith('.d.cts')) pairs.push({ dts, dcts });
+  }
+  return pairs;
+}
 
 let written = 0;
-for (const rel of ENTRIES) {
-  const dts = path.join(distDir, rel);
-  if (!fs.existsSync(dts)) continue;
-  const dcts = dts.replace(/\.d\.ts$/, '.d.cts');
+for (const { dts, dcts } of dtsPairs()) {
+  const src = path.resolve(pkgRoot, dts);
+  if (!fs.existsSync(src)) continue;
   const body = fs
-    .readFileSync(dts, 'utf8')
+    .readFileSync(src, 'utf8')
     .replace(/\n?\/\/# sourceMappingURL=.*\.d\.ts\.map\s*$/, '\n');
-  fs.writeFileSync(dcts, body);
+  fs.writeFileSync(path.resolve(pkgRoot, dcts), body);
   written++;
 }
 
