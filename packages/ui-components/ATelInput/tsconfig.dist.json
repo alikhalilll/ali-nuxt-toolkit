@@ -6,7 +6,7 @@
     "declaration": true,
     "declarationMap": true,
     "rootDir": ".",
-    "outDir": "dist/runtime",
+    "outDir": "dist",
     "noImplicitAny": false,
     "strict": false,
     "noEmitOnError": false,

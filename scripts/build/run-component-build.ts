@@ -8,13 +8,14 @@
  * Why each step exists:
  *   - tsdown            — bundle `.`/`./nuxt`/`./resolver` to ESM+CJS (no dts; tsdown's
  *                         vue dts emission is broken here, so vue-tsc handles dts).
- *   - vue-tsc           — emit per-source `.d.ts` (+ `.d.ts.map`) into `dist/runtime/`.
- *   - fix-dts-imports   — append `.js` / map `.vue` → `.vue.d.ts` in emitted dts so
- *                         declarations resolve under `node16`/`nodenext` consumers.
- *   - generate-entry-dts — write the `dist/{,nuxt/,resolver/}index.d.ts(+.d.cts)` stubs
- *                         the exports map points at (re-export from the runtime mirror).
+ *   - vue-tsc           — emit the per-source `.d.ts` (+ `.d.ts.map`) tree straight into
+ *                         `dist/` — flat, no `runtime/` mirror. `dist/index.d.ts` is the
+ *                         real entry the exports map points at (no re-export stub).
+ *   - fix-dts-imports   — append `.js` / map `.vue` → `.vue.js` in emitted dts so
+ *                         declarations resolve (with go-to-def) under TS/Volar.
  *   - strip-vls-wrapper — drop `__VLS_WithSlots` (a vue-tsc artefact that breaks
  *                         `InstanceType` + go-to-definition), preserving source maps.
+ *   - emit-entry-dcts   — copy the entry `.d.ts` → `.d.cts` for the `require` condition.
  *   - tailwindcss + merge-sfc-styles — compile this component's utilities into
  *                         `dist/styles.css` and append its bundled SFC styles.
  *   - gen-web-types     — emit `web-types.json` for JetBrains IDEs.
@@ -24,7 +25,7 @@
  *                         would break Volar's "go to definition").
  *
  * `.d.ts.map` sources point at the package-root source (shipped via `files`), so
- * go-to-definition lands on the real `.vue`/`.ts` — no need to copy sources into dist.
+ * go-to-definition lands on the real `.vue`/`.ts` — no copied sources in dist.
  */
 
 import path from 'node:path';
@@ -40,8 +41,8 @@ const steps: string[][] = [
   ['tsdown'],
   ['vue-tsc', '-p', 'tsconfig.dist.json'],
   step('fix-dts-imports.ts'),
-  step('generate-entry-dts.ts'),
   step('strip-vls-wrapper.ts'),
+  step('emit-entry-dcts.ts'),
   ['tailwindcss', '-i', 'styles.src.css', '-o', 'dist/styles.css', '--minify'],
   step('merge-sfc-styles.ts'),
   step('gen-web-types.ts'),
