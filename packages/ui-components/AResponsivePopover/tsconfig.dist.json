@@ -1,29 +1,7 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": ["./tsconfig.json", "../tsconfig.dist.base.json"],
   "compilerOptions": {
-    "noEmit": false,
-    "emitDeclarationOnly": true,
-    "declaration": true,
-    "declarationMap": true,
     "rootDir": ".",
-    "outDir": "dist",
-    "noImplicitAny": false,
-    "strict": false,
-    "noEmitOnError": false,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false
-  },
-  "include": [
-    "index.ts",
-    "types.ts",
-    "components/**/*.vue",
-    "components/**/*.ts",
-    "composables/**/*.ts",
-    "icons/**/*.vue",
-    "icons/**/*.ts",
-    "utils/**/*.ts",
-    "nuxt/**/*.ts",
-    "resolver/**/*.ts"
-  ],
-  "exclude": ["node_modules", "dist", "scripts"]
+    "outDir": "dist"
+  }
 }
