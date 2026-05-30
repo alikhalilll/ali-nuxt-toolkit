@@ -1,6 +1,6 @@
 {
   "name": "@alikhalilll/a-input",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Headless, shadcn-vue style Vue 3 input with prefix/suffix slots and a shared size scale. Part of the @alikhalilll/a-* toolkit.",
   "license": "MIT",
   "author": "alikhalilll",
