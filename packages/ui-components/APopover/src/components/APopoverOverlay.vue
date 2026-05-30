@@ -26,7 +26,6 @@ onMounted(() => {
   prevPaddingRight = body.style.paddingRight;
   body.style.overflow = 'hidden';
   body.style.touchAction = 'none';
-  // Compensate for the missing scrollbar so the layout doesn't jump.
   if (sbw > 0) body.style.paddingRight = `${sbw}px`;
 });
 
@@ -44,14 +43,45 @@ onBeforeUnmount(() => {
   <div
     data-slot="popover-overlay"
     aria-hidden="true"
-    :class="
-      cn(
-        // `fixed inset-0` covers the entire viewport; `pointer-events-auto` captures every
-        // click so it can never reach the page underneath. `z-50` keeps us above any normal
-        // page chrome; the popover content sits at `z-[60]`.
-        'fixed inset-0 z-50 bg-black/70 pointer-events-auto data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
-        props.class
-      )
-    "
+    :class="cn('a-popover__overlay', props.class)"
   />
 </template>
+
+<!-- Teleported sibling of the popover content — unscoped to survive the portal. -->
+<style>
+.a-popover__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: auto;
+  background: rgba(0, 0, 0, 0.7);
+}
+.a-popover__overlay[data-state='open'] {
+  animation: a-popover-overlay-in 150ms ease-out;
+}
+.a-popover__overlay[data-state='closed'] {
+  animation: a-popover-overlay-out 100ms ease-in forwards;
+}
+@keyframes a-popover-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes a-popover-overlay-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .a-popover__overlay[data-state='open'],
+  .a-popover__overlay[data-state='closed'] {
+    animation: none;
+  }
+}
+</style>

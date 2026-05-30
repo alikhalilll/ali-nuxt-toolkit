@@ -37,6 +37,7 @@ const steps: string[][] = [
   step('strip-vls-wrapper.ts'),
   ['tailwindcss', '-i', 'styles.src.css', '-o', 'dist/styles.css', '--minify'],
   step('merge-sfc-styles.ts'),
+  step('verify-css-bundle.ts'),
   step('gen-web-types.ts'),
   step('verify-exports.ts'),
   step('verify-go-to-def.ts'),

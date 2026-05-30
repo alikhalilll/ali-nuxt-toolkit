@@ -64,6 +64,11 @@
     "./styles.css": "./dist/styles.css",
     "./package.json": "./package.json"
   },
+  "cssBundleRequires": [
+    "a-popover__content",
+    "a-drawer__content",
+    "a-tel-input"
+  ],
   "types": "./dist/index.d.ts",
   "web-types": "./web-types.json",
   "files": [

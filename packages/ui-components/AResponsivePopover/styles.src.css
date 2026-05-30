@@ -12,5 +12,3 @@
 @import '@alikhalilll/a-drawer/styles.css';
 
 @source './src/**/*.{vue,ts}';
-@source '../APopover/src/**/*.{vue,ts}';
-@source '../ADrawer/src/**/*.{vue,ts}';

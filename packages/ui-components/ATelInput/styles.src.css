@@ -1,9 +1,9 @@
 /*
  * @alikhalilll/a-tel-input — compiled stylesheet source. See a-ui-base for the model.
- * Renders the responsive country picker (a-popover/a-drawer), so also import those stylesheets.
+ * Every component (incl. the bundled popover/drawer surfaces) ships its own scoped
+ * CSS that tsdown bundles into dist/style.css and `merge-sfc-styles` appends to
+ * dist/styles.css. No upstream CSS @import chain required.
  *   import '@alikhalilll/a-ui-base/tokens.css';
- *   import '@alikhalilll/a-popover/styles.css';
- *   import '@alikhalilll/a-drawer/styles.css';
  *   import '@alikhalilll/a-tel-input/styles.css';
  */
 @import '@alikhalilll/a-ui-base/tokens.css';
@@ -11,6 +11,3 @@
 @import '@alikhalilll/a-responsive-popover/styles.css';
 
 @source './src/**/*.{vue,ts}';
-@source '../AResponsivePopover/src/**/*.{vue,ts}';
-@source '../APopover/src/**/*.{vue,ts}';
-@source '../ADrawer/src/**/*.{vue,ts}';

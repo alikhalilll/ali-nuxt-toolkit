@@ -20,12 +20,6 @@ const forwarded = useForwardPropsEmits(delegated, emits);
 
 <template>
   <PopoverPortal>
-    <!--
-      Overlay is a sibling of PopoverContent inside the same portal. Reka-ui's
-      DismissableLayer treats any pointer-down outside the content as a dismiss,
-      so clicking the overlay closes the popover for free. The overlay component
-      locks body scroll on mount and restores it on unmount.
-    -->
     <APopoverOverlay
       v-if="props.overlay"
       :class="props.overlayClass"
@@ -34,14 +28,60 @@ const forwarded = useForwardPropsEmits(delegated, emits);
     <PopoverContent
       data-slot="popover-content"
       v-bind="{ ...$attrs, ...forwarded }"
-      :class="
-        cn(
-          'bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-[60] w-72 rounded-md border border-border/70 p-4 shadow-xl shadow-black/15 outline-none',
-          props.class
-        )
-      "
+      :class="cn('a-popover__content', props.class)"
     >
       <slot />
     </PopoverContent>
   </PopoverPortal>
 </template>
+
+<!--
+  PopoverContent is teleported to <body> by reka-ui's PopoverPortal. `<style scoped>`
+  data-attributes don't propagate through teleport, so the dropdown surface is styled
+  in this unscoped block. Class names are uniquely prefixed `a-popover__*`.
+-->
+<style>
+.a-popover__content {
+  z-index: 60;
+  width: 18rem;
+  padding: 1rem;
+  border-radius: calc(var(--ak-ui-radius) - 2px);
+  border: 1px solid hsl(var(--ak-ui-border) / 0.7);
+  background: hsl(var(--ak-ui-popover));
+  color: hsl(var(--ak-ui-popover-foreground));
+  outline: none;
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.15),
+    0 8px 10px -6px rgba(0, 0, 0, 0.15);
+}
+.a-popover__content[data-state='open'] {
+  animation: a-popover-in 150ms ease-out;
+}
+.a-popover__content[data-state='closed'] {
+  animation: a-popover-out 100ms ease-in forwards;
+}
+@keyframes a-popover-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes a-popover-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .a-popover__content[data-state='open'],
+  .a-popover__content[data-state='closed'] {
+    animation: none;
+  }
+}
+</style>
