@@ -1,6 +1,6 @@
 {
   "name": "@alikhalilll/a-popover",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Headless, shadcn-vue style Vue 3 popover built on reka-ui, with an optional dim overlay and scroll-lock. Part of the @alikhalilll/a-* toolkit.",
   "license": "MIT",
   "author": "alikhalilll",
