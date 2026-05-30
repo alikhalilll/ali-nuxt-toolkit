@@ -68,6 +68,30 @@ const npmUrl = computed(() =>
   packageName.value ? `https://www.npmjs.com/package/${packageName.value}` : null
 );
 
+/**
+ * Resolve each package to its monorepo source directory so the "Source" chip
+ * deep-links instead of pointing at the repo root. Names without a known
+ * mapping fall back to the repo root (matches the old behaviour).
+ *
+ * Keep this in sync with `scripts/lib/constants.ts:packageDir`. Pure mapping
+ * — no fs lookups — because this runs in the browser bundle.
+ */
+const REPO_URL = 'https://github.com/alikhalilll/ali-nuxt-toolkit';
+const PACKAGE_SOURCE_PATHS: Record<string, string> = {
+  '@alikhalilll/nuxt-api-provider': 'packages/api-provider',
+  '@alikhalilll/nuxt-crypto': 'packages/crypto',
+  '@alikhalilll/nuxt-auto-middleware': 'packages/auto-middleware',
+  '@alikhalilll/a-input': 'packages/ui-components/AInput',
+  '@alikhalilll/a-popover': 'packages/ui-components/APopover',
+  '@alikhalilll/a-drawer': 'packages/ui-components/ADrawer',
+  '@alikhalilll/a-responsive-popover': 'packages/ui-components/AResponsivePopover',
+  '@alikhalilll/a-tel-input': 'packages/ui-components/ATelInput',
+};
+const sourceUrl = computed(() => {
+  const sub = packageName.value ? PACKAGE_SOURCE_PATHS[packageName.value] : null;
+  return sub ? `${REPO_URL}/tree/master/${sub}` : REPO_URL;
+});
+
 const accentClass = computed(() => {
   const p = route.path.replace(/\/+$/, '');
   if (p === '/api-provider' || p.startsWith('/api-provider/')) return 'pkg-api';
@@ -188,7 +212,7 @@ watch(
           npm
         </a>
         <a
-          href="https://github.com/alikhalilll/ali-nuxt-toolkit"
+          :href="sourceUrl"
           target="_blank"
           rel="noopener"
           class="inline-flex items-center gap-1.5 rounded-md border border-border bg-surface/40 px-2.5 py-1 font-mono text-text-dim transition-colors hover:border-text/40 hover:text-text hover:no-underline"

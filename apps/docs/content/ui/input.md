@@ -19,11 +19,55 @@ pnpm add @alikhalilll/a-input
 ```
 
 ```ts
-import { AInput } from '@alikhalilll/a-input'; // tree-shaken subpath
-// or: import { AInput } from '@alikhalilll/a-input';
+import { AInput } from '@alikhalilll/a-input';
 ```
 
-First time using `@alikhalilll/a-input`? Run the [one-time setup](/ui#setup) (CSS import + Tailwind tokens + `.dark` class).
+## Setup
+
+The shipped CSS is self-contained — design tokens + utility classes are pre-compiled. Import the stylesheet once and the component renders themed out of the box (no Tailwind config, no `@theme` block).
+
+### Nuxt 3 / 4
+
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  css: ['@alikhalilll/a-input/styles.css'],
+});
+```
+
+For auto-imports (use `<AInput>` in templates with no `import`), also register the bundled module:
+
+```ts
+modules: ['@alikhalilll/a-input/nuxt'],
+```
+
+### Vue + Vite
+
+```ts
+// main.ts
+import '@alikhalilll/a-input/styles.css';
+```
+
+For `unplugin-vue-components` auto-resolve, drop in the shipped resolver:
+
+```ts
+// vite.config.ts
+import Components from 'unplugin-vue-components/vite';
+import UiResolver from '@alikhalilll/a-input/resolver';
+
+export default { plugins: [Components({ resolvers: [UiResolver()] })] };
+```
+
+### Dark mode
+
+Toggle `class="dark"` (or `"light"`) on `<html>` — every component inherits via CSS variables.
+
+```ts
+// nuxt.config.ts — locked dark
+app: { head: { htmlAttrs: { class: 'dark' } } },
+```
+
+> Theming tokens, UnoCSS interplay, monorepo CSS gotcha, full public API — see the [UI overview](/ui).
 
 ## Usage
 
@@ -68,6 +112,6 @@ Every standard `<input>` attribute (`type`, `placeholder`, `disabled`, `inputmod
 
 ## Building on it
 
-For a tel input, compose `AInput` with [`usePhoneValidation`](/ui/tell-input) — or just use the shipped [`ATelInput`](/ui/tell-input) which already wires it up.
+For a tel input, compose `AInput` with [`usePhoneValidation`](/ui/tel-input) — or just use the shipped [`ATelInput`](/ui/tel-input) which already wires it up.
 
 The size maps (`controlHeight`, `controlPaddingX`, `controlTextSize`) are exported so you can build other size-aware components in lockstep. See [Size scale](/ui#size-scale).

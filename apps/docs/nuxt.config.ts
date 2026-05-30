@@ -65,7 +65,7 @@ export default defineNuxtConfig({
         '/crypto',
         '/auto-middleware',
         '/ui',
-        '/ui/tell-input',
+        '/ui/tel-input',
         '/ui/input',
         '/ui/popover',
         '/ui/drawer',

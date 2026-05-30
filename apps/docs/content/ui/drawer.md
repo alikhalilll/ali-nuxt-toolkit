@@ -22,7 +22,52 @@ pnpm add @alikhalilll/a-drawer
 import { ADrawer, ADrawerTrigger, ADrawerContent } from '@alikhalilll/a-drawer';
 ```
 
-First time using `@alikhalilll/a-drawer`? Run the [one-time setup](/ui#setup).
+## Setup
+
+The shipped CSS is self-contained — design tokens + utility classes are pre-compiled. Import the stylesheet once and the drawer renders themed out of the box.
+
+### Nuxt 3 / 4
+
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  css: ['@alikhalilll/a-drawer/styles.css'],
+});
+```
+
+For auto-imports (use `<ADrawer>` / `<ADrawerContent>` / etc. with no `import`), also register the bundled module:
+
+```ts
+modules: ['@alikhalilll/a-drawer/nuxt'],
+```
+
+### Vue + Vite
+
+```ts
+// main.ts
+import '@alikhalilll/a-drawer/styles.css';
+```
+
+For `unplugin-vue-components` auto-resolve, drop in the shipped resolver:
+
+```ts
+// vite.config.ts
+import Components from 'unplugin-vue-components/vite';
+import UiResolver from '@alikhalilll/a-drawer/resolver';
+
+export default { plugins: [Components({ resolvers: [UiResolver()] })] };
+```
+
+### Dark mode
+
+Toggle `class="dark"` (or `"light"`) on `<html>` — portaled drawer content inherits via the cascade.
+
+```ts
+// nuxt.config.ts — locked dark
+app: { head: { htmlAttrs: { class: 'dark' } } },
+```
+
+> Theming tokens, UnoCSS interplay, monorepo CSS gotcha, full public API — see the [UI overview](/ui).
 
 ## Usage
 

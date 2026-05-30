@@ -117,7 +117,7 @@ const minimalTheme = {
                 <span class="text-foreground font-semibold">
                   {{ selectedCountry?.raw_data.iso2 ?? '??' }}
                 </span>
-                <ChevronDown
+                <ChevronDownIcon
                   class="text-muted-foreground size-3 shrink-0 transition-transform duration-200"
                   :class="open && 'rotate-180'"
                 />

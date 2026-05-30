@@ -72,7 +72,7 @@ const creamTheme = {
               class="size-10 rounded-full object-cover"
             />
           </span>
-          <ChevronDown
+          <ChevronDownIcon
             class="size-4 transition-transform duration-200"
             :class="open && 'rotate-180'"
           />
@@ -136,7 +136,7 @@ const creamTheme = {
                   />
                   <span v-else class="text-muted-foreground text-xs">?</span>
                 </span>
-                <ChevronDown
+                <ChevronDownIcon
                   class="text-muted-foreground size-4 shrink-0 transition-transform duration-200"
                   :class="open && 'rotate-180'"
                 />
@@ -144,7 +144,7 @@ const creamTheme = {
             </template>
 
             <template #suffix>
-              <Smartphone
+              <SmartphoneIcon
                 class="mr-3 size-5 shrink-0"
                 style="color: hsl(20 50% 30%)"
                 aria-hidden="true"

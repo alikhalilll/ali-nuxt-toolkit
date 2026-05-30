@@ -12,7 +12,7 @@ Renders as an [`APopover`](/ui/popover) at ≥ 768 px and an [`ADrawer`](/ui/dra
 ::DemoResponsivePopover
 ::
 
-This is the surface powering the country picker in [`ATelInput`](/ui/tell-input).
+This is the surface powering the country picker in [`ATelInput`](/ui/tel-input).
 
 ## Install
 
@@ -28,7 +28,52 @@ import {
 } from '@alikhalilll/a-responsive-popover';
 ```
 
-First time using `@alikhalilll/a-responsive-popover`? Run the [one-time setup](/ui#setup).
+## Setup
+
+The shipped CSS is self-contained — design tokens + utility classes are pre-compiled. Import the stylesheet once and both popover + drawer surfaces render themed out of the box.
+
+### Nuxt 3 / 4
+
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  css: ['@alikhalilll/a-responsive-popover/styles.css'],
+});
+```
+
+For auto-imports (use `<AResponsivePopover>` / `<AResponsivePopoverContent>` with no `import`), also register the bundled module:
+
+```ts
+modules: ['@alikhalilll/a-responsive-popover/nuxt'],
+```
+
+### Vue + Vite
+
+```ts
+// main.ts
+import '@alikhalilll/a-responsive-popover/styles.css';
+```
+
+For `unplugin-vue-components` auto-resolve, drop in the shipped resolver:
+
+```ts
+// vite.config.ts
+import Components from 'unplugin-vue-components/vite';
+import UiResolver from '@alikhalilll/a-responsive-popover/resolver';
+
+export default { plugins: [Components({ resolvers: [UiResolver()] })] };
+```
+
+### Dark mode
+
+Toggle `class="dark"` (or `"light"`) on `<html>` — both branches inherit via CSS variables.
+
+```ts
+// nuxt.config.ts — locked dark
+app: { head: { htmlAttrs: { class: 'dark' } } },
+```
+
+> Theming tokens, UnoCSS interplay, monorepo CSS gotcha, full public API — see the [UI overview](/ui).
 
 ## Usage
 

@@ -17,13 +17,15 @@ const navLinks = [
   { to: '/auto-middleware', label: 'auto-middleware' },
 ];
 
-const uiNavItems = [
+// Each UI component now ships as its own npm package — surface the package
+// suffix in the dropdown / mobile nav so the structure is visible at-a-glance.
+const uiNavItems: { to: string; label: string; pkg?: string }[] = [
   { to: '/ui', label: 'Overview' },
-  { to: '/ui/tell-input', label: 'ATelInput' },
-  { to: '/ui/input', label: 'AInput' },
-  { to: '/ui/popover', label: 'APopover' },
-  { to: '/ui/drawer', label: 'ADrawer' },
-  { to: '/ui/responsive-popover', label: 'AResponsivePopover' },
+  { to: '/ui/tel-input', label: 'ATelInput', pkg: 'a-tel-input' },
+  { to: '/ui/input', label: 'AInput', pkg: 'a-input' },
+  { to: '/ui/popover', label: 'APopover', pkg: 'a-popover' },
+  { to: '/ui/drawer', label: 'ADrawer', pkg: 'a-drawer' },
+  { to: '/ui/responsive-popover', label: 'AResponsivePopover', pkg: 'a-responsive-popover' },
 ];
 
 const uiNavOpen = ref(false);
@@ -235,11 +237,16 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
                 v-for="item in uiNavItems"
                 :key="item.to"
                 :to="item.to"
+                :title="item.pkg ? `${item.label} · @alikhalilll/${item.pkg}` : item.label"
                 class="ui-menu-item"
                 active-class="ui-menu-item--active"
                 @click="uiNavOpen = false"
               >
-                {{ item.label }}
+                <span class="ui-menu-item__label">{{ item.label }}</span>
+                <!-- Independent npm package badge — visible in the dropdown only -->
+                <span v-if="item.pkg" class="ui-menu-item__pkg"
+                  >a-*/{{ item.pkg.replace(/^a-/, '') }}</span
+                >
               </NuxtLink>
             </AResponsivePopoverContent>
           </AResponsivePopover>
@@ -510,11 +517,21 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
               <li v-for="item in uiNavItems" :key="item.to">
                 <NuxtLink
                   :to="item.to"
-                  class="block rounded-md px-3 py-2 text-text-dim transition-colors hover:bg-surface hover:text-text hover:no-underline"
+                  class="mobile-ui-item block rounded-md px-3 py-2 text-text-dim transition-colors hover:bg-surface hover:text-text hover:no-underline"
                   active-class="!text-accent-2 font-medium"
                   @click="mobileNavOpen = false"
                 >
-                  {{ item.label }}
+                  <span class="block leading-tight">{{ item.label }}</span>
+                  <!--
+                    Package badge mirrors the desktop dropdown — keeps the new split
+                    structure obvious on touch devices too.
+                  -->
+                  <span
+                    v-if="item.pkg"
+                    class="block font-mono text-[10.5px] leading-tight text-text-muted/70"
+                  >
+                    @alikhalilll/{{ item.pkg }}
+                  </span>
                 </NuxtLink>
               </li>
             </ul>
@@ -670,7 +687,9 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
 
 /* Dropdown menu rows — matched to nav-link tones for visual continuity. */
 .ui-menu-item {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
   padding: 8px 10px;
   border-radius: 6px;
   color: var(--text-dim);
@@ -690,6 +709,21 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
 .ui-menu-item--active {
   color: var(--text);
   background: color-mix(in oklab, var(--surface-2, var(--surface)) 50%, transparent);
+}
+.ui-menu-item__label {
+  line-height: 1.15;
+}
+/* Independent-package badge — communicates the new split structure without
+   competing visually with the component name above. */
+.ui-menu-item__pkg {
+  font-family: ui-monospace, 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  line-height: 1.15;
+  color: color-mix(in oklab, var(--text-muted, var(--text-dim)) 80%, transparent);
+}
+.ui-menu-item:hover .ui-menu-item__pkg,
+.ui-menu-item--active .ui-menu-item__pkg {
+  color: var(--text-dim);
 }
 
 /* Generic round icon button — used for theme/GitHub/LinkedIn. Subtle glow halo

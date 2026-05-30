@@ -170,7 +170,7 @@ const playfulTheme = {
                 <span class="text-foreground text-sm font-semibold tabular-nums">
                   {{ selectedCountry ? selectedCountry.raw_data.dial_code : '+?' }}
                 </span>
-                <ChevronDown
+                <ChevronDownIcon
                   class="text-muted-foreground size-4 shrink-0 transition-transform duration-200"
                   :class="open && 'rotate-180'"
                 />
@@ -178,7 +178,7 @@ const playfulTheme = {
             </template>
 
             <template #suffix>
-              <Smile
+              <SmileIcon
                 class="mr-3 size-5 shrink-0"
                 style="color: hsl(28 100% 60%)"
                 aria-hidden="true"

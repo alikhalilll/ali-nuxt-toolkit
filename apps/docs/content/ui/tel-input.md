@@ -21,11 +21,55 @@ pnpm add @alikhalilll/a-tel-input
 ```
 
 ```ts
-import { ATelInput } from '@alikhalilll/a-tel-input'; // tree-shaken subpath
-// or: import { ATelInput } from '@alikhalilll/a-tel-input';
+import { ATelInput } from '@alikhalilll/a-tel-input';
 ```
 
-First time using `@alikhalilll/a-tel-input`? Run the [one-time setup](/ui#setup).
+## Setup
+
+The shipped CSS is self-contained — design tokens + utility classes are pre-compiled. Import the stylesheet once and the field renders themed out of the box (no Tailwind config, no `@theme` block).
+
+### Nuxt 3 / 4
+
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  css: ['@alikhalilll/a-tel-input/styles.css'],
+});
+```
+
+For auto-imports (use `<ATelInput>` / `<ACountrySelect>` / `<ACountryFlag>` with no `import`), also register the bundled module:
+
+```ts
+modules: ['@alikhalilll/a-tel-input/nuxt'],
+```
+
+### Vue + Vite
+
+```ts
+// main.ts
+import '@alikhalilll/a-tel-input/styles.css';
+```
+
+For `unplugin-vue-components` auto-resolve, drop in the shipped resolver:
+
+```ts
+// vite.config.ts
+import Components from 'unplugin-vue-components/vite';
+import UiResolver from '@alikhalilll/a-tel-input/resolver';
+
+export default { plugins: [Components({ resolvers: [UiResolver()] })] };
+```
+
+### Dark mode
+
+Toggle `class="dark"` (or `"light"`) on `<html>` — every component inherits via CSS variables.
+
+```ts
+// nuxt.config.ts — locked dark
+app: { head: { htmlAttrs: { class: 'dark' } } },
+```
+
+> Theming tokens, UnoCSS interplay, monorepo CSS gotcha, full public API — see the [UI overview](/ui).
 
 ## Usage
 

@@ -16,10 +16,9 @@ onMounted(() => {
     :class="{ 'reveal--in': mounted }"
     style="--reveal-delay: 0ms"
   >
-    <a
-      href="https://www.npmjs.com/package/@alikhalilll/nuxt-api-provider"
-      target="_blank"
-      rel="noopener"
+    <!-- Chip ⇒ the ATelInput docs page (the very thing it advertises). -->
+    <NuxtLink
+      to="/ui/tel-input"
       class="group inline-flex items-center gap-2 rounded-full border border-brand/30 bg-brand/5 px-3 py-1 text-xs text-text-dim transition-colors hover:border-brand hover:text-text hover:no-underline"
     >
       <span
@@ -43,7 +42,7 @@ onMounted(() => {
         <line x1="5" y1="12" x2="19" y2="12" />
         <polyline points="12 5 19 12 12 19" />
       </svg>
-    </a>
+    </NuxtLink>
   </div>
 </template>
 

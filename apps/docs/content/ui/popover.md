@@ -22,7 +22,52 @@ pnpm add @alikhalilll/a-popover
 import { APopover, APopoverTrigger, APopoverContent } from '@alikhalilll/a-popover';
 ```
 
-First time using `@alikhalilll/a-popover`? Run the [one-time setup](/ui#setup).
+## Setup
+
+The shipped CSS is self-contained — design tokens + utility classes are pre-compiled. Import the stylesheet once and the popover renders themed out of the box.
+
+### Nuxt 3 / 4
+
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  css: ['@alikhalilll/a-popover/styles.css'],
+});
+```
+
+For auto-imports (use `<APopover>` / `<APopoverContent>` / etc. with no `import`), also register the bundled module:
+
+```ts
+modules: ['@alikhalilll/a-popover/nuxt'],
+```
+
+### Vue + Vite
+
+```ts
+// main.ts
+import '@alikhalilll/a-popover/styles.css';
+```
+
+For `unplugin-vue-components` auto-resolve, drop in the shipped resolver:
+
+```ts
+// vite.config.ts
+import Components from 'unplugin-vue-components/vite';
+import UiResolver from '@alikhalilll/a-popover/resolver';
+
+export default { plugins: [Components({ resolvers: [UiResolver()] })] };
+```
+
+### Dark mode
+
+Toggle `class="dark"` (or `"light"`) on `<html>` — portaled popover content inherits via the cascade.
+
+```ts
+// nuxt.config.ts — locked dark
+app: { head: { htmlAttrs: { class: 'dark' } } },
+```
+
+> Theming tokens, UnoCSS interplay, monorepo CSS gotcha, full public API — see the [UI overview](/ui).
 
 ## Usage
 
@@ -83,7 +128,7 @@ Use reka-ui's available-height variable so long lists never overflow:
 </APopoverContent>
 ```
 
-This is how [`ACountrySelect`](/ui/tell-input) keeps the country list inside the popover bounds.
+This is how [`ACountrySelect`](/ui/tel-input) keeps the country list inside the popover bounds.
 
 ## Animations
 

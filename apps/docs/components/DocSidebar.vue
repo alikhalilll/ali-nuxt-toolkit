@@ -6,11 +6,16 @@ interface SubPage {
   path: string;
   title: string;
   /**
-   * `'page'` — full route (e.g. `/ui/tell-input`). Expands its in-page TOC under it
+   * `'page'` — full route (e.g. `/ui/tel-input`). Expands its in-page TOC under it
    * when active.
    * `'anchor'` — same-page section link (e.g. `/ui#install`). No nested TOC.
    */
   kind?: 'page' | 'anchor';
+  /**
+   * npm package badge under the title — surfaces that each UI component now
+   * ships as its own independently-versioned package (e.g. `a-tel-input`).
+   */
+  pkg?: string;
 }
 
 interface SubGroup {
@@ -40,13 +45,10 @@ const modules: ModuleEntry[] = [
     accent: 'pkg-ui',
     groups: [
       {
+        // /ui is now intro + theming only — install/setup live on each
+        // component page (and each page has its own `#install` anchor).
         label: 'Getting started',
-        items: [
-          { path: '/ui#install', title: 'Install', kind: 'anchor' },
-          { path: '/ui#setup', title: 'Setup', kind: 'anchor' },
-          { path: '/ui#theming', title: 'Theming', kind: 'anchor' },
-          { path: '/ui#important-notes', title: 'Notes', kind: 'anchor' },
-        ],
+        items: [{ path: '/ui#theming', title: 'Theming', kind: 'anchor' }],
       },
       {
         // The `A` prefix is dropped in the sidebar — the "Components" group context
@@ -54,11 +56,16 @@ const modules: ModuleEntry[] = [
         // still carry the prefix (ATelInput, AInput, …). Keeps long labels readable.
         label: 'Components',
         items: [
-          { path: '/ui/tell-input', title: 'TelInput', kind: 'page' },
-          { path: '/ui/input', title: 'Input', kind: 'page' },
-          { path: '/ui/popover', title: 'Popover', kind: 'page' },
-          { path: '/ui/drawer', title: 'Drawer', kind: 'page' },
-          { path: '/ui/responsive-popover', title: 'ResponsivePopover', kind: 'page' },
+          { path: '/ui/tel-input', title: 'TelInput', kind: 'page', pkg: 'a-tel-input' },
+          { path: '/ui/input', title: 'Input', kind: 'page', pkg: 'a-input' },
+          { path: '/ui/popover', title: 'Popover', kind: 'page', pkg: 'a-popover' },
+          { path: '/ui/drawer', title: 'Drawer', kind: 'page', pkg: 'a-drawer' },
+          {
+            path: '/ui/responsive-popover',
+            title: 'ResponsivePopover',
+            kind: 'page',
+            pkg: 'a-responsive-popover',
+          },
         ],
       },
     ],
@@ -159,15 +166,26 @@ function scrollTo(id: string, e: MouseEvent) {
                 <li class="-ml-px">
                   <NuxtLink
                     :to="sub.path"
-                    :title="sub.title"
+                    :title="sub.pkg ? `${sub.title} · @alikhalilll/${sub.pkg}` : sub.title"
                     :class="[
-                      'block truncate border-l-2 px-2.5 py-[3px] text-[12.5px] leading-snug transition-colors hover:text-text hover:no-underline',
+                      'group/sub block border-l-2 px-2.5 py-[3px] text-[12.5px] leading-snug transition-colors hover:text-text hover:no-underline',
                       isSubpageActive(sub)
                         ? 'border-brand bg-brand/10 font-medium text-brand'
                         : 'border-transparent text-text-dim',
                     ]"
                   >
-                    {{ sub.title }}
+                    <span class="block truncate">{{ sub.title }}</span>
+                    <!--
+                      Each UI component is now its own npm package. Surface the package
+                      name in a dim mono badge under the title so the split is obvious
+                      at-a-glance without leaving the sidebar.
+                    -->
+                    <span
+                      v-if="sub.pkg"
+                      class="block truncate font-mono text-[10px] leading-tight text-text-muted/80 group-hover/sub:text-text-dim"
+                    >
+                      a-*/{{ sub.pkg.replace(/^a-/, '') }}
+                    </span>
                   </NuxtLink>
                 </li>
 

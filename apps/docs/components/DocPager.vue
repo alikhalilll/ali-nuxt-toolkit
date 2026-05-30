@@ -17,7 +17,7 @@ const order: PagerEntry[] = [
   { path: '/crypto', title: 'crypto', description: 'AES-GCM + PBKDF2' },
   { path: '/auto-middleware', title: 'auto-middleware', description: 'Layout-based middleware' },
   { path: '/ui', title: 'ui', description: 'Headless component library' },
-  { path: '/ui/tell-input', title: 'ATelInput', description: 'Composite phone input' },
+  { path: '/ui/tel-input', title: 'ATelInput', description: 'Composite phone input' },
   { path: '/ui/input', title: 'AInput', description: 'Base text input' },
   { path: '/ui/popover', title: 'APopover', description: 'reka-ui Popover wrapper' },
   { path: '/ui/drawer', title: 'ADrawer', description: 'vaul-vue Drawer wrapper' },
