@@ -1,6 +1,6 @@
 {
   "name": "@alikhalilll/a-responsive-popover",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Vue 3 responsive popover: a reka-ui popover on desktop that becomes a vaul drawer on mobile. Part of the @alikhalilll/a-* toolkit.",
   "license": "MIT",
   "author": "alikhalilll",
