@@ -25,15 +25,23 @@ const isDesktop = useMediaQuery(() => props.breakpoint);
 const Root = computed(() => (isDesktop.value ? APopover : ADrawer));
 
 /**
- * Only `scrollLock='body'` triggers reka-ui's `PopoverContentModal` (and its
- * `useBodyScrollLock`). For `'events'` we install our own document-level event lock in
- * `AResponsivePopoverContent`. For `'none'` nothing locks. Legacy `modal=false` still
- * forces non-modal regardless of `scrollLock`.
+ * Per-branch `modal` resolution — the two roots interpret the prop differently:
+ *
+ *   APopover (desktop, reka-ui): `modal=true` triggers `PopoverContentModal` + its
+ *   `useBodyScrollLock`. We only want that when the caller explicitly opted into the
+ *   body-level scroll lock; for `'events'`/`'none'` we install our own lock in
+ *   `AResponsivePopoverContent`. Legacy `modal=false` still forces non-modal.
+ *
+ *   ADrawer (mobile, vaul-vue): `modal=false` SUPPRESSES THE OVERLAY entirely. Drawers
+ *   are modal by convention (a dimmed backdrop is the affordance), so default to modal
+ *   unless the caller explicitly turned the whole thing off.
  */
 const rekaModal = computed(() => {
   if (props.modal === false) return false;
   return props.scrollLock === 'body';
 });
+const drawerModal = computed(() => props.modal !== false);
+const rootModal = computed(() => (isDesktop.value ? rekaModal.value : drawerModal.value));
 
 provideResponsivePopoverContext({
   open: computed(() => open.value ?? false),
@@ -43,7 +51,7 @@ provideResponsivePopoverContext({
 </script>
 
 <template>
-  <component :is="Root" v-model:open="open" :modal="rekaModal" data-slot="responsive-popover">
+  <component :is="Root" v-model:open="open" :modal="rootModal" data-slot="responsive-popover">
     <slot :is-desktop="isDesktop" />
   </component>
 </template>

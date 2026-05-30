@@ -576,6 +576,24 @@ defineExpose({
 .a-country-select__list {
   flex: 1;
   overflow-y: auto;
+  /* Themed scrollbar — Firefox + WebKit/Blink. Resolves the browser-default
+     light-grey scrollbar that didn't match the popover surface in dark mode. */
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--ak-ui-muted-foreground) / 0.4) transparent;
+}
+.a-country-select__list::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.a-country-select__list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.a-country-select__list::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--ak-ui-muted-foreground) / 0.4);
+  border-radius: 4px;
+}
+.a-country-select__list::-webkit-scrollbar-thumb:hover {
+  background-color: hsl(var(--ak-ui-muted-foreground) / 0.6);
 }
 .a-country-select__loading,
 .a-country-select__empty {
