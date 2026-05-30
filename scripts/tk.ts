@@ -6,10 +6,18 @@
  * accepts either "all" or a single package name; if omitted, you get an
  * interactive picker.
  *
- *   build       Build one or all publishable packages
- *   typecheck   Typecheck one or all publishable packages
+ * Package scopes per action:
+ *   - build / typecheck / clean — every workspace package (publishable + internal),
+ *     since internal pkgs are still part of the local build graph (their dist feeds
+ *     a-tel-input's bundled CSS).
+ *   - pack / validate / consumer / release — publishable packages only. The four
+ *     internal pkgs (a-input, a-popover, a-drawer, a-responsive-popover) have no
+ *     npm presence; consumer-validate auto-packs them as transitive deps.
+ *
+ *   build       Build one or all workspace packages
+ *   typecheck   Typecheck one or all workspace packages
  *   clean       Remove dist + generated artifacts
- *   pack        Build + pack one or all packages into .tgz (→ ./artifacts)
+ *   pack        Build + pack one or all publishable packages into .tgz
  *   validate    Full validate (build + publint + attw + consumer install)
  *   consumer    Consumer-validate only (faster than `validate`)
  *   release    Interactive release: bump version, publish, tag (use `--dry-run`)
@@ -34,10 +42,12 @@ import { execa, execaSync } from 'execa';
 import minimist from 'minimist';
 import pc from 'picocolors';
 import {
+  ALL_PACKAGES,
+  INTERNAL_PACKAGES,
   packageDir,
   PUBLISHABLE_PACKAGES,
   ROOT,
-  type PublishablePackage,
+  type AnyPackage,
 } from './lib/constants.ts';
 
 type Action =
@@ -49,8 +59,22 @@ type Action =
   | 'consumer'
   | 'release'
   | 'dev';
-type PackageScope = 'all' | PublishablePackage;
+type PackageScope = 'all' | AnyPackage;
 type DevTarget = 'play' | 'play:packed' | 'play:restore' | 'docs';
+
+/**
+ * Whether an action can touch internal (non-published) packages.
+ *   - build/typecheck/clean: yes — they're still real workspace packages with src
+ *   - pack/validate/consumer/release: no — they're about npm publication, which
+ *     internals don't participate in
+ */
+const ACTIONS_INCLUDING_INTERNAL = new Set<Action>(['build', 'typecheck', 'clean']);
+
+function packagesForAction(action: Action): readonly string[] {
+  return ACTIONS_INCLUDING_INTERNAL.has(action)
+    ? (ALL_PACKAGES as readonly string[])
+    : (PUBLISHABLE_PACKAGES as readonly string[]);
+}
 
 const ACTIONS: readonly Action[] = [
   'build',
@@ -72,13 +96,18 @@ ${pc.bold('Usage:')}
   pnpm tk <action> [target] [--flags]
 
 ${pc.bold('Actions:')}
-  build      ${pc.dim('Build one or all publishable packages')}
-  typecheck  ${pc.dim('Typecheck one or all packages')}
+  ${pc.cyan('Compile / check')}  (all workspace packages, incl. internal)
+  build      ${pc.dim('Build one or all workspace packages')}
+  typecheck  ${pc.dim('Typecheck one or all workspace packages')}
   clean      ${pc.dim('Remove dist + generated artifacts')}
-  pack       ${pc.dim('Build + pack one or all packages → .tgz')}
+
+  ${pc.magenta('Ship / validate')}  (publishable packages only)
+  pack       ${pc.dim('Build + pack one or all publishable packages → .tgz')}
   validate   ${pc.dim('Full validate (build + publint + attw + consumer install)')}
   consumer   ${pc.dim('Consumer-validate only (faster than validate)')}
   release    ${pc.dim('Interactive release; pass --dry-run to preview')}
+
+  ${pc.yellow('Run')}
   dev        ${pc.dim('Boot a dev server: play | play:packed | play:restore | docs')}
 
 ${pc.bold('Examples:')}
@@ -88,25 +117,43 @@ ${pc.bold('Examples:')}
   pnpm tk release --dry-run
   pnpm tk dev play:packed
 
+${pc.bold('Packages:')}
+  publishable  ${pc.dim(PUBLISHABLE_PACKAGES.join(', '))}
+  internal     ${pc.dim(INTERNAL_PACKAGES.join(', ') + ' (bundled into a-tel-input)')}
+
 ${pc.bold('Flags:')}
-  --pkg <name>     ${pc.dim('Alternative to positional target (all|api-provider|crypto|...)')}
+  --pkg <name>     ${pc.dim('Alternative to positional target (all|<package>)')}
   --dry-run        ${pc.dim('(release only) preview without publishing')}
   -h, --help       ${pc.dim('Show this help')}
 `;
 
-/** Resolve a package target from positional/--pkg args, narrowed to a valid scope. */
+/**
+ * Resolve a package target from positional/--pkg args, narrowed to the action's
+ * valid scope (publish-y actions reject internal pkg names with a clear error).
+ */
 function resolvePackageArg(
+  action: Action,
   positional: string | undefined,
   flag: string | undefined
 ): PackageScope | undefined {
   const raw = flag ?? positional;
   if (!raw) return undefined;
   if (raw === 'all') return 'all';
-  if ((PUBLISHABLE_PACKAGES as readonly string[]).includes(raw)) return raw as PublishablePackage;
-  console.error(
-    pc.red('✖') +
-      ` Unknown package "${raw}". Expected one of: all, ${PUBLISHABLE_PACKAGES.join(', ')}`
-  );
+  const valid = packagesForAction(action);
+  if (valid.includes(raw)) return raw as AnyPackage;
+
+  // Distinguish "unknown" from "valid pkg but wrong scope for this action".
+  if ((ALL_PACKAGES as readonly string[]).includes(raw)) {
+    console.error(
+      pc.red('✖') +
+        ` "${raw}" is an internal package — it can't be ${action}ed (no npm presence).\n` +
+        `  Valid choices for ${action}: all, ${valid.join(', ')}`
+    );
+  } else {
+    console.error(
+      pc.red('✖') + ` Unknown package "${raw}". Expected one of: all, ${valid.join(', ')}`
+    );
+  }
   process.exit(1);
 }
 
@@ -135,7 +182,8 @@ function printWelcomeBanner(): void {
   console.log(
     pc.bold(pc.cyan('▸ tk')) +
       pc.dim('  ·  ') +
-      pc.bold(`${PUBLISHABLE_PACKAGES.length} packages`) +
+      pc.bold(`${PUBLISHABLE_PACKAGES.length} publishable`) +
+      pc.dim(` + ${INTERNAL_PACKAGES.length} internal`) +
       pc.dim('  ·  ') +
       `${pc.bold('branch:')} ${branch}` +
       pc.dim('  ·  ') +
@@ -183,15 +231,25 @@ function readVersionLabel(name: string): string {
   }
 }
 
-async function pickPackage(verb: string): Promise<PackageScope> {
+async function pickPackage(action: Action, verb: string): Promise<PackageScope> {
+  const valid = packagesForAction(action);
+  const includesInternal = ACTIONS_INCLUDING_INTERNAL.has(action);
+  const allLabel = includesInternal
+    ? `${pc.bold('all')}  ${pc.dim('— every workspace package (publishable + internal)')}`
+    : `${pc.bold('all')}  ${pc.dim('— every publishable package')}`;
   return select<PackageScope>({
     message: `Which package to ${verb}?`,
     choices: [
-      { name: `${pc.bold('all')}  ${pc.dim('— every publishable package')}`, value: 'all' },
-      ...PUBLISHABLE_PACKAGES.map((p) => ({
-        name: `${p.padEnd(22)} ${pc.dim('v' + readVersionLabel(p))}`,
-        value: p as PackageScope,
-      })),
+      { name: allLabel, value: 'all' },
+      ...valid.map((p) => {
+        const tag = (INTERNAL_PACKAGES as readonly string[]).includes(p)
+          ? pc.dim('  internal')
+          : '';
+        return {
+          name: `${p.padEnd(22)} ${pc.dim('v' + readVersionLabel(p))}${tag}`,
+          value: p as PackageScope,
+        };
+      }),
     ],
   });
 }
@@ -226,20 +284,13 @@ async function spawn(cmd: string, args: string[]): Promise<void> {
   await execa(cmd, args, { cwd: ROOT, stdio: 'inherit' });
 }
 
-/** Path to a package's pnpm workspace dir (UI components are nested under ui-components/). */
-function pkgPath(scope: PublishablePackage): string {
-  const nested = ['a-input', 'a-popover', 'a-drawer', 'a-responsive-popover', 'a-tel-input'];
-  return nested.includes(scope) ? `packages/ui-components/${pkgDir(scope)}` : `packages/${scope}`;
-}
-function pkgDir(scope: PublishablePackage): string {
-  const map: Record<string, string> = {
-    'a-input': 'AInput',
-    'a-popover': 'APopover',
-    'a-drawer': 'ADrawer',
-    'a-responsive-popover': 'AResponsivePopover',
-    'a-tel-input': 'ATelInput',
-  };
-  return map[scope] ?? scope;
+/**
+ * Path to a package's pnpm workspace dir, relative to the repo root.
+ * Delegates to {@link packageDir} (the canonical resolver) so the nested
+ * ui-components layout stays defined in one place.
+ */
+function pkgPath(scope: AnyPackage): string {
+  return path.relative(ROOT, packageDir(scope));
 }
 
 async function runRecursive(script: string): Promise<void> {
@@ -343,33 +394,41 @@ async function main(): Promise<void> {
 
   switch (action) {
     case 'build': {
-      const scope = resolvePackageArg(positional[1], args.pkg) ?? (await pickPackage('build'));
+      const scope =
+        resolvePackageArg(action, positional[1], args.pkg) ?? (await pickPackage(action, 'build'));
       await runBuild(scope);
       return;
     }
     case 'typecheck': {
-      const scope = resolvePackageArg(positional[1], args.pkg) ?? (await pickPackage('typecheck'));
+      const scope =
+        resolvePackageArg(action, positional[1], args.pkg) ??
+        (await pickPackage(action, 'typecheck'));
       await runTypecheck(scope);
       return;
     }
     case 'clean': {
-      const scope = resolvePackageArg(positional[1], args.pkg) ?? (await pickPackage('clean'));
+      const scope =
+        resolvePackageArg(action, positional[1], args.pkg) ?? (await pickPackage(action, 'clean'));
       await runClean(scope);
       return;
     }
     case 'pack': {
-      const scope = resolvePackageArg(positional[1], args.pkg) ?? (await pickPackage('pack'));
+      const scope =
+        resolvePackageArg(action, positional[1], args.pkg) ?? (await pickPackage(action, 'pack'));
       await runPack(scope);
       return;
     }
     case 'validate': {
-      const scope = resolvePackageArg(positional[1], args.pkg) ?? (await pickPackage('validate'));
+      const scope =
+        resolvePackageArg(action, positional[1], args.pkg) ??
+        (await pickPackage(action, 'validate'));
       await runValidate(scope);
       return;
     }
     case 'consumer': {
       const scope =
-        resolvePackageArg(positional[1], args.pkg) ?? (await pickPackage('consumer-validate'));
+        resolvePackageArg(action, positional[1], args.pkg) ??
+        (await pickPackage(action, 'consumer-validate'));
       await runConsumer(scope);
       return;
     }

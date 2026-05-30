@@ -29,7 +29,7 @@ import { fileURLToPath } from 'node:url';
 import minimist from 'minimist';
 import { execa } from 'execa';
 import pc from 'picocolors';
-import { packageDir, PUBLISHABLE_PACKAGES, ROOT } from '../lib/constants.ts';
+import { ALL_PACKAGES, packageDir, PUBLISHABLE_PACKAGES, ROOT } from '../lib/constants.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -356,14 +356,15 @@ async function verifyAutoImports(tmpPlayground, includesUi) {
 }
 
 /**
- * Map every publishable package's on-disk dir → its published npm name.
- * Built lazily from each package's package.json. Used to expand a user's
- * pick list to the closure of internal deps.
+ * Map every workspace package's on-disk dir → its npm name. Iterates
+ * {@link ALL_PACKAGES} (publishable + internal) so the closure expansion
+ * below can resolve internal deps (e.g. `@alikhalilll/a-popover` → `a-popover`)
+ * even though they're never published to npm.
  */
 function buildNpmNameIndex(): { byDir: Record<string, string>; byNpmName: Record<string, string> } {
   const byDir: Record<string, string> = {};
   const byNpmName: Record<string, string> = {};
-  for (const dir of PUBLISHABLE_PACKAGES) {
+  for (const dir of ALL_PACKAGES) {
     const pkgJson = JSON.parse(
       readFileSyncOrEmpty(path.join(packageDir(dir), 'package.json')) || '{}'
     );
@@ -453,12 +454,13 @@ async function main() {
     );
   }
 
-  // 1. Pack into a fresh .packs/<stamp>/ dir
+  // 1. Pack into a fresh .packs/<stamp>/ dir. Always pass an explicit --pkg
+  // list — `picked` may include internal packages (pulled in via the closure
+  // expansion above) which pack-all's `--all` shortcut doesn't cover.
   const stamp = new Date().toISOString().replace(/[-:T]/g, '').replace(/\..+$/, '');
   const outDir = path.join(ROOT, '.packs', `consumer-${stamp}`);
   const packArgs = ['tsx', path.join(__dirname, '..', 'pack', 'pack-all.ts'), '--outDir', outDir];
-  if (picked.length === PUBLISHABLE_PACKAGES.length) packArgs.push('--all');
-  else packArgs.push('--pkg', picked.join(','));
+  packArgs.push('--pkg', picked.join(','));
 
   console.log(pc.cyan('→') + ' Packing tarballs...');
   await execa(packArgs[0], packArgs.slice(1), { stdio: 'inherit', cwd: ROOT });

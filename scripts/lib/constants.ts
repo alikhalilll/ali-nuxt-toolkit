@@ -7,24 +7,45 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 export const ROOT = path.resolve(here, '..', '..');
 export const PACKAGES_DIR = path.join(ROOT, 'packages');
 
-/** Directory names under `packages/` that are publishable. `a-ui-base` is intentionally
- *  excluded — it's an internal-only foundation, bundled into every component's dist. */
+/**
+ * Directory names under `packages/` that are actually shipped to npm. `a-ui-base`
+ * is intentionally absent — internal-only, bundled into every component. The four
+ * UI primitives (a-input, a-popover, a-drawer, a-responsive-popover) are also
+ * absent — their source lives in the workspace and is bundled into a-tel-input,
+ * but they are not published; see {@link INTERNAL_PACKAGES}.
+ */
 export const PUBLISHABLE_PACKAGES = [
   'api-provider',
   'crypto',
   'auto-middleware',
-  'a-input',
-  'a-popover',
-  'a-drawer',
-  'a-responsive-popover',
   'a-tel-input',
 ] as const;
 export type PublishablePackage = (typeof PUBLISHABLE_PACKAGES)[number];
 
 /**
- * Publishable packages nested under `packages/ui-components/`, mapping the npm
- * name (kebab, what consumers import) → on-disk folder name. Component folders
- * are PascalCase (`ATelInput`) while the package stays `@alikhalilll/a-tel-input`.
+ * Workspace packages whose source is bundled into a publishable package (currently
+ * all four flow into a-tel-input via the @import chain + tsdown). They are still
+ * real workspace packages — buildable, typecheckable, importable from siblings —
+ * but `pack --all`, `release`, `validate-dist`, etc. skip them because they have
+ * no npm presence.
+ */
+export const INTERNAL_PACKAGES = [
+  'a-input',
+  'a-popover',
+  'a-drawer',
+  'a-responsive-popover',
+] as const;
+export type InternalPackage = (typeof INTERNAL_PACKAGES)[number];
+
+/** Every workspace package, publishable or internal. Build/typecheck/clean use this. */
+export const ALL_PACKAGES = [...PUBLISHABLE_PACKAGES, ...INTERNAL_PACKAGES] as const;
+export type AnyPackage = (typeof ALL_PACKAGES)[number];
+
+/**
+ * Packages nested under `packages/ui-components/`, mapping the npm name (kebab,
+ * what consumers import) → on-disk folder name. Component folders are PascalCase
+ * (`ATelInput`) while the package stays `@alikhalilll/a-tel-input`. Includes
+ * both publishable and internal entries — `packageDir()` works for either.
  * `AUiBase` is intentionally absent — it's internal-only, bundled into each.
  */
 const UI_COMPONENT_DIRS: Record<string, string> = {
@@ -35,7 +56,7 @@ const UI_COMPONENT_DIRS: Record<string, string> = {
   'a-tel-input': 'ATelInput',
 };
 
-/** Absolute directory for a publishable package, accounting for the nested ui-components set. */
+/** Absolute directory for any workspace package, accounting for the nested ui-components set. */
 export function packageDir(name: string): string {
   const nested = UI_COMPONENT_DIRS[name];
   return nested ? path.join(PACKAGES_DIR, 'ui-components', nested) : path.join(PACKAGES_DIR, name);
@@ -52,10 +73,6 @@ export const ATTW_IGNORE_NO_RESOLUTION: Record<PublishablePackage, string[]> = {
   'api-provider': [],
   'auto-middleware': [],
   crypto: [],
-  'a-input': ['./styles.css'],
-  'a-popover': ['./styles.css'],
-  'a-drawer': ['./styles.css'],
-  'a-responsive-popover': ['./styles.css'],
   'a-tel-input': ['./styles.css'],
 };
 

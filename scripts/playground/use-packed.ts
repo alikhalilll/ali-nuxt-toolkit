@@ -25,7 +25,7 @@ import { fileURLToPath } from 'node:url';
 import { execa } from 'execa';
 import minimist from 'minimist';
 import pc from 'picocolors';
-import { PUBLISHABLE_PACKAGES, ROOT } from '../lib/constants.ts';
+import { ALL_PACKAGES, ROOT } from '../lib/constants.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -60,8 +60,10 @@ function depSections() {
 }
 
 /**
- * Pack every publishable package into PLAYGROUND/.tarballs/ and return the
- * manifest (name → { filename, version, path }).
+ * Pack every workspace package (publishable + internal) into PLAYGROUND/.tarballs/
+ * and return the manifest (name → { filename, version, path }). The playground's
+ * package.json depends on the internal pkgs (a-input, a-popover, …) via workspace
+ * symlinks, so the file:.tarballs/ rewrite below needs tarballs for those too.
  */
 async function packAllIntoPlayground() {
   await fs.rm(TARBALL_DIR, { recursive: true, force: true });
@@ -70,11 +72,12 @@ async function packAllIntoPlayground() {
   const packArgs = [
     'tsx',
     path.join(__dirname, '..', 'pack', 'pack-all.ts'),
-    '--all',
+    '--pkg',
+    ALL_PACKAGES.join(','),
     '--outDir',
     TARBALL_DIR,
   ];
-  console.log(pc.cyan('→') + ' Packing ' + pc.bold(PUBLISHABLE_PACKAGES.join(', ')));
+  console.log(pc.cyan('→') + ' Packing ' + pc.bold(ALL_PACKAGES.join(', ')));
   await execa(packArgs[0], packArgs.slice(1), { stdio: 'inherit', cwd: ROOT });
 
   const manifest = await readJson(path.join(TARBALL_DIR, 'manifest.json'));
