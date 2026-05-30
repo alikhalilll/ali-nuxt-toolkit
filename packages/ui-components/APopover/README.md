@@ -15,7 +15,6 @@ pnpm add @alikhalilll/a-popover
 ## Styles
 
 ```ts
-import '@alikhalilll/a-ui-base/tokens.css';
 import '@alikhalilll/a-popover/styles.css';
 ```
 
@@ -72,7 +71,7 @@ The standalone dim layer (used internally by `overlay`): `class`, `lockScroll`.
 ```ts
 export default defineNuxtConfig({
   modules: ['@alikhalilll/a-popover/nuxt'],
-  css: ['@alikhalilll/a-ui-base/tokens.css', '@alikhalilll/a-popover/styles.css'],
+  css: ['@alikhalilll/a-popover/styles.css'],
 });
 ```
 

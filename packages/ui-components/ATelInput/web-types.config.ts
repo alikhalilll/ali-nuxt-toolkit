@@ -8,7 +8,7 @@ interface ComponentSpec {
 }
 
 const module = '@alikhalilll/a-tel-input';
-const typesFile = 'utils/types.ts';
+const typesFile = 'src/types.ts';
 
 export const components: ComponentSpec[] = [
   {

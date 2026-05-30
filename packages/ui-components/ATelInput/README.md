@@ -14,14 +14,14 @@ Components: **`ATelInput`** · **`ACountrySelect`** · **`ACountryFlag`**.
 pnpm add @alikhalilll/a-tel-input
 ```
 
-(Pulls in `@alikhalilll/a-responsive-popover` → `a-popover` + `a-drawer` + `a-ui-base` automatically.)
+(Pulls in `@alikhalilll/a-responsive-popover` → `a-popover` + `a-drawer` automatically. Design
+tokens are bundled into each component's `styles.css`, so there's no separate base package to install.)
 
 ## Styles
 
-The picker renders the popover/drawer, so import their stylesheets plus the shared tokens:
+The picker renders the popover/drawer, so import their stylesheets too:
 
 ```ts
-import '@alikhalilll/a-ui-base/tokens.css';
 import '@alikhalilll/a-popover/styles.css';
 import '@alikhalilll/a-drawer/styles.css';
 import '@alikhalilll/a-tel-input/styles.css';
@@ -105,7 +105,6 @@ primitives `ATelInput` uses (see `ACountrySelect` / `AInput`).
 export default defineNuxtConfig({
   modules: ['@alikhalilll/a-tel-input/nuxt'],
   css: [
-    '@alikhalilll/a-ui-base/tokens.css',
     '@alikhalilll/a-popover/styles.css',
     '@alikhalilll/a-drawer/styles.css',
     '@alikhalilll/a-tel-input/styles.css',

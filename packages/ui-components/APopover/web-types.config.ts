@@ -13,17 +13,17 @@ export const components: ComponentSpec[] = [
   {
     name: 'APopover',
     module,
-    typesFile: 'types.ts',
+    typesFile: 'src/types.ts',
     props: 'APopoverProps',
     emits: 'APopoverEmits',
   },
-  { name: 'APopoverTrigger', module, typesFile: 'types.ts', props: 'APopoverTriggerProps' },
+  { name: 'APopoverTrigger', module, typesFile: 'src/types.ts', props: 'APopoverTriggerProps' },
   {
     name: 'APopoverContent',
     module,
-    typesFile: 'types.ts',
+    typesFile: 'src/types.ts',
     props: 'APopoverContentProps',
     emits: 'APopoverContentEmits',
   },
-  { name: 'APopoverOverlay', module, typesFile: 'types.ts', props: 'APopoverOverlayProps' },
+  { name: 'APopoverOverlay', module, typesFile: 'src/types.ts', props: 'APopoverOverlayProps' },
 ];

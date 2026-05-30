@@ -11,7 +11,7 @@ export const components: ComponentSpec[] = [
   {
     name: 'AInput',
     module: '@alikhalilll/a-input',
-    typesFile: 'types.ts',
+    typesFile: 'src/types.ts',
     props: 'AInputProps',
     slots: 'AInputSlots',
     emits: 'AInputEmits',

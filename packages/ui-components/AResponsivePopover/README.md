@@ -18,7 +18,6 @@ It renders the popover (desktop) and drawer (mobile), so import all three styles
 shared tokens:
 
 ```ts
-import '@alikhalilll/a-ui-base/tokens.css';
 import '@alikhalilll/a-popover/styles.css';
 import '@alikhalilll/a-drawer/styles.css';
 import '@alikhalilll/a-responsive-popover/styles.css';
@@ -78,7 +77,6 @@ closed drawer is collapsed, so the swap is invisible.
 export default defineNuxtConfig({
   modules: ['@alikhalilll/a-responsive-popover/nuxt'],
   css: [
-    '@alikhalilll/a-ui-base/tokens.css',
     '@alikhalilll/a-popover/styles.css',
     '@alikhalilll/a-drawer/styles.css',
     '@alikhalilll/a-responsive-popover/styles.css',

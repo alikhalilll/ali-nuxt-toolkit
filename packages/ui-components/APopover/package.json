@@ -67,11 +67,7 @@
   "web-types": "./web-types.json",
   "files": [
     "dist",
-    "components/**/*.vue",
-    "components/**/*.ts",
-    "composables/**/*.ts",
-    "types.ts",
-    "index.ts",
+    "src",
     "web-types.json",
     "README.md",
     "LICENSE"
@@ -104,18 +100,15 @@
     }
   },
   "dependencies": {
-    "@alikhalilll/a-ui-base": "workspace:*",
     "reka-ui": "^2.9.0"
   },
   "devDependencies": {
-    "@ampproject/remapping": "^2.3.0",
     "@nuxt/kit": "^4.4.2",
     "@nuxt/schema": "^4.4.2",
     "@tailwindcss/cli": "^4.0.0",
     "@tsdown/css": "0.22.0",
     "@types/node": "^22.13.0",
     "@vueuse/core": "^14.0.0",
-    "magic-string": "^0.30.21",
     "rimraf": "^6.0.1",
     "tailwindcss": "^4.0.0",
     "tsdown": "0.22.0",
@@ -123,6 +116,7 @@
     "unplugin-vue": "7.2.0",
     "unplugin-vue-components": "^32.1.0",
     "vue": "^3.5.0",
-    "vue-tsc": "^3.2.4"
+    "vue-tsc": "^3.2.4",
+    "@alikhalilll/a-ui-base": "workspace:*"
   }
 }

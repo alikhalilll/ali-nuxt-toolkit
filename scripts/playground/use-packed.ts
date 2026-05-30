@@ -206,8 +206,8 @@ async function main() {
     const mode = detectMode();
     console.log(pc.bold('playground-use-packed') + ' — current mode: ' + pc.bold(mode));
     console.log('\nUsage:');
-    console.log('  pnpm play:packed              # switch to packed tarballs');
-    console.log('  pnpm play:packed:restore      # back to workspace:*');
+    console.log('  pnpm tk dev play:packed       # switch to packed tarballs');
+    console.log('  pnpm tk dev play:restore      # back to workspace:*');
     return;
   }
 
@@ -225,7 +225,7 @@ async function main() {
     );
     console.log(
       pc.dim('  When done, run ') +
-        pc.bold('pnpm play:packed:restore') +
+        pc.bold('pnpm tk dev play:restore') +
         pc.dim(' to return to the workspace dev loop.')
     );
     return;

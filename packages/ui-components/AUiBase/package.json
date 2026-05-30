@@ -1,67 +1,22 @@
 {
   "name": "@alikhalilll/a-ui-base",
   "version": "1.0.0",
-  "description": "Shared foundation for the @alikhalilll/a-* component packages: the `cn` class merger, the shared size scale, and the design-token / Tailwind-theme stylesheets every component builds against.",
+  "private": true,
+  "description": "Internal workspace foundation for the @alikhalilll/a-* component packages. NOT published — its JS, types, and tokens are bundled into each component's dist by tsdown.",
   "license": "MIT",
-  "author": "alikhalilll",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/alikhalilll/ali-nuxt-toolkit.git",
-    "directory": "packages/ui-components/AUiBase"
-  },
-  "homepage": "https://alikhalilll.github.io/ali-nuxt-toolkit/ui",
-  "bugs": {
-    "url": "https://github.com/alikhalilll/ali-nuxt-toolkit/issues"
-  },
   "type": "module",
   "sideEffects": [
     "**/*.css"
   ],
-  "publishConfig": {
-    "access": "public"
-  },
-  "keywords": [
-    "vue",
-    "tailwind",
-    "design-tokens",
-    "clsx",
-    "tailwind-merge"
-  ],
   "exports": {
-    ".": {
-      "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      },
-      "require": {
-        "types": "./dist/index.d.cts",
-        "default": "./dist/index.cjs"
-      }
-    },
+    ".": "./dist/index.js",
     "./tokens.css": "./tokens.css",
-    "./theme.css": "./theme.css",
-    "./package.json": "./package.json"
-  },
-  "types": "./dist/index.d.ts",
-  "files": [
-    "dist",
-    "tokens.css",
-    "theme.css",
-    "README.md",
-    "LICENSE"
-  ],
-  "engines": {
-    "node": ">=18"
+    "./theme.css": "./theme.css"
   },
   "scripts": {
     "clean": "rimraf dist",
     "build": "tsdown",
-    "typecheck": "tsc --noEmit -p tsconfig.json",
-    "validate-dist": "tsx ../../../scripts/validate/dist-validate.ts --pkg a-ui-base",
-    "validate-consumer": "tsx ../../../scripts/validate/consumer-validate.ts --pkg a-ui-base",
-    "validate": "pnpm build && pnpm validate-dist",
-    "prepack": "pnpm build",
-    "prepublishOnly": "pnpm validate"
+    "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
     "clsx": "^2.1.1",

@@ -15,7 +15,6 @@ pnpm add @alikhalilll/a-drawer
 ## Styles
 
 ```ts
-import '@alikhalilll/a-ui-base/tokens.css';
 import '@alikhalilll/a-drawer/styles.css';
 ```
 
@@ -63,7 +62,7 @@ The dim layer: extends reka-ui `DialogOverlayProps` plus `class`.
 ```ts
 export default defineNuxtConfig({
   modules: ['@alikhalilll/a-drawer/nuxt'],
-  css: ['@alikhalilll/a-ui-base/tokens.css', '@alikhalilll/a-drawer/styles.css'],
+  css: ['@alikhalilll/a-drawer/styles.css'],
 });
 ```
 

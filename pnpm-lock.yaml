@@ -225,9 +225,6 @@ importers:
 
   packages/ui-components/ADrawer:
     dependencies:
-      '@alikhalilll/a-ui-base':
-        specifier: workspace:*
-        version: link:../AUiBase
       reka-ui:
         specifier: ^2.9.0
         version: 2.9.7(vue@3.5.32(typescript@5.9.3))
@@ -235,9 +232,9 @@ importers:
         specifier: ^0.4.0
         version: 0.4.1(reka-ui@2.9.7(vue@3.5.32(typescript@5.9.3)))(vue@3.5.32(typescript@5.9.3))
     devDependencies:
-      '@ampproject/remapping':
-        specifier: ^2.3.0
-        version: 2.3.0
+      '@alikhalilll/a-ui-base':
+        specifier: workspace:*
+        version: link:../AUiBase
       '@nuxt/kit':
         specifier: ^4.4.2
         version: 4.4.2(magicast@0.5.2)
@@ -256,9 +253,6 @@ importers:
       '@vueuse/core':
         specifier: ^14.0.0
         version: 14.3.0(vue@3.5.32(typescript@5.9.3))
-      magic-string:
-        specifier: ^0.30.21
-        version: 0.30.21
       rimraf:
         specifier: ^6.0.1
         version: 6.1.3
@@ -285,14 +279,10 @@ importers:
         version: 3.3.1(typescript@5.9.3)
 
   packages/ui-components/AInput:
-    dependencies:
+    devDependencies:
       '@alikhalilll/a-ui-base':
         specifier: workspace:*
         version: link:../AUiBase
-    devDependencies:
-      '@ampproject/remapping':
-        specifier: ^2.3.0
-        version: 2.3.0
       '@nuxt/kit':
         specifier: ^4.4.2
         version: 4.4.2(magicast@0.5.2)
@@ -311,9 +301,6 @@ importers:
       '@vueuse/core':
         specifier: ^14.0.0
         version: 14.3.0(vue@3.5.32(typescript@5.9.3))
-      magic-string:
-        specifier: ^0.30.21
-        version: 0.30.21
       rimraf:
         specifier: ^6.0.1
         version: 6.1.3
@@ -341,16 +328,13 @@ importers:
 
   packages/ui-components/APopover:
     dependencies:
-      '@alikhalilll/a-ui-base':
-        specifier: workspace:*
-        version: link:../AUiBase
       reka-ui:
         specifier: ^2.9.0
         version: 2.9.7(vue@3.5.32(typescript@5.9.3))
     devDependencies:
-      '@ampproject/remapping':
-        specifier: ^2.3.0
-        version: 2.3.0
+      '@alikhalilll/a-ui-base':
+        specifier: workspace:*
+        version: link:../AUiBase
       '@nuxt/kit':
         specifier: ^4.4.2
         version: 4.4.2(magicast@0.5.2)
@@ -369,9 +353,6 @@ importers:
       '@vueuse/core':
         specifier: ^14.0.0
         version: 14.3.0(vue@3.5.32(typescript@5.9.3))
-      magic-string:
-        specifier: ^0.30.21
-        version: 0.30.21
       rimraf:
         specifier: ^6.0.1
         version: 6.1.3
@@ -405,13 +386,10 @@ importers:
       '@alikhalilll/a-popover':
         specifier: workspace:*
         version: link:../APopover
+    devDependencies:
       '@alikhalilll/a-ui-base':
         specifier: workspace:*
         version: link:../AUiBase
-    devDependencies:
-      '@ampproject/remapping':
-        specifier: ^2.3.0
-        version: 2.3.0
       '@nuxt/kit':
         specifier: ^4.4.2
         version: 4.4.2(magicast@0.5.2)
@@ -430,9 +408,6 @@ importers:
       '@vueuse/core':
         specifier: ^14.0.0
         version: 14.3.0(vue@3.5.32(typescript@5.9.3))
-      magic-string:
-        specifier: ^0.30.21
-        version: 0.30.21
       rimraf:
         specifier: ^6.0.1
         version: 6.1.3
@@ -463,9 +438,6 @@ importers:
       '@alikhalilll/a-responsive-popover':
         specifier: workspace:*
         version: link:../AResponsivePopover
-      '@alikhalilll/a-ui-base':
-        specifier: workspace:*
-        version: link:../AUiBase
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -473,9 +445,9 @@ importers:
         specifier: ^1.12.0
         version: 1.13.2
     devDependencies:
-      '@ampproject/remapping':
-        specifier: ^2.3.0
-        version: 2.3.0
+      '@alikhalilll/a-ui-base':
+        specifier: workspace:*
+        version: link:../AUiBase
       '@nuxt/kit':
         specifier: ^4.4.2
         version: 4.4.2(magicast@0.5.2)
@@ -494,9 +466,6 @@ importers:
       '@vueuse/core':
         specifier: ^14.0.0
         version: 14.3.0(vue@3.5.32(typescript@5.9.3))
-      magic-string:
-        specifier: ^0.30.21
-        version: 0.30.21
       rimraf:
         specifier: ^6.0.1
         version: 6.1.3
@@ -561,9 +530,6 @@ importers:
       '@alikhalilll/a-tel-input':
         specifier: workspace:*
         version: link:../../packages/ui-components/ATelInput
-      '@alikhalilll/a-ui-base':
-        specifier: workspace:*
-        version: link:../../packages/ui-components/AUiBase
       '@alikhalilll/nuxt-api-provider':
         specifier: workspace:*
         version: link:../../packages/api-provider

@@ -13,11 +13,11 @@ export const components: ComponentSpec[] = [
   {
     name: 'AResponsivePopover',
     module,
-    typesFile: 'types.ts',
+    typesFile: 'src/types.ts',
     props: 'AResponsivePopoverProps',
     emits: 'AResponsivePopoverEmits',
     slots: 'AResponsivePopoverSlots',
   },
-  { name: 'AResponsivePopoverTrigger', module, typesFile: 'types.ts' },
-  { name: 'AResponsivePopoverContent', module, typesFile: 'types.ts' },
+  { name: 'AResponsivePopoverTrigger', module, typesFile: 'src/types.ts' },
+  { name: 'AResponsivePopoverContent', module, typesFile: 'src/types.ts' },
 ];

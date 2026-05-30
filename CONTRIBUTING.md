@@ -183,7 +183,7 @@ Bump levels:
 
 Skip a changeset only if your PR is truly internal (CI, repo tooling, test-only, internal refactor with no behavior change). When in doubt, add one — the release flow respects patch-level no-ops fine.
 
-Check status with `pnpm changeset:status`.
+Check status with `pnpm changeset status --verbose`.
 
 ## Releasing (maintainers only)
 
@@ -202,9 +202,9 @@ Secrets needed in the repo: `NPM_TOKEN` (npm automation token with publish right
 Kept working for ad-hoc releases; don't interleave it with a pending Changesets version PR.
 
 ```bash
-pnpm release                # pick packages interactively
-pnpm release:api-provider   # target one
-pnpm release:dry            # preview without writing
+pnpm tk release                # pick packages interactively
+pnpm tk release api-provider   # target one
+pnpm tk release --dry-run      # preview without writing
 ```
 
 You need an `npm login` session with publish rights on `@alikhalilll`.

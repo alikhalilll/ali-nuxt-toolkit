@@ -3,6 +3,7 @@
  *   import '@alikhalilll/a-ui-base/tokens.css';
  *   import '@alikhalilll/a-drawer/styles.css';
  */
+@import '@alikhalilll/a-ui-base/tokens.css';
 @import '@alikhalilll/a-ui-base/theme.css';
 
 @source './**/*.{vue,ts}';

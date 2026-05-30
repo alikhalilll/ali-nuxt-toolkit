@@ -6,26 +6,21 @@
  * place instead of duplicating the step sequence across every package.json.
  *
  * Why each step exists:
- *   - tsdown            — bundle `.`/`./nuxt`/`./resolver` to ESM+CJS (no dts; tsdown's
- *                         vue dts emission is broken here, so vue-tsc handles dts).
- *   - vue-tsc           — emit the per-source `.d.ts` (+ `.d.ts.map`) tree straight into
- *                         `dist/` — flat, no `runtime/` mirror. `dist/index.d.ts` is the
- *                         real entry the exports map points at (no re-export stub).
- *   - fix-dts-imports   — append `.js` / map `.vue` → `.vue.js` in emitted dts so
- *                         declarations resolve (with go-to-def) under TS/Volar.
- *   - strip-vls-wrapper — drop `__VLS_WithSlots` (a vue-tsc artefact that breaks
- *                         `InstanceType` + go-to-definition), preserving source maps.
- *   - emit-entry-dcts   — copy the entry `.d.ts` → `.d.cts` for the `require` condition.
+ *   - tsdown            — bundle every entry from the package's `exports` map to
+ *                         ESM+CJS AND emit a single rolled-up `.d.ts` (+ `.d.cts`)
+ *                         per entry via `dts: { vue: true }` (rolldown-plugin-dts
+ *                         + vue-tsc). Components inline as `DefineComponent`; no
+ *                         `.vue` token survives in any specifier.
+ *   - strip-vls-wrapper — remove the `__VLS_WithSlots` artefact `@vue/language-tools`
+ *                         bakes around SFC defaults that call `defineSlots()` —
+ *                         its `T & { new (): { $slots: S } }` intersection breaks
+ *                         `InstanceType<typeof Comp>` in consumers.
  *   - tailwindcss + merge-sfc-styles — compile this component's utilities into
  *                         `dist/styles.css` and append its bundled SFC styles.
  *   - gen-web-types     — emit `web-types.json` for JetBrains IDEs.
- *   - verify-exports    — gate: every exports path exists, dts non-empty, no __VLS leak.
- *   - verify-go-to-def  — gate: every public export resolves to a navigable declaration
- *                         and no emitted specifier ends in a literal `.d.ts` (which
- *                         would break Volar's "go to definition").
- *
- * `.d.ts.map` sources point at the package-root source (shipped via `files`), so
- * go-to-definition lands on the real `.vue`/`.ts` — no copied sources in dist.
+ *   - verify-exports / verify-go-to-def — gates: every exports path resolves to a
+ *                         navigable declaration; no Volar-hostile specifier shapes
+ *                         (`.d.ts` suffix, `.vue` token) leak into dist.
  */
 
 import path from 'node:path';
@@ -39,10 +34,7 @@ const step = (s: string) => ['tsx', path.join(here, s)];
 const steps: string[][] = [
   ['rimraf', 'dist', 'web-types.json'],
   ['tsdown'],
-  ['vue-tsc', '-p', 'tsconfig.dist.json'],
-  step('fix-dts-imports.ts'),
   step('strip-vls-wrapper.ts'),
-  step('emit-entry-dcts.ts'),
   ['tailwindcss', '-i', 'styles.src.css', '-o', 'dist/styles.css', '--minify'],
   step('merge-sfc-styles.ts'),
   step('gen-web-types.ts'),

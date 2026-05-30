@@ -6,17 +6,6 @@
     "jsx": "preserve",
     "verbatimModuleSyntax": true
   },
-  "include": [
-    "index.ts",
-    "types.ts",
-    "components/**/*.vue",
-    "components/**/*.ts",
-    "composables/**/*.ts",
-    "icons/**/*.vue",
-    "icons/**/*.ts",
-    "utils/**/*.ts",
-    "nuxt/**/*.ts",
-    "resolver/**/*.ts"
-  ],
+  "include": ["src/**/*.ts", "src/**/*.vue"],
   "exclude": ["node_modules", "dist"]
 }

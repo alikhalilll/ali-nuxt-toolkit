@@ -23,12 +23,12 @@ cd ali-nuxt-toolkit
 pnpm install && pnpm build && pnpm play
 ```
 
-| Package                                                           | Version                                                                                                                                                 | Downloads                                                                                                                                                      | Size                                                                                                                                                                               | Purpose                                                                                                                                                                                                                                                                                                                                           |
-| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`@alikhalilll/nuxt-api-provider`](./packages/api-provider)       | [![npm](https://img.shields.io/npm/v/@alikhalilll/nuxt-api-provider.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-api-provider)       | [![downloads](https://img.shields.io/npm/dm/@alikhalilll/nuxt-api-provider.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-api-provider)       | [![size](https://img.shields.io/bundlephobia/minzip/@alikhalilll/nuxt-api-provider?label=minzip&color=444)](https://bundlephobia.com/package/@alikhalilll/nuxt-api-provider)       | Typed `fetch` client with interceptors, retry/backoff, timeouts, and a unified upload/download progress hook.                                                                                                                                                                                                                                     |
-| [`@alikhalilll/nuxt-crypto`](./packages/crypto)                   | [![npm](https://img.shields.io/npm/v/@alikhalilll/nuxt-crypto.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-crypto)                   | [![downloads](https://img.shields.io/npm/dm/@alikhalilll/nuxt-crypto.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-crypto)                   | [![size](https://img.shields.io/bundlephobia/minzip/@alikhalilll/nuxt-crypto?label=minzip&color=444)](https://bundlephobia.com/package/@alikhalilll/nuxt-crypto)                   | AES-256-GCM + PBKDF2 via Web Crypto — key caching, pluggable algorithms, server-only mode, optional device-fingerprint binding.                                                                                                                                                                                                                   |
-| [`@alikhalilll/nuxt-auto-middleware`](./packages/auto-middleware) | [![npm](https://img.shields.io/npm/v/@alikhalilll/nuxt-auto-middleware.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-auto-middleware) | [![downloads](https://img.shields.io/npm/dm/@alikhalilll/nuxt-auto-middleware.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-auto-middleware) | [![size](https://img.shields.io/bundlephobia/minzip/@alikhalilll/nuxt-auto-middleware?label=minzip&color=444)](https://bundlephobia.com/package/@alikhalilll/nuxt-auto-middleware) | Layout-based route middleware with glob patterns, named groups, and per-page overrides.                                                                                                                                                                                                                                                           |
-| [`@alikhalilll/a-*` (UI components)](./packages/ui-components)    | —                                                                                                                                                       | —                                                                                                                                                              | —                                                                                                                                                                                  | Headless, shadcn-vue style Vue 3 components — **one package each**: `a-tel-input`, `a-input`, `a-popover`, `a-drawer`, `a-responsive-popover`, plus shared `a-ui-base`. Install only what you use. Flagship `ATelInput` — IP-detected country, libphonenumber-js validation, responsive popover/drawer picker, RTL + i18n + alternative numerals. |
+| Package                                                           | Version                                                                                                                                                 | Downloads                                                                                                                                                      | Size                                                                                                                                                                               | Purpose                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [`@alikhalilll/nuxt-api-provider`](./packages/api-provider)       | [![npm](https://img.shields.io/npm/v/@alikhalilll/nuxt-api-provider.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-api-provider)       | [![downloads](https://img.shields.io/npm/dm/@alikhalilll/nuxt-api-provider.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-api-provider)       | [![size](https://img.shields.io/bundlephobia/minzip/@alikhalilll/nuxt-api-provider?label=minzip&color=444)](https://bundlephobia.com/package/@alikhalilll/nuxt-api-provider)       | Typed `fetch` client with interceptors, retry/backoff, timeouts, and a unified upload/download progress hook.                                                                                                                                                                                                                                                                                                                                    |
+| [`@alikhalilll/nuxt-crypto`](./packages/crypto)                   | [![npm](https://img.shields.io/npm/v/@alikhalilll/nuxt-crypto.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-crypto)                   | [![downloads](https://img.shields.io/npm/dm/@alikhalilll/nuxt-crypto.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-crypto)                   | [![size](https://img.shields.io/bundlephobia/minzip/@alikhalilll/nuxt-crypto?label=minzip&color=444)](https://bundlephobia.com/package/@alikhalilll/nuxt-crypto)                   | AES-256-GCM + PBKDF2 via Web Crypto — key caching, pluggable algorithms, server-only mode, optional device-fingerprint binding.                                                                                                                                                                                                                                                                                                                  |
+| [`@alikhalilll/nuxt-auto-middleware`](./packages/auto-middleware) | [![npm](https://img.shields.io/npm/v/@alikhalilll/nuxt-auto-middleware.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-auto-middleware) | [![downloads](https://img.shields.io/npm/dm/@alikhalilll/nuxt-auto-middleware.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-auto-middleware) | [![size](https://img.shields.io/bundlephobia/minzip/@alikhalilll/nuxt-auto-middleware?label=minzip&color=444)](https://bundlephobia.com/package/@alikhalilll/nuxt-auto-middleware) | Layout-based route middleware with glob patterns, named groups, and per-page overrides.                                                                                                                                                                                                                                                                                                                                                          |
+| [`@alikhalilll/a-*` (UI components)](./packages/ui-components)    | —                                                                                                                                                       | —                                                                                                                                                              | —                                                                                                                                                                                  | Headless, shadcn-vue style Vue 3 components — **one package each**: `a-tel-input`, `a-input`, `a-popover`, `a-drawer`, `a-responsive-popover`. The internal `a-ui-base` (cn helper, size scale, design tokens) is bundled into every component's `dist/` — install only the component(s) you use. Flagship `ATelInput` — IP-detected country, libphonenumber-js validation, responsive popover/drawer picker, RTL + i18n + alternative numerals. |
 
 Every Nuxt-module package (`api-provider`, `crypto`, `auto-middleware`) ships:
 
@@ -36,7 +36,7 @@ Every Nuxt-module package (`api-provider`, `crypto`, `auto-middleware`) ships:
 - A **framework-agnostic core** (`./core` subpath) usable in Node, Bun, Deno, CLIs, tests.
 - Full **type exports** (`./types` subpath).
 
-The `@alikhalilll/a-*` UI packages are plain **Vue 3 components** — they work in any Vue app, not just Nuxt. Each component is its own package; they share `@alikhalilll/a-ui-base` for the `cn` helper, the size scale, and the design tokens. CSS variables are prefixed `--ak-ui-*` (defined in `@alikhalilll/a-ui-base/tokens.css`) and theme is set by overriding them anywhere in the cascade.
+The `@alikhalilll/a-*` UI packages are plain **Vue 3 components** — they work in any Vue app, not just Nuxt. Each component is its own package; an internal `a-ui-base` workspace (the `cn` helper, the size scale, the design tokens) is bundled into every component's published `dist/`, so consumers install only the component(s) they use. CSS variables are prefixed `--ak-ui-*` (defined in each component's `styles.css`) and theme is set by overriding them anywhere in the cascade.
 
 ---
 
@@ -63,8 +63,7 @@ export default defineNuxtConfig({
     '@alikhalilll/a-tel-input/nuxt', // <ATelInput> auto-imported (add other component modules as needed)
   ],
   css: [
-    '@alikhalilll/a-ui-base/tokens.css', // shared design tokens — import once
-    '@alikhalilll/a-tel-input/styles.css', // + each component package's stylesheet
+    '@alikhalilll/a-tel-input/styles.css', // design tokens bundled in — just the component's CSS
   ],
 });
 ```
@@ -407,7 +406,7 @@ Every middleware runs inside `callWithNuxt()`, so `useNuxtApp()` / composables w
 
 ## `@alikhalilll/a-*` — UI components
 
-Headless, [shadcn-vue](https://www.shadcn-vue.com) style Vue 3 components built on [reka-ui](https://reka-ui.com) + [vaul-vue](https://github.com/unovue/vaul-vue), shipped as **one package per component** (`@alikhalilll/a-tel-input`, `@alikhalilll/a-input`, `@alikhalilll/a-popover`, `@alikhalilll/a-drawer`, `@alikhalilll/a-responsive-popover`) on a shared `@alikhalilll/a-ui-base`. Theme via prefixed CSS variables, size via a shared scale (xs/sm/md/lg/xl; md = 43 px), customize via deep slots + override props.
+Headless, [shadcn-vue](https://www.shadcn-vue.com) style Vue 3 components built on [reka-ui](https://reka-ui.com) + [vaul-vue](https://github.com/unovue/vaul-vue), shipped as **one package per component** (`@alikhalilll/a-tel-input`, `@alikhalilll/a-input`, `@alikhalilll/a-popover`, `@alikhalilll/a-drawer`, `@alikhalilll/a-responsive-popover`). The shared foundation (`a-ui-base`) is an internal workspace bundled into every component's `dist/` — no separate install. Theme via prefixed CSS variables, size via a shared scale (xs/sm/md/lg/xl; md = 43 px), customize via deep slots + override props.
 
 ### First component — `ATelInput`
 
@@ -423,13 +422,12 @@ A composite phone-number input that:
 
 ### Setup
 
-Each component ships a **prebuilt stylesheet** — no Tailwind `@source`/`@theme` wiring in your app. Import the shared tokens once, then each component package's CSS:
+Each component ships a **prebuilt stylesheet** — no Tailwind `@source`/`@theme` wiring in your app. Design tokens are bundled into every component's `styles.css`, so just import each package's CSS:
 
 ```ts
 // nuxt.config.ts
 export default defineNuxtConfig({
   css: [
-    '@alikhalilll/a-ui-base/tokens.css', // --ak-ui-* design tokens (import once)
     '@alikhalilll/a-popover/styles.css', // ATelInput's picker renders the popover…
     '@alikhalilll/a-drawer/styles.css', // …and drawer
     '@alikhalilll/a-responsive-popover/styles.css',
@@ -544,27 +542,24 @@ Per-package: `pnpm -C packages/<name> build|typecheck`.
 
 The release flow bumps the version, builds, publishes to npm, commits `chore(release): <pkg>@<version>`, tags, and pushes.
 
-```bash
-pnpm release                # Interactive (pick packages, bump, dist-tag)
-pnpm release:all            # All packages, fully interactive
-pnpm release:api-provider   # Target one
-pnpm release:crypto
-pnpm release:auto-middleware
-pnpm release:dry            # Preview without writing anything
-
-# Fully non-interactive:
-node scripts/release/index.mjs --all --bump patch --tag latest
-node scripts/release/index.mjs --pkg api-provider,crypto --bump minor
-```
-
-Flags: `--pkg <names>` (comma-separated), `--all`, `--bump <patch|minor|major|prerelease|none>`, `--tag <latest|next|beta|...>`, `--branch <name>`, `--interactive`, `--dry-run`, `--skip-git`, `--skip-publish`.
-
-To build tarballs without publishing:
+All release/pack flows go through the `tk` CLI:
 
 ```bash
-pnpm pack:all           # all three into ./artifacts/
-pnpm pack:api-provider  # one
+pnpm tk release                # Interactive: pick packages, bump, dist-tag
+pnpm tk release all            # Drive every publishable package
+pnpm tk release api-provider   # Target one
+pnpm tk release --dry-run      # Preview without writing anything
+
+# Build tarballs without publishing:
+pnpm tk pack all               # All publishable packages → ./artifacts/
+pnpm tk pack a-tel-input       # One
+
+# Fully non-interactive (skips tk's wrapper, calls the release script directly):
+node scripts/release/index.ts --all --bump patch --tag latest
+node scripts/release/index.ts --pkg api-provider,crypto --bump minor
 ```
+
+Release-script flags: `--pkg <names>` (comma-separated), `--all`, `--bump <patch|minor|major|prerelease|none>`, `--tag <latest|next|beta|...>`, `--branch <name>`, `--interactive`, `--dry-run`, `--skip-git`, `--skip-publish`.
 
 You'll need to be logged in (`npm login`) with publish rights to the `@alikhalilll` scope.
 

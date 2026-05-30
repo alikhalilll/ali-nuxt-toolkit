@@ -12,10 +12,9 @@ pnpm add @alikhalilll/a-input
 
 ## Styles
 
-Import the shared tokens once (anywhere in your app) and this component's stylesheet:
+Import this component's stylesheet (design tokens are bundled in):
 
 ```ts
-import '@alikhalilll/a-ui-base/tokens.css';
 import '@alikhalilll/a-input/styles.css';
 ```
 
@@ -72,7 +71,7 @@ Any other native `<input>` attribute (`placeholder`, `disabled`, `type`, …) is
 ```ts
 export default defineNuxtConfig({
   modules: ['@alikhalilll/a-input/nuxt'],
-  css: ['@alikhalilll/a-ui-base/tokens.css', '@alikhalilll/a-input/styles.css'],
+  css: ['@alikhalilll/a-input/styles.css'],
   aInput: { prefix: '' }, // optional component-name prefix
 });
 ```

@@ -7,12 +7,12 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 export const ROOT = path.resolve(here, '..', '..');
 export const PACKAGES_DIR = path.join(ROOT, 'packages');
 
-/** Directory names under `packages/` that are publishable. */
+/** Directory names under `packages/` that are publishable. `a-ui-base` is intentionally
+ *  excluded — it's an internal-only foundation, bundled into every component's dist. */
 export const PUBLISHABLE_PACKAGES = [
   'api-provider',
   'crypto',
   'auto-middleware',
-  'a-ui-base',
   'a-input',
   'a-popover',
   'a-drawer',
@@ -22,12 +22,12 @@ export const PUBLISHABLE_PACKAGES = [
 export type PublishablePackage = (typeof PUBLISHABLE_PACKAGES)[number];
 
 /**
- * Packages nested under `packages/ui-components/`, mapping the publishable npm
+ * Publishable packages nested under `packages/ui-components/`, mapping the npm
  * name (kebab, what consumers import) → on-disk folder name. Component folders
  * are PascalCase (`ATelInput`) while the package stays `@alikhalilll/a-tel-input`.
+ * `AUiBase` is intentionally absent — it's internal-only, bundled into each.
  */
 const UI_COMPONENT_DIRS: Record<string, string> = {
-  'a-ui-base': 'AUiBase',
   'a-input': 'AInput',
   'a-popover': 'APopover',
   'a-drawer': 'ADrawer',
@@ -52,7 +52,6 @@ export const ATTW_IGNORE_NO_RESOLUTION: Record<PublishablePackage, string[]> = {
   'api-provider': [],
   'auto-middleware': [],
   crypto: [],
-  'a-ui-base': ['./tokens.css', './theme.css'],
   'a-input': ['./styles.css'],
   'a-popover': ['./styles.css'],
   'a-drawer': ['./styles.css'],

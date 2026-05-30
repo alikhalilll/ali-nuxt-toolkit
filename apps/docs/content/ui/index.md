@@ -29,10 +29,15 @@ Then import the stylesheet **once** in your app entry — no Tailwind config, no
 
 ### Nuxt 3 / 4
 
+Design tokens are bundled into every component's `styles.css`, so just import each
+component package's CSS — no separate base import.
+
 ```ts
 // nuxt.config.ts
 export default defineNuxtConfig({
-  css: ['@alikhalilll/a-ui-base/tokens.css'],
+  css: [
+    '@alikhalilll/a-tel-input/styles.css', // any component you use
+  ],
 });
 ```
 
@@ -42,7 +47,7 @@ export default defineNuxtConfig({
 // main.ts
 import { createApp } from 'vue';
 import App from './App.vue';
-import '@alikhalilll/a-ui-base/tokens.css';
+import '@alikhalilll/a-tel-input/styles.css';
 
 createApp(App).mount('#app');
 ```
@@ -59,7 +64,7 @@ The shipped CSS already contains every utility class the components need, so the
 // nuxt.config.ts — UnoCSS + @alikhalilll/a-*
 export default defineNuxtConfig({
   modules: ['@unocss/nuxt'],
-  css: ['@alikhalilll/a-ui-base/tokens.css'],
+  css: ['@alikhalilll/a-tel-input/styles.css'],
 });
 ```
 
@@ -96,11 +101,11 @@ If you don't write those class names yourself, you can skip this entirely — th
 
 ### Workspaces / monorepos
 
-If you're a pnpm/yarn workspace consumer and you _also_ use Tailwind v4 in the app, Vite can double-emit the symlinked CSS file (once via `@alikhalilll/a-ui-base/tokens.css`, once via the resolved filesystem path), which puts the lib's `.hidden { display: none }` after your `md:flex` / `md:block` responsive rules in the cascade and silently hides nav bars and sidebars. Avoid it by `@import`ing the lib stylesheet from inside your own app CSS instead of listing it in `nuxt.config.css`:
+If you're a pnpm/yarn workspace consumer and you _also_ use Tailwind v4 in the app, Vite can double-emit a symlinked component CSS file (once via the package specifier, once via the resolved filesystem path), which puts the lib's `.hidden { display: none }` after your `md:flex` / `md:block` responsive rules in the cascade and silently hides nav bars and sidebars. Avoid it by `@import`ing the component stylesheet from inside your own app CSS instead of listing it in `nuxt.config.css`:
 
 ```css
 /* app.css */
-@import '@alikhalilll/a-ui-base/tokens.css';
+@import '@alikhalilll/a-tel-input/styles.css';
 @import 'tailwindcss';
 /* …your own rules… */
 ```
@@ -136,10 +141,9 @@ Available subpaths:
 | `@alikhalilll/a-popover`            | `APopover` + `Trigger` / `Content` / `Overlay` + types (re-exported reka-ui) |
 | `@alikhalilll/a-drawer`             | `ADrawer` + `Trigger` / `Content` / `Overlay` + types (re-exported vaul-vue) |
 | `@alikhalilll/a-responsive-popover` | `AResponsivePopover` + `Trigger` / `Content` + types                         |
-| `@alikhalilll/a-ui-base`            | `cn`, `SIZES`, `controlHeight`, `controlPaddingX`, `controlTextSize`         |
 | `@alikhalilll/a-tel-input/nuxt`     | Nuxt module — register in `nuxt.config.ts` for auto-import                   |
 | `@alikhalilll/a-tel-input/resolver` | `unplugin-vue-components` resolver factory for Vite consumers                |
-| `@alikhalilll/a-ui-base/tokens.css` | Pre-compiled stylesheet (design tokens + utility classes)                    |
+| `@alikhalilll/a-<name>/styles.css`  | Pre-compiled stylesheet (design tokens + utility classes — bundled in)       |
 
 Each component also ships its own README at `node_modules/@alikhalilll/a-<name>/README.md`.
 
@@ -190,7 +194,7 @@ Values are HSL **triplets** — no `hsl(…)` wrapper. Full token list + recipes
 ```ts
 // nuxt.config.ts
 export default defineNuxtConfig({
-  css: ['@alikhalilll/a-ui-base/tokens.css'],
+  css: ['@alikhalilll/a-tel-input/styles.css'],
   app: { head: { htmlAttrs: { class: 'dark' } } }, // or .light
 });
 ```
@@ -217,7 +221,7 @@ const country = ref<number | null>(null);
 // nuxt.config.ts
 export default defineNuxtConfig({
   modules: ['@alikhalilll/a-tel-input/nuxt'],
-  css: ['@alikhalilll/a-ui-base/tokens.css'],
+  css: ['@alikhalilll/a-tel-input/styles.css'],
   alikhalilllUi: { prefix: '' }, // optional; default is no prefix
 });
 ```
@@ -258,7 +262,7 @@ export default {
 - **No Tailwind `@source` needed** — each component package ships a prebuilt `styles.css` (its utilities, resolved against the `--ak-ui-*` tokens). Import the shared tokens once plus each component's stylesheet (see [Setup](#setup)); you don't point Tailwind at the package source.
 
   ```css
-  @import '@alikhalilll/a-ui-base/tokens.css';
+  @import '@alikhalilll/a-tel-input/styles.css';
   @import '@alikhalilll/a-tel-input/styles.css';
   ```
 
@@ -282,7 +286,7 @@ The trade-off vs. auto-imports: subpath imports are explicit (easier to grep, ea
 import { createApp } from 'vue';
 import App from './App.vue';
 
-import '@alikhalilll/a-ui-base/tokens.css';
+import '@alikhalilll/a-tel-input/styles.css';
 import './assets/main.css'; // your own stylesheet that imports Tailwind + maps the tokens
 
 createApp(App).mount('#app');
@@ -357,17 +361,8 @@ Every interactive component shares one scale:
 | `lg`  | 52 px               | `h-[52px]` |
 | `xl`  | 60 px               | `h-[60px]` |
 
-The maps are exported for building size-aware components:
-
-```ts
-import {
-  SIZES,
-  controlHeight,
-  controlPaddingX,
-  controlTextSize,
-  type Size,
-} from '@alikhalilll/a-ui-base';
-```
+Size scale is internal to the components — every `@alikhalilll/a-*` component accepts
+`size: 'xs' | 'sm' | 'md' | 'lg' | 'xl'` and lays out at the heights in the table above.
 
 ## Public API
 
@@ -431,7 +426,7 @@ type SuffixProps = Parameters<NonNullable<ATelInputSlots['suffix']>>[0];
 ## Notes
 
 - Country detection runs in `onMounted` (client-only) — the input renders immediately with `defaultCountry`; the detected ISO2 patches in on hydration.
-- Import `@alikhalilll/a-ui-base/tokens.css` **before** your own overrides so your overrides win the cascade.
+- Import each component's `styles.css` **before** your own overrides so your overrides win the cascade. Design tokens are bundled into every component's CSS, so the first component import drops them onto `:root`.
 
 ## License
 

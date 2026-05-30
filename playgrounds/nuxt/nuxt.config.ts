@@ -4,7 +4,8 @@ export default defineNuxtConfig({
   compatibilityDate: '2026-04-01',
   srcDir: '.',
   css: [
-    '@alikhalilll/a-ui-base/tokens.css',
+    // Tokens (--ak-ui-*) are bundled into each component's styles.css now, so
+    // any single component import drops them onto :root. No separate token import.
     '@alikhalilll/a-popover/styles.css',
     '@alikhalilll/a-drawer/styles.css',
     '@alikhalilll/a-responsive-popover/styles.css',

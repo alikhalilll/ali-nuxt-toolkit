@@ -2,29 +2,30 @@
 /**
  * tk — the ali-nuxt-toolkit CLI.
  *
- * One entry point that fans out to every common task in the repo:
- *   - build      pnpm build (all packages) or one package
- *   - validate   full validate pipeline (build + dist gates + consumer install)
- *   - consumer   consumer-validate only (skip per-package validate-dist)
- *   - dev        boot a dev server: playground (workspace HMR) /
- *                playground (packed tarballs) / docs site
+ * One entry point that fans out to every common task in the repo. Each action
+ * accepts either "all" or a single package name; if omitted, you get an
+ * interactive picker.
+ *
+ *   build       Build one or all publishable packages
+ *   typecheck   Typecheck one or all publishable packages
+ *   clean       Remove dist + generated artifacts
+ *   pack        Build + pack one or all packages into .tgz (→ ./artifacts)
+ *   validate    Full validate (build + publint + attw + consumer install)
+ *   consumer    Consumer-validate only (faster than `validate`)
+ *   release    Interactive release: bump version, publish, tag (use `--dry-run`)
+ *   dev         Boot a dev server: play | play:packed | play:restore | docs
  *
  * Two ways to call it:
  *   pnpm tk                              # interactive menu (no args)
  *   pnpm tk <action> [target] [--flags]  # non-interactive
  *
  * Examples:
- *   pnpm tk build                  # interactive package picker
- *   pnpm tk build all              # everything
- *   pnpm tk build ui               # one package
- *   pnpm tk validate ui            # full validate of one package
- *   pnpm tk consumer all           # consumer-validate the lot
- *   pnpm tk dev play               # playground (workspace symlinks)
- *   pnpm tk dev play:packed        # playground against built tarballs
- *   pnpm tk dev docs               # docs site
- *
- * Missing required choices fall back to the interactive picker, so
- * `pnpm tk build` alone still works.
+ *   pnpm tk build a-tel-input
+ *   pnpm tk pack all
+ *   pnpm tk validate all
+ *   pnpm tk consumer --pkg crypto
+ *   pnpm tk release --dry-run
+ *   pnpm tk dev play:packed
  */
 import { select } from '@inquirer/prompts';
 import { execa } from 'execa';
@@ -32,12 +33,30 @@ import minimist from 'minimist';
 import pc from 'picocolors';
 import { PUBLISHABLE_PACKAGES, ROOT, type PublishablePackage } from './lib/constants.ts';
 
-type Action = 'build' | 'validate' | 'consumer' | 'dev';
+type Action =
+  | 'build'
+  | 'typecheck'
+  | 'clean'
+  | 'pack'
+  | 'validate'
+  | 'consumer'
+  | 'release'
+  | 'dev';
 type PackageScope = 'all' | PublishablePackage;
-type DevTarget = 'play' | 'play:packed' | 'docs';
+type DevTarget = 'play' | 'play:packed' | 'play:restore' | 'docs';
 
-const ACTIONS: readonly Action[] = ['build', 'validate', 'consumer', 'dev'] as const;
-const DEV_TARGETS: readonly DevTarget[] = ['play', 'play:packed', 'docs'] as const;
+const ACTIONS: readonly Action[] = [
+  'build',
+  'typecheck',
+  'clean',
+  'pack',
+  'validate',
+  'consumer',
+  'release',
+  'dev',
+] as const;
+const DEV_TARGETS: readonly DevTarget[] = ['play', 'play:packed', 'play:restore', 'docs'] as const;
+const PNPM_FILTER = ['-r', '--filter', './packages/*', '--filter', './packages/ui-components/*'];
 
 const HELP = `${pc.bold('tk')} — ali-nuxt-toolkit CLI
 
@@ -47,18 +66,24 @@ ${pc.bold('Usage:')}
 
 ${pc.bold('Actions:')}
   build      ${pc.dim('Build one or all publishable packages')}
+  typecheck  ${pc.dim('Typecheck one or all packages')}
+  clean      ${pc.dim('Remove dist + generated artifacts')}
+  pack       ${pc.dim('Build + pack one or all packages → .tgz')}
   validate   ${pc.dim('Full validate (build + publint + attw + consumer install)')}
-  consumer   ${pc.dim('Consumer-validate only (skip per-package dist gates)')}
-  dev        ${pc.dim('Boot a dev server: play | play:packed | docs')}
+  consumer   ${pc.dim('Consumer-validate only (faster than validate)')}
+  release    ${pc.dim('Interactive release; pass --dry-run to preview')}
+  dev        ${pc.dim('Boot a dev server: play | play:packed | play:restore | docs')}
 
 ${pc.bold('Examples:')}
-  pnpm tk build ui
-  pnpm tk validate all
+  pnpm tk build a-tel-input
+  pnpm tk pack all
   pnpm tk consumer --pkg crypto
+  pnpm tk release --dry-run
   pnpm tk dev play:packed
 
 ${pc.bold('Flags:')}
   --pkg <name>     ${pc.dim('Alternative to positional target (all|api-provider|crypto|...)')}
+  --dry-run        ${pc.dim('(release only) preview without publishing')}
   -h, --help       ${pc.dim('Show this help')}
 `;
 
@@ -93,8 +118,12 @@ async function pickAction(): Promise<Action> {
     message: 'What do you want to do?',
     choices: [
       { name: 'build      — compile packages', value: 'build' },
+      { name: 'typecheck  — vue-tsc / tsc --noEmit', value: 'typecheck' },
+      { name: 'clean      — wipe dist + generated artifacts', value: 'clean' },
+      { name: 'pack       — build + npm pack into .tgz', value: 'pack' },
       { name: 'validate   — build + publint + attw + consumer install', value: 'validate' },
       { name: 'consumer   — consumer-validate only (faster)', value: 'consumer' },
+      { name: 'release    — interactive release (pass --dry-run to preview)', value: 'release' },
       { name: 'dev        — boot a dev server', value: 'dev' },
     ],
   });
@@ -119,6 +148,10 @@ async function pickDevTarget(): Promise<DevTarget> {
         name: 'play:packed    — playgrounds/nuxt against built tarballs',
         value: 'play:packed',
       },
+      {
+        name: 'play:restore   — restore playground to workspace symlinks',
+        value: 'play:restore',
+      },
       { name: 'docs           — apps/docs (Nuxt content site)', value: 'docs' },
     ],
   });
@@ -130,20 +163,59 @@ async function spawn(cmd: string, args: string[]): Promise<void> {
   await execa(cmd, args, { cwd: ROOT, stdio: 'inherit' });
 }
 
+/** Path to a package's pnpm workspace dir (UI components are nested under ui-components/). */
+function pkgPath(scope: PublishablePackage): string {
+  const nested = ['a-input', 'a-popover', 'a-drawer', 'a-responsive-popover', 'a-tel-input'];
+  return nested.includes(scope) ? `packages/ui-components/${pkgDir(scope)}` : `packages/${scope}`;
+}
+function pkgDir(scope: PublishablePackage): string {
+  const map: Record<string, string> = {
+    'a-input': 'AInput',
+    'a-popover': 'APopover',
+    'a-drawer': 'ADrawer',
+    'a-responsive-popover': 'AResponsivePopover',
+    'a-tel-input': 'ATelInput',
+  };
+  return map[scope] ?? scope;
+}
+
+async function runRecursive(script: string): Promise<void> {
+  await spawn('pnpm', [...PNPM_FILTER, 'run', script]);
+}
+
 async function runBuild(scope: PackageScope): Promise<void> {
-  if (scope === 'all') {
-    await spawn('pnpm', ['-r', '--filter', './packages/*', 'build']);
-    return;
-  }
-  await spawn('pnpm', ['-C', `packages/${scope}`, 'build']);
+  if (scope === 'all') return runRecursive('build');
+  await spawn('pnpm', ['-C', pkgPath(scope), 'build']);
+}
+
+async function runTypecheck(scope: PackageScope): Promise<void> {
+  if (scope === 'all') return runRecursive('typecheck');
+  await spawn('pnpm', ['-C', pkgPath(scope), 'typecheck']);
+}
+
+async function runClean(scope: PackageScope): Promise<void> {
+  if (scope === 'all') return runRecursive('clean');
+  await spawn('pnpm', ['-C', pkgPath(scope), 'clean']);
+}
+
+async function runPack(scope: PackageScope): Promise<void> {
+  const args = ['scripts/pack/pack-all.ts', scope === 'all' ? '--all' : `--pkg=${scope}`];
+  await spawn('tsx', args);
+}
+
+async function runRelease(extra: string[]): Promise<void> {
+  await spawn('tsx', ['scripts/release/index.ts', '--interactive', ...extra]);
 }
 
 async function runValidate(scope: PackageScope): Promise<void> {
   if (scope === 'all') {
-    await spawn('pnpm', ['validate']);
+    // build → per-package validate-dist (publint + attw) → consumer-validate
+    await runRecursive('build');
+    await runRecursive('validate-dist');
+    await spawn('tsx', ['scripts/validate/consumer-validate.ts', '--all']);
     return;
   }
-  await spawn('pnpm', [`validate:${scope}`]);
+  await spawn('pnpm', ['-C', pkgPath(scope), 'validate']);
 }
 
 async function runConsumer(scope: PackageScope): Promise<void> {
@@ -168,6 +240,9 @@ async function runDev(target: DevTarget): Promise<void> {
           ' Playground now consumes tarballs. Boot with: ' +
           pc.bold('pnpm -C playgrounds/nuxt dev')
       );
+      return;
+    case 'play:restore':
+      await spawn('tsx', ['scripts/playground/use-packed.ts', '--restore']);
       return;
     case 'docs':
       await spawn('pnpm', ['-C', 'apps/docs', 'dev']);
@@ -207,6 +282,21 @@ async function main(): Promise<void> {
       await runBuild(scope);
       return;
     }
+    case 'typecheck': {
+      const scope = resolvePackageArg(positional[1], args.pkg) ?? (await pickPackage('typecheck'));
+      await runTypecheck(scope);
+      return;
+    }
+    case 'clean': {
+      const scope = resolvePackageArg(positional[1], args.pkg) ?? (await pickPackage('clean'));
+      await runClean(scope);
+      return;
+    }
+    case 'pack': {
+      const scope = resolvePackageArg(positional[1], args.pkg) ?? (await pickPackage('pack'));
+      await runPack(scope);
+      return;
+    }
     case 'validate': {
       const scope = resolvePackageArg(positional[1], args.pkg) ?? (await pickPackage('validate'));
       await runValidate(scope);
@@ -216,6 +306,17 @@ async function main(): Promise<void> {
       const scope =
         resolvePackageArg(positional[1], args.pkg) ?? (await pickPackage('consumer-validate'));
       await runConsumer(scope);
+      return;
+    }
+    case 'release': {
+      // Pass through additional flags (--dry-run, --pkg, etc.) to the release script.
+      const extras: string[] = [];
+      if (args['dry-run']) extras.push('--dry-run');
+      if (args.pkg) extras.push('--pkg', String(args.pkg));
+      const positionalScope = positional[1];
+      if (positionalScope)
+        extras.push(positionalScope === 'all' ? '--all' : `--pkg=${positionalScope}`);
+      await runRelease(extras);
       return;
     }
     case 'dev': {
