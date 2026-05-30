@@ -1,6 +1,7 @@
 {
   "name": "@alikhalilll/a-responsive-popover",
   "version": "1.0.1",
+  "private": true,
   "description": "Vue 3 responsive popover: a reka-ui popover on desktop that becomes a vaul drawer on mobile. Part of the @alikhalilll/a-* toolkit.",
   "license": "MIT",
   "author": "alikhalilll",
@@ -100,10 +101,6 @@
       "optional": true
     }
   },
-  "dependencies": {
-    "@alikhalilll/a-popover": "workspace:*",
-    "@alikhalilll/a-drawer": "workspace:*"
-  },
   "devDependencies": {
     "@nuxt/kit": "^4.4.2",
     "@nuxt/schema": "^4.4.2",
@@ -119,6 +116,8 @@
     "unplugin-vue-components": "^32.1.0",
     "vue": "^3.5.0",
     "vue-tsc": "^3.2.4",
-    "@alikhalilll/a-ui-base": "workspace:*"
+    "@alikhalilll/a-ui-base": "workspace:*",
+    "@alikhalilll/a-popover": "workspace:*",
+    "@alikhalilll/a-drawer": "workspace:*"
   }
 }

@@ -18,14 +18,6 @@ const order: PagerEntry[] = [
   { path: '/auto-middleware', title: 'auto-middleware', description: 'Layout-based middleware' },
   { path: '/ui', title: 'ui', description: 'Headless component library' },
   { path: '/ui/tel-input', title: 'ATelInput', description: 'Composite phone input' },
-  { path: '/ui/input', title: 'AInput', description: 'Base text input' },
-  { path: '/ui/popover', title: 'APopover', description: 'reka-ui Popover wrapper' },
-  { path: '/ui/drawer', title: 'ADrawer', description: 'vaul-vue Drawer wrapper' },
-  {
-    path: '/ui/responsive-popover',
-    title: 'AResponsivePopover',
-    description: 'Popover on desktop, Drawer on mobile',
-  },
 ];
 
 const normalizedPath = computed(() => {

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { cn } from '@alikhalilll/a-ui-base';
-import { AInput } from '@alikhalilll/a-input';
 import { ACountrySelect, usePhoneValidation } from '@alikhalilll/a-tel-input';
 
 const country = ref('EG');
@@ -18,7 +17,6 @@ const result = computed(() =>
 const source = `<script setup lang="ts">
 import { computed, ref } from 'vue';
 import { cn } from '@alikhalilll/a-ui-base';
-import { AInput } from '@alikhalilll/a-input';
 import { ACountrySelect, usePhoneValidation } from '@alikhalilll/a-tel-input';
 
 const country = ref('EG');
@@ -34,18 +32,19 @@ const result = computed(() =>
 \u003c/script>
 
 <template>
-  <!-- Stacked layout: country picker on top, plain AInput below, live E.164 chip on the right -->
+  <!-- Stacked layout: country picker on top, plain input below, live E.164 chip on the right -->
   <div class="space-y-2 max-w-sm">
     <div class="flex items-stretch overflow-hidden rounded-md border border-input bg-background shadow-sm">
       <ACountrySelect v-model:selected="country" size="md" class="grow" trigger-class="w-full" />
     </div>
 
     <div class="flex items-center gap-2">
-      <AInput
+      <input
         v-model="phone"
         type="tel"
         inputmode="numeric"
         placeholder="National number"
+        class="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
         @input="(e) => {
           const t = e.target as HTMLInputElement;
           t.value = t.value.replace(/\\D/g, '');
@@ -74,8 +73,8 @@ const result = computed(() =>
     </h4>
 
     <p class="mb-4 text-sm text-text-dim">
-      Same primitives as the default <code>ATelInput</code>, recombined: full-width country trigger
-      on top, plain <code>AInput</code> below, E.164 chip on the right.
+      Recombined primitives: full-width country trigger on top, a plain national-number
+      <code>&lt;input&gt;</code> below, E.164 chip on the right.
     </p>
 
     <DemoTabs :code="source">
@@ -93,12 +92,12 @@ const result = computed(() =>
           </div>
 
           <div class="flex items-center gap-2">
-            <AInput
+            <input
               v-model="phone"
               type="tel"
               inputmode="numeric"
               placeholder="National number"
-              size="md"
+              class="h-10 w-full rounded-md border border-border bg-bg px-3 text-sm text-text outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
               @input="
                 (e) => {
                   const t = e.target as HTMLInputElement;

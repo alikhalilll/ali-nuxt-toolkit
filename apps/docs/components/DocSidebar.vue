@@ -55,18 +55,7 @@ const modules: ModuleEntry[] = [
         // already implies the @alikhalilll/a-* component family. Page H1s + imports
         // still carry the prefix (ATelInput, AInput, …). Keeps long labels readable.
         label: 'Components',
-        items: [
-          { path: '/ui/tel-input', title: 'TelInput', kind: 'page', pkg: 'a-tel-input' },
-          { path: '/ui/input', title: 'Input', kind: 'page', pkg: 'a-input' },
-          { path: '/ui/popover', title: 'Popover', kind: 'page', pkg: 'a-popover' },
-          { path: '/ui/drawer', title: 'Drawer', kind: 'page', pkg: 'a-drawer' },
-          {
-            path: '/ui/responsive-popover',
-            title: 'ResponsivePopover',
-            kind: 'page',
-            pkg: 'a-responsive-popover',
-          },
-        ],
+        items: [{ path: '/ui/tel-input', title: 'TelInput', kind: 'page', pkg: 'a-tel-input' }],
       },
     ],
   },

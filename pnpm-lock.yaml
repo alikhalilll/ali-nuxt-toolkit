@@ -92,18 +92,6 @@ importers:
 
   apps/docs:
     dependencies:
-      '@alikhalilll/a-drawer':
-        specifier: workspace:*
-        version: link:../../packages/ui-components/ADrawer
-      '@alikhalilll/a-input':
-        specifier: workspace:*
-        version: link:../../packages/ui-components/AInput
-      '@alikhalilll/a-popover':
-        specifier: workspace:*
-        version: link:../../packages/ui-components/APopover
-      '@alikhalilll/a-responsive-popover':
-        specifier: workspace:*
-        version: link:../../packages/ui-components/AResponsivePopover
       '@alikhalilll/a-tel-input':
         specifier: workspace:*
         version: link:../../packages/ui-components/ATelInput
@@ -379,14 +367,13 @@ importers:
         version: 3.3.1(typescript@5.9.3)
 
   packages/ui-components/AResponsivePopover:
-    dependencies:
+    devDependencies:
       '@alikhalilll/a-drawer':
         specifier: workspace:*
         version: link:../ADrawer
       '@alikhalilll/a-popover':
         specifier: workspace:*
         version: link:../APopover
-    devDependencies:
       '@alikhalilll/a-ui-base':
         specifier: workspace:*
         version: link:../AUiBase
@@ -435,9 +422,6 @@ importers:
 
   packages/ui-components/ATelInput:
     dependencies:
-      '@alikhalilll/a-responsive-popover':
-        specifier: workspace:*
-        version: link:../AResponsivePopover
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -445,6 +429,9 @@ importers:
         specifier: ^1.12.0
         version: 1.13.2
     devDependencies:
+      '@alikhalilll/a-responsive-popover':
+        specifier: workspace:*
+        version: link:../AResponsivePopover
       '@alikhalilll/a-ui-base':
         specifier: workspace:*
         version: link:../AUiBase

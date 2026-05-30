@@ -48,11 +48,11 @@ const packages: PackageCard[] = [
     modeLabel: 'Nuxt-only (middleware is a Nuxt primitive)',
   },
   {
-    name: '@alikhalilll/a-* (UI)',
+    name: '@alikhalilll/a-tel-input',
     docs: '/ui',
     npm: 'https://www.npmjs.com/package/@alikhalilll/a-tel-input',
     description:
-      'Headless Vue 3 components — ATelInput, APopover, ADrawer, AResponsivePopover, AInput. Each lives behind its own package (`@alikhalilll/a-tel-input`, …) so you only ship the components you use.',
+      'Headless Vue 3 phone input — ATelInput with auto country detection, libphonenumber validation, and a popover/drawer country picker. All in one package.',
     accent: 'ui',
     mode: 'vue',
     modeLabel: 'Vue 3 (Nuxt + non-Nuxt)',

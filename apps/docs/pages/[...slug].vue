@@ -81,10 +81,6 @@ const PACKAGE_SOURCE_PATHS: Record<string, string> = {
   '@alikhalilll/nuxt-api-provider': 'packages/api-provider',
   '@alikhalilll/nuxt-crypto': 'packages/crypto',
   '@alikhalilll/nuxt-auto-middleware': 'packages/auto-middleware',
-  '@alikhalilll/a-input': 'packages/ui-components/AInput',
-  '@alikhalilll/a-popover': 'packages/ui-components/APopover',
-  '@alikhalilll/a-drawer': 'packages/ui-components/ADrawer',
-  '@alikhalilll/a-responsive-popover': 'packages/ui-components/AResponsivePopover',
   '@alikhalilll/a-tel-input': 'packages/ui-components/ATelInput',
 };
 const sourceUrl = computed(() => {

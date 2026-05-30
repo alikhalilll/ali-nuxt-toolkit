@@ -8,5 +8,9 @@
  */
 @import '@alikhalilll/a-ui-base/tokens.css';
 @import '@alikhalilll/a-ui-base/theme.css';
+@import '@alikhalilll/a-responsive-popover/styles.css';
 
 @source './src/**/*.{vue,ts}';
+@source '../AResponsivePopover/src/**/*.{vue,ts}';
+@source '../APopover/src/**/*.{vue,ts}';
+@source '../ADrawer/src/**/*.{vue,ts}';

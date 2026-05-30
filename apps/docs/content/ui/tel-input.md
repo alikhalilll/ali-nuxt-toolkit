@@ -470,7 +470,6 @@ Every primitive, composable, and helper is re-exported — fork-free composition
 ```vue
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { AInput } from '@alikhalilll/a-input';
 import { ACountrySelect, usePhoneValidation } from '@alikhalilll/a-tel-input';
 
 const country = ref('EG');
@@ -485,7 +484,7 @@ const result = computed(() =>
 <template>
   <div class="space-y-2">
     <ACountrySelect v-model:selected="country" size="md" />
-    <AInput v-model="phone" type="tel" inputmode="numeric" placeholder="National number" />
+    <input v-model="phone" type="tel" inputmode="numeric" placeholder="National number" />
     <p class="font-mono text-xs">{{ result.full_phone || '+?' }}</p>
   </div>
 </template>

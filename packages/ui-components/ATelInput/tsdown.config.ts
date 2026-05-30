@@ -6,7 +6,6 @@ export default defineConfig(
   componentTsdownConfig({
     plugins: [Vue()],
     extraExternals: [
-      '@alikhalilll/a-responsive-popover',
       'libphonenumber-js',
       'libphonenumber-js/examples.mobile.json',
       'class-variance-authority',

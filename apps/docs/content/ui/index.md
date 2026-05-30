@@ -1,25 +1,15 @@
 ---
 title: ui
-description: Headless, shadcn-vue style component library. Built on reka-ui and vaul-vue, fully typed, themed via CSS variables, tree-shakable per component.
-package: '@alikhalilll/a-*'
+description: Headless, shadcn-vue style phone input. Built on reka-ui and vaul-vue, fully typed, themed via CSS variables.
+package: '@alikhalilll/a-tel-input'
 order: 4
 ---
 
-# @alikhalilll/a-\*
+# @alikhalilll/a-tel-input
 
-A headless, [shadcn-vue](https://www.shadcn-vue.com/) style component library for Vue 3 + Nuxt 3/4. Built on [reka-ui](https://reka-ui.com) and [vaul-vue](https://github.com/unovue/vaul-vue). Fully typed, themed via CSS variables, **tree-shakable per component** through separate packages.
+A headless, [shadcn-vue](https://www.shadcn-vue.com/) style phone input for Vue 3 + Nuxt 3/4. Built on [reka-ui](https://reka-ui.com) and [vaul-vue](https://github.com/unovue/vaul-vue). Fully typed, themed via CSS variables — the country picker is a popover on desktop and a drawer on mobile, themable end-to-end.
 
-## Components
-
-| Component                                      | Subpath                             | Summary                                                                                          |
-| ---------------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------ |
-| [`ATelInput`](/ui/tel-input)                   | `@alikhalilll/a-tel-input`          | Phone input with auto country detection, libphonenumber validation, and a popover/drawer picker. |
-| [`AInput`](/ui/input)                          | `@alikhalilll/a-input`              | Sized, themed text input with `prefix` / `suffix` slots.                                         |
-| [`APopover`](/ui/popover)                      | `@alikhalilll/a-popover`            | Themed reka-ui popover — modal by default, optional overlay.                                     |
-| [`ADrawer`](/ui/drawer)                        | `@alikhalilll/a-drawer`             | Bottom-sheet drawer (vaul-vue + reka-ui), drag-to-dismiss.                                       |
-| [`AResponsivePopover`](/ui/responsive-popover) | `@alikhalilll/a-responsive-popover` | Popover on desktop, drawer on mobile. Single API.                                                |
-
-Each component has its own **Install + Setup** section — open any component page above.
+See the [`ATelInput`](/ui/tel-input) page for install, setup, props, slots, and live demos.
 
 ## Theming
 

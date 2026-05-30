@@ -7,10 +7,6 @@
  * utilities. Single @import = single inlined copy.
  */
 @import '@alikhalilll/a-ui-base/tokens.css';
-@import '@alikhalilll/a-popover/styles.css';
-@import '@alikhalilll/a-drawer/styles.css';
-@import '@alikhalilll/a-responsive-popover/styles.css';
-@import '@alikhalilll/a-input/styles.css';
 @import '@alikhalilll/a-tel-input/styles.css';
 @import 'tailwindcss';
 

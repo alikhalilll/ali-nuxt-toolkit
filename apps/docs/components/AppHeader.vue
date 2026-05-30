@@ -1,10 +1,5 @@
 <script setup lang="ts">
-import { APopover, APopoverContent, APopoverTrigger } from '@alikhalilll/a-popover';
-import {
-  AResponsivePopover,
-  AResponsivePopoverContent,
-  AResponsivePopoverTrigger,
-} from '@alikhalilll/a-responsive-popover';
+import { onClickOutside } from '@vueuse/core';
 import { ChevronDownIcon } from '~/components/icons';
 
 const route = useRoute();
@@ -17,19 +12,15 @@ const navLinks = [
   { to: '/auto-middleware', label: 'auto-middleware' },
 ];
 
-// Each UI component now ships as its own npm package — surface the package
-// suffix in the dropdown / mobile nav so the structure is visible at-a-glance.
 const uiNavItems: { to: string; label: string; pkg?: string }[] = [
   { to: '/ui', label: 'Overview' },
   { to: '/ui/tel-input', label: 'ATelInput', pkg: 'a-tel-input' },
-  { to: '/ui/input', label: 'AInput', pkg: 'a-input' },
-  { to: '/ui/popover', label: 'APopover', pkg: 'a-popover' },
-  { to: '/ui/drawer', label: 'ADrawer', pkg: 'a-drawer' },
-  { to: '/ui/responsive-popover', label: 'AResponsivePopover', pkg: 'a-responsive-popover' },
 ];
 
 const uiNavOpen = ref(false);
+const uiNavEl = ref<HTMLElement | null>(null);
 const uiIsActive = computed(() => route.fullPath.startsWith('/ui'));
+onClickOutside(uiNavEl, () => (uiNavOpen.value = false));
 
 const themeOptions = [
   { value: 'light' as const, label: 'Light', desc: 'Locked light theme' },
@@ -38,6 +29,8 @@ const themeOptions = [
 ];
 
 const themePopoverOpen = ref(false);
+const themePopoverEl = ref<HTMLElement | null>(null);
+onClickOutside(themePopoverEl, () => (themePopoverOpen.value = false));
 
 function selectTheme(value: 'light' | 'dark' | 'system') {
   setMode(value);
@@ -198,71 +191,41 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
           {{ link.label }}
         </NuxtLink>
 
-        <!--
-          Wrapped in <ClientOnly> because AResponsivePopover uses useMediaQuery to swap
-          between popover (desktop) and drawer (mobile) AND reka-ui generates random IDs
-          at hydration time. Both produce SSR ↔ client mismatches that, in Vue 3.5+,
-          can leave the parent nav in a partially-broken layout state. SSR renders an
-          identically-styled non-interactive placeholder so the row width stays stable;
-          the real trigger swaps in on the client. Fallback button mirrors the active
-          state from the route so the gradient underline lights up in SSR too.
-        -->
-        <ClientOnly>
-          <AResponsivePopover v-model:open="uiNavOpen" :modal="false">
-            <AResponsivePopoverTrigger as-child>
-              <button
-                type="button"
-                class="nav-link nav-link--trigger"
-                :class="uiIsActive && 'nav-link--active'"
-                :aria-expanded="uiNavOpen"
-                aria-haspopup="menu"
-              >
-                ui
-                <ChevronDownIcon
-                  class="ml-0.5 inline size-3 transition-transform"
-                  :class="uiNavOpen && 'rotate-180'"
-                  aria-hidden="true"
-                />
-              </button>
-            </AResponsivePopoverTrigger>
-
-            <AResponsivePopoverContent
-              align="start"
-              :side-offset="8"
-              popover-class="w-56 rounded-md border border-border bg-surface shadow-lg"
-              drawer-class="pb-4"
-              class="p-1"
-            >
-              <NuxtLink
-                v-for="item in uiNavItems"
-                :key="item.to"
-                :to="item.to"
-                :title="item.pkg ? `${item.label} · @alikhalilll/${item.pkg}` : item.label"
-                class="ui-menu-item"
-                active-class="ui-menu-item--active"
-                @click="uiNavOpen = false"
-              >
-                <span class="ui-menu-item__label">{{ item.label }}</span>
-                <!-- Independent npm package badge — visible in the dropdown only -->
-                <span v-if="item.pkg" class="ui-menu-item__pkg"
-                  >a-*/{{ item.pkg.replace(/^a-/, '') }}</span
-                >
-              </NuxtLink>
-            </AResponsivePopoverContent>
-          </AResponsivePopover>
-
-          <template #fallback>
+        <div ref="uiNavEl" class="relative">
+          <button
+            type="button"
+            class="nav-link nav-link--trigger"
+            :class="uiIsActive && 'nav-link--active'"
+            :aria-expanded="uiNavOpen"
+            aria-haspopup="menu"
+            @click="uiNavOpen = !uiNavOpen"
+          >
+            ui
+            <ChevronDownIcon
+              class="ml-0.5 inline size-3 transition-transform"
+              :class="uiNavOpen && 'rotate-180'"
+              aria-hidden="true"
+            />
+          </button>
+          <div
+            v-if="uiNavOpen"
+            class="absolute left-0 top-full mt-2 w-56 rounded-md border border-border bg-surface p-1 shadow-lg"
+            role="menu"
+          >
             <NuxtLink
-              to="/ui"
-              class="nav-link nav-link--trigger"
-              :class="uiIsActive && 'nav-link--active'"
-              aria-haspopup="menu"
+              v-for="item in uiNavItems"
+              :key="item.to"
+              :to="item.to"
+              :title="item.pkg ? `${item.label} · @alikhalilll/${item.pkg}` : item.label"
+              class="ui-menu-item"
+              active-class="ui-menu-item--active"
+              @click="uiNavOpen = false"
             >
-              ui
-              <ChevronDownIcon class="ml-0.5 inline size-3" aria-hidden="true" />
+              <span class="ui-menu-item__label">{{ item.label }}</span>
+              <span v-if="item.pkg" class="ui-menu-item__pkg">@alikhalilll/{{ item.pkg }}</span>
             </NuxtLink>
-          </template>
-        </ClientOnly>
+          </div>
+        </div>
       </nav>
 
       <!-- Right side -->
@@ -279,80 +242,80 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
           <span class="version-chip__label">Latest</span>
         </a>
 
-        <!-- Theme switcher — popover with Light / Dark / System -->
-        <APopover v-model:open="themePopoverOpen" :modal="false">
-          <APopoverTrigger as-child>
-            <button
-              type="button"
-              aria-label="Theme settings"
-              title="Theme settings"
-              class="icon-btn"
+        <!-- Theme switcher — dropdown with Light / Dark / System -->
+        <div ref="themePopoverEl" class="relative">
+          <button
+            type="button"
+            aria-label="Theme settings"
+            title="Theme settings"
+            class="icon-btn"
+            :aria-expanded="themePopoverOpen"
+            aria-haspopup="menu"
+            @click="themePopoverOpen = !themePopoverOpen"
+          >
+            <!-- Sun -->
+            <svg
+              v-if="pref === 'light'"
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
             >
-              <!-- Sun -->
-              <svg
-                v-if="pref === 'light'"
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <circle cx="12" cy="12" r="4" />
-                <path d="M12 2v2" />
-                <path d="M12 20v2" />
-                <path d="m4.93 4.93 1.41 1.41" />
-                <path d="m17.66 17.66 1.41 1.41" />
-                <path d="M2 12h2" />
-                <path d="M20 12h2" />
-                <path d="m6.34 17.66-1.41 1.41" />
-                <path d="m19.07 4.93-1.41 1.41" />
-              </svg>
-              <!-- Moon -->
-              <svg
-                v-else-if="pref === 'dark'"
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-              </svg>
-              <!-- Monitor (system) -->
-              <svg
-                v-else
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <rect width="20" height="14" x="2" y="3" rx="2" />
-                <line x1="8" x2="16" y1="21" y2="21" />
-                <line x1="12" x2="12" y1="17" y2="21" />
-              </svg>
-            </button>
-          </APopoverTrigger>
-
-          <APopoverContent
-            align="end"
-            :side-offset="6"
-            class="w-44 rounded-md border border-border bg-surface p-1 shadow-lg"
+              <circle cx="12" cy="12" r="4" />
+              <path d="M12 2v2" />
+              <path d="M12 20v2" />
+              <path d="m4.93 4.93 1.41 1.41" />
+              <path d="m17.66 17.66 1.41 1.41" />
+              <path d="M2 12h2" />
+              <path d="M20 12h2" />
+              <path d="m6.34 17.66-1.41 1.41" />
+              <path d="m19.07 4.93-1.41 1.41" />
+            </svg>
+            <!-- Moon -->
+            <svg
+              v-else-if="pref === 'dark'"
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+            </svg>
+            <!-- Monitor (system) -->
+            <svg
+              v-else
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <rect width="20" height="14" x="2" y="3" rx="2" />
+              <line x1="8" x2="16" y1="21" y2="21" />
+              <line x1="12" x2="12" y1="17" y2="21" />
+            </svg>
+          </button>
+          <div
+            v-if="themePopoverOpen"
+            class="absolute right-0 top-full mt-2 w-44 rounded-md border border-border bg-surface p-1 shadow-lg"
+            role="menu"
           >
             <button
               v-for="opt in themeOptions"
@@ -436,8 +399,8 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </button>
-          </APopoverContent>
-        </APopover>
+          </div>
+        </div>
 
         <a
           href="https://github.com/alikhalilll/ali-nuxt-toolkit"

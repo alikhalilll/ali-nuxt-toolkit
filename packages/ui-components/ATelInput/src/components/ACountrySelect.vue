@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, onBeforeUnmount, ref, watch } from 'vue';
 import { cn } from '@alikhalilll/a-ui-base';
 import {
   AResponsivePopover,
@@ -188,6 +188,82 @@ watch(open, (isOpen) => {
   if (!isOpen) search.value = '';
 });
 
+/* ---------------------------------------------------------------
+ * Theme inheritance for teleported content. AResponsivePopoverContent
+ * is portaled to <body>, so the CSS custom properties a caller set on a
+ * wrapper (e.g. `<div :style="{ '--ak-ui-popover': '...' }">`) don't
+ * reach the dropdown by inheritance. We snapshot the trigger's resolved
+ * tokens and apply them inline on the content. While the menu is open,
+ * an rAF loop keeps the values in sync so live theming demos (sliders
+ * that mutate the tokens) re-paint the dropdown in real time.
+ * ------------------------------------------------------------- */
+const triggerEl = ref<HTMLElement | null>(null);
+const themeStyle = ref<Record<string, string>>({});
+
+const THEME_TOKENS = [
+  'background',
+  'foreground',
+  'card',
+  'card-foreground',
+  'popover',
+  'popover-foreground',
+  'primary',
+  'primary-foreground',
+  'secondary',
+  'secondary-foreground',
+  'muted',
+  'muted-foreground',
+  'accent',
+  'accent-foreground',
+  'destructive',
+  'destructive-foreground',
+  'border',
+  'input',
+  'ring',
+  'radius',
+] as const;
+
+function snapshotTheme() {
+  const el = triggerEl.value;
+  if (!el || typeof window === 'undefined') return;
+  const cs = window.getComputedStyle(el);
+  const next: Record<string, string> = {};
+  for (const t of THEME_TOKENS) {
+    const k = `--ak-ui-${t}`;
+    const v = cs.getPropertyValue(k);
+    if (v) next[k] = v.trim();
+  }
+  themeStyle.value = next;
+}
+
+let themeRafId = 0;
+function stopThemeLoop() {
+  if (themeRafId) {
+    cancelAnimationFrame(themeRafId);
+    themeRafId = 0;
+  }
+}
+function startThemeLoop() {
+  stopThemeLoop();
+  const tick = () => {
+    snapshotTheme();
+    if (open.value) themeRafId = requestAnimationFrame(tick);
+    else themeRafId = 0;
+  };
+  themeRafId = requestAnimationFrame(tick);
+}
+
+watch(open, (isOpen) => {
+  if (isOpen) {
+    snapshotTheme();
+    startThemeLoop();
+  } else {
+    stopThemeLoop();
+  }
+});
+
+onBeforeUnmount(stopThemeLoop);
+
 /** Trigger size — class is consumed by the scoped `<style>` block via `data-size`. The
  *  legacy `sizeClasses` slot prop is preserved for backwards compat but it's now an empty
  *  string (consumers should rely on `size` directly when overriding the trigger). */
@@ -215,6 +291,7 @@ defineExpose({
         :size-classes="triggerSizeClasses"
       >
         <button
+          ref="triggerEl"
           type="button"
           :disabled="props.disabled"
           data-slot="country-select-trigger"
@@ -247,6 +324,7 @@ defineExpose({
       :class="cn('a-country-select__content', props.contentClass)"
       :popover-class="cn('a-country-select__popover', props.popoverClass)"
       :drawer-class="cn('a-country-select__drawer', props.drawerClass)"
+      :style="themeStyle"
     >
       <!-- Search header -->
       <slot

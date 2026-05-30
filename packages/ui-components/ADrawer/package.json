@@ -1,6 +1,7 @@
 {
   "name": "@alikhalilll/a-drawer",
   "version": "1.0.1",
+  "private": true,
   "description": "Headless, shadcn-vue style Vue 3 drawer built on vaul-vue + reka-ui. Part of the @alikhalilll/a-* toolkit.",
   "license": "MIT",
   "author": "alikhalilll",

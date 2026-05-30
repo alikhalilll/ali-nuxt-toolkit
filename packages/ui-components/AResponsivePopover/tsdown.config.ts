@@ -5,6 +5,5 @@ import { componentTsdownConfig } from '../tsdown.shared.mjs';
 export default defineConfig(
   componentTsdownConfig({
     plugins: [Vue()],
-    extraExternals: ['@alikhalilll/a-popover', '@alikhalilll/a-drawer'],
   })
 );
