@@ -216,7 +216,7 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
                 aria-haspopup="menu"
               >
                 ui
-                <ChevronDown
+                <ChevronDownIcon
                   class="ml-0.5 inline size-3 transition-transform"
                   :class="uiNavOpen && 'rotate-180'"
                   aria-hidden="true"
