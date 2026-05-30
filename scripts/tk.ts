@@ -27,11 +27,18 @@
  *   pnpm tk release --dry-run
  *   pnpm tk dev play:packed
  */
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { select } from '@inquirer/prompts';
-import { execa } from 'execa';
+import { execa, execaSync } from 'execa';
 import minimist from 'minimist';
 import pc from 'picocolors';
-import { PUBLISHABLE_PACKAGES, ROOT, type PublishablePackage } from './lib/constants.ts';
+import {
+  packageDir,
+  PUBLISHABLE_PACKAGES,
+  ROOT,
+  type PublishablePackage,
+} from './lib/constants.ts';
 
 type Action =
   | 'build'
@@ -113,28 +120,78 @@ function resolveDevArg(positional: string | undefined): DevTarget | undefined {
   process.exit(1);
 }
 
+/**
+ * Pretty session header — branch, dirty-tree flag, and package count so the
+ * user can orient themselves the moment `pnpm tk` launches.
+ */
+function printWelcomeBanner(): void {
+  const branch =
+    execaSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { reject: false }).stdout?.trim() ||
+    '?';
+  const dirty =
+    execaSync('git', ['status', '--porcelain'], { reject: false }).stdout?.trim().length || 0;
+  const dirtyTag =
+    dirty > 0 ? pc.yellow(`${dirty} file${dirty === 1 ? '' : 's'} changed`) : pc.green('clean');
+  console.log(
+    pc.bold(pc.cyan('▸ tk')) +
+      pc.dim('  ·  ') +
+      pc.bold(`${PUBLISHABLE_PACKAGES.length} packages`) +
+      pc.dim('  ·  ') +
+      `${pc.bold('branch:')} ${branch}` +
+      pc.dim('  ·  ') +
+      `${pc.bold('tree:')} ${dirtyTag}`
+  );
+  console.log();
+}
+
 async function pickAction(): Promise<Action> {
   return select<Action>({
     message: 'What do you want to do?',
     choices: [
-      { name: 'build      — compile packages', value: 'build' },
-      { name: 'typecheck  — vue-tsc / tsc --noEmit', value: 'typecheck' },
-      { name: 'clean      — wipe dist + generated artifacts', value: 'clean' },
-      { name: 'pack       — build + npm pack into .tgz', value: 'pack' },
-      { name: 'validate   — build + publint + attw + consumer install', value: 'validate' },
-      { name: 'consumer   — consumer-validate only (faster)', value: 'consumer' },
-      { name: 'release    — interactive release (pass --dry-run to preview)', value: 'release' },
-      { name: 'dev        — boot a dev server', value: 'dev' },
+      // Compile/check
+      { name: `${pc.cyan('build')}      compile package dist`, value: 'build' },
+      { name: `${pc.cyan('typecheck')}  vue-tsc / tsc --noEmit`, value: 'typecheck' },
+      { name: `${pc.cyan('clean')}      wipe dist + generated artifacts`, value: 'clean' },
+      // Package/validate
+      { name: `${pc.magenta('pack')}       build + npm pack into .tgz`, value: 'pack' },
+      {
+        name: `${pc.magenta('validate')}   build + publint + attw + consumer install`,
+        value: 'validate',
+      },
+      {
+        name: `${pc.magenta('consumer')}   consumer-validate only (faster)`,
+        value: 'consumer',
+      },
+      // Ship
+      {
+        name: `${pc.green('release')}    interactive release ${pc.dim('(--dry-run supported)')}`,
+        value: 'release',
+      },
+      // Run
+      { name: `${pc.yellow('dev')}        boot a dev server`, value: 'dev' },
     ],
   });
+}
+
+/** Read a package's current version for the picker label. */
+function readVersionLabel(name: string): string {
+  try {
+    const pj = JSON.parse(readFileSync(path.join(packageDir(name), 'package.json'), 'utf8'));
+    return pj.version || '?';
+  } catch {
+    return '?';
+  }
 }
 
 async function pickPackage(verb: string): Promise<PackageScope> {
   return select<PackageScope>({
     message: `Which package to ${verb}?`,
     choices: [
-      { name: 'all (every publishable package)', value: 'all' },
-      ...PUBLISHABLE_PACKAGES.map((p) => ({ name: p, value: p as PackageScope })),
+      { name: `${pc.bold('all')}  ${pc.dim('— every publishable package')}`, value: 'all' },
+      ...PUBLISHABLE_PACKAGES.map((p) => ({
+        name: `${p.padEnd(22)} ${pc.dim('v' + readVersionLabel(p))}`,
+        value: p as PackageScope,
+      })),
     ],
   });
 }
@@ -143,16 +200,22 @@ async function pickDevTarget(): Promise<DevTarget> {
   return select<DevTarget>({
     message: 'Which dev target?',
     choices: [
-      { name: 'play           — playgrounds/nuxt (workspace HMR)', value: 'play' },
       {
-        name: 'play:packed    — playgrounds/nuxt against built tarballs',
+        name: `${pc.cyan('play')}           playgrounds/nuxt ${pc.dim('(workspace HMR)')}`,
+        value: 'play',
+      },
+      {
+        name: `${pc.cyan('play:packed')}    playgrounds/nuxt against built tarballs`,
         value: 'play:packed',
       },
       {
-        name: 'play:restore   — restore playground to workspace symlinks',
+        name: `${pc.cyan('play:restore')}   restore playground to workspace symlinks`,
         value: 'play:restore',
       },
-      { name: 'docs           — apps/docs (Nuxt content site)', value: 'docs' },
+      {
+        name: `${pc.cyan('docs')}           apps/docs ${pc.dim('(Nuxt content site)')}`,
+        value: 'docs',
+      },
     ],
   });
 }
@@ -264,6 +327,8 @@ async function main(): Promise<void> {
 
   const positional = args._;
   const rawAction = positional[0] as Action | undefined;
+  // Welcome banner only when entering interactive mode (no action passed).
+  if (!rawAction) printWelcomeBanner();
   const action: Action =
     rawAction && (ACTIONS as readonly string[]).includes(rawAction)
       ? rawAction

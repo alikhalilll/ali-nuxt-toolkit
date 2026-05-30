@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import path from 'node:path';
 import { checkbox, confirm, password, select } from '@inquirer/prompts';
 import { parseArgs, validateBump } from './cli.ts';
 import {
@@ -21,6 +22,8 @@ import {
 } from './git.ts';
 import { createGithubRelease, ghAvailable } from './github.ts';
 import { die, divider, fail, header, info, step, success, warn } from '../lib/logger.ts';
+import { ReleaseProgress, card, type PhaseStatus } from '../lib/progress.ts';
+import { writeChangeset, type ChangesetEntry } from './changeset.ts';
 import {
   bumpVersion,
   packagePath,
@@ -29,6 +32,12 @@ import {
   setVersion,
   versionPublished,
 } from './package.ts';
+
+/**
+ * Ordered phases each package goes through. Drives the per-package progress
+ * row and the success/failure markers.
+ */
+const PHASES = ['bump', 'build', 'publish', 'commit', 'tag'] as const;
 
 async function pickInteractive(cliPackages, cliBump, cliTag) {
   let packages;
@@ -126,18 +135,31 @@ async function ensureNpmToken({ interactive, skipPublish, dryRun }) {
   success('NPM_TOKEN captured for this run');
 }
 
-async function releasePackage({ dir, bump, distTag, skipGit, skipPublish, forceTag, dryRun }) {
+async function releasePackage({
+  dir,
+  bump,
+  distTag,
+  skipGit,
+  skipPublish,
+  forceTag,
+  dryRun,
+  progress,
+}) {
   const cwd = packagePath(dir);
   const { data: pkg } = readPackageJson(dir);
   const nextVersion = bumpVersion(pkg.version, bump);
   const previousVersion = pkg.version;
 
-  step(`Releasing ${pkg.name}`);
-  info(`version: ${previousVersion} → ${nextVersion}`);
-  info(`cwd:     ${cwd}`);
+  progress.startItem(dir);
+  info(`${pkg.name}: ${previousVersion} → ${nextVersion}`);
+  info(`cwd: ${cwd}`);
 
   if (!forceTag && versionPublished(pkg.name, nextVersion)) {
-    die(`${pkg.name}@${nextVersion} already exists on npm. Pick a different bump.`);
+    progress.setPhase('bump', 'failed');
+    die(
+      `${pkg.name}@${nextVersion} already exists on npm. Pick a different bump.\n` +
+        `  Tip: re-run with --bump minor (or major), or --force-tag if you really mean it.`
+    );
   }
 
   let versionWritten = false;
@@ -145,55 +167,79 @@ async function releasePackage({ dir, bump, distTag, skipGit, skipPublish, forceT
 
   try {
     // 1) Bump version in package.json (unless bump === 'none').
+    progress.setPhase('bump', 'running');
     if (bump !== 'none' && !dryRun) {
       setVersion(dir, nextVersion);
       versionWritten = true;
-      success(`Wrote package.json with ${nextVersion}`);
+      progress.setPhase('bump', 'done');
     } else if (dryRun) {
       info(`[dry-run] would bump package.json → ${nextVersion}`);
+      progress.setPhase('bump', 'skipped');
+    } else {
+      progress.setPhase('bump', 'skipped');
     }
 
     // 2) Build.
-    step('Build');
+    progress.setPhase('build', 'running');
     runPnpm(['-C', cwd, 'build']);
-    success('Build complete');
+    progress.setPhase('build', 'done');
 
     // 3) Publish.
     if (skipPublish) {
       warn('--skip-publish set; not publishing');
+      progress.setPhase('publish', 'skipped');
     } else if (dryRun) {
       info(`[dry-run] would: pnpm publish --tag ${distTag} --no-git-checks --access public`);
+      progress.setPhase('publish', 'skipped');
     } else {
-      step('Publish to npm');
+      progress.setPhase('publish', 'running');
       runPnpm(['publish', '--tag', distTag, '--no-git-checks', '--access', 'public'], { cwd });
       published = true;
-      success(`Published ${pkg.name}@${nextVersion} (tag: ${distTag})`);
+      progress.setPhase('publish', 'done');
     }
 
     // 4) Git commit + tag.
     const tag = `${pkg.name}@${nextVersion}`;
     if (skipGit) {
       warn('--skip-git set; not committing/tagging');
+      progress.setPhase('commit', 'skipped');
+      progress.setPhase('tag', 'skipped');
     } else if (dryRun) {
       info(`[dry-run] would: git commit -m "chore(release): ${tag}" && git tag ${tag}`);
+      progress.setPhase('commit', 'skipped');
+      progress.setPhase('tag', 'skipped');
     } else {
-      step('Git');
+      progress.setPhase('commit', 'running');
       const existed = tagExists(tag);
       if (existed && !forceTag) {
         warn(`Tag ${tag} already exists — skipping tag step (pass --force-tag to overwrite)`);
+        progress.setPhase('commit', 'skipped');
+        progress.setPhase('tag', 'skipped');
       } else {
         commitAll(`chore(release): ${tag}`);
+        progress.setPhase('commit', 'done');
+        progress.setPhase('tag', 'running');
         if (existed && forceTag) {
           warn(`Tag ${tag} already exists — overwriting (--force-tag)`);
           deleteTagLocal(tag);
         }
         createTag(tag, `Release ${tag}`, { force: forceTag });
-        success(`Committed + tagged ${tag}${forceTag ? ' (forced)' : ''}`);
+        progress.setPhase('tag', 'done');
       }
     }
 
     return { name: pkg.name, previousVersion, nextVersion, tag };
   } catch (err) {
+    // Mark whichever phase was running as failed (best-effort — we don't know
+    // which phase threw; use the earliest pending/running marker).
+    for (const phase of PHASES) {
+      try {
+        progress.setPhase(phase, 'failed');
+        break;
+      } catch {
+        /* phase already settled */
+      }
+    }
     // If we bumped the version but never published, roll the file back so the
     // working tree isn't left with a phantom bump. If publish succeeded, the
     // version is live on npm — keep it so state matches reality.
@@ -247,36 +293,88 @@ async function main() {
     info(`Skipping git checks (skipGit=${flags.skipGit}, dryRun=${flags.dryRun})`);
   }
 
-  info(`packages: ${packages.join(', ')}`);
-  info(`bump:     ${bump}`);
-  info(`tag:      ${distTag}`);
-  info(`branch:   ${branch}`);
-  info(`cwd:      ${ROOT}`);
-
   await ensureNpmToken({
     interactive: flags.interactive,
     skipPublish: flags.skipPublish,
     dryRun: flags.dryRun,
   });
 
+  // Build the per-package plan up-front so the confirmation card shows real
+  // version transitions — not just bump types. Catches "already published" too.
+  const plan = packages.map((dir) => {
+    const { data: pkg } = readPackageJson(dir);
+    const next = bumpVersion(pkg.version, bump);
+    return {
+      dir,
+      name: pkg.name,
+      previousVersion: pkg.version,
+      nextVersion: next,
+      alreadyPublished: !flags.forceTag && versionPublished(pkg.name, next),
+    };
+  });
+
+  card('Release plan', [
+    `bump:     ${bump}`,
+    `tag:      ${distTag}`,
+    `branch:   ${branch}`,
+    `npm user: ${capture('npm', ['whoami']) || '(none)'}`,
+    '',
+    ...plan.map(
+      (p) =>
+        `  ${p.name.padEnd(38)} ${p.previousVersion} → ${p.nextVersion}` +
+        (p.alreadyPublished ? '  ⚠ already on npm' : '')
+    ),
+  ]);
+
+  const alreadyOnNpm = plan.filter((p) => p.alreadyPublished);
+  if (alreadyOnNpm.length && !flags.forceTag) {
+    die(
+      `These versions are already on npm — bump them first or pass --force-tag:\n  - ` +
+        alreadyOnNpm.map((p) => `${p.name}@${p.nextVersion}`).join('\n  - ')
+    );
+  }
+
   if (flags.interactive && !flags.dryRun) {
-    const ok = await confirm({ message: 'Proceed?', default: true });
+    const ok = await confirm({ message: 'Proceed with release?', default: true });
     if (!ok) die('Aborted.');
   }
 
+  // Auto-write a Changesets entry BEFORE the per-package loop so the first
+  // package's `git add .` includes it. Documents the release for CHANGELOG
+  // generation without making the release flow depend on the Changesets
+  // version-bump state machine.
+  const changesetEntries: ChangesetEntry[] = plan
+    .filter((p) => bump !== 'none')
+    .map((p) => ({ name: p.name, bump: bump as 'major' | 'minor' | 'patch' }));
+  if (changesetEntries.length) {
+    const summary = `Release ${plan.map((p) => `${p.name}@${p.nextVersion}`).join(', ')}`;
+    const written = writeChangeset(changesetEntries, summary, { dryRun: flags.dryRun });
+    if (written) {
+      success(
+        `${flags.dryRun ? '[dry-run] would write' : 'Wrote'} changeset: ${path.relative(ROOT, written)}`
+      );
+    }
+  }
+
+  const progress = new ReleaseProgress(packages, [...PHASES]);
   const results = [];
-  for (const dir of packages) {
-    results.push(
-      await releasePackage({
-        dir,
-        bump,
-        distTag,
-        skipGit: flags.skipGit,
-        skipPublish: flags.skipPublish,
-        forceTag: flags.forceTag,
-        dryRun: flags.dryRun,
-      })
-    );
+  try {
+    for (const dir of packages) {
+      results.push(
+        await releasePackage({
+          dir,
+          bump,
+          distTag,
+          skipGit: flags.skipGit,
+          skipPublish: flags.skipPublish,
+          forceTag: flags.forceTag,
+          dryRun: flags.dryRun,
+          progress,
+        })
+      );
+    }
+  } finally {
+    progress.finish();
   }
 
   // Push at the end so a partial failure doesn't leave half-pushed state.
@@ -323,14 +421,16 @@ async function main() {
     }
   }
 
-  header('Summary');
-  for (const r of results) {
-    info(`${r.name}: ${r.previousVersion} → ${r.nextVersion}  (${r.tag})`);
-  }
+  card(
+    `✓ Released ${results.length} package${results.length === 1 ? '' : 's'}`,
+    results.map((r) => `  ${r.name.padEnd(38)} ${r.previousVersion} → ${r.nextVersion}`)
+  );
   divider();
-  const npmWhoami = capture('npm', ['whoami']);
-  if (npmWhoami) info(`npm user: ${npmWhoami}`);
-  success('Done.');
+  info('Next steps:');
+  info('  • CHANGELOG: run `pnpm changeset version` to regenerate from .changeset/');
+  info(
+    '  • Verify on npm: ' + results.map((r) => `https://npmjs.com/package/${r.name}`).join(', ')
+  );
 }
 
 main().catch((err) => {

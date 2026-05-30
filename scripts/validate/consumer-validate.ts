@@ -22,13 +22,14 @@
  *   node scripts/consumer-validate.mjs --keep     # keep tmp dir on success (for debugging)
  */
 import fs from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import minimist from 'minimist';
 import { execa } from 'execa';
 import pc from 'picocolors';
-import { PUBLISHABLE_PACKAGES, ROOT } from '../lib/constants.ts';
+import { packageDir, PUBLISHABLE_PACKAGES, ROOT } from '../lib/constants.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -354,18 +355,103 @@ async function verifyAutoImports(tmpPlayground, includesUi) {
   );
 }
 
+/**
+ * Map every publishable package's on-disk dir → its published npm name.
+ * Built lazily from each package's package.json. Used to expand a user's
+ * pick list to the closure of internal deps.
+ */
+function buildNpmNameIndex(): { byDir: Record<string, string>; byNpmName: Record<string, string> } {
+  const byDir: Record<string, string> = {};
+  const byNpmName: Record<string, string> = {};
+  for (const dir of PUBLISHABLE_PACKAGES) {
+    const pkgJson = JSON.parse(
+      readFileSyncOrEmpty(path.join(packageDir(dir), 'package.json')) || '{}'
+    );
+    if (pkgJson.name) {
+      byDir[dir] = pkgJson.name;
+      byNpmName[pkgJson.name] = dir;
+    }
+  }
+  return { byDir, byNpmName };
+}
+
+function readFileSyncOrEmpty(p: string): string {
+  try {
+    return readFileSync(p, 'utf8');
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * Given a user-requested pack list, walk each package.json and add any
+ * `@alikhalilll/*` dependency that's also a publishable workspace package.
+ * Repeats until closure. Returns a stable order: user's picks first, then
+ * supporting deps appended.
+ *
+ * Why this matters: during a multi-package release, packages are published
+ * one at a time. When `a-tel-input`'s tarball is consumer-validated, its
+ * `package.json` declares `@alikhalilll/a-popover@1.0.1` as a dependency
+ * (workspace-pinned at pack time). pnpm tries to fetch that from npm and
+ * may 404 due to CDN propagation lag — even though we published it 30s ago.
+ * Packing the entire workspace-internal closure sidesteps the registry
+ * entirely: every internal dep resolves to a local `file:.tarballs/...`
+ * override.
+ */
+function expandToWorkspaceClosure(initial: string[], byNpmName: Record<string, string>): string[] {
+  const out: string[] = [...initial];
+  const seen = new Set(initial);
+  const queue = [...initial];
+  while (queue.length > 0) {
+    const dir = queue.shift()!;
+    const pkgJsonPath = path.join(packageDir(dir), 'package.json');
+    const raw = readFileSyncOrEmpty(pkgJsonPath);
+    if (!raw) continue;
+    const pkgJson = JSON.parse(raw);
+    const allDeps = {
+      ...(pkgJson.dependencies || {}),
+      ...(pkgJson.peerDependencies || {}),
+      // devDeps too: AUiBase is sometimes a devDep so the bundled output references it.
+      ...(pkgJson.devDependencies || {}),
+    };
+    for (const depName of Object.keys(allDeps)) {
+      const depDir = byNpmName[depName];
+      if (!depDir || seen.has(depDir)) continue;
+      seen.add(depDir);
+      out.push(depDir);
+      queue.push(depDir);
+    }
+  }
+  return out;
+}
+
 async function main() {
   console.log(pc.bold(pc.blue('\n▶ consumer-validate\n')));
 
-  const picked = pickPkgs();
-  for (const p of picked) {
+  const requested = pickPkgs();
+  for (const p of requested) {
     if (!PUBLISHABLE_PACKAGES.includes(p)) {
       throw new Error(
         `Unknown package "${p}". Expected one of: ${PUBLISHABLE_PACKAGES.join(', ')}`
       );
     }
   }
-  console.log(pc.cyan('→') + ' Packages: ' + pc.bold(picked.join(', ')));
+
+  // Expand to workspace-internal transitive closure so we never hit the npm
+  // registry for our own packages during install (avoids CDN propagation races
+  // during multi-package releases).
+  const { byNpmName } = buildNpmNameIndex();
+  const picked = expandToWorkspaceClosure(requested, byNpmName);
+  const added = picked.filter((p) => !requested.includes(p));
+
+  console.log(pc.cyan('→') + ' Validating: ' + pc.bold(requested.join(', ')));
+  if (added.length) {
+    console.log(
+      pc.cyan('→') +
+        ' ' +
+        pc.dim(`Also packing internal deps (avoids registry race): ${added.join(', ')}`)
+    );
+  }
 
   // 1. Pack into a fresh .packs/<stamp>/ dir
   const stamp = new Date().toISOString().replace(/[-:T]/g, '').replace(/\..+$/, '');
