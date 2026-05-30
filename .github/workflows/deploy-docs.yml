@@ -32,7 +32,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Build workspace packages
-        run: pnpm --filter "./packages/*" build
+        run: pnpm build
 
       - name: Generate static docs
         working-directory: apps/docs

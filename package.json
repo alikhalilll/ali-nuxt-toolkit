@@ -18,7 +18,9 @@
     "format:check": "prettier --check .",
     "commitlint": "commitlint",
     "prepare": "husky",
-    "changeset": "changeset"
+    "changeset": "changeset",
+    "changeset:version": "changeset version",
+    "changeset:publish": "changeset publish"
   },
   "devDependencies": {
     "@ampproject/remapping": "^2.3.0",
