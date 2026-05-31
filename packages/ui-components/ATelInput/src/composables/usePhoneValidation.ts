@@ -94,6 +94,25 @@ export type ValidateArgs =
 const STORAGE_KEY = 'ali_ui_phone_countries_v1';
 const REST_COUNTRIES_URL = 'https://restcountries.com/v3.1/all?fields=name,cca2,idd,flags';
 
+/* -----------------------------------------------------------------------------
+ * Module-level singleton state for country data.
+ *
+ * `usePhoneValidation()` is called once per `<ATelInput>`, once per `<ACountrySelect>`,
+ * once per `useTelField()`, once per `zPhone()` — so a single page can spin up four
+ * or more instances. Without deduplication, each instance would independently:
+ *   - JSON.parse the localStorage cache,
+ *   - fire the REST Countries fetch (~80KB),
+ *   - parse + normalise the response.
+ *
+ * Sharing the result via these module-level slots collapses every concurrent call
+ * to **one** network request and **one** cache parse for the lifetime of the page.
+ * Each `usePhoneValidation()` instance still gets its own reactive `countries` ref,
+ * so consumers can mutate their local view (e.g., `props.countries` override) without
+ * affecting siblings — the singleton is only consulted as a data source.
+ * -------------------------------------------------------------------------- */
+let sharedCountries: CountryOption[] | null = null;
+let inflightFetch: Promise<CountryOption[]> | null = null;
+
 const EX = examples as unknown as Examples;
 
 const isBrowser = () => typeof window !== 'undefined';
@@ -267,10 +286,16 @@ export function usePhoneValidation(): UsePhoneValidationReturn {
   const countries = ref<CountryOption[]>([]);
   const isCountriesLoading = ref(false);
 
-  const byValue = ref<Map<string, CountryOption>>(new Map());
-  const byDialDigits = ref<Map<string, CountryOption[]>>(new Map());
-
-  function rebuildIndexes(list: CountryOption[]) {
+  // Pre-seed the lookup indexes with the bundled fallback (~22 most-populated countries).
+  // This makes country *detection* (matchLeadingDialCode, getCountryByValue) work
+  // synchronously from first paint — without it, typing a +20/+1/+44 etc. number while
+  // the REST Countries fetch is in flight would silently fail every matcher tier because
+  // `parsePhoneNumberFromString('+201066105963').country = 'EG'` can't resolve to a
+  // `CountryOption` (empty index → null) and tier 3's `getCountriesByDial('20')` also
+  // returns []. `countries.value` stays `[]` so `getCountries()` still runs its
+  // localStorage → network upgrade path; once that resolves the indexes are rebuilt
+  // wholesale with the full ~250-entry list.
+  function buildIndexes(list: CountryOption[]) {
     const valueMap = new Map<string, CountryOption>();
     const dialMap = new Map<string, CountryOption[]>();
     for (const item of list) {
@@ -282,6 +307,15 @@ export function usePhoneValidation(): UsePhoneValidationReturn {
         dialMap.set(dial, bucket);
       }
     }
+    return { valueMap, dialMap };
+  }
+
+  const _seed = buildIndexes(FALLBACK_COUNTRIES);
+  const byValue = ref<Map<string, CountryOption>>(_seed.valueMap);
+  const byDialDigits = ref<Map<string, CountryOption[]>>(_seed.dialMap);
+
+  function rebuildIndexes(list: CountryOption[]) {
+    const { valueMap, dialMap } = buildIndexes(list);
     byValue.value = valueMap;
     byDialDigits.value = dialMap;
   }
@@ -335,12 +369,33 @@ export function usePhoneValidation(): UsePhoneValidationReturn {
     const force = Boolean(options?.force);
     if (!force && countries.value.length) return countries.value;
 
+    // Shared module-level cache — if any sibling instance already loaded the list,
+    // adopt it without re-parsing localStorage or hitting the network.
+    if (!force && sharedCountries) {
+      upsertCountries(sharedCountries);
+      return countries.value;
+    }
+
+    // Shared in-flight promise — if another instance fired the fetch first, await
+    // its result instead of starting a duplicate request.
+    if (!force && inflightFetch) {
+      isCountriesLoading.value = true;
+      try {
+        const list = await inflightFetch;
+        upsertCountries(list);
+        return countries.value;
+      } finally {
+        isCountriesLoading.value = false;
+      }
+    }
+
     if (!force && isBrowser()) {
       try {
         const cached = localStorage.getItem(STORAGE_KEY);
         if (cached) {
           const parsed = JSON.parse(cached) as CountryOption[];
           if (Array.isArray(parsed) && parsed.length) {
+            sharedCountries = parsed;
             upsertCountries(parsed);
             return countries.value;
           }
@@ -351,22 +406,30 @@ export function usePhoneValidation(): UsePhoneValidationReturn {
     }
 
     isCountriesLoading.value = true;
-    try {
-      const res = await fetch(REST_COUNTRIES_URL);
-      if (!res.ok) throw new Error(`Failed to fetch countries: ${res.status}`);
-      const data = (await res.json()) as RestCountry[];
-      const normalized = normalizeRestCountries(data);
-      upsertCountries(normalized.length ? normalized : FALLBACK_COUNTRIES);
-      if (isBrowser()) {
-        try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(countries.value));
-        } catch {
-          /* storage full or disabled */
+    inflightFetch = (async (): Promise<CountryOption[]> => {
+      try {
+        const res = await fetch(REST_COUNTRIES_URL);
+        if (!res.ok) throw new Error(`Failed to fetch countries: ${res.status}`);
+        const data = (await res.json()) as RestCountry[];
+        const normalized = normalizeRestCountries(data);
+        const list = normalized.length ? normalized : FALLBACK_COUNTRIES;
+        if (isBrowser()) {
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+          } catch {
+            /* storage full or disabled */
+          }
         }
+        return list;
+      } catch {
+        return FALLBACK_COUNTRIES;
       }
-      return countries.value;
-    } catch {
-      upsertCountries(FALLBACK_COUNTRIES);
+    })();
+
+    try {
+      const list = await inflightFetch;
+      sharedCountries = list;
+      upsertCountries(list);
       return countries.value;
     } finally {
       isCountriesLoading.value = false;

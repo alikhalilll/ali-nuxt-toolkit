@@ -7,6 +7,11 @@ import {
   type CountryOption,
   type FlagUrlBuilder,
 } from '@alikhalilll/a-tel-input';
+import { useTelField } from '@alikhalilll/a-tel-input/vee-validate';
+import { zPhone } from '@alikhalilll/a-tel-input/zod';
+import { useForm } from 'vee-validate';
+import { toTypedSchema } from '@vee-validate/zod';
+import { z } from 'zod';
 
 const phone = ref('');
 const country = ref<number | null>(null);
@@ -101,6 +106,57 @@ function applyTheme(next: 'dark' | 'light') {
 
 onMounted(() => applyTheme(theme.value));
 watch(theme, (t) => applyTheme(t));
+
+/* ----------------------------------------------------------------------------
+ * VeeValidate + Zod + server-side validation showcase
+ * -------------------------------------------------------------------------- */
+function fakePhoneExistsCheck(value: string): Promise<{ exists: boolean }> {
+  return new Promise((resolve) => {
+    // Pretend the network is slow. Reject any number whose digits contain "123456789".
+    setTimeout(() => {
+      const digits = (value ?? '').replace(/\D/g, '');
+      resolve({ exists: digits.includes('123456789') });
+    }, 700);
+  });
+}
+
+const submitState = ref<'idle' | 'submitting' | 'done'>('idle');
+const submittedValue = ref<string | null>(null);
+
+const { handleSubmit, resetForm } = useForm({
+  validationSchema: toTypedSchema(z.object({ phone: zPhone() })),
+});
+
+const {
+  phone: formPhone,
+  country: formCountry,
+  error: formError,
+  handleBlur: formHandleBlur,
+  fieldProps: formFieldProps,
+  validating: formValidating,
+} = useTelField('phone', {
+  rules: async (value: string) => {
+    const sync = await zPhone().safeParseAsync(value);
+    if (!sync.success) return sync.error.issues[0]!.message;
+    const { exists } = await fakePhoneExistsCheck(value);
+    return exists ? 'This phone number is already registered.' : true;
+  },
+  validateOn: 'blur',
+  defaultCountry: 'SA',
+});
+
+const onFormSubmit = handleSubmit(async (values) => {
+  submitState.value = 'submitting';
+  await new Promise((r) => setTimeout(r, 400));
+  submittedValue.value = String(values.phone ?? '');
+  submitState.value = 'done';
+});
+
+function resetForm_() {
+  submitState.value = 'idle';
+  submittedValue.value = null;
+  resetForm();
+}
 </script>
 
 <template>
@@ -306,6 +362,58 @@ watch(theme, (t) => applyTheme(t));
         />
       </div>
       <pre class="mt-4 text-xs">{{ JSON.stringify({ i18nPhone, i18nCountry }, null, 2) }}</pre>
+    </div>
+
+    <h2 class="mt-10 mb-2 text-xl font-semibold tracking-tight">
+      Form integration · VeeValidate + Zod + server-side check
+    </h2>
+    <p class="mb-4 text-sm text-text-dim">
+      The <code>@alikhalilll/a-tel-input/vee-validate</code> subpath ships
+      <code>useTelField()</code> which wires both v-models into a single VeeValidate field, composes
+      them into an E.164 string, and exposes a <code>fieldProps</code> bag plus
+      <code>handleBlur</code>. The Zod schema (<code>zPhone()</code>) reuses the same libphonenumber
+      engine the component uses. The async <code>rules</code> below adds a server-side uniqueness
+      check — any number containing <code>123456789</code> is rejected after a 700 ms latency; the
+      field shows a spinner while the check is in flight.
+    </p>
+
+    <div class="rounded-xl border border-brand-border bg-surface p-5">
+      <form class="max-w-sm" novalidate @submit="onFormSubmit">
+        <ATelInput
+          v-model:phone="formPhone"
+          v-model:country="formCountry"
+          v-bind="formFieldProps"
+          :error="formError"
+          :validating="formValidating"
+          show-validation
+          @blur="formHandleBlur"
+        />
+
+        <div class="mt-3 flex items-center gap-2 text-sm">
+          <button
+            type="submit"
+            class="rounded border border-brand-border bg-surface-2 px-3 py-1.5 hover:bg-brand-border/30 disabled:opacity-50"
+            :disabled="submitState === 'submitting'"
+          >
+            {{ submitState === 'submitting' ? 'Submitting…' : 'Submit' }}
+          </button>
+          <button
+            v-if="submitState === 'done'"
+            type="button"
+            class="rounded border border-brand-border px-3 py-1.5 text-text-dim hover:bg-surface-2"
+            @click="resetForm_"
+          >
+            Reset
+          </button>
+        </div>
+
+        <p
+          v-if="submitState === 'done' && submittedValue"
+          class="mt-3 rounded border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-300"
+        >
+          Submitted ✓ — server received <code>{{ submittedValue }}</code>
+        </p>
+      </form>
     </div>
 
     <h2 class="mt-10 mb-2 text-xl font-semibold tracking-tight">Public API</h2>

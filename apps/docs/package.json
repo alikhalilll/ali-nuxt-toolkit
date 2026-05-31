@@ -17,7 +17,10 @@
     "@alikhalilll/a-ui-base": "workspace:*",
     "@alikhalilll/a-tel-input": "workspace:*",
     "@nuxt/content": "^3.0.0",
-    "better-sqlite3": "^12.0.0"
+    "@vee-validate/zod": "^4.13.0",
+    "better-sqlite3": "^12.0.0",
+    "vee-validate": "^4.13.0",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.0.0",

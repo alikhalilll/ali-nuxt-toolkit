@@ -34,3 +34,5 @@ export * from './composables/useCountryDetection';
 export * from './composables/useCountryMatching';
 export * from './composables/useTypingPhase';
 export * from './composables/useTelInputValidation';
+export * from './composables/useCountrySelection';
+export * from './composables/useSyncedModel';

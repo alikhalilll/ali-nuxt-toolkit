@@ -140,21 +140,38 @@ function tryLocale(): string | null {
   }
 }
 
+/* Module-level dedupe for the IP geolocation fetch. Multiple `<ATelInput>` instances
+ * mounting at the same time would otherwise each fire their own request to `ipapi.co`
+ * (or whatever `ipEndpoint` resolves to) before the first one's response makes it into
+ * sessionStorage. Keyed by endpoint so different consumer-configured endpoints don't
+ * collide. */
+const inflightIpFetch = new Map<string, Promise<string | null>>();
+
 async function tryIp(endpoint: string, timeoutMs: number): Promise<string | null> {
   if (!isBrowser() || typeof fetch !== 'function') return null;
+  const existing = inflightIpFetch.get(endpoint);
+  if (existing) return existing;
+
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const res = await fetch(endpoint, { signal: controller.signal, credentials: 'omit' });
-    if (!res.ok) return null;
-    const data = (await res.json()) as { country_code?: string; country?: string };
-    const code = (data.country_code ?? data.country ?? '').toString().toUpperCase();
-    return /^[A-Z]{2}$/.test(code) ? code : null;
-  } catch {
-    return null;
-  } finally {
-    clearTimeout(timer);
-  }
+  const promise = (async () => {
+    try {
+      const res = await fetch(endpoint, { signal: controller.signal, credentials: 'omit' });
+      if (!res.ok) return null;
+      const data = (await res.json()) as { country_code?: string; country?: string };
+      const code = (data.country_code ?? data.country ?? '').toString().toUpperCase();
+      return /^[A-Z]{2}$/.test(code) ? code : null;
+    } catch {
+      return null;
+    } finally {
+      clearTimeout(timer);
+      // Release the slot once the result is decided. Future calls will read the
+      // sessionStorage cache (if a code was found) instead of re-fetching.
+      inflightIpFetch.delete(endpoint);
+    }
+  })();
+  inflightIpFetch.set(endpoint, promise);
+  return promise;
 }
 
 function readCache(): string | null {

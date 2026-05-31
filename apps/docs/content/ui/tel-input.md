@@ -1,23 +1,44 @@
 ---
 title: ATelInput
-description: Phone-number input with smart country detection, libphonenumber-js validation, and a responsive popover/drawer picker.
+description: A headless international telephone input for Vue 3 / Nuxt 3+ — country auto-detect, libphonenumber-js validation, responsive popover/drawer picker, and first-class VeeValidate + Zod integration with server-side validation hooks.
 package: '@alikhalilll/a-tel-input'
 order: 1
 ---
 
 # ATelInput
 
-A composite phone input. Hides the country picker until your input matches a known dial code, then reveals it pre-filled with the detected country. The picker sits at the **end** of the field as a flag-only trigger; the selected dial code shows as a static prefix inside the input. `v-model:phone` holds the digits-only national number; `v-model:country` holds the **dial number** (`20` for Egypt, `44` for the UK, `1` for the NANP block, `null` for no selection).
+**An international telephone input that gets out of the way.** The field starts as a single clean input — no picker, no clutter — and reveals the country flag the moment your number's dial code is recognised. Numbers validate in real time against `libphonenumber-js`, the picker is a popover on desktop and a bottom-sheet on mobile, and the whole thing plugs straight into VeeValidate + Zod with built-in support for async server-side checks.
 
-The field is direction-aware (RTL inherits from the page), country names and numerals localise via the `locale` prop, and digits typed in alternative numeral systems (Arabic-Indic `٠-٩`, Persian `۰-۹`, Devanagari, Bengali) are accepted and normalised to ASCII. See [Internationalization](#internationalization).
+`v-model:phone` is the **digits-only national number**. `v-model:country` is the **dial-code number** (`20` for Egypt, `44` for the UK, `1` for the NANP block, `null` for none).
 
 ::DemoTelInputBasic
 ::
 
+### What's in the box
+
+- **Smart country detection** — debounced parse of every keystroke against the full libphonenumber metadata. NANP-aware tie-breaks, IP + timezone + locale chain as a silent hint on mount.
+- **libphonenumber-js validation** — seven failure reasons, format hint, E.164 output, all reactive.
+- **Responsive picker** — popover on desktop, vaul-vue bottom-sheet on mobile, sticky-safe scroll lock on both (the page underneath never scrolls; the picker's inner list does).
+- **Form-library ready** — controlled `error` prop, `@blur` event, `useTelField()` composable for VeeValidate, `zPhone()` factory for Zod, plus an in-field spinner for async server-side validation.
+- **i18n + RTL** — country names via `Intl.DisplayNames`, numerals localised in the format hint, RTL inherited from the page, alternative numerals (Arabic-Indic, Persian, Devanagari, Bengali) folded to ASCII on input.
+- **Headless slots** for every visual region — trigger, chevron, flag, item, search, hint, error, the lot.
+- **SSR-safe** — country detection runs after mount, hydration is clean.
+- **TypeScript-first** — every prop, slot, and event typed; web-types ship for JetBrains IDEs.
+
 ## Install
 
 ```bash
+# pnpm
 pnpm add @alikhalilll/a-tel-input
+
+# npm
+npm install @alikhalilll/a-tel-input
+
+# yarn
+yarn add @alikhalilll/a-tel-input
+
+# bun
+bun add @alikhalilll/a-tel-input
 ```
 
 ```ts
@@ -95,6 +116,10 @@ Type `+447911123456`, `01066105963`, or paste any well-formed international numb
 | -------------------- | ------------------------------------------------ | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | `v-model:phone`      | `string`                                         | `''`                         | Digits-only national number — no leading `+`, no dial code.                                                             |
 | `v-model:country`    | `number \| null`                                 | `null`                       | Dial number, e.g. `20` (Egypt), `44` (UK), `1` (NANP).                                                                  |
+| `name`               | `string`                                         | —                            | Forwarded to the inner `<input name="">` for native form / form-library integration.                                    |
+| `error`              | `string \| null`                                 | —                            | Externally controlled error message. When non-empty, overrides internal validation and forces the error state.          |
+| `validating`         | `boolean`                                        | `false`                      | `true` while an async validation is in flight. Renders a spinner inside the field (doesn't disable it).                 |
+| `validateOn`         | `'change' \| 'blur' \| 'eager'`                  | `'change'`                   | When to surface validation in the UI. `'blur'` is form-library friendly.                                                |
 | `placeholder`        | `string`                                         | `'Phone number'`             | Falls back to the country's example number when empty.                                                                  |
 | `disabled`           | `boolean`                                        | `false`                      |                                                                                                                         |
 | `loading`            | `boolean`                                        | `false`                      | Disables interaction.                                                                                                   |
@@ -124,6 +149,10 @@ tellRef.value.validation; // PhoneValidationResult — reactive
 tellRef.value.required; // PhoneRequiredInfo | null — example, length range, format hint
 tellRef.value.selectedDialCode; // '+20' | null
 tellRef.value.validationState; // 'idle' | 'valid' | 'error'
+
+tellRef.value.focus(); // imperative focus management
+tellRef.value.blur();
+tellRef.value.select();
 ```
 
 ## Sizes
@@ -173,6 +202,152 @@ Localise the messages with `errorMessages`:
   show-validation
 />
 ```
+
+## Form integration
+
+The component supports two binding contracts:
+
+- **Single `v-model`** carrying the canonical **E.164** string — works directly with VeeValidate's `<Field v-slot="{ field }">`, native `<form>` submission, and any `v-model="phoneE164"` consumer.
+- **Split `v-model:phone` + `v-model:country`** — when you want the raw digits and the dial code as separate values. Stays in sync with the single-string contract; pick whichever fits.
+
+Two subpath entries also ship for first-class **VeeValidate** + **Zod** integration, including async / server-side validation:
+
+```bash
+# pnpm
+pnpm add vee-validate @vee-validate/zod zod
+
+# npm
+npm install vee-validate @vee-validate/zod zod
+
+# yarn
+yarn add vee-validate @vee-validate/zod zod
+
+# bun
+bun add vee-validate @vee-validate/zod zod
+```
+
+### Drop-in `<Field v-slot="{ field, errors }">` — `v-bind="field"` just works
+
+Use VeeValidate's slot-style `<Field>` exactly the way you would with a native `<Input>`. The component's default `v-model` is the E.164 string, so Vue auto-spreads `field.modelValue`, `field['onUpdate:modelValue']`, `field.name`, and `field.onBlur` straight through:
+
+```vue
+<script setup lang="ts">
+import { useForm, Field as VeeField } from 'vee-validate';
+import { toTypedSchema } from '@vee-validate/zod';
+import { z } from 'zod';
+import { ATelInput } from '@alikhalilll/a-tel-input';
+import { zPhone } from '@alikhalilll/a-tel-input/zod';
+
+const { handleSubmit } = useForm({
+  validationSchema: toTypedSchema(z.object({ phone: zPhone() })),
+});
+</script>
+
+<template>
+  <form @submit="handleSubmit(onSubmit)">
+    <VeeField v-slot="{ field, errors }" name="phone">
+      <label for="phone">Phone</label>
+      <ATelInput
+        id="phone"
+        v-bind="field"
+        :error="errors[0]"
+        :aria-invalid="!!errors.length"
+        default-country="SA"
+        show-validation
+      />
+    </VeeField>
+    <button type="submit">Submit</button>
+  </form>
+</template>
+```
+
+That's the whole integration. No `useTelField()`, no manual `handleBlur`, no extra glue.
+
+### `useTelField()` — when you need async / server-side validation
+
+::DemoTelInputVeeValidate
+::
+
+::DemoTelInputVeeValidate
+::
+
+`useTelField(name, options)` (from `@alikhalilll/a-tel-input/vee-validate`) owns the two v-models (`phone` + `country`), composes them into an E.164 string for VeeValidate's schema, and returns a ready-to-bind prop bag. Pair it with `zPhone()` (from `@alikhalilll/a-tel-input/zod`) for a Zod schema that delegates to the same `libphonenumber-js` engine the component uses — so the schema can never disagree with the in-field validation state.
+
+```ts
+import { ATelInput } from '@alikhalilll/a-tel-input';
+import { useTelField } from '@alikhalilll/a-tel-input/vee-validate';
+import { zPhone } from '@alikhalilll/a-tel-input/zod';
+import { useForm } from 'vee-validate';
+import { toTypedSchema } from '@vee-validate/zod';
+import { z } from 'zod';
+
+const { handleSubmit } = useForm({
+  validationSchema: toTypedSchema(z.object({ phone: zPhone() })),
+});
+
+const { phone, country, error, handleBlur, fieldProps, validating } = useTelField('phone', {
+  // Async rule — server-side uniqueness check. Runs after the sync schema passes.
+  rules: async (value) => {
+    const sync = await zPhone().safeParseAsync(value);
+    if (!sync.success) return sync.error.issues[0]!.message;
+    const { exists } = await $fetch('/api/phone/exists', { query: { phone: value } });
+    return exists ? 'This phone number is already registered.' : true;
+  },
+  validateOn: 'blur',
+  defaultCountry: 'SA',
+});
+```
+
+```vue
+<ATelInput
+  v-model:phone="phone"
+  v-model:country="country"
+  v-bind="fieldProps"
+  :error="error"
+  :validating="validating"
+  show-validation
+  @blur="handleBlur"
+/>
+```
+
+### Anatomy
+
+- **`error` prop** — externally controlled error message. When set, it forces the field into the error state and replaces internal libphonenumber validation. Wire it from any source — VeeValidate, Zod, a server response, a custom validator.
+- **`validating` prop** — `true` while an async rule is in flight. Renders a small spinner inside the field and sets `aria-busy="true"`. Doesn't disable the input (use `loading` for that).
+- **`validateOn` prop** — `'change'` (default, current behaviour), `'blur'` (stays idle until first blur — form-library friendly), or `'eager'` (no typing pause).
+- **`name` prop** — forwards to the inner `<input name="">` for native `<form>` submission.
+- **`@blur` / `@focus` emits** — mirror the inner input's native events.
+- **Exposed methods** — `tellRef.value?.focus()`, `.blur()`, `.select()` for imperative focus management after submit-fail.
+
+### Zod schema shapes
+
+`zPhone()` returns a `z.ZodType<string>` that validates an E.164 string:
+
+```ts
+z.object({ phone: zPhone() }); // input: '+201066105963'
+z.object({ phone: zPhone({ country: 'SA' }) }); // input: national digits, validated as SA
+z.object({ phone: zPhone({ allowedDialCodes: ['20', '966'] }) }); // restrict to EG + SA
+```
+
+Or use `zPhoneObject()` when you want to validate the `{ phone, country }` shape directly:
+
+```ts
+import { zPhoneObject } from '@alikhalilll/a-tel-input/zod';
+
+const schema = z.object({
+  contact: zPhoneObject({ requiredMessage: 'Phone number is required.' }),
+});
+```
+
+### Native HTML forms
+
+```vue
+<form>
+  <ATelInput v-model:phone="phone" v-model:country="country" name="phone" />
+</form>
+```
+
+`name` is forwarded to the inner `<input>`, so FormData picks the value up automatically. The submitted value is the digits-only national number; compose the E.164 via `usePhoneValidation()` when needed.
 
 ## Country detection
 

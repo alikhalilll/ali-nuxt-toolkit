@@ -9,7 +9,7 @@
     "url": "git+https://github.com/alikhalilll/ali-nuxt-toolkit.git",
     "directory": "packages/ui-components/ATelInput"
   },
-  "homepage": "https://alikhalilll.github.io/ali-nuxt-toolkit/ui",
+  "homepage": "https://alikhalilll.github.io/ali-nuxt-toolkit/ui/tel-input/#install",
   "bugs": {
     "url": "https://github.com/alikhalilll/ali-nuxt-toolkit/issues"
   },
@@ -61,6 +61,26 @@
         "default": "./dist/resolver/index.cjs"
       }
     },
+    "./vee-validate": {
+      "import": {
+        "types": "./dist/vee-validate/index.d.ts",
+        "default": "./dist/vee-validate/index.js"
+      },
+      "require": {
+        "types": "./dist/vee-validate/index.d.cts",
+        "default": "./dist/vee-validate/index.cjs"
+      }
+    },
+    "./zod": {
+      "import": {
+        "types": "./dist/zod/index.d.ts",
+        "default": "./dist/zod/index.js"
+      },
+      "require": {
+        "types": "./dist/zod/index.d.cts",
+        "default": "./dist/zod/index.cjs"
+      }
+    },
     "./styles.css": "./dist/styles.css",
     "./package.json": "./package.json"
   },
@@ -95,13 +115,21 @@
     "@nuxt/kit": "^3.0.0 || ^4.0.0",
     "@vueuse/core": "^14.0.0",
     "unplugin-vue-components": "^28.0.0 || ^29.0.0 || ^30.0.0 || ^31.0.0 || ^32.0.0",
-    "vue": "^3.5.0"
+    "vee-validate": "^4.13.0",
+    "vue": "^3.5.0",
+    "zod": "^3.23.0 || ^4.0.0"
   },
   "peerDependenciesMeta": {
     "@nuxt/kit": {
       "optional": true
     },
     "unplugin-vue-components": {
+      "optional": true
+    },
+    "vee-validate": {
+      "optional": true
+    },
+    "zod": {
       "optional": true
     }
   },
@@ -124,6 +152,8 @@
     "unplugin-vue-components": "^32.1.0",
     "vue": "^3.5.0",
     "vue-tsc": "^3.2.4",
+    "vee-validate": "^4.13.0",
+    "zod": "^3.23.8",
     "@alikhalilll/a-ui-base": "workspace:*",
     "@alikhalilll/a-responsive-popover": "workspace:*"
   }

@@ -1,5 +1,11 @@
-import { parsePhoneNumberFromString, type CountryCode } from 'libphonenumber-js';
+import { getCountries, parsePhoneNumberFromString, type CountryCode } from 'libphonenumber-js';
 import type { CountryOption } from './usePhoneValidation';
+
+/** Cached snapshot of every country libphonenumber knows about (~250 ISO2 codes).
+ *  Used by tier 2 of `matchLeadingDialCode` as the last-resort iteration so detection
+ *  works for *every* country, not just the popular ones in the bundled fallback list.
+ *  Cached at module load — `getCountries()` is a static metadata table, no I/O. */
+const ALL_LIBPHONENUMBER_ISO2: readonly string[] = getCountries();
 
 /** Synchronous dial-digit → ISO2 fallback for common countries, used when the async
  *  REST Countries fetch hasn't populated `getCountriesByDial`'s index yet at setup. */
@@ -69,6 +75,36 @@ export const DIAL_TO_ISO2_FALLBACK: Record<string, string> = {
  *  tie-breaker when multiple countries share a dial code (e.g. all NANP). */
 export const COUNTRY_RECENTS_KEY = 'ali_ui_country_recents_v1';
 
+/** ISO2 codes iterated by tier 2 of `matchLeadingDialCode` when looking for a country
+ *  that accepts a local-format input as valid. Mirrors the `FALLBACK_COUNTRIES` list in
+ *  {@link usePhoneValidation} (kept in sync by tests + by being short and obvious).
+ *  Order matters — earlier entries get priority when multiple countries would each
+ *  validate the same input. Built around the most-populated / most-likely countries. */
+export const FALLBACK_ISO2_LIST: readonly string[] = [
+  'SA',
+  'EG',
+  'AE',
+  'US',
+  'GB',
+  'DE',
+  'FR',
+  'ES',
+  'IT',
+  'TR',
+  'RU',
+  'CN',
+  'IN',
+  'JP',
+  'KR',
+  'BR',
+  'MX',
+  'CA',
+  'AU',
+  'NG',
+  'PK',
+  'ID',
+];
+
 export interface DialMatch {
   country: CountryOption;
   /** The national significant number — what the phone input should hold, with both the
@@ -83,6 +119,30 @@ export interface MatchLeadingDialCodeOptions {
   /** Currently selected ISO2 — preferred when a shared dial code yields multiple
    *  countries (tier 3 tie-break). */
   currentIso2?: string;
+}
+
+/** Build a minimal `CountryOption` from libphonenumber metadata when the async REST
+ *  Countries list hasn't loaded the entry yet. Used so country **detection** works
+ *  generically for any libphonenumber country, not just the ~22 in the offline
+ *  fallback list. The picker will overwrite this synthetic record with the real one
+ *  (with localized name + flag) as soon as `getCountries()` resolves. */
+function buildSyntheticCountry(iso2: string, dialDigits: string): CountryOption {
+  const ISO2 = iso2.toUpperCase();
+  const digits = String(dialDigits).replace(/\D/g, '');
+  return {
+    label: `${ISO2} (+${digits})`,
+    value: ISO2,
+    search_key: `${ISO2.toLowerCase()} +${digits} ${digits}`,
+    raw_data: {
+      iso2: ISO2,
+      dial_code: `+${digits}`,
+      dial_digits: digits,
+      name: ISO2,
+      flag: `https://flagcdn.com/w40/${ISO2.toLowerCase()}.png`,
+      source: 'fallback',
+      original: {},
+    },
+  };
 }
 
 function readRecents(): string[] {
@@ -145,12 +205,41 @@ export function useCountryMatching(deps: CountryMatchingDeps) {
     return Number.isFinite(n) ? n : null;
   }
 
+  // LRU cache of recent matcher results. Tier 2 iterates over ~250 countries in the
+  // worst case (~25–250 ms of parsing); without this cache, every debounce settle on
+  // an unmatched input would re-pay that cost. Keyed by the full input + context so
+  // user picks / recents updates don't return stale matches. Capped to a small size —
+  // typing typically reuses a few prefixes, no need for unbounded memory.
+  const MATCHER_CACHE_MAX = 128;
+  const matcherCache = new Map<string, DialMatch | null>();
+
+  function readMatcherCache(key: string): DialMatch | null | undefined {
+    if (!matcherCache.has(key)) return undefined;
+    // Refresh LRU order by re-inserting.
+    const value = matcherCache.get(key)!;
+    matcherCache.delete(key);
+    matcherCache.set(key, value);
+    return value;
+  }
+
+  function writeMatcherCache(key: string, value: DialMatch | null) {
+    if (matcherCache.size >= MATCHER_CACHE_MAX) {
+      const oldest = matcherCache.keys().next().value;
+      if (oldest !== undefined) matcherCache.delete(oldest);
+    }
+    matcherCache.set(key, value);
+  }
+
   /** Three-tier match of the leading digits to a country:
    *   1. libphonenumber international parse (handles NANP disambiguation).
-   *   2. libphonenumber national-format parse using `hintCountry` (handles local
-   *      formats like Egyptian `01066105963` with no dial-code prefix).
+   *   2. libphonenumber national-format parse, iterating through candidate hint
+   *      countries (handles local formats like Egyptian `01066105963` with no
+   *      dial-code prefix). Universal coverage via `getCountries()`.
    *   3. Longest-prefix match against the dial-digits index, with the current
-   *      selection / recents as tie-breakers when multiple countries share a code. */
+   *      selection / recents as tie-breakers when multiple countries share a code.
+   *
+   * Results are LRU-cached per input + context to avoid re-paying tier-2 iteration
+   * cost when the user backspaces and retypes the same prefix. */
   function matchLeadingDialCode(
     digits: string,
     options: MatchLeadingDialCodeOptions = {}
@@ -158,38 +247,89 @@ export function useCountryMatching(deps: CountryMatchingDeps) {
     if (!digits) return null;
     const { hintCountry, currentIso2 } = options;
 
-    // Tier 1: international parse with leading `+`.
+    const cacheKey = `${digits}|${hintCountry ?? ''}|${currentIso2 ?? ''}`;
+    const cached = readMatcherCache(cacheKey);
+    if (cached !== undefined) return cached;
+
+    const result = runMatch(digits, hintCountry, currentIso2);
+    writeMatcherCache(cacheKey, result);
+    return result;
+  }
+
+  // Pure tier-1/2/3 matcher — extracted so the public `matchLeadingDialCode` is a thin
+  // memoisation wrapper. Returns the first match found; `null` if none.
+  function runMatch(
+    digits: string,
+    hintCountry: string | undefined,
+    currentIso2: string | undefined
+  ): DialMatch | null {
+    // Tier 1: international parse with leading `+`. libphonenumber knows every
+    // country's dial code natively — so even when our async country index hasn't
+    // populated yet (first paint, no localStorage cache), we can still return a
+    // synthetic `CountryOption` derived from the parse result and let the picker
+    // upgrade it to the real entry when the fetch resolves.
     try {
       const parsed = parsePhoneNumberFromString(`+${digits}`);
       if (parsed?.country && parsed.countryCallingCode) {
-        const parsedCountry = getCountryByValue(parsed.country);
-        if (parsedCountry) {
-          return { country: parsedCountry, nationalNumber: String(parsed.nationalNumber ?? '') };
-        }
+        const parsedCountry =
+          getCountryByValue(parsed.country) ??
+          buildSyntheticCountry(parsed.country, String(parsed.countryCallingCode));
+        return { country: parsedCountry, nationalNumber: String(parsed.nationalNumber ?? '') };
       }
     } catch {
       /* libphonenumber throws on partial input — fall through */
     }
 
-    // Tier 2: national-format parse using the silently-inferred country as a hint.
-    if (hintCountry && digits.length >= 4) {
-      try {
-        const parsed = parsePhoneNumberFromString(digits, hintCountry as CountryCode);
-        if (parsed?.isValid()) {
-          const matched = getCountryByValue(parsed.country || hintCountry);
-          if (matched) {
+    // Tier 2: national-format parse. Iterate through candidate hint countries — the env
+    // hint, the current selection, the user's recents, the popular-countries shortlist,
+    // and finally **every** ISO2 libphonenumber knows about — and return the first one
+    // that yields a valid parse. This is what lets `01066105963` resolve to Egypt even
+    // when the silent IP/timezone hint is `SA` (the SA parse rejects the number, but
+    // iterating finds EG). First-match wins, so the iteration ORDER encodes the priority:
+    //   1. Env hint (`hintCountry`).
+    //   2. Current picker selection (`currentIso2`).
+    //   3. The user's recents (most-recent first).
+    //   4. The popular-countries shortlist (`FALLBACK_ISO2_LIST`).
+    //   5. Every other libphonenumber country.
+    // Step 5 guarantees universal coverage; the earlier steps bias to the more
+    // contextually-likely answers when multiple countries would each accept the input.
+    if (digits.length >= 4) {
+      const candidates = new Set<string>();
+      if (hintCountry) candidates.add(hintCountry.toUpperCase());
+      if (currentIso2) candidates.add(currentIso2.toUpperCase());
+      for (const recent of readRecents()) candidates.add(recent.toUpperCase());
+      for (const fallback of FALLBACK_ISO2_LIST) candidates.add(fallback);
+      for (const all of ALL_LIBPHONENUMBER_ISO2) candidates.add(all);
+
+      for (const iso2 of candidates) {
+        try {
+          const parsed = parsePhoneNumberFromString(digits, iso2 as CountryCode);
+          if (parsed?.isValid()) {
+            const resolvedIso2 = parsed.country || iso2;
+            const matched =
+              getCountryByValue(resolvedIso2) ??
+              buildSyntheticCountry(resolvedIso2, String(parsed.countryCallingCode ?? ''));
             return { country: matched, nationalNumber: String(parsed.nationalNumber ?? '') };
           }
+        } catch {
+          /* libphonenumber throws on partial input — try next candidate */
         }
-      } catch {
-        /* fall through */
       }
     }
 
-    // Tier 3: longest-prefix match over the dial-digits index.
+    // Tier 3: longest-prefix match over the dial-digits index, with the synchronous
+    // `DIAL_TO_ISO2_FALLBACK` table (~60 countries) as a backstop when the async
+    // country index hasn't loaded yet. This keeps detection working from first paint
+    // for every country in the table — not just the ~22 in `FALLBACK_COUNTRIES`.
     for (let len = Math.min(3, digits.length); len >= 1; len--) {
       const prefix = digits.slice(0, len);
-      const group = getCountriesByDial(prefix);
+      let group = getCountriesByDial(prefix);
+      if (!group.length) {
+        const iso2 = DIAL_TO_ISO2_FALLBACK[prefix];
+        if (iso2) {
+          group = [getCountryByValue(iso2) ?? buildSyntheticCountry(iso2, prefix)];
+        }
+      }
       if (!group.length) continue;
       const nationalNumber = digits.slice(prefix.length);
       if (group.length === 1) return { country: group[0], nationalNumber };

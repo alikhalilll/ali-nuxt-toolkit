@@ -1,13 +1,21 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, useId, watch } from 'vue';
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import { cn } from '@alikhalilll/a-ui-base';
 import { usePhoneValidation } from '../composables/usePhoneValidation';
 import { detectCountry, type DetectCountryOptions } from '../composables/useCountryDetection';
 import { useCountryMatching } from '../composables/useCountryMatching';
 import { useTypingPhase } from '../composables/useTypingPhase';
 import { useTelInputValidation } from '../composables/useTelInputValidation';
+import { useCountrySelection } from '../composables/useCountrySelection';
+import { useSyncedModel } from '../composables/useSyncedModel';
 import { DEFAULT_SIZE } from '@alikhalilll/a-ui-base';
-import { resolveMessages, type ATelInputProps, type ATelInputSlots } from '../types';
+import {
+  resolveMessages,
+  type ATelInputProps,
+  type ATelInputSlots,
+  type ATelInputEmits,
+} from '../types';
 import { normalizeDigits } from '../utils/digits';
 import ACountrySelect from './ACountrySelect.vue';
 import { CheckCircleIcon, AlertCircleIcon, SpinnerIcon } from '../icons';
@@ -21,7 +29,10 @@ const props = withDefaults(defineProps<ATelInputProps>(), {
   detectFromInput: true,
   detectDebounceMs: 800,
   showValidationIcon: false,
+  validateOn: 'change',
 });
+
+const emit = defineEmits<ATelInputEmits>();
 
 defineSlots<ATelInputSlots>();
 
@@ -32,9 +43,33 @@ const phone = defineModel<string>('phone', { default: '' });
  *  NANP (`+1` covers 25+ countries) — the picker still needs an exact country. */
 const country = defineModel<number | null>('country', { default: null });
 
-/** Internal source of truth — the ISO2 alpha-2 code of the picker selection. Synced with
- *  `country` (dial number) via watchers below. */
-const selectedIso2 = ref<string>('');
+/**
+ * Default v-model — the canonical **E.164** string (e.g. `'+201066105963'`).
+ *
+ * Single-string contract for VeeValidate's `<Field v-slot="{ field }">` pattern
+ * (`v-bind="field"`), native `<form>` submission, or any `v-model="phoneE164"`
+ * consumer. Bind it with:
+ *
+ *   <ATelInput v-model="phoneE164" />
+ *
+ *   <VeeField v-slot="{ field, errors }" name="phone">
+ *     <ATelInput v-bind="field" :error="errors[0]" />
+ *   </VeeField>
+ *
+ * When set externally, the value is parsed via libphonenumber-js → the country
+ * picker and the digits-only `phone` model are derived from it. When the user
+ * types or picks a country, the composed E.164 is written back out. Stays in
+ * sync with `v-model:phone` / `v-model:country` — you can use either contract.
+ */
+const modelValue = defineModel<string>({ default: '' });
+
+/** The picker selection state machine — `iso2` is the internal source of truth, `source`
+ *  records where the current selection came from, `detectionLocked` answers "should
+ *  typed-input detection re-route the picker on the next burst?". Single mutator: `set`.
+ *  Replaces the historical flag soup (`userPickedCountry` / `autoSettingCountry` /
+ *  `inputDetectionApplied`). */
+const selection = useCountrySelection();
+const selectedIso2 = selection.iso2;
 
 const { getCountries, validate, getRequiredInfo, getCountryByValue, getCountriesByDial } =
   usePhoneValidation();
@@ -46,9 +81,6 @@ const { resolveCountryIdentifier, dialNumberFor, matchLeadingDialCode } = useCou
 });
 
 void getCountries();
-
-const userPickedCountry = ref(false);
-const autoSettingCountry = ref(false);
 
 /** Silently resolved via IP/timezone/locale when `detectFromInput` is on — used as a hint
  *  so local-format numbers (e.g. Egyptian `01066105963`) can be parsed without a `+` prefix.
@@ -67,42 +99,65 @@ function tryMatchPhone(digits: string) {
 
 /* ---------------------------------------------------------------
  * Typing-phase state machine — owns `isDetecting`, `hasFinishedTyping`,
- * `detectionAttempted` and the debounce timer. The `onSettle` callback
- * runs at the end of every debounce window: it short-circuits when
- * detection is disabled / the user already picked / input is empty,
- * otherwise marks a detection attempt and applies any match.
+ * `detectionAttempted` and the debounce timer. `onSettle` decides — once
+ * the user pauses — whether to re-route the picker based on what they
+ * typed. The decision tree below is the entire detection policy:
+ *
+ *   1. `detectFromInput` opt-out → bail.
+ *   2. `selection.detectionLocked` (user picked, or a previous input-driven
+ *      match was already applied) → bail.
+ *   3. Empty input → bail.
+ *   4. A country is already selected from a *hint* source (`'default'` /
+ *      `'env'` / `'external'`) AND the user did NOT type an explicit `+`
+ *      prefix → bail. Local-format typing must not get re-routed by tier-3
+ *      ambiguous prefix lookups (e.g. `055…` matching Brazil's `+55`).
+ *   5. Run the matcher. If it lands on the same country we already have AND
+ *      the same national number, only lock detection. Otherwise apply the
+ *      new country + stripped national number and lock.
  * ------------------------------------------------------------- */
+/** User explicitly picked a country from the picker — locks the selection so subsequent
+ *  typed-input detection cannot churn the picker. */
+function onPickerPick(iso2: string) {
+  selection.set(iso2, 'picker');
+}
+
 const typing = useTypingPhase({
   debounceMs: computed(() => Math.max(0, props.detectDebounceMs)),
   onSettle: () => {
     if (!props.detectFromInput) return;
-    if (userPickedCountry.value || selectedIso2.value) return;
+    if (selection.detectionLocked.value) return;
     const current = phone.value;
     if (!current) return;
+
+    const typedInternational = (displayValue.value ?? '').trimStart().startsWith('+');
+    if (selectedIso2.value && !typedInternational) return;
 
     typing.markDetectionAttempt();
 
     const match = tryMatchPhone(current);
     if (!match) return;
-    autoSettingCountry.value = true;
-    selectedIso2.value = match.country.value;
+
+    if (match.country.value === selectedIso2.value && match.nationalNumber === phone.value) {
+      // No-op except for the lock — the matcher confirmed our current state.
+      selection.source.value = 'input';
+      return;
+    }
+    selection.set(match.country.value, 'input');
     phone.value = match.nationalNumber;
   },
 });
 const { isDetecting, hasFinishedTyping, detectionAttempted } = typing;
 
 onMounted(async () => {
-  if (selectedIso2.value) return; // v-model has an initial value — respect it.
+  if (selectedIso2.value) return; // v-model:country or v-model has an initial value.
 
-  // Explicit `defaultCountry` is treated as the initial picker value (the picker shows
-  // immediately) — this is how callers opt out of the hidden-until-detected default. Accepts
-  // either an ISO2 code (`'EG'`) or a dial-digit string (`'20'`, `'+20'`).
+  // Explicit `defaultCountry` is the initial picker value (and a parsing hint). Accepts
+  // an ISO2 code (`'EG'`) or a dial-digit string (`'20'`, `'+20'`).
   if (props.defaultCountry) {
     const seed = resolveCountryIdentifier(props.defaultCountry);
     if (seed) {
       inferredCountry.value = seed;
-      autoSettingCountry.value = true;
-      selectedIso2.value = seed;
+      selection.set(seed, 'default');
       return;
     }
   }
@@ -129,59 +184,50 @@ onMounted(async () => {
 
   if (props.detectFromInput) {
     inferredCountry.value = iso2;
-    // If the user has already typed something while detection was resolving, re-attempt
-    // matching now that we have a hint country for the libphonenumber national-format pass.
-    if (phone.value && !userPickedCountry.value && !selectedIso2.value) {
+    // If the user typed something while detection was resolving, re-attempt the match
+    // now that we have a hint country for libphonenumber's national-format parse.
+    if (phone.value && !selection.detectionLocked.value && !selectedIso2.value) {
       const match = tryMatchPhone(phone.value);
       if (match) {
-        autoSettingCountry.value = true;
-        selectedIso2.value = match.country.value;
+        selection.set(match.country.value, 'input');
         phone.value = match.nationalNumber;
       }
     }
     return;
   }
   if (!selectedIso2.value && iso2) {
-    autoSettingCountry.value = true;
-    selectedIso2.value = iso2;
+    selection.set(iso2, 'env');
   }
 });
 
-/** External → internal: when the caller mutates `v-model:country` (dial number), resolve
- *  it to an ISO2. If the current ISO2 already maps to this dial (e.g. user has Canada
- *  selected and the caller writes back `1`), keep the existing selection — don't churn it. */
-watch(
-  country,
-  (next) => {
+/* ---------------------------------------------------------------
+ * `country` (dial-number model) ↔ `selectedIso2` two-way sync.
+ *
+ * Replaces the historical pair of manual watchers + `autoSettingCountry` flag.
+ * `useSyncedModel` handles the echo-loop guard internally: writes that originate
+ * from `compose()` are stamped via `lastEmitted` so the corresponding `apply`
+ * call (which fires when Vue's defineModel cascades the write back through the
+ * reactivity graph) recognises and skips the echo.
+ *
+ * When the *caller* writes `v-model:country` from outside (a fresh dial number
+ * not derived from us), `apply` runs with `source: 'external'`, leaving
+ * `detectionLocked` false — typed-international input is still allowed to
+ * override an externally-seeded selection.
+ * ------------------------------------------------------------- */
+useSyncedModel<number | null>({
+  model: country,
+  triggers: [selectedIso2],
+  compose: () => (selectedIso2.value ? dialNumberFor(selectedIso2.value) : null),
+  apply: (next) => {
     if (next == null) {
-      if (selectedIso2.value) selectedIso2.value = '';
+      selection.clear();
       return;
     }
     if (dialNumberFor(selectedIso2.value) === next) return; // already in sync
     const iso2 = resolveCountryIdentifier(String(next));
-    if (iso2) selectedIso2.value = iso2;
+    if (iso2) selection.set(iso2, 'external');
   },
-  { immediate: true }
-);
-
-/** Internal → external: keep `country` (dial number) in lockstep with `selectedIso2`, and
- *  flag "user manually picked from picker" when the change isn't one we initiated.
- *  `flush: 'sync'` so the `autoSettingCountry` guard is reliable. */
-watch(
-  selectedIso2,
-  (iso2, prev) => {
-    const wasAutoSet = autoSettingCountry.value;
-    autoSettingCountry.value = false;
-
-    const nextDial = dialNumberFor(iso2);
-    if (country.value !== nextDial) country.value = nextDial;
-
-    if (!wasAutoSet && props.detectFromInput && iso2 && prev !== iso2) {
-      userPickedCountry.value = true;
-    }
-  },
-  { flush: 'sync' }
-);
+});
 
 /** The string shown in the `<input>`. Deliberately decoupled from `phone` (the digits-only
  *  model) so the visible field is NOT rewritten mid-edit — non-digits / alternative numerals
@@ -192,6 +238,45 @@ const displayValue = ref<string>(String(phone.value ?? ''));
 /** Set when the in-flight `phone` change came from the user typing — tells the `phone`
  *  watcher to leave `displayValue` alone (the user is still editing it). */
 let phoneEditedByInput = false;
+
+/* ---------------------------------------------------------------
+ * Default v-model (E.164 string) ↔ `phone` + `selectedIso2` two-way sync.
+ *
+ * Single-string contract for VeeValidate's `<Field v-slot="{ field }">` pattern
+ * (`v-bind="field"`), native `<form>` submission, or any `v-model="phoneE164"`
+ * consumer. Implemented with the same `useSyncedModel` helper used for `country`
+ * — one shared echo-loop guard, no hand-rolled flag pair.
+ *
+ * Crucially, `apply` does NOT write to `displayValue`. The existing `watch(phone)`
+ * handler already updates `displayValue` when the change isn't user-driven (i.e.
+ * `phoneEditedByInput === false`); and when the user IS mid-typing, it leaves
+ * `displayValue` alone. Writing the parsed national number here would clobber
+ * what the user just typed — that was the original "typing rewrites to '96610'"
+ * bug.
+ * ------------------------------------------------------------- */
+useSyncedModel<string>({
+  model: modelValue,
+  triggers: [phone, selectedIso2],
+  compose: () => {
+    if (!selectedIso2.value || !phone.value) return '';
+    return validate({ country: { iso2: selectedIso2.value }, phone: phone.value }).full_phone ?? '';
+  },
+  apply: (next) => {
+    const trimmed = String(next ?? '').trim();
+    if (!trimmed) {
+      if (phone.value !== '') phone.value = '';
+      if (selectedIso2.value !== '') selection.clear();
+      return;
+    }
+    const e164 = trimmed.startsWith('+') ? trimmed : `+${trimmed.replace(/^\+/, '')}`;
+    const parsed = parsePhoneNumberFromString(e164);
+    if (!parsed || !parsed.country) return;
+    if (selectedIso2.value !== parsed.country) {
+      selection.set(parsed.country, 'external');
+    }
+    if (phone.value !== parsed.nationalNumber) phone.value = parsed.nationalNumber;
+  },
+});
 
 function commitPhone(value: string) {
   phoneEditedByInput = true;
@@ -208,13 +293,10 @@ function handlePhoneInput(e: Event) {
 
   if (!cleaned) {
     // Always reset on clear — even after a manual pick. Instant (not debounced) so the
-    // picker + spinner hide the moment the input goes empty.
+    // picker + spinner hide the moment the input goes empty. `selection.clear()` drops
+    // both `iso2` and `source` back to the empty/no-country state, re-arming detection.
     typing.reset();
-    if (props.detectFromInput) {
-      autoSettingCountry.value = true;
-      selectedIso2.value = '';
-      userPickedCountry.value = false;
-    }
+    if (props.detectFromInput) selection.clear();
     commitPhone('');
     return;
   }
@@ -265,8 +347,12 @@ const dirAttr = computed<'ltr' | 'rtl' | undefined>(() =>
 /* ---------------------------------------------------------------
  * Validation facade — wraps the raw `usePhoneValidation` calls and
  * produces the view-layer surface (visible state gated by the typing
- * pause, localised error message, conditional show flags, etc.).
+ * pause / blur, localised error message, conditional show flags,
+ * external `error` override, etc.).
  * ------------------------------------------------------------- */
+/** Set to `true` the first time the input is blurred. Drives `validateOn: 'blur'`. */
+const hasBlurred = ref(false);
+
 const {
   validation,
   required,
@@ -278,11 +364,13 @@ const {
   selectedDialCode,
 } = useTelInputValidation(
   { validate, getRequiredInfo, getCountryByValue },
-  { phone, selectedIso2, hasFinishedTyping, messages },
+  { phone, selectedIso2, hasFinishedTyping, hasBlurred, messages },
   {
     locale: () => props.locale,
     showValidation: () => props.showValidation,
     errorMessages: () => props.errorMessages,
+    validateOn: () => props.validateOn,
+    externalError: () => props.error,
   }
 );
 
@@ -298,6 +386,31 @@ const effectivePlaceholder = computed(
 const helperId = useId();
 const describedBy = computed(() => (showError.value || showHint.value ? helperId : undefined));
 
+/* ---------------------------------------------------------------
+ * Imperative API — form libraries (VeeValidate, etc.) need to focus
+ * the offending field after a failed submit. `inputRef` is also used
+ * by `handleBlur` / `handleFocus` to forward the native event.
+ * ------------------------------------------------------------- */
+const inputRef = ref<HTMLInputElement | null>(null);
+
+function handleBlur(e: FocusEvent) {
+  hasBlurred.value = true;
+  emit('blur', e);
+}
+function handleFocus(e: FocusEvent) {
+  emit('focus', e);
+}
+
+function focus(options?: FocusOptions) {
+  inputRef.value?.focus(options);
+}
+function blur() {
+  inputRef.value?.blur();
+}
+function select() {
+  inputRef.value?.select();
+}
+
 defineExpose({
   validation,
   required,
@@ -307,6 +420,9 @@ defineExpose({
   isDetecting,
   hasFinishedTyping,
   detectionAttempted,
+  focus,
+  blur,
+  select,
 });
 </script>
 
@@ -339,22 +455,44 @@ defineExpose({
         </span>
 
         <input
+          ref="inputRef"
           :value="displayValue"
           type="tel"
           inputmode="numeric"
           autocomplete="tel"
           dir="ltr"
           data-slot="tel-input-field"
+          :name="props.name"
           :disabled="props.disabled || props.loading"
           :placeholder="effectivePlaceholder"
           :aria-label="messages.phoneInputLabel"
           :aria-invalid="visibleValidationState === 'error' || undefined"
           :aria-describedby="describedBy"
+          :aria-errormessage="visibleValidationState === 'error' ? helperId : undefined"
+          :aria-busy="props.validating || undefined"
           :class="cn('a-tel-input__input', props.inputClass)"
           :data-has-dial="selectedDialCode ? '' : undefined"
           @input="handlePhoneInput"
           @change="handlePhoneChange"
+          @blur="handleBlur"
+          @focus="handleFocus"
         />
+
+        <!-- Async-validation spinner (e.g. server-side "phone exists?" check). Independent
+             of `isDetecting` (which is for country detection) so both can be shown without
+             interfering. Lives next to the input and never disables it. -->
+        <Transition name="a-tell-detect">
+          <div
+            v-if="props.validating"
+            class="a-tel-input__validating"
+            data-slot="tel-input-validating"
+            aria-hidden="true"
+          >
+            <slot name="validating">
+              <SpinnerIcon class="a-tel-input__detecting-icon" />
+            </slot>
+          </div>
+        </Transition>
 
         <!-- Detection-in-flight spinner — shown only during the first debounce window,
              before the picker has appeared. Once the picker is visible (success OR a failed
@@ -383,7 +521,7 @@ defineExpose({
             data-slot="tel-input-country-wrapper"
           >
             <ACountrySelect
-              v-model:selected="selectedIso2"
+              :selected="selectedIso2"
               :allowed-dial-codes="props.allowedDialCodes"
               :disabled="props.disabled || props.loading"
               :size="props.size"
@@ -394,6 +532,7 @@ defineExpose({
               :suggested-label="messages.suggestedLabel"
               :all-countries-label="messages.allCountriesLabel"
               :country-label="messages.countryLabel"
+              @update:selected="onPickerPick"
               :select-country-label="messages.selectCountryLabel"
               :flag-url="props.flagUrl"
               :searcher="props.searcher"
@@ -628,7 +767,8 @@ defineExpose({
   padding-inline-start: 0.25rem;
 }
 
-.a-tel-input__detecting {
+.a-tel-input__detecting,
+.a-tel-input__validating {
   display: inline-flex;
   height: 100%;
   flex-shrink: 0;

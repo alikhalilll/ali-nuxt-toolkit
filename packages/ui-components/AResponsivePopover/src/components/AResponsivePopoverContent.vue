@@ -47,9 +47,13 @@ const mergedClass = computed(() => [
   isDesktop.value ? props.popoverClass : props.drawerClass,
 ]);
 
-// Sticky-safe scroll lock — only active while the popover is open on desktop and the root
-// asked for the event-based strategy. The getter resolves every responsive popover content
-// element currently in the DOM, which lets stacked popovers share the lock cleanly.
+// Sticky-safe scroll lock — active in both the desktop popover and the mobile drawer when
+// the root asked for the event-based strategy. The getter resolves every responsive popover
+// content element currently in the DOM (popover or drawer, since both carry the data attr
+// below), which lets stacked / responsive surfaces share the lock cleanly. On mobile this
+// stops the page underneath the drawer from scrolling while still letting the drawer's
+// inner list scroll via `canConsume()` boundary detection; `vaul-vue`'s drag-to-dismiss is
+// built on pointer events (not touchmove) and is therefore unaffected.
 useEventScrollLock({
   allowedScrollContainer: () => {
     if (typeof document === 'undefined') return [];
@@ -57,7 +61,7 @@ useEventScrollLock({
       document.querySelectorAll<HTMLElement>('[data-responsive-popover-scroll-container="true"]')
     );
   },
-  active: computed(() => !!ctx?.open.value && isDesktop.value && scrollLockMode.value === 'events'),
+  active: computed(() => !!ctx?.open.value && scrollLockMode.value === 'events'),
 });
 </script>
 
@@ -74,7 +78,12 @@ useEventScrollLock({
   >
     <slot />
   </APopoverContent>
-  <ADrawerContent v-else :class="mergedClass" data-slot="responsive-popover-content">
+  <ADrawerContent
+    v-else
+    :class="mergedClass"
+    data-slot="responsive-popover-content"
+    data-responsive-popover-scroll-container="true"
+  >
     <slot />
   </ADrawerContent>
 </template>

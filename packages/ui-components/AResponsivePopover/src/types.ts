@@ -10,14 +10,15 @@ export interface AResponsivePopoverProps {
    */
   modal?: boolean;
   /**
-   * How desktop page scroll is blocked while the popover is open:
-   * - `'events'` (default) — wheel/touch/keyboard intercepted at document level.
-   *   Page scrollbar stays visible; `position: sticky` keeps working.
-   * - `'body'` — legacy `document.body.style.overflow='hidden'` lock. Use when the
-   *   page must reflow as the scrollbar goes away.
+   * How page scroll is blocked while the popover (desktop) or drawer (mobile) is open:
+   * - `'events'` (default) — wheel / touch / keyboard intercepted at document level.
+   *   Page scrollbar stays visible, `position: sticky` keeps working, the picker's own
+   *   inner list still scrolls, and `vaul-vue`'s pointer-based drag-to-dismiss is unaffected.
+   * - `'body'` — legacy `document.body.style.overflow='hidden'` lock. Use when the page
+   *   must reflow as the scrollbar goes away.
    * - `'none'` — no page-scroll lock at all.
    *
-   * Drawer (mobile) branch is unaffected — vaul-vue owns its own lock.
+   * The same mode applies to both the desktop popover and the mobile drawer.
    */
   scrollLock?: ScrollLockMode;
 }

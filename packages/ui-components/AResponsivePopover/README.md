@@ -53,12 +53,12 @@ const open = ref(false);
 
 ### `AResponsivePopover` (root)
 
-| Prop         | Type                           | Default              | Description                                                                                                |
-| ------------ | ------------------------------ | -------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `open`       | `boolean`                      | —                    | `v-model:open`.                                                                                            |
-| `breakpoint` | `string`                       | `(min-width: 768px)` | Media query for the desktop break; below it, the drawer renders.                                           |
-| `scrollLock` | `'events' \| 'body' \| 'none'` | `events`             | How desktop page-scroll is blocked while open (`events` keeps the scrollbar + `position: sticky` working). |
-| `modal`      | `boolean`                      | `true`               | **Deprecated** — prefer `scrollLock`. `false` ≈ `scrollLock="none"`.                                       |
+| Prop         | Type                           | Default              | Description                                                                                                                                     |
+| ------------ | ------------------------------ | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `open`       | `boolean`                      | —                    | `v-model:open`.                                                                                                                                 |
+| `breakpoint` | `string`                       | `(min-width: 768px)` | Media query for the desktop break; below it, the drawer renders.                                                                                |
+| `scrollLock` | `'events' \| 'body' \| 'none'` | `events`             | How page-scroll is blocked while the popover (desktop) or drawer (mobile) is open. `'events'` keeps the scrollbar + `position: sticky` working. |
+| `modal`      | `boolean`                      | `true`               | **Deprecated** — prefer `scrollLock`. `false` ≈ `scrollLock="none"`.                                                                            |
 
 Emits `update:open`. The default slot receives `{ isDesktop }` so you can branch content without a
 separate `useMediaQuery`.

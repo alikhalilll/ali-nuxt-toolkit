@@ -16,7 +16,10 @@
     "@alikhalilll/a-popover": "workspace:*",
     "@alikhalilll/a-drawer": "workspace:*",
     "@alikhalilll/a-responsive-popover": "workspace:*",
-    "@alikhalilll/a-tel-input": "workspace:*"
+    "@alikhalilll/a-tel-input": "workspace:*",
+    "@vee-validate/zod": "^4.13.0",
+    "vee-validate": "^4.13.0",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.0.0",

@@ -6,8 +6,11 @@ import type {
   PhoneValidationReason,
   PhoneValidationResult,
 } from './composables/usePhoneValidation';
+import type { ATelInputValidateOn } from './composables/useTelInputValidation';
 import type { FlagUrlBuilder } from './utils/flag-url';
 import type { Size } from '@alikhalilll/a-ui-base';
+
+export type { ATelInputValidateOn } from './composables/useTelInputValidation';
 
 /** Alias for the shared `Size` scale — kept for backwards-friendly naming. */
 export type ATelInputSize = Size;
@@ -61,6 +64,48 @@ export type TelInputMessagesInput = Partial<Omit<TelInputMessages, 'errorMessage
 
 export interface ATelInputProps {
   class?: HTMLAttributes['class'];
+  /**
+   * Default `v-model` — the canonical **E.164** string (e.g. `'+201066105963'`).
+   *
+   * Reads + writes the full international number as a single value. Designed to drop
+   * straight into VeeValidate's `<Field v-slot="{ field }">` pattern (use
+   * `v-bind="field"`), native `<form>` submission, or any `v-model="phoneE164"` consumer.
+   *
+   * Stays in sync with the split `v-model:phone` + `v-model:country` contract — use
+   * either, or both.
+   */
+  modelValue?: string;
+  /**
+   * Forwarded to the inner `<input name="">`. Set this when participating in a native
+   * `<form>` submission, or when a form library (VeeValidate, etc.) wants a stable name.
+   */
+  name?: string;
+  /**
+   * Externally controlled error message. When set to a non-empty string the component
+   * is forced into the error visual state and renders this message via the `#error`
+   * slot — overriding internal libphonenumber validation. Wire this from VeeValidate,
+   * Zod, an async server check ("this phone is already registered"), or any custom
+   * validation layer.
+   *
+   * Pass `null` / `undefined` / `''` to defer to internal validation.
+   */
+  error?: string | null;
+  /**
+   * `true` while an async validation is in flight (e.g. a server-side uniqueness
+   * check). Renders a small spinner inside the field and sets `aria-busy="true"` on
+   * the input. Does **not** disable the field — use `loading` for that. Replace the
+   * spinner via the `#validating` slot.
+   *
+   * Designed to be bound to the `validating` ref returned by `useTelField()`.
+   */
+  validating?: boolean;
+  /**
+   * When to surface validation in the UI.
+   * - `'change'` (default) — visible state mirrors the typing-paused state.
+   * - `'blur'` — stays idle until the input has been blurred once (form-library friendly).
+   * - `'eager'` — mirror raw validation immediately, no typing pause.
+   */
+  validateOn?: ATelInputValidateOn;
   placeholder?: string;
   disabled?: boolean;
   loading?: boolean;
@@ -284,17 +329,52 @@ export interface ATelInputSlots {
   empty?: (props: { query: string }) => unknown;
   /** Replace the spinner shown in the picker slot during the debounce window. */
   detecting?: () => unknown;
+  /** Replace the spinner shown inside the field while async validation is in flight. */
+  validating?: () => unknown;
 }
 
 /**
  * Emit map for {@link ATelInput}. `update:phone` carries the digits-only string,
  * `update:country` carries the dial-number (not ISO2). Surface for consumers who
  * wire the events manually instead of via `v-model:phone` / `v-model:country`.
+ *
+ * `blur` / `focus` mirror the inner input's native events — useful for form
+ * libraries (VeeValidate's `handleBlur`, etc.).
  */
 export type ATelInputEmits = {
+  'update:modelValue': [value: string];
   'update:phone': [value: string];
   'update:country': [value: number | null];
+  blur: [event: FocusEvent];
+  focus: [event: FocusEvent];
 };
+
+/**
+ * Imperative API exposed by {@link ATelInput} via `defineExpose`. Grab it with
+ * `ref="tellRef"` + `tellRef.value?.focus()` — useful for form libraries that want
+ * to focus the offending field after a failed submit.
+ */
+export interface ATelInputExpose {
+  /** Full {@link PhoneValidationResult} for the current input. */
+  validation: import('vue').ComputedRef<PhoneValidationResult>;
+  /** Format hint + example for the currently selected country, or `null`. */
+  required: import('vue').ComputedRef<unknown>;
+  /** Selected country's dial code as a `+`-prefixed string (e.g. `+20`), or `null`. */
+  selectedDialCode: import('vue').ComputedRef<string | null>;
+  /** Raw validation state — not gated by typing pause / blur / `showValidation`. */
+  validationState: import('vue').ComputedRef<'idle' | 'valid' | 'error'>;
+  /** Surfacing-gated validation state — the one the UI actually displays. */
+  visibleValidationState: import('vue').ComputedRef<'idle' | 'valid' | 'error'>;
+  isDetecting: Readonly<import('vue').Ref<boolean>>;
+  hasFinishedTyping: Readonly<import('vue').Ref<boolean>>;
+  detectionAttempted: Readonly<import('vue').Ref<boolean>>;
+  /** Programmatically focus the inner `<input>`. */
+  focus(options?: FocusOptions): void;
+  /** Programmatically blur the inner `<input>`. */
+  blur(): void;
+  /** Programmatically select the inner `<input>`'s text. */
+  select(): void;
+}
 
 /**
  * Props for {@link ACountrySelect} — the standalone country picker. Surface
