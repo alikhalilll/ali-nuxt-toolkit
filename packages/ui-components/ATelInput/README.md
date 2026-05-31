@@ -34,23 +34,29 @@ bun add @alikhalilll/a-tel-input
 
 ## Why this component
 
-- **Detects the country from what the user types** — debounced parse against the full
-  libphonenumber metadata, NANP-aware. The picker stays hidden until a leading dial code
-  is recognised, so the field starts as a single clean input.
+- **Universal country detection** — debounced parse against the **full libphonenumber
+  metadata (~250 countries)**. Works with international format (`+201066105963`) AND
+  local format (`01066105963`), with NANP disambiguation and a hint-priority chain
+  (env → current → recents → popular → all). No "only the popular countries" caveats.
 - **Validates and formats** — error reasons, format hint, E.164 output, every keystroke.
 - **Responsive surface** — popover on desktop, bottom-sheet drawer on mobile, sticky-safe
-  scroll lock on both. The page underneath never scrolls; the inner picker list does.
-- **Headless slots for every region** — the trigger, the chevron, the flag, each item,
-  the search bar, the error message, the hint. Restyle the field down to the pixel
-  without forking the logic.
+  scroll lock on **both**. The page underneath never scrolls; the inner picker list does.
+- **Headless slots for every region** — trigger, chevron, flag, item, search, hint,
+  error. Restyle the field down to the pixel without forking the logic.
 - **First-class form-library integration** — controlled `error` prop, `@blur` event,
   `useTelField()` composable for VeeValidate, `zPhone()` factory for Zod schemas, and a
   `validating` spinner for async server-side checks ("is this number already registered?").
+- **Two binding contracts, your pick** — single default `v-model` (E.164 string, drops
+  into VeeValidate's `<Field v-slot="{ field }">` via `v-bind="field"`), or split
+  `v-model:phone` + `v-model:country`. Both stay in sync.
 - **i18n + RTL out of the box** — country names localised via `Intl.DisplayNames`,
   alternative numerals (Arabic-Indic, Persian, Devanagari, Bengali) folded to ASCII on
   input, RTL inherited from the page or forced via `dir`.
-- **SSR-safe** — country detection runs only after mount, hydration is clean, no
-  flash-of-empty-content for non-detected pages.
+- **Efficient by default** — REST Countries fetch + IP geolocation request deduped to
+  one network call per page across every `<ATelInput>` / `<ACountrySelect>` /
+  `useTelField()` / `zPhone()` instance. LRU-cached matcher. `FALLBACK_COUNTRIES`
+  pre-seeded into the lookup indexes so detection works synchronously from first paint.
+- **SSR-safe** — country detection runs only after mount, hydration is clean.
 - **TypeScript-first** — every prop, slot, and event fully typed; web-types ship for
   JetBrains IDEs.
 
@@ -271,21 +277,35 @@ validates a single canonical value while the component still binds to two v-mode
 
 ### Server-side validation ("is this phone already registered?")
 
-VeeValidate's `rules` accept an **async function** — that's the only ingredient you need.
-The component already surfaces external errors via `error` and async-in-flight state via
-`validating`, so wiring a server check is a one-liner:
+> **Important** — VeeValidate **ignores field-level `rules`** when `useForm` is given a
+> `validationSchema`. To run an async server check, chain it onto the schema itself via
+> `z.refine(async)`. `handleSubmit` awaits the schema, and `meta.pending` (which drives
+> `useTelField`'s `validating` ref → the in-field spinner) follows the schema's async work.
 
 ```ts
-const { phone, country, error, handleBlur, fieldProps, validating } = useTelField('phone', {
-  rules: async (value: string) => {
-    // 1. Fail fast on syntactically invalid numbers — don't burn an API call.
-    const sync = await zPhone().safeParseAsync(value);
-    if (!sync.success) return sync.error.issues[0]!.message;
+import { useForm } from 'vee-validate';
+import { toTypedSchema } from '@vee-validate/zod';
+import { z } from 'zod';
+import { useTelField } from '@alikhalilll/a-tel-input/vee-validate';
+import { zPhone } from '@alikhalilll/a-tel-input/zod';
 
-    // 2. Hit your endpoint. Anything truthy = error message; `true` = valid.
+// Build the schema: sync zPhone() first (cheap — runs locally via libphonenumber-js),
+// then an async refine that hits your server. Refines run AFTER the parent passes, so
+// the server is only contacted when the value is syntactically valid.
+const phoneSchema = zPhone().refine(
+  async (value) => {
+    if (!value) return true;
     const { exists } = await $fetch('/api/phone/exists', { query: { phone: value } });
-    return exists ? 'This phone number is already registered.' : true;
+    return !exists;
   },
+  { message: 'This phone number is already registered.' }
+);
+
+const { handleSubmit } = useForm({
+  validationSchema: toTypedSchema(z.object({ phone: phoneSchema })),
+});
+
+const { phone, country, error, handleBlur, fieldProps, validating } = useTelField('phone', {
   validateOn: 'blur',
 });
 ```
@@ -305,6 +325,8 @@ const { phone, country, error, handleBlur, fieldProps, validating } = useTelFiel
 - `error` displays the server message in the existing error region.
 - `validating` is `true` while the request is in flight — renders a small spinner inside
   the field and sets `aria-busy="true"`. It does **not** disable the input.
+- `handleSubmit` awaits the async refine before invoking your callback, so a failing
+  server check blocks submission automatically.
 
 ### Native HTML forms
 
@@ -414,17 +436,19 @@ Reach these via `<ATelInput ref="tel" />` → `tel.value?.<method>()`:
 Re-exported from the main entry — compose your own field from the same primitives the
 component uses.
 
-| Symbol                    | Source path                             | Purpose                                                                                                                      |
-| ------------------------- | --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `usePhoneValidation`      | `@alikhalilll/a-tel-input`              | The libphonenumber-js wrapper — `validate`, `getRequiredInfo`, `searchCountries`, `getCountryByValue`, `getCountriesByDial`. |
-| `useCountryMatching`      | `@alikhalilll/a-tel-input`              | Longest-prefix dial-code matching with tier-3 NANP tie-break.                                                                |
-| `detectCountry`           | `@alikhalilll/a-tel-input`              | The IP → timezone → locale → default chain (callable standalone).                                                            |
-| `useTypingPhase`          | `@alikhalilll/a-tel-input`              | Debounced typing-pause state machine.                                                                                        |
-| `useTelInputValidation`   | `@alikhalilll/a-tel-input`              | View-layer facade (visible state, error message, show flags).                                                                |
-| `useTelField`             | `@alikhalilll/a-tel-input/vee-validate` | VeeValidate adapter — see [Form integration](#form-integration).                                                             |
-| `zPhone` / `zPhoneObject` | `@alikhalilll/a-tel-input/zod`          | Zod schema factories — see [Form integration](#form-integration).                                                            |
-| `normalizeDigits`         | `@alikhalilll/a-tel-input`              | Fold Arabic-Indic / Persian / Devanagari / Bengali numerals → ASCII.                                                         |
-| `defaultFlagUrl`          | `@alikhalilll/a-tel-input`              | Default flagcdn URL builder.                                                                                                 |
+| Symbol                    | Source path                             | Purpose                                                                                                                                                                     |
+| ------------------------- | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `usePhoneValidation`      | `@alikhalilll/a-tel-input`              | The libphonenumber-js wrapper — `validate`, `getRequiredInfo`, `searchCountries`, `getCountryByValue`, `getCountriesByDial`.                                                |
+| `useCountryMatching`      | `@alikhalilll/a-tel-input`              | Longest-prefix dial-code matching with tier-3 NANP tie-break.                                                                                                               |
+| `detectCountry`           | `@alikhalilll/a-tel-input`              | The IP → timezone → locale → default chain (callable standalone).                                                                                                           |
+| `useTypingPhase`          | `@alikhalilll/a-tel-input`              | Debounced typing-pause state machine.                                                                                                                                       |
+| `useTelInputValidation`   | `@alikhalilll/a-tel-input`              | View-layer facade (visible state, error message, show flags).                                                                                                               |
+| `useCountrySelection`     | `@alikhalilll/a-tel-input`              | Picker selection state machine (`iso2` + `source` enum + `detectionLocked`). The single state machine the component uses internally — useful when composing your own field. |
+| `useSyncedModel`          | `@alikhalilll/a-tel-input`              | Generic bidirectional sync between a `defineModel` ref and internal state, with the echo-loop guard built in. Reusable in any v-model bridge.                               |
+| `useTelField`             | `@alikhalilll/a-tel-input/vee-validate` | VeeValidate adapter — see [Form integration](#form-integration).                                                                                                            |
+| `zPhone` / `zPhoneObject` | `@alikhalilll/a-tel-input/zod`          | Zod schema factories — see [Form integration](#form-integration).                                                                                                           |
+| `normalizeDigits`         | `@alikhalilll/a-tel-input`              | Fold Arabic-Indic / Persian / Devanagari / Bengali numerals → ASCII.                                                                                                        |
+| `defaultFlagUrl`          | `@alikhalilll/a-tel-input`              | Default flagcdn URL builder.                                                                                                                                                |
 
 ---
 

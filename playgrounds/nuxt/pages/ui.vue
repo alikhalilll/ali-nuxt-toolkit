@@ -123,8 +123,19 @@ function fakePhoneExistsCheck(value: string): Promise<{ exists: boolean }> {
 const submitState = ref<'idle' | 'submitting' | 'done'>('idle');
 const submittedValue = ref<string | null>(null);
 
+// Async server-side check lives in the form schema (vee-validate ignores field-level
+// `rules` when useForm has a `validationSchema`).
+const phoneSchema = zPhone().refine(
+  async (value) => {
+    if (!value) return true;
+    const { exists } = await fakePhoneExistsCheck(value);
+    return !exists;
+  },
+  { message: 'This phone number is already registered.' }
+);
+
 const { handleSubmit, resetForm } = useForm({
-  validationSchema: toTypedSchema(z.object({ phone: zPhone() })),
+  validationSchema: toTypedSchema(z.object({ phone: phoneSchema })),
 });
 
 const {
@@ -135,12 +146,6 @@ const {
   fieldProps: formFieldProps,
   validating: formValidating,
 } = useTelField('phone', {
-  rules: async (value: string) => {
-    const sync = await zPhone().safeParseAsync(value);
-    if (!sync.success) return sync.error.issues[0]!.message;
-    const { exists } = await fakePhoneExistsCheck(value);
-    return exists ? 'This phone number is already registered.' : true;
-  },
   validateOn: 'blur',
   defaultCountry: 'SA',
 });

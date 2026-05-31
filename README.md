@@ -182,17 +182,29 @@ const { handleSubmit } = useForm({
 
 ### Server-side validation (e.g. "is this phone already registered?")
 
+Chain the async check onto the form schema via `z.refine(async)` — `handleSubmit` awaits it before invoking your callback, and the in-field spinner (`useTelField`'s `validating`) follows the schema's async work via `meta.pending`.
+
 ```ts
+import { useForm } from 'vee-validate';
+import { toTypedSchema } from '@vee-validate/zod';
+import { z } from 'zod';
 import { useTelField } from '@alikhalilll/a-tel-input/vee-validate';
 import { zPhone } from '@alikhalilll/a-tel-input/zod';
 
-const { phone, country, error, handleBlur, fieldProps, validating } = useTelField('phone', {
-  rules: async (value: string) => {
-    const sync = await zPhone().safeParseAsync(value);
-    if (!sync.success) return sync.error.issues[0]!.message;
+const phoneSchema = zPhone().refine(
+  async (value) => {
+    if (!value) return true;
     const { exists } = await $fetch('/api/phone/exists', { query: { phone: value } });
-    return exists ? 'This phone number is already registered.' : true;
+    return !exists;
   },
+  { message: 'This phone number is already registered.' }
+);
+
+const { handleSubmit } = useForm({
+  validationSchema: toTypedSchema(z.object({ phone: phoneSchema })),
+});
+
+const { phone, country, error, handleBlur, fieldProps, validating } = useTelField('phone', {
   validateOn: 'blur',
 });
 ```

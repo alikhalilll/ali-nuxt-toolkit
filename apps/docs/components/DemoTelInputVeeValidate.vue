@@ -21,21 +21,25 @@ function fakeServerCheck(value: string): Promise<{ exists: boolean }> {
 const submitState = ref<'idle' | 'submitting' | 'done'>('idle');
 const submittedValue = ref<string | null>(null);
 
-// `useForm` from vee-validate scopes `useField` calls. The schema runs first; the async
-// `rules` callback below runs on top, so we only hit the "server" if the Zod check passes.
+// Server-side validation lives in the FORM SCHEMA (not in useField's `rules`) because
+// vee-validate ignores field-level rules whenever `useForm` is given a `validationSchema`.
+// Chaining `.refine(async)` onto `zPhone()` means the async server check runs as part of
+// schema validation — which is what `handleSubmit` actually awaits before submitting, and
+// which drives `meta.pending` (used by `useTelField`'s `validating` ref → field spinner).
+const phoneSchema = zPhone().refine(
+  async (value) => {
+    if (!value) return true; // empty is handled by zPhone() itself
+    const { exists } = await fakeServerCheck(value);
+    return !exists;
+  },
+  { message: 'This phone number is already registered.' }
+);
+
 const { handleSubmit, resetForm } = useForm({
-  validationSchema: toTypedSchema(z.object({ phone: zPhone() })),
+  validationSchema: toTypedSchema(z.object({ phone: phoneSchema })),
 });
 
 const { phone, country, error, handleBlur, fieldProps, validating } = useTelField('phone', {
-  rules: async (value: string) => {
-    // Zod already ran via the form schema — only reach the server when the value is
-    // syntactically valid. This avoids burning a network call on every keystroke.
-    const sync = await zPhone().safeParseAsync(value);
-    if (!sync.success) return sync.error.issues[0]!.message;
-    const { exists } = await fakeServerCheck(value);
-    return exists ? 'This phone number is already registered.' : true;
-  },
   validateOn: 'blur',
   defaultCountry: 'SA',
 });
@@ -61,18 +65,23 @@ import { useForm } from 'vee-validate';
 import { toTypedSchema } from '@vee-validate/zod';
 import { z } from 'zod';
 
+// Async server-side check lives inside the form schema via z.refine(async).
+// vee-validate ignores field-level rules when the form has a validationSchema,
+// so async validation MUST be part of the schema to actually run.
+const phoneSchema = zPhone().refine(
+  async (value) => {
+    if (!value) return true;
+    const { exists } = await $fetch('/api/phone/exists', { query: { phone: value } });
+    return !exists;
+  },
+  { message: 'This phone number is already registered.' }
+);
+
 const { handleSubmit } = useForm({
-  validationSchema: toTypedSchema(z.object({ phone: zPhone() })),
+  validationSchema: toTypedSchema(z.object({ phone: phoneSchema })),
 });
 
 const { phone, country, error, handleBlur, fieldProps, validating } = useTelField('phone', {
-  // Async rule: sync-validate first (cheap), then hit the server.
-  rules: async (value) => {
-    const sync = await zPhone().safeParseAsync(value);
-    if (!sync.success) return sync.error.issues[0]!.message;
-    const { exists } = await $fetch('/api/phone/exists', { query: { phone: value } });
-    return exists ? 'This phone number is already registered.' : true;
-  },
   validateOn: 'blur',
   defaultCountry: 'SA',
 });

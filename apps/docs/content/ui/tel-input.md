@@ -16,12 +16,14 @@ order: 1
 
 ### What's in the box
 
-- **Smart country detection** — debounced parse of every keystroke against the full libphonenumber metadata. NANP-aware tie-breaks, IP + timezone + locale chain as a silent hint on mount.
+- **Universal country detection** — debounced parse against the **full libphonenumber metadata (~250 countries)**, with a priority chain (env hint → current → recents → popular shortlist → all countries). Works for international format (`+201066105963`) AND local format (`01066105963` resolves to Egypt even when the env hint is Saudi).
 - **libphonenumber-js validation** — seven failure reasons, format hint, E.164 output, all reactive.
-- **Responsive picker** — popover on desktop, vaul-vue bottom-sheet on mobile, sticky-safe scroll lock on both (the page underneath never scrolls; the picker's inner list does).
+- **Responsive picker** — popover on desktop, vaul-vue bottom-sheet on mobile, sticky-safe scroll lock on **both** (the page underneath never scrolls; the picker's inner list does).
 - **Form-library ready** — controlled `error` prop, `@blur` event, `useTelField()` composable for VeeValidate, `zPhone()` factory for Zod, plus an in-field spinner for async server-side validation.
+- **Two binding contracts** — single `v-model` (E.164 string, drops into VeeValidate's `<Field v-slot="{ field }">` via `v-bind="field"`) or split `v-model:phone` + `v-model:country`. Both stay in sync.
 - **i18n + RTL** — country names via `Intl.DisplayNames`, numerals localised in the format hint, RTL inherited from the page, alternative numerals (Arabic-Indic, Persian, Devanagari, Bengali) folded to ASCII on input.
 - **Headless slots** for every visual region — trigger, chevron, flag, item, search, hint, error, the lot.
+- **Efficient by default** — REST Countries fetch + IP geolocation request deduped to one network call per page across every `<ATelInput>` / `<ACountrySelect>` / `useTelField()` / `zPhone()` instance. LRU-cached matcher.
 - **SSR-safe** — country detection runs after mount, hydration is clean.
 - **TypeScript-first** — every prop, slot, and event typed; web-types ship for JetBrains IDEs.
 
@@ -281,18 +283,24 @@ import { useForm } from 'vee-validate';
 import { toTypedSchema } from '@vee-validate/zod';
 import { z } from 'zod';
 
+// Important: vee-validate ignores field-level `rules` when `useForm` has a
+// `validationSchema`. To run an async server check, chain it onto the schema via
+// `z.refine(async)` — that's what `handleSubmit` actually awaits, and what drives
+// `useTelField`'s `validating` ref (via `meta.pending` → in-field spinner).
+const phoneSchema = zPhone().refine(
+  async (value) => {
+    if (!value) return true;
+    const { exists } = await $fetch('/api/phone/exists', { query: { phone: value } });
+    return !exists;
+  },
+  { message: 'This phone number is already registered.' }
+);
+
 const { handleSubmit } = useForm({
-  validationSchema: toTypedSchema(z.object({ phone: zPhone() })),
+  validationSchema: toTypedSchema(z.object({ phone: phoneSchema })),
 });
 
 const { phone, country, error, handleBlur, fieldProps, validating } = useTelField('phone', {
-  // Async rule — server-side uniqueness check. Runs after the sync schema passes.
-  rules: async (value) => {
-    const sync = await zPhone().safeParseAsync(value);
-    if (!sync.success) return sync.error.issues[0]!.message;
-    const { exists } = await $fetch('/api/phone/exists', { query: { phone: value } });
-    return exists ? 'This phone number is already registered.' : true;
-  },
   validateOn: 'blur',
   defaultCountry: 'SA',
 });

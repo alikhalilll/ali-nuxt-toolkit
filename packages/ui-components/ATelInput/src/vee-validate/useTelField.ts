@@ -57,9 +57,15 @@ import type { ATelInputValidateOn } from '../composables/useTelInputValidation';
 
 export interface UseTelFieldOptions {
   /**
-   * VeeValidate rules — a function, schema, or string. Most commonly used with
-   * `toTypedSchema(zPhone(...))` from `@vee-validate/zod`. Can be **async** for
-   * server-side checks (e.g. uniqueness).
+   * VeeValidate rules — a function, schema, or string. Use when the field stands
+   * alone (no `useForm` / no form-level `validationSchema`).
+   *
+   * **Important**: vee-validate **ignores field-level `rules` whenever the parent
+   * `useForm` is configured with `validationSchema`**. If you need async / server-
+   * side validation inside a form, chain it onto the form schema via
+   * `z.refine(async)` instead — that's what `handleSubmit` actually awaits and what
+   * drives this composable's `validating` ref (via `meta.pending`). See the README
+   * section "Server-side validation" for the full pattern.
    */
   rules?: RuleExpression<string>;
   /**
