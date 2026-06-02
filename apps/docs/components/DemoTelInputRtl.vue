@@ -49,10 +49,7 @@ const country = ref<number | null>(null);
           />
         </div>
 
-        <pre
-          class="mt-4 whitespace-pre-wrap break-all rounded-md border border-border bg-code-bg p-3 font-mono text-[12px] text-text-dim"
-          >{{ JSON.stringify({ phone, country }, null, 2) }}</pre
-        >
+        <DocOutput class="mt-4" label="state" :value="{ phone, country }" />
       </div>
     </DemoTabs>
   </div>

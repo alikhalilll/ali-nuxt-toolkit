@@ -564,25 +564,32 @@ Three customisation vectors — stack any combination:
 
 ### Slots
 
-| Slot           | Scope                                       | Replaces                                                                  |
-| -------------- | ------------------------------------------- | ------------------------------------------------------------------------- |
-| `prefix`       | —                                           | Content at the start of the field.                                        |
-| `suffix`       | `{ validationState, validation }`           | Content at the end, after the flag trigger.                               |
-| `trigger`      | `{ selectedCountry, open, sizeClasses }`    | Entire country picker trigger.                                            |
-| `chevron`      | `{ open }`                                  | Just the chevron icon.                                                    |
-| `flag`         | `{ country, context: 'trigger' \| 'item' }` | Flag rendering (trigger + list items).                                    |
-| `search`       | `{ value, setValue, isSearching }`          | Entire search bar.                                                        |
-| `search-icon`  | —                                           | Just the leading search icon.                                             |
-| `loading`      | —                                           | Picker loading state.                                                     |
-| `empty`        | `{ query }`                                 | Empty / no-results state.                                                 |
-| `detecting`    | —                                           | Spinner shown in the picker slot during the typing-pause debounce window. |
-| `group-header` | `{ label, group: 'suggested' \| 'all' }`    | Section headers in the picker.                                            |
-| `item`         | `{ country, selected, disabled, select }`   | Entire row in the country list.                                           |
-| `item-check`   | `{ country }`                               | Right-side check icon for selected row.                                   |
-| `valid-icon`   | —                                           | Green check shown when valid.                                             |
-| `error-icon`   | `{ reason }`                                | Warning icon shown when invalid.                                          |
-| `hint`         | `{ country, formatHint, example }`          | Helper line shown below when empty.                                       |
-| `error`        | `{ message, reason, validation }`           | Error message shown below when invalid.                                   |
+| Slot            | Scope                                       | Replaces                                                                  |
+| --------------- | ------------------------------------------- | ------------------------------------------------------------------------- |
+| `prefix`        | —                                           | Content at the start of the field.                                        |
+| `suffix`        | `{ validationState, validation }`           | Content at the end, after the flag trigger.                               |
+| `trigger`       | `{ selectedCountry, open, sizeClasses }`    | Entire country picker trigger.                                            |
+| `chevron`       | `{ open }`                                  | Just the chevron icon.                                                    |
+| `selected-flag` | `{ country, open }`                         | Selected-state label rendered inside the **trigger only**.                |
+| `item-flag`     | `{ country }`                               | Flag rendered for each **popover option row** only.                       |
+| `flag`          | `{ country, context: 'trigger' \| 'item' }` | Legacy unified flag slot — fires for both locations¹.                     |
+| `search`        | `{ value, setValue, isSearching }`          | Entire search bar.                                                        |
+| `search-icon`   | —                                           | Just the leading search icon.                                             |
+| `loading`       | —                                           | Picker loading state.                                                     |
+| `empty`         | `{ query }`                                 | Empty / no-results state.                                                 |
+| `detecting`     | —                                           | Spinner shown in the picker slot during the typing-pause debounce window. |
+| `group-header`  | `{ label, group: 'suggested' \| 'all' }`    | Section headers in the picker.                                            |
+| `item`          | `{ country, selected, disabled, select }`   | Entire row in the country list.                                           |
+| `item-check`    | `{ country }`                               | Right-side check icon for selected row.                                   |
+| `valid-icon`    | —                                           | Green check shown when valid.                                             |
+| `error-icon`    | `{ reason }`                                | Warning icon shown when invalid.                                          |
+| `hint`          | `{ country, formatHint, example }`          | Helper line shown below when empty.                                       |
+| `error`         | `{ message, reason, validation }`           | Error message shown below when invalid.                                   |
+
+¹ Prefer `selected-flag` / `item-flag` over the legacy unified `flag` slot — they
+target one location at a time so a trigger restyling doesn't bleed into the popover
+list. `flag` is kept as a back-compat fallback (and is what fires when neither
+of the dedicated slots is provided).
 
 ### Data props
 

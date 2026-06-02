@@ -212,22 +212,24 @@ async function copy() {
 }
 
 /* --- Body -----------------------------------------------------------------
-   Holds the actual code. We don't style the `<pre>` directly here — the slot
-   content (Shiki HTML, hand-coded spans, raw text) already brings its own
-   `<pre>`. Font-size / line-height mirror the homepage `Showcase` panel
-   (`12.5px / 1.6`) so every code surface — prose, demo Code panes, hero —
-   shares one rhythm. The body's background is the dark `--color-code-bg`
-   while the outer frame is one shade lighter, producing the two-tone
-   editor effect. */
+   Code blocks use `line-height: 1` for maximum compactness — rows are flush.
+   Standalone `<pre>` runtime-output blocks (paired rule in `docs.css`) get
+   `1.5` instead so descender-heavy JSON keys read comfortably. */
 .doc-code__body {
   position: relative;
   max-height: 480px;
   overflow: auto;
   font-size: 12.5px;
-  line-height: 1.6;
+  line-height: 1;
   background: var(--color-code-bg);
   border-radius: 0 0 8px 8px;
   counter-reset: doc-code-line;
+}
+.doc-code__body,
+.doc-code__body pre,
+.doc-code__body code,
+.doc-code__body .line {
+  line-height: 1.3;
 }
 .doc-code:not(.doc-code--has-bar) .doc-code__body {
   border-radius: 8px;
@@ -244,20 +246,35 @@ async function copy() {
 .doc-code__body .shiki,
 .doc-code__body .shiki-fallback {
   margin: 0;
-  /* `14px 0` matches the Showcase panel's vertical padding. Horizontal
+  /* Compact `10px 0` vertical padding — tight editor density. Horizontal
      padding sits on the inner `.line` elements so the gutter alignment is
      consistent. */
-  padding: 14px 0;
+  padding: 10px 0;
   background: transparent !important;
   background-color: transparent !important;
   font-family: inherit;
   font-size: inherit;
-  line-height: inherit;
+  line-height: 1.5 !important;
   color: inherit;
   white-space: pre;
   overflow-x: auto;
   border: 0;
   border-radius: 0;
+}
+/* Shiki's HTML output looks like:
+     <code><span class="line">…</span>\n<span class="line">…</span>\n…</code>
+   Inside a `<pre>` those `\n` text nodes between line spans are real
+   characters and combine with `.line { display: block }` to render TWO
+   line breaks per source line — one from the block-level `.line`, one
+   from the preserved `\n`. Drop the font-size of the bare `<code>` to
+   zero so the inter-line `\n` text nodes have no rendered height, then
+   restore the real font-size on `.line` for the actual code spans.
+   Result: one source line = one rendered line, no airy blanks between. */
+.doc-code__body code {
+  font-size: 0;
+}
+.doc-code__body .line {
+  font-size: 12.5px;
 }
 .doc-code__body code,
 .doc-code__body .line,

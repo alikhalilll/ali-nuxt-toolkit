@@ -304,12 +304,19 @@ defineExpose({
               : props.selectCountryLabel
           "
         >
-          <slot v-if="selectedCountry" name="flag" :country="selectedCountry" context="trigger">
-            <ACountryFlag
-              :iso2="selectedCountry.raw_data.iso2"
-              :src="selectedCountry.raw_data.flag"
-              :flag-url="props.flagUrl"
-            />
+          <!-- Trigger flag — dedicated slot `selected-flag` so consumers can
+               restyle the selected-state label without affecting the option
+               list inside the popover. Falls back to the legacy unified
+               `flag` slot (with `context="trigger"`) when `selected-flag`
+               isn't provided, so existing consumers keep working unchanged. -->
+          <slot v-if="selectedCountry" name="selected-flag" :country="selectedCountry" :open="open">
+            <slot name="flag" :country="selectedCountry" context="trigger">
+              <ACountryFlag
+                :iso2="selectedCountry.raw_data.iso2"
+                :src="selectedCountry.raw_data.flag"
+                :flag-url="props.flagUrl"
+              />
+            </slot>
           </slot>
           <slot name="chevron" :open="open">
             <ChevronDownIcon class="a-country-select__chevron" :data-open="open ? '' : undefined" />
@@ -415,12 +422,18 @@ defineExpose({
                     class="a-country-select__item"
                     @click="selectCountry(option)"
                   >
-                    <slot name="flag" :country="option" context="item">
-                      <ACountryFlag
-                        :iso2="option.raw_data.iso2"
-                        :src="option.raw_data.flag"
-                        :flag-url="props.flagUrl"
-                      />
+                    <!-- Item flag — dedicated `item-flag` slot, mirrors
+                         `selected-flag` in the trigger. Falls back to the
+                         legacy `flag` slot (with `context="item"`) for
+                         back-compat with consumers that haven't migrated. -->
+                    <slot name="item-flag" :country="option">
+                      <slot name="flag" :country="option" context="item">
+                        <ACountryFlag
+                          :iso2="option.raw_data.iso2"
+                          :src="option.raw_data.flag"
+                          :flag-url="props.flagUrl"
+                        />
+                      </slot>
                     </slot>
                     <span class="a-country-select__item-name">{{ option.raw_data.name }}</span>
                     <span class="a-country-select__item-dial">{{ option.raw_data.dial_code }}</span>
@@ -476,12 +489,18 @@ defineExpose({
                     class="a-country-select__item"
                     @click="selectCountry(option)"
                   >
-                    <slot name="flag" :country="option" context="item">
-                      <ACountryFlag
-                        :iso2="option.raw_data.iso2"
-                        :src="option.raw_data.flag"
-                        :flag-url="props.flagUrl"
-                      />
+                    <!-- Item flag — dedicated `item-flag` slot, mirrors
+                         `selected-flag` in the trigger. Falls back to the
+                         legacy `flag` slot (with `context="item"`) for
+                         back-compat with consumers that haven't migrated. -->
+                    <slot name="item-flag" :country="option">
+                      <slot name="flag" :country="option" context="item">
+                        <ACountryFlag
+                          :iso2="option.raw_data.iso2"
+                          :src="option.raw_data.flag"
+                          :flag-url="props.flagUrl"
+                        />
+                      </slot>
                     </slot>
                     <span class="a-country-select__item-name">{{ option.raw_data.name }}</span>
                     <span class="a-country-select__item-dial">{{ option.raw_data.dial_code }}</span>

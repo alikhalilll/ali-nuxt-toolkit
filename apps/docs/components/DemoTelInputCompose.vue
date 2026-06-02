@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { cn } from '@alikhalilll/a-ui-base';
-import { ACountrySelect, usePhoneValidation } from '@alikhalilll/a-tel-input';
+import { ACountryFlag, ACountrySelect, usePhoneValidation } from '@alikhalilll/a-tel-input';
 
 const country = ref('EG');
 const phone = ref('');
@@ -17,7 +17,7 @@ const result = computed(() =>
 const source = `<script setup lang="ts">
 import { computed, ref } from 'vue';
 import { cn } from '@alikhalilll/a-ui-base';
-import { ACountrySelect, usePhoneValidation } from '@alikhalilll/a-tel-input';
+import { ACountryFlag, ACountrySelect, usePhoneValidation } from '@alikhalilll/a-tel-input';
 
 const country = ref('EG');
 const phone = ref('');
@@ -32,33 +32,23 @@ const result = computed(() =>
 \u003c/script>
 
 <template>
-  <!-- Stacked layout: country picker on top, plain input below, live E.164 chip on the right -->
-  <div class="space-y-2 max-w-sm">
-    <div class="flex items-stretch overflow-hidden rounded-md border border-input bg-background shadow-sm">
-      <ACountrySelect v-model:selected="country" size="md" class="grow" trigger-class="w-full" />
-    </div>
+  <div class="max-w-sm space-y-2">
+    <!-- Country picker — #selected-flag targets ONLY the trigger.
+         The popover option rows keep their default flag rendering.
+         Use #item-flag if you also want to restyle each list row. -->
+    <ACountrySelect v-model:selected="country" size="md" trigger-class="w-full">
+      <template #selected-flag="{ country: selected }">
+        <span class="row">
+          <ACountryFlag :iso2="selected.raw_data.iso2" :src="selected.raw_data.flag" />
+          <span class="name">{{ selected.raw_data.name }}</span>
+        </span>
+      </template>
+    </ACountrySelect>
 
+    <!-- National-number input + live E.164 chip. -->
     <div class="flex items-center gap-2">
-      <input
-        v-model="phone"
-        type="tel"
-        inputmode="numeric"
-        placeholder="National number"
-        class="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        @input="(e) => {
-          const t = e.target as HTMLInputElement;
-          t.value = t.value.replace(/\\D/g, '');
-          phone = t.value;
-        }"
-      />
-      <div
-        :class="cn(
-          'shrink-0 rounded-md border px-2 py-1 font-mono text-xs tabular-nums',
-          result.ok
-            ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400'
-            : 'border-border bg-muted text-muted-foreground'
-        )"
-      >
+      <input v-model="phone" type="tel" inputmode="numeric" placeholder="National number" />
+      <div :class="cn('chip', result.ok && 'chip--ok')">
         {{ result.full_phone || '+?' }}
       </div>
     </div>
@@ -80,17 +70,35 @@ const result = computed(() =>
     <DemoTabs :code="source">
       <DemoStage caption="Composed from primitives">
         <div class="compose-stage__field">
-          <!-- Row 1 — full-width country trigger. The ACountrySelect's own
-               trigger is given `w-full` so it fills the visual width and the
-               row reads as a single "picker card". `ACountrySelect` has a
-               fragment root (renders reka-ui's PopoverRoot which is a slot),
-               so a regular `class` prop on the component would be discarded —
-               we wrap it in an explicit `<div>` so our `:deep()` selectors
-               below have a real element to scope against. -->
+          <!-- Row 1 — full-width country trigger.
+               Two slot overrides make this read like a native `<select>`:
+                 - `#flag` renders the flag AND the localised country name
+                   (default just renders the flag, which leaves the trigger
+                   looking unlabelled when widened to fill a row).
+                 - `#select-label` mirrors the same layout for the empty
+                   state ("Select a country…") so the row never collapses to
+                   chevron-only.
+               `ACountrySelect` has a fragment root (reka-ui's PopoverRoot is
+               a slot), so a regular `class` prop would be discarded — we
+               wrap it in an explicit `<div>` so the `:deep()` selectors in
+               `<style scoped>` have a real element to scope against. -->
           <div class="compose-stage__row compose-stage__row--picker">
             <span class="compose-stage__hint">Country</span>
             <div class="compose-stage__picker">
-              <ACountrySelect v-model:selected="country" size="md" trigger-class="w-full" />
+              <ACountrySelect v-model:selected="country" size="md" trigger-class="w-full">
+                <!-- `#selected-flag` targets ONLY the trigger — flag + country
+                     name. The popover's option rows are unaffected (they keep
+                     their default flag-only rendering, which is what most
+                     users want in a dense list). The chevron comes from the
+                     default `#chevron` slot and is pushed to the right edge
+                     by CSS — `[flag] [name] [   spacer   ] [chevron]`. -->
+                <template #selected-flag="{ country: selected }">
+                  <span class="compose-stage__picker-label">
+                    <ACountryFlag :iso2="selected.raw_data.iso2" :src="selected.raw_data.flag" />
+                    <span class="compose-stage__picker-name">{{ selected.raw_data.name }}</span>
+                  </span>
+                </template>
+              </ACountrySelect>
             </div>
           </div>
 
@@ -221,6 +229,32 @@ const result = computed(() =>
   width: 1rem;
   height: 1rem;
   color: var(--color-text-muted);
+}
+
+/* Slot label — flag + country name + dial code in one flex row inside the
+   trigger. Mirrors a typical `<select>` row layout (icon + label + meta on
+   the right). The name takes the available space and ellipsises if the row
+   is narrow; the dial code stays as a compact mono suffix. */
+.compose-stage__picker-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  color: var(--color-text);
+  font-size: 0.875rem;
+}
+.compose-stage__picker-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+.compose-stage__picker-label--empty {
+  color: var(--color-text-muted);
+  font-style: italic;
+  flex: 1;
 }
 
 /* National-number row. Stacks the hint label above its own input, so the

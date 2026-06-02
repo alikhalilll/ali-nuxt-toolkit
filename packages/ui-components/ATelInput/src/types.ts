@@ -440,7 +440,34 @@ export interface ACountrySelectSlots {
   }) => unknown;
   /** Replace the chevron icon. */
   chevron?: (props: { open: boolean }) => unknown;
-  /** Replace just the flag rendered in the trigger and items. */
+  /**
+   * Replace the selected-state label rendered inside the trigger button.
+   *
+   * Use this for trigger-only customisation — e.g. rendering flag + country
+   * name + dial code as one composed cell — without affecting how each row
+   * in the popover's country list renders. The picker's option items use
+   * {@link ACountrySelectSlots['item-flag']} (or fall back to {@link flag}).
+   *
+   * Receives the currently-selected country and the open state. Falls back
+   * to the legacy unified `flag` slot (with `context: 'trigger'`) when not
+   * provided, so consumers built against earlier versions keep working.
+   */
+  'selected-flag'?: (props: { country: CountryOption; open: boolean }) => unknown;
+  /**
+   * Replace just the flag rendered for each row inside the popover's country
+   * list. The trigger has its own dedicated {@link selected-flag} slot now —
+   * use this to customise the option rows without touching the trigger.
+   *
+   * Falls back to the legacy unified `flag` slot (with `context: 'item'`)
+   * for back-compat.
+   */
+  'item-flag'?: (props: { country: CountryOption }) => unknown;
+  /**
+   * Legacy unified flag slot. Still fires for BOTH the trigger and each
+   * option row (with `context` indicating which) so existing consumers keep
+   * working; new code should prefer {@link selected-flag} or
+   * {@link item-flag} to target one location at a time.
+   */
   flag?: (props: { country: CountryOption; context: 'trigger' | 'item' }) => unknown;
   /** Replace the entire search bar (input + icon + kbd). */
   search?: (props: {

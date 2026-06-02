@@ -44,10 +44,6 @@ const run = async () => {
     >
       {{ loading ? 'Loading…' : 'Fetch' }}
     </button>
-    <pre
-      v-if="result"
-      class="mt-3 whitespace-pre-wrap break-all rounded-md border border-border bg-code-bg p-3 font-mono text-[13px] text-text-dim"
-      >{{ result }}</pre
-    >
+    <DocOutput v-if="result" class="mt-3" label="response" :value="result" />
   </div>
 </template>

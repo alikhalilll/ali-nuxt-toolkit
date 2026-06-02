@@ -199,16 +199,8 @@ const cssSnippet = computed(() => {
   return `/* ${t.label} */\n${target.replace(/;$/, '')} {\n${lines.join('\n')}\n}`;
 });
 
-const copied = ref(false);
-async function copyCss() {
-  try {
-    await navigator.clipboard.writeText(cssSnippet.value);
-    copied.value = true;
-    setTimeout(() => (copied.value = false), 1500);
-  } catch {
-    /* ignore */
-  }
-}
+// (`copyCss` removed — `<DocOutput>` ships its own Copy button via the `code`
+// prop that DocCodeBlock surfaces in the panel's top bar.)
 </script>
 
 <template>
@@ -268,20 +260,9 @@ async function copyCss() {
       </div>
     </div>
 
-    <!-- Copy-ready CSS for the active theme -->
-    <div class="relative mt-4">
-      <pre
-        class="mt-0 whitespace-pre-wrap break-all rounded-md border border-border bg-code-bg p-3 pr-12 font-mono text-[12px] leading-relaxed text-text-dim"
-      ><code>{{ cssSnippet }}</code></pre>
-      <button
-        type="button"
-        class="absolute right-2 top-2 inline-flex h-7 items-center gap-1 rounded-md border border-border bg-surface px-2 text-[11px] font-medium text-text-dim transition-colors hover:bg-surface-2 hover:text-text"
-        :aria-label="copied ? 'Copied' : 'Copy CSS'"
-        @click="copyCss"
-      >
-        {{ copied ? '✓ Copied' : 'Copy' }}
-      </button>
-    </div>
+    <!-- Copy-ready CSS for the active theme — DocOutput ships its own copy
+         button via the `code` prop, so we drop the bespoke one above. -->
+    <DocOutput class="mt-4" lang="css" label="theme.css" :value="cssSnippet" />
 
     <p class="mt-3 text-xs text-text-muted">
       To apply globally, drop the snippet into your global CSS. To scope per-section, replace the

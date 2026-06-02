@@ -58,28 +58,23 @@ const required   = computed(() => tellRef.value?.required);
           />
         </div>
 
-        <pre
-          class="mt-4 whitespace-pre-wrap break-all rounded-md border border-border bg-code-bg p-3 font-mono text-[12px] text-text-dim"
-          >{{
-            JSON.stringify(
-              {
-                validation: validation && {
-                  ok: validation.ok,
-                  reason: validation.reason,
-                  full_phone: validation.full_phone,
-                },
-                required: required && {
-                  iso2: required.iso2,
-                  dial_code: required.dial_code,
-                  example_e164: required.example_e164,
-                  national_number_length: required.national_number_length,
-                },
-              },
-              null,
-              2
-            )
-          }}</pre
-        >
+        <DocOutput
+          class="mt-4"
+          label="state"
+          :value="{
+            validation: validation && {
+              ok: validation.ok,
+              reason: validation.reason,
+              full_phone: validation.full_phone,
+            },
+            required: required && {
+              iso2: required.iso2,
+              dial_code: required.dial_code,
+              example_e164: required.example_e164,
+              national_number_length: required.national_number_length,
+            },
+          }"
+        />
       </div>
     </DemoTabs>
   </div>

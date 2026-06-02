@@ -165,9 +165,7 @@ const theme = computed(() => {
           </div>
         </div>
 
-        <pre
-          class="mt-4 whitespace-pre-wrap break-all rounded-md border border-border bg-code-bg p-3 font-mono text-[12px] text-text-dim"
-        ><code>{{ cssSnippet }}</code></pre>
+        <DocOutput class="mt-4" lang="css" label="generated.css" :value="cssSnippet" />
       </div>
     </DemoTabs>
   </div>

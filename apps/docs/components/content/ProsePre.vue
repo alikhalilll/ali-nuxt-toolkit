@@ -28,6 +28,16 @@ defineProps<{
     :code="code"
     :class="$props.class"
   >
-    <pre><slot /></pre>
+    <!-- IMPORTANT: keep the `shiki` class on the inner `<pre>`. Nuxt Content
+         generates per-token CSS rules that look like
+           html pre.shiki code .sU953, html code.shiki .sU953
+             { --shiki-default:#…; --shiki-dark:#… }
+         For them to fire, EITHER the inner `<pre>` OR the inner `<code>` must
+         carry the `shiki` class. DocCodeBlock applies the `$props.class` to
+         its outer wrapper (for the `.shiki` background tokens), so we re-add
+         the same `shiki` class here on the inner `<pre>` to satisfy the
+         per-token selectors. Without this, every token in every prose code
+         block renders in the page's default body colour. -->
+    <pre class="shiki"><slot /></pre>
   </DocCodeBlock>
 </template>

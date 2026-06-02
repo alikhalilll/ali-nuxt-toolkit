@@ -40,17 +40,13 @@ const decrypt = async () => {
         decrypt
       </button>
     </div>
-    <div
-      v-if="cipher"
-      class="mt-3 whitespace-pre-wrap break-all rounded-md border border-border bg-code-bg p-3 font-mono text-[13px] text-text-dim"
-    >
-      {{ cipher }}
-    </div>
-    <div
+    <DocOutput v-if="cipher" class="mt-3" lang="text" label="cipher" :value="cipher" />
+    <DocOutput
       v-if="clear"
-      class="mt-2 whitespace-pre-wrap break-all rounded-md border border-border bg-code-bg p-3 font-mono text-[13px] text-text-dim"
-    >
-      decrypted → {{ clear }}
-    </div>
+      class="mt-2"
+      lang="text"
+      label="decrypted"
+      :value="`decrypted → ${clear}`"
+    />
   </div>
 </template>

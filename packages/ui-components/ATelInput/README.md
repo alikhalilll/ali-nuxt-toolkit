@@ -404,24 +404,41 @@ in your submit handler if you want the international form.
 
 Every visual region is a slot — the component is fully recomposable.
 
-| Slot           | Props                                       |
-| -------------- | ------------------------------------------- |
-| `prefix`       | —                                           |
-| `suffix`       | `{ validationState, validation }`           |
-| `trigger`      | `{ selectedCountry, open, sizeClasses }`    |
-| `chevron`      | `{ open }`                                  |
-| `flag`         | `{ country, context: 'trigger' \| 'item' }` |
-| `item`         | `{ country, selected, disabled, select }`   |
-| `group-header` | `{ label, group: 'suggested' \| 'all' }`    |
-| `search`       | `{ value, setValue, isSearching }`          |
-| `loading`      | —                                           |
-| `empty`        | `{ query }`                                 |
-| `detecting`    | — (during country detection)                |
-| `validating`   | — (during async form validation)            |
-| `valid-icon`   | —                                           |
-| `error-icon`   | `{ reason }`                                |
-| `hint`         | `{ country, formatHint, example }`          |
-| `error`        | `{ message, reason, validation }`           |
+| Slot            | Props                                                         |
+| --------------- | ------------------------------------------------------------- |
+| `prefix`        | —                                                             |
+| `suffix`        | `{ validationState, validation }`                             |
+| `trigger`       | `{ selectedCountry, open, sizeClasses }`                      |
+| `chevron`       | `{ open }`                                                    |
+| `selected-flag` | `{ country, open }` — trigger only                            |
+| `item-flag`     | `{ country }` — popover option rows only                      |
+| `flag`          | `{ country, context: 'trigger' \| 'item' }` — legacy unified¹ |
+| `item`          | `{ country, selected, disabled, select }`                     |
+| `group-header`  | `{ label, group: 'suggested' \| 'all' }`                      |
+| `search`        | `{ value, setValue, isSearching }`                            |
+| `loading`       | —                                                             |
+| `empty`         | `{ query }`                                                   |
+| `detecting`     | — (during country detection)                                  |
+| `validating`    | — (during async form validation)                              |
+| `valid-icon`    | —                                                             |
+| `error-icon`    | `{ reason }`                                                  |
+| `hint`          | `{ country, formatHint, example }`                            |
+| `error`         | `{ message, reason, validation }`                             |
+
+¹ Legacy unified slot — still fires for both the trigger and each option row
+(distinguished by `context`) so existing consumers keep working. Prefer
+`selected-flag` / `item-flag` in new code so changes to one location don't
+spill into the other. Example: customising the trigger to render flag +
+country name without changing how rows in the popover look:
+
+```vue
+<ACountrySelect v-model:selected="country" trigger-class="w-full">
+  <template #selected-flag="{ country: c }">
+    <ACountryFlag :iso2="c.raw_data.iso2" :src="c.raw_data.flag" />
+    <span>{{ c.raw_data.name }}</span>
+  </template>
+</ACountrySelect>
+```
 
 ### Exposed methods
 

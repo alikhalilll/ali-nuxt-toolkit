@@ -84,11 +84,6 @@ const run = async () => {
       </div>
     </div>
 
-    <div
-      v-if="message"
-      class="mt-3 rounded-md border border-border bg-code-bg p-3 font-mono text-[13px] text-text-dim"
-    >
-      {{ message }}
-    </div>
+    <DocOutput v-if="message" class="mt-3" lang="text" label="status" :value="message" />
   </div>
 </template>

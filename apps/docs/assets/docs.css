@@ -510,6 +510,32 @@ a {
 }
 
 /*
+ * Shiki dual-theme token colours — wire the inline `--shiki-*` CSS variables
+ * (set on every span by Shiki's CSS-variable mode) through to actual `color`.
+ *
+ * Two naming conventions in play because Nuxt Content names its themes
+ * `{ default, dark }` (→ `--shiki-default`) but the client-side `useShiki`
+ * composable names them `{ light, dark }` (→ `--shiki-light`). Both surfaces
+ * coexist on the docs site (prose blocks vs DemoTabs Code / DocOutput), so
+ * the rules below fall back across both names — whichever Shiki actually set
+ * on the span wins.
+ *
+ * `!important` is necessary because `.doc-code__body .shiki { color: inherit }`
+ * in DocCodeBlock has higher specificity than the plain `.shiki span` selector
+ * and would otherwise override us, leaving every code block in the docs'
+ * default body colour (looks fine in dark mode by coincidence but turns the
+ * whole panel monochrome in light mode).
+ */
+.shiki,
+.shiki span {
+  color: var(--shiki-default, var(--shiki-light)) !important;
+}
+html.dark .shiki,
+html.dark .shiki span {
+  color: var(--shiki-dark) !important;
+}
+
+/*
  * Demo "runtime output" panels — the live state JSON / E.164 echoes that
  * sit under most of the interactive demos use `<pre class="… bg-code-bg …">`
  * markup directly (they're not Markdown code blocks so they bypass `<ProsePre>`).
