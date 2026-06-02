@@ -1,41 +1,49 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted } from 'vue';
+import { computed } from 'vue';
 import { cn } from '@alikhalilll/a-ui-base';
+import { useEventScrollLock } from '../composables/useEventScrollLock';
 import type { APopoverOverlayProps } from '../types';
 
 defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<APopoverOverlayProps>(), { lockScroll: false });
 
-let prevBodyOverflow = '';
-let prevBodyTouchAction = '';
-let prevPaddingRight = '';
-
-function getScrollbarWidth() {
-  if (typeof window === 'undefined') return 0;
-  return window.innerWidth - document.documentElement.clientWidth;
-}
-
-onMounted(() => {
-  if (!props.lockScroll) return;
-  if (typeof document === 'undefined') return;
-  const body = document.body;
-  const sbw = getScrollbarWidth();
-  prevBodyOverflow = body.style.overflow;
-  prevBodyTouchAction = body.style.touchAction;
-  prevPaddingRight = body.style.paddingRight;
-  body.style.overflow = 'hidden';
-  body.style.touchAction = 'none';
-  if (sbw > 0) body.style.paddingRight = `${sbw}px`;
-});
-
-onBeforeUnmount(() => {
-  if (!props.lockScroll) return;
-  if (typeof document === 'undefined') return;
-  const body = document.body;
-  body.style.overflow = prevBodyOverflow;
-  body.style.touchAction = prevBodyTouchAction;
-  body.style.paddingRight = prevPaddingRight;
+/**
+ * Sticky-safe page-scroll lock.
+ *
+ * The legacy implementation here set `body.style.overflow = 'hidden'` for the lifetime
+ * of the overlay. That visually freezes the page but has a hidden cost: the moment the
+ * body's overflow flips to `hidden`, every `position: sticky` descendant on the host page
+ * snaps out of its `top` offset and scrolls away with the content. Reports of "the
+ * navbar disappears when I open the picker mid-scroll" all trace back to that mutation.
+ *
+ * We now delegate to {@link useEventScrollLock}, which intercepts wheel / touchmove /
+ * scroll-key events at document capture and lets only events inside the popover surface
+ * through. The page stays a scrolling container in DOM terms (so `position: sticky` keeps
+ * working) but is visually inert while the popover is open. The page scrollbar stays
+ * visible — no width shift, no `padding-right` compensation — which also fixes the layout
+ * jump some hosts saw when the scrollbar disappeared and reappeared.
+ *
+ * `allowedScrollContainer` looks for any popover / drawer / responsive-popover content
+ * surface in the portal tree. That covers raw `APopover` usage, `AResponsivePopover` on
+ * either branch, and `ADrawer` mounted inside a popover overlay — the inner list can
+ * always scroll, the page underneath cannot.
+ */
+useEventScrollLock({
+  active: computed(() => !!props.lockScroll),
+  allowedScrollContainer: () => {
+    if (typeof document === 'undefined') return [];
+    return Array.from(
+      document.querySelectorAll<HTMLElement>(
+        [
+          '[data-slot="popover-content"]',
+          '[data-slot="drawer-content"]',
+          '[data-slot="responsive-popover-content"]',
+          '[data-responsive-popover-scroll-container="true"]',
+        ].join(', ')
+      )
+    );
+  },
 });
 </script>
 

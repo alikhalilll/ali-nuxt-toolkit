@@ -632,7 +632,13 @@ digits (`'1066105963'`), while `zPhone()` (no `country`) expects the **E.164** f
 
 **The page underneath the drawer scrolls.**
 That was a bug in versions < 1.1.0 — the event scroll-lock was desktop-only. Upgrade.
-If you need the legacy `body { overflow: hidden }` style instead, set `scroll-lock="body"`.
+
+**Opening the picker mid-scroll makes my page header / sticky TOC vanish.**
+Fixed in 1.1.3. The legacy `scroll-lock="body"` mode (and reka-ui's `modal=true`
+body lock that fired alongside it) used to mutate `body { overflow: hidden }`,
+which silently broke `position: sticky` on the host page. Both paths now share
+the event-based lock (sticky-safe). The default `scroll-lock="events"` always
+behaved correctly; only `'body'` was destructive, and it's now equivalent.
 
 **Country auto-detect didn't work.**
 The default `ipEndpoint` is `https://ipapi.co/json/` — it's free-tier rate-limited.

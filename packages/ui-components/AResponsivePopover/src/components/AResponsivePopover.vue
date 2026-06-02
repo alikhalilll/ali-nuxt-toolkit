@@ -22,26 +22,26 @@ const isDesktop = useMediaQuery(() => props.breakpoint);
  * Per-branch `modal` resolution — the two roots interpret the prop differently:
  *
  *   APopover (desktop, reka-ui): `modal=true` triggers `PopoverContentModal` + its
- *   `useBodyScrollLock`. We only want that when the caller explicitly opted into the
- *   body-level scroll lock; for `'events'`/`'none'` we install our own lock in
- *   `AResponsivePopoverContent`. Legacy `modal=false` still forces non-modal.
+ *   built-in `useBodyScrollLock`, which mutates `body { overflow: hidden }` and so
+ *   breaks `position: sticky` on the host page. We never want that — our own
+ *   event-based lock in `AResponsivePopoverContent` is sticky-safe and covers both
+ *   `'events'` and `'body'` modes. Force `modal=false` on reka-ui regardless of the
+ *   caller's `scrollLock` choice. Legacy `props.modal === false` still propagates
+ *   (it was explicit).
  *
  *   ADrawer (mobile, vaul-vue): `modal=false` SUPPRESSES THE OVERLAY entirely. Drawers
  *   are modal by convention (a dimmed backdrop is the affordance), so default to modal
  *   unless the caller explicitly turned the whole thing off.
  */
-const rekaModal = computed(() => {
-  if (props.modal === false) return false;
-  return props.scrollLock === 'body';
-});
+const rekaModal = computed(() => false);
 const drawerModal = computed(() => props.modal !== false);
 
-// Suppress vaul-vue's body-style scroll lock (which sets `body { overflow:hidden;
-// position:fixed }` and breaks `position: sticky` everywhere on the page) whenever
-// the caller is using the sticky-safe event lock — the desktop popover branch is
-// already sticky-safe via `useEventScrollLock`, and we want the mobile drawer to
-// behave identically. Only the legacy `'body'` strategy keeps vaul's default lock.
-const drawerNoBodyStyles = computed(() => props.scrollLock !== 'body');
+// Always tell vaul to skip its body-style scroll lock — our event-based lock owns the
+// scroll-prevention strategy now, and vaul's default `body { overflow: hidden;
+// position: fixed }` mutation kills `position: sticky` everywhere on the host page.
+// (Was previously gated on `scrollLock !== 'body'`; now `'body'` is also event-based,
+// so we apply this unconditionally.)
+const drawerNoBodyStyles = computed(() => true);
 
 provideResponsivePopoverContext({
   open: computed(() => open.value ?? false),

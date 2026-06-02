@@ -100,8 +100,53 @@ function onKeyDown(e: KeyboardEvent) {
   e.preventDefault();
 }
 
+// Snapshot the host page's `body` inline styles before any third-party body lock
+// (reka-ui's `useBodyScrollLock`, vaul-vue's Safari lock, …) runs. We restore
+// them while our event lock is active so the host's `position: sticky` keeps
+// working — the legacy approach was for the popover to set `body { overflow:
+// hidden; pointer-events: none }` itself; multiple modal libraries do the same,
+// and any of them silently break sticky on the host page.
+const PROTECTED_PROPS = ['overflow', 'overflowY', 'overflowX', 'pointerEvents'] as const;
+type ProtectedProp = (typeof PROTECTED_PROPS)[number];
+let bodyStyleSnapshot: Partial<Record<ProtectedProp, string>> | null = null;
+let bodyStyleObserver: MutationObserver | null = null;
+
+function snapshotBodyStyle() {
+  if (typeof document === 'undefined') return;
+  const s = document.body.style;
+  bodyStyleSnapshot = {
+    overflow: s.overflow,
+    overflowY: s.overflowY,
+    overflowX: s.overflowX,
+    pointerEvents: s.pointerEvents,
+  };
+}
+
+function applyBodyStyleSnapshot() {
+  if (!bodyStyleSnapshot || typeof document === 'undefined') return;
+  const s = document.body.style;
+  for (const key of PROTECTED_PROPS) {
+    const want = bodyStyleSnapshot[key] ?? '';
+    if (s[key] !== want) s[key] = want;
+  }
+}
+
+function startBodyStyleProtection() {
+  if (bodyStyleObserver || typeof document === 'undefined') return;
+  snapshotBodyStyle();
+  bodyStyleObserver = new MutationObserver(() => applyBodyStyleSnapshot());
+  bodyStyleObserver.observe(document.body, { attributes: true, attributeFilter: ['style'] });
+}
+
+function stopBodyStyleProtection() {
+  bodyStyleObserver?.disconnect();
+  bodyStyleObserver = null;
+  bodyStyleSnapshot = null;
+}
+
 function activate() {
   if (refCount === 0) {
+    startBodyStyleProtection();
     document.addEventListener('wheel', onWheel, {
       passive: false,
       capture: true,
@@ -126,6 +171,7 @@ function deactivate() {
     document.removeEventListener('touchstart', onTouchStart, { capture: true });
     document.removeEventListener('touchmove', onTouchMove, { capture: true });
     document.removeEventListener('keydown', onKeyDown, { capture: true });
+    stopBodyStyleProtection();
   }
 }
 

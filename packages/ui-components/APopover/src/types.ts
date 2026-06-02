@@ -28,8 +28,12 @@ export interface APopoverContentProps extends PopoverContentProps {
   overlay?: boolean;
   overlayClass?: HTMLAttributes['class'];
   /**
-   * When true, the overlay also locks page scroll via `body { overflow: hidden }`.
-   * Off by default — `AResponsivePopover` opts in to this when `scrollLock="body"`.
+   * When true, the overlay also locks page scroll while open.
+   *
+   * Sticky-safe: implemented via document-level event capture (`useEventScrollLock`),
+   * not `body { overflow: hidden }`. The host page's `position: sticky` elements stay
+   * in place and the page scrollbar stays visible (no width shift). The popover's own
+   * inner content can still scroll because it's allowed through the lock.
    */
   overlayLockScroll?: boolean;
 }
@@ -42,10 +46,16 @@ export interface APopoverContentEmits extends PopoverContentEmits {}
 export interface APopoverOverlayProps {
   class?: HTMLAttributes['class'];
   /**
-   * When true, set `body { overflow: hidden; touchAction: none }` for the lifetime of
-   * the overlay. Off by default because it breaks `position: sticky` on the host page.
-   * Prefer the event-based lock (see `AResponsivePopover`'s `scrollLock` prop) which
-   * keeps the page scrollbar in place.
+   * When true, block page scroll while the overlay is mounted.
+   *
+   * Implemented with the event-based `useEventScrollLock` (wheel / touchmove /
+   * scroll-keys intercepted at document capture). Unlike the legacy
+   * `body { overflow: hidden }` approach this:
+   *
+   * - Keeps `position: sticky` working on the host page (headers, sticky TOC bars,
+   *   in-page indicators all stay put).
+   * - Leaves the page scrollbar visible — no width compensation, no layout jump.
+   * - Lets the popover content's own inner list still scroll.
    */
   lockScroll?: boolean;
 }

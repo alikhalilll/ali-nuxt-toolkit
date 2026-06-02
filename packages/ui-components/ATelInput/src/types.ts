@@ -199,9 +199,12 @@ export interface ATelInputProps {
   /** Classes for the error message line. */
   errorClass?: string;
   /**
-   * How page scroll is blocked while the country popover is open. Defaults to `'events'`
-   * (sticky-safe document-level lock). Pass `'body'` for the legacy
-   * `body { overflow: hidden }` lock, or `'none'` to leave page scrolling alone.
+   * How page scroll is blocked while the country popover is open. Both `'events'`
+   * (the default) and `'body'` are now sticky-safe document-level locks — the host
+   * page's `position: sticky` elements (headers, sticky TOC bars, in-page rails) all
+   * keep working. `'body'` used to mutate `body { overflow: hidden }` but that
+   * silently broke sticky positioning; it was rewritten to share the event-based
+   * implementation. Pass `'none'` to leave page scrolling alone.
    */
   scrollLock?: 'events' | 'body' | 'none';
 }
@@ -415,7 +418,11 @@ export interface ACountrySelectProps {
   countryLabel?: string;
   /** Trigger's `aria-label` when no country is selected. */
   selectCountryLabel?: string;
-  /** How page scroll is blocked while the popover is open. Default `'events'`. */
+  /**
+   * How page scroll is blocked while the popover is open. Both `'events'` (default)
+   * and `'body'` are sticky-safe document-level locks; `'none'` disables locking.
+   * See {@link ATelInputProps.scrollLock} for the full rationale.
+   */
   scrollLock?: 'events' | 'body' | 'none';
 }
 
