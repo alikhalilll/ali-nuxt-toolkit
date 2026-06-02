@@ -150,4 +150,21 @@ async function copy() {
   font-size: 12px;
   line-height: 1.65;
 }
+/*
+ * Nuxt Content's runtime injects a `.shiki .line { background: var(--shiki-*-bg) }`
+ * rule (so per-line diff highlighting can paint over the base bg). For our demo
+ * Code pane we want the container's `bg-code-bg` to be the only visible surface —
+ * every nested Shiki node has to be transparent or the lines render as a stack
+ * of slightly-lighter bars over the dark container.
+ */
+.demo-tabs__code :deep(.shiki code),
+.demo-tabs__code :deep(.shiki .line),
+.demo-tabs__code :deep(.shiki span) {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+.demo-tabs__code :deep(.shiki .line) {
+  display: block;
+  min-height: 1lh;
+}
 </style>
