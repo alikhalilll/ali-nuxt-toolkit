@@ -20,25 +20,23 @@
 [![license](https://img.shields.io/npm/l/%40alikhalilll%2Fa-tel-input.svg?style=for-the-badge&labelColor=0a0a0a&color=635bff)](./LICENSE)
 [![types](https://img.shields.io/npm/types/%40alikhalilll%2Fa-tel-input.svg?style=for-the-badge&labelColor=0a0a0a&color=635bff)](https://www.npmjs.com/package/@alikhalilll/a-tel-input)
 
-```bash
-# pnpm
+**Install**
+
+```sh
 pnpm add @alikhalilll/a-tel-input
-
-# npm
-npm install @alikhalilll/a-tel-input
-
-# yarn
-yarn add @alikhalilll/a-tel-input
-
-# bun
-bun add @alikhalilll/a-tel-input
 ```
 
-```vue
-<!-- Single E.164 string — what VeeValidate's <Field v-slot="{ field }"> + native forms expect -->
-<ATelInput v-model="phone" default-country="SA" show-validation />
+<sub>npm · `npm install @alikhalilll/a-tel-input` &nbsp; · &nbsp; yarn · `yarn add @alikhalilll/a-tel-input` &nbsp; · &nbsp; bun · `bun add @alikhalilll/a-tel-input`</sub>
 
-<!-- Or split phone + country into two v-models -->
+**Single E.164 string** — what VeeValidate's `<Field v-slot="{ field }">` and native forms expect:
+
+```html
+<ATelInput v-model="phone" default-country="SA" show-validation />
+```
+
+**Or split phone + country** into two v-models:
+
+```html
 <ATelInput v-model:phone="phone" v-model:country="country" default-country="SA" show-validation />
 ```
 
