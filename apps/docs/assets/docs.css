@@ -510,6 +510,42 @@ a {
 }
 
 /*
+ * Demo "runtime output" panels — the live state JSON / E.164 echoes that
+ * sit under most of the interactive demos use `<pre class="… bg-code-bg …">`
+ * markup directly (they're not Markdown code blocks so they bypass `<ProsePre>`).
+ * Re-paint them with the same panel chrome `<DocCodeBlock>` ships so every
+ * code-adjacent surface on the docs site reads as one system. Targets the
+ * raw `<pre>` only (DocCodeBlock's own inner `<pre>` lives inside `.doc-code`
+ * and stays transparent via the deep override there).
+ */
+pre[class~='bg-code-bg']:not(.doc-code__body pre):not(.doc-code__body .shiki),
+pre.bg-code-bg:not(.doc-code__body pre):not(.doc-code__body .shiki) {
+  position: relative;
+  margin: 1rem 0 1.25rem;
+  padding: 0.875rem 1rem;
+  border-radius: 12px;
+  border: 1px solid color-mix(in oklab, var(--color-border) 80%, transparent);
+  background: color-mix(in oklab, var(--color-code-bg) 80%, var(--color-bg)) !important;
+  box-shadow: 0 16px 36px -20px rgba(0, 0, 0, 0.42);
+  font-family: ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--color-text-dim) !important;
+  overflow: auto;
+  scrollbar-width: thin;
+}
+pre[class~='bg-code-bg']::-webkit-scrollbar,
+pre.bg-code-bg::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+pre[class~='bg-code-bg']::-webkit-scrollbar-thumb,
+pre.bg-code-bg::-webkit-scrollbar-thumb {
+  background: color-mix(in oklab, var(--color-text-muted) 30%, transparent);
+  border-radius: 3px;
+}
+
+/*
  * Nuxt Content + Shiki injects its own `html .dark .shiki span { color: var(--shiki-dark) }`
  * rule when the `theme` object has multiple keys — we don't need to duplicate it here.
  */

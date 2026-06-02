@@ -78,50 +78,224 @@ const result = computed(() =>
     </p>
 
     <DemoTabs :code="source">
-      <div class="p-5">
-        <div class="max-w-sm space-y-2">
-          <div
-            class="border-input bg-background flex items-stretch overflow-hidden rounded-md border shadow-sm"
-          >
+      <DemoStage caption="Composed from primitives">
+        <div class="compose-stage__field">
+          <!-- Row 1 — full-width country trigger. The ACountrySelect's own
+               trigger is given `w-full` so it fills the visual width and the
+               row reads as a single "picker card". -->
+          <div class="compose-stage__row compose-stage__row--picker">
+            <span class="compose-stage__hint">Country</span>
             <ACountrySelect
               v-model:selected="country"
               size="md"
-              class="grow"
+              class="compose-stage__picker"
               trigger-class="w-full"
             />
           </div>
 
-          <div class="flex items-center gap-2">
-            <input
-              v-model="phone"
-              type="tel"
-              inputmode="numeric"
-              placeholder="National number"
-              class="h-10 w-full rounded-md border border-border bg-bg px-3 text-sm text-text outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
-              @input="
-                (e) => {
-                  const t = e.target as HTMLInputElement;
-                  t.value = t.value.replace(/\\D/g, '');
-                  phone = t.value;
-                }
-              "
-            />
+          <!-- Row 2 — national-number input on the left, E.164 chip on the right.
+               Validity drives the chip's tint via `cn()` (emerald when ok, surface-2
+               muted otherwise) so the user sees the engine reacting per keystroke. -->
+          <div class="compose-stage__row compose-stage__row--number">
+            <div class="compose-stage__input-wrap">
+              <span class="compose-stage__hint">National number</span>
+              <input
+                v-model="phone"
+                type="tel"
+                inputmode="numeric"
+                placeholder="01066105963"
+                class="compose-stage__input"
+                @input="
+                  (e) => {
+                    const t = e.target as HTMLInputElement;
+                    t.value = t.value.replace(/\\D/g, '');
+                    phone = t.value;
+                  }
+                "
+              />
+            </div>
+
             <div
-              :class="
-                cn(
-                  'shrink-0 rounded-md border px-2 py-1 font-mono text-xs tabular-nums',
-                  result.ok
-                    ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400'
-                    : 'border-border bg-surface-2 text-text-muted'
-                )
-              "
+              :class="[
+                'compose-stage__chip',
+                result.ok ? 'compose-stage__chip--ok' : 'compose-stage__chip--idle',
+              ]"
               :title="result.ok ? 'valid' : (result.reason ?? 'incomplete')"
             >
-              {{ result.full_phone || '+?' }}
+              <span class="compose-stage__chip-label">E.164</span>
+              <span class="compose-stage__chip-value">
+                {{ result.full_phone || '+?' }}
+              </span>
+              <svg
+                v-if="result.ok"
+                class="compose-stage__chip-icon"
+                xmlns="http://www.w3.org/2000/svg"
+                width="11"
+                height="11"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="3"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
             </div>
           </div>
         </div>
-      </div>
+      </DemoStage>
     </DemoTabs>
   </div>
 </template>
+
+<style scoped>
+/* Stage / frame / caption now live in `DemoStage`. What remains here is
+   demo-specific: the two-row field layout, the labelled inputs, and the
+   E.164 result chip's state machine. */
+.compose-stage__field {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.compose-stage__row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.compose-stage__row--number {
+  flex-direction: row;
+  align-items: stretch;
+  gap: 10px;
+}
+.compose-stage__hint {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  padding-left: 2px;
+}
+
+/* The country picker fills the row; the inherited trigger styles already
+   handle border + bg, we just add elevation when focused. */
+.compose-stage__picker {
+  width: 100%;
+}
+.compose-stage__picker :deep([data-slot='country-select-trigger']) {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid color-mix(in oklab, var(--color-border) 80%, transparent);
+  background: color-mix(in oklab, var(--bg) 60%, var(--surface));
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.compose-stage__picker :deep([data-slot='country-select-trigger']:hover) {
+  border-color: color-mix(in oklab, var(--color-brand) 35%, var(--color-border));
+}
+
+/* National-number row. Stacks the hint label above its own input, so the
+   chip on the right can baseline-align with the input field. */
+.compose-stage__input-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.compose-stage__input {
+  height: 40px;
+  width: 100%;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in oklab, var(--color-border) 80%, transparent);
+  background: color-mix(in oklab, var(--bg) 60%, var(--surface));
+  font-family: ui-monospace, 'JetBrains Mono', monospace;
+  font-size: 13.5px;
+  letter-spacing: 0.02em;
+  color: var(--color-text);
+  outline: none;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+.compose-stage__input::placeholder {
+  color: var(--color-text-muted);
+  letter-spacing: normal;
+}
+.compose-stage__input:focus-visible {
+  border-color: color-mix(in oklab, var(--color-brand) 55%, var(--color-border));
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-brand) 18%, transparent);
+}
+
+/* E.164 result chip. Two states:
+     - idle: muted surface + ghost border + "+?" placeholder text
+     - ok:   emerald wash + brand-tinted ring + check icon */
+.compose-stage__chip {
+  align-self: flex-end;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in oklab, var(--color-border) 70%, transparent);
+  background: color-mix(in oklab, var(--surface) 60%, transparent);
+  font-family: ui-monospace, 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  transition:
+    color 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+.compose-stage__chip-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: color-mix(in oklab, var(--surface) 80%, transparent);
+  color: var(--color-text-muted);
+}
+.compose-stage__chip-value {
+  color: var(--color-text-dim);
+}
+.compose-stage__chip-icon {
+  flex-shrink: 0;
+}
+.compose-stage__chip--idle {
+  color: var(--color-text-muted);
+}
+.compose-stage__chip--ok {
+  color: var(--color-success);
+  background: color-mix(in oklab, var(--color-success) 12%, transparent);
+  border-color: color-mix(in oklab, var(--color-success) 45%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--color-success) 25%, transparent);
+}
+.compose-stage__chip--ok .compose-stage__chip-label {
+  background: color-mix(in oklab, var(--color-success) 22%, transparent);
+  color: var(--color-success);
+}
+.compose-stage__chip--ok .compose-stage__chip-value {
+  color: var(--color-success);
+}
+
+/* Stack the number row on narrow screens — the chip drops below the input
+   instead of crowding it. */
+@media (max-width: 480px) {
+  .compose-stage__row--number {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .compose-stage__chip {
+    align-self: stretch;
+    justify-content: space-between;
+  }
+}
+</style>

@@ -90,10 +90,15 @@ export default defineNuxtConfig({
            *   - `default` is the base (light) theme
            *   - `dark`    activates when an ancestor has `.dark`
            * Switching the `.dark` class on <html> swaps every code block instantly.
+           *
+           * `github-*-default` (not the older `github-*`) — its palette matches
+           * what GitHub.com actually serves today and what the homepage hero
+           * showcase uses (`.code-fn=#d2a8ff` etc.), so prose blocks and the hero
+           * read with one set of token colours instead of two.
            */
           theme: {
-            default: 'github-light',
-            dark: 'github-dark',
+            default: 'github-light-default',
+            dark: 'github-dark-default',
           },
           langs: ['ts', 'js', 'vue', 'bash', 'json', 'html', 'css'],
         },

@@ -90,13 +90,16 @@ async function copy() {
 /* --- Outer frame ----------------------------------------------------------
    Mirrors the hero `code-panel` recipe — same border, brand-tinted bg, same
    rounded corners — so prose, demo Code panes, and the hero feel like one
-   system. */
+   system. `padding: 0.5rem` (Tailwind `p-2`) gives the inner bar + body a
+   thin breathing margin against the outer border, producing the "framed
+   editor" look the homepage Showcase uses. */
 .doc-code {
   position: relative;
   margin: 1rem 0 1.5rem;
+  padding: 0.5rem;
   border-radius: 12px;
   border: 1px solid color-mix(in oklab, var(--color-border) 80%, transparent);
-  background: color-mix(in oklab, var(--color-code-bg) 80%, var(--color-bg));
+  background: color-mix(in oklab, var(--color-bg) 60%, var(--color-surface));
   font-family: ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, monospace;
   box-shadow: 0 16px 36px -20px rgba(0, 0, 0, 0.42);
   overflow: hidden;
@@ -139,14 +142,17 @@ async function copy() {
 
 /* --- Top bar --------------------------------------------------------------
    filename · spacer · lang pill · copy button. Hidden when none of those
-   slots are configured (a bare code block stays chrome-free). */
+   slots are configured (a bare code block stays chrome-free). Sits flush
+   against the inner body so they read as a single editor surface inside the
+   `p-2` outer frame. */
 .doc-code__bar {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
+  border-radius: 8px 8px 0 0;
   border-bottom: 1px solid color-mix(in oklab, var(--color-border) 40%, transparent);
-  background: color-mix(in oklab, var(--color-bg) 60%, var(--color-code-bg));
+  background: color-mix(in oklab, var(--color-code-bg) 90%, var(--color-bg));
   font-size: 11.5px;
   color: var(--color-text-muted);
 }
@@ -208,26 +214,38 @@ async function copy() {
 /* --- Body -----------------------------------------------------------------
    Holds the actual code. We don't style the `<pre>` directly here — the slot
    content (Shiki HTML, hand-coded spans, raw text) already brings its own
-   `<pre>`. We just give it consistent padding + horizontal scroll. */
+   `<pre>`. We just give it consistent padding + horizontal scroll. Tight
+   line-height (1.45) so the panel reads like a real editor, not a marketing
+   code sample. Background sits at the dark `--color-code-bg` while the outer
+   frame is one shade lighter — a thin two-tone editor effect. */
 .doc-code__body {
   position: relative;
   max-height: 480px;
   overflow: auto;
   font-size: 12.5px;
-  line-height: 1.65;
+  line-height: 1.45;
+  background: var(--color-code-bg);
+  border-radius: 0 0 8px 8px;
+  counter-reset: doc-code-line;
+}
+.doc-code:not(.doc-code--has-bar) .doc-code__body {
+  border-radius: 8px;
 }
 
-/* Inner pre / shiki / code elements all share the same padding + transparent
-   bg so the panel's `--color-code-bg` shows through uniformly. The third-party
-   Nuxt Content runtime paints `.line` backgrounds at the github-dark-bg colour
-   — we override every nested node to transparent to avoid the per-line bars.
-   `<style>` here is unscoped on purpose (so the rules reach v-html-injected
-   Shiki spans), which means no `:deep()` — selectors target by class directly. */
+/* Inner pre / shiki / code elements all share the same compact padding +
+   transparent bg so the panel's `--color-code-bg` shows through uniformly.
+   The third-party Nuxt Content runtime paints `.line` backgrounds at the
+   github-dark-bg colour — we override every nested node to transparent to
+   avoid per-line bars. `<style>` here is unscoped on purpose (so the rules
+   reach v-html-injected Shiki spans), which means no `:deep()` — selectors
+   target by class directly. */
 .doc-code__body pre,
 .doc-code__body .shiki,
 .doc-code__body .shiki-fallback {
   margin: 0;
-  padding: 1rem;
+  /* `0.75rem 0` (no horizontal padding) — the inner `.line` elements pick up
+     left padding to leave room for the gutter. */
+  padding: 0.75rem 0;
   background: transparent !important;
   background-color: transparent !important;
   font-family: inherit;
@@ -239,19 +257,65 @@ async function copy() {
   border: 0;
   border-radius: 0;
 }
-.doc-code__body .shiki code,
-.doc-code__body .shiki .line,
-.doc-code__body .shiki span {
+.doc-code__body code,
+.doc-code__body .line,
+.doc-code__body .line span {
   background: transparent !important;
   background-color: transparent !important;
-}
-.doc-code__body .shiki .line {
-  display: block;
-  min-height: 1lh;
 }
 .doc-code__body code {
   font-family: inherit;
   font-size: inherit;
+}
+
+/* --- Line numbers + gutter ---------------------------------------------
+   Each `<span class="line">` increments a CSS counter and renders the
+   current value as a left-edge gutter via `::before`. The gutter is tiny
+   (10px), dim, and right-aligned so the eye reads the code as the primary
+   content and the numbers as the secondary scaffold. `tabular-nums` keeps
+   columns flush even for 1- vs 2-digit lines. A hairline divider on the
+   right of the gutter visually separates numbers from code without adding
+   any layout cost.
+
+   The selectors live on `.doc-code__body .line` (not `.shiki .line`) because
+   Nuxt Content's `ProsePre` injection puts the `.shiki` class on the outer
+   wrapper (which here is the parent `.doc-code`), not on an inner element. */
+.doc-code__body .line {
+  display: block;
+  position: relative;
+  min-height: 1lh;
+  padding: 0 0.875rem 0 3.25rem;
+  counter-increment: doc-code-line;
+}
+.doc-code__body .line::before {
+  content: counter(doc-code-line);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 2.5rem;
+  padding-right: 0.625rem;
+  text-align: right;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  line-height: inherit;
+  color: color-mix(in oklab, var(--color-text-muted) 60%, transparent);
+  user-select: none;
+  pointer-events: none;
+  border-right: 1px solid color-mix(in oklab, var(--color-border) 35%, transparent);
+}
+
+/* Highlight the gutter number when a line is hovered — subtle editor-style
+   affordance that helps users when they want to reference a specific line. */
+.doc-code__body .line:hover::before {
+  color: var(--color-text-dim);
+  background: color-mix(in oklab, var(--color-surface) 30%, transparent);
+}
+
+/* For the fallback (plain `<pre><code>`) path we don't have `.line` spans, so
+   the gutter falls back to no numbering. Pad the body so it still aligns
+   visually with the Shiki path. */
+.doc-code__body .shiki-fallback {
+  padding-left: 3.25rem;
 }
 
 /* Hide scrollbars inside the panel (wheel / touch / keyboard still work). */

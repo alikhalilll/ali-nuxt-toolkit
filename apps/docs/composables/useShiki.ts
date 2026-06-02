@@ -18,7 +18,7 @@ export async function getHighlighter(): Promise<Highlighter> {
   if (highlighter) return highlighter;
   if (!pending) {
     pending = createHighlighter({
-      themes: ['github-light', 'github-dark'],
+      themes: ['github-light-default', 'github-dark-default'],
       langs: ['ts', 'js', 'vue', 'bash', 'json', 'html', 'css'],
     }).then((h) => {
       highlighter = h;
@@ -34,7 +34,7 @@ export async function highlight(code: string, lang: string): Promise<string> {
   const safeLang = (loaded as readonly string[]).includes(lang) ? lang : 'plaintext';
   return h.codeToHtml(code, {
     lang: safeLang,
-    themes: { light: 'github-light', dark: 'github-dark' },
+    themes: { light: 'github-light-default', dark: 'github-dark-default' },
     defaultColor: false,
   });
 }
