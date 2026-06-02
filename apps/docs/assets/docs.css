@@ -484,20 +484,22 @@ a {
   background: color-mix(in oklab, var(--color-brand) 12%, var(--color-surface));
   border-color: color-mix(in oklab, var(--color-brand) 30%, var(--color-border));
 }
+/*
+ * Prose code blocks now render through `<ProsePre>` → `<DocCodeBlock>` — the
+ * panel chrome (border / bg / filename strip / copy button) lives in the
+ * wrapper. The inner `<pre>` stays transparent so the panel's surface shows
+ * through and we don't double-paint a border.
+ */
 .prose pre {
-  /*
-   * Background + text colour come from Shiki's inline styles (per-token), so we don't set
-   * them here. We only style the wrapper chrome (border, padding, scroll).
-   */
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  padding: 1rem 1.15rem;
-  overflow-x: auto;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
   font-family: var(--font-mono);
   font-size: 0.8rem;
   line-height: 1.65;
-  margin: 0.5rem 0 1.5rem;
-  background: var(--color-code-bg);
+  overflow: visible;
 }
 .prose pre code {
   background: transparent;
@@ -512,10 +514,9 @@ a {
  * rule when the `theme` object has multiple keys — we don't need to duplicate it here.
  */
 
-/* Copy button on code blocks */
-.prose pre {
-  position: relative;
-}
+/* Legacy copy button — DocCodeBlock now ships its own, but the runtime
+   `enhanceCodeBlocks` enhancer still injects this for any markdown <pre>
+   element. Keep the styles so any remaining instance reads correctly. */
 .copy-btn {
   position: absolute;
   top: 0.5rem;

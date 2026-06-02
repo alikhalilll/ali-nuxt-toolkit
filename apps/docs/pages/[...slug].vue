@@ -97,56 +97,10 @@ const accentClass = computed(() => {
   return '';
 });
 
-function enhanceCodeBlocks() {
-  if (!import.meta.client) return;
-  const pres = document.querySelectorAll<HTMLPreElement>('article.prose pre');
-  pres.forEach((pre) => {
-    if (pre.dataset.enhanced) return;
-    pre.dataset.enhanced = '1';
-
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'copy-btn';
-    btn.setAttribute('aria-label', 'Copy code');
-    btn.innerHTML = copyIconSvg();
-
-    btn.addEventListener('click', async () => {
-      const code = pre.querySelector('code');
-      const text = (code?.innerText ?? pre.innerText).replace(/\n$/, '');
-      try {
-        await navigator.clipboard.writeText(text);
-        btn.innerHTML = checkIconSvg();
-        btn.classList.add('copied');
-        setTimeout(() => {
-          btn.innerHTML = copyIconSvg();
-          btn.classList.remove('copied');
-        }, 1500);
-      } catch {
-        /* ignore */
-      }
-    });
-
-    pre.appendChild(btn);
-  });
-}
-
-function copyIconSvg() {
-  return '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
-}
-function checkIconSvg() {
-  return '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
-}
-
-onMounted(() => {
-  nextTick(enhanceCodeBlocks);
-});
-watch(
-  () => route.fullPath,
-  async () => {
-    await nextTick();
-    enhanceCodeBlocks();
-  }
-);
+// (Legacy `enhanceCodeBlocks` removed — `<ProsePre>` is overridden by
+// `components/content/ProsePre.vue`, which wraps the Shiki output in
+// `<DocCodeBlock>` and brings its own filename strip + copy button + chrome.
+// Markdown code blocks now ride that same component everywhere.)
 </script>
 
 <template>

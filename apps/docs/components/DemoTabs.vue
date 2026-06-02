@@ -130,41 +130,20 @@ async function copy() {
       <slot />
     </div>
 
-    <!-- Code pane — Shiki dual-theme HTML; theme swap driven by `.dark` on <html>. -->
-    <div
-      v-show="activeTab === 'code'"
-      class="demo-tabs__code max-h-[480px] overflow-auto bg-code-bg text-text"
-      v-html="highlighted"
-    />
+    <!-- Code pane — uses the shared DocCodeBlock so demo code matches both
+         prose code blocks and the homepage hero showcase. The DemoTabs strip
+         above already provides chrome (Preview/Code tabs + lang/copy), so
+         we pass `flush` and skip the inner bar. -->
+    <DocCodeBlock v-show="activeTab === 'code'" flush class="demo-tabs__code">
+      <div v-html="highlighted" />
+    </DocCodeBlock>
   </div>
 </template>
 
 <style scoped>
-/* Match prose <pre> styling so demo code panes look identical to markdown blocks. */
-.demo-tabs__code :deep(.shiki),
-.demo-tabs__code :deep(.shiki-fallback) {
-  margin: 0;
-  padding: 1rem;
-  background: transparent !important;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  line-height: 1.65;
-}
-/*
- * Nuxt Content's runtime injects a `.shiki .line { background: var(--shiki-*-bg) }`
- * rule (so per-line diff highlighting can paint over the base bg). For our demo
- * Code pane we want the container's `bg-code-bg` to be the only visible surface —
- * every nested Shiki node has to be transparent or the lines render as a stack
- * of slightly-lighter bars over the dark container.
- */
-.demo-tabs__code :deep(.shiki code),
-.demo-tabs__code :deep(.shiki .line),
-.demo-tabs__code :deep(.shiki span) {
-  background: transparent !important;
-  background-color: transparent !important;
-}
-.demo-tabs__code :deep(.shiki .line) {
-  display: block;
-  min-height: 1lh;
+/* Tighten the inherited frame for the demo-tabs context — the tab strip above
+   already provides the chrome, we just want a clean rounded body underneath. */
+.demo-tabs__code :deep(.doc-code__body) {
+  max-height: 480px;
 }
 </style>
