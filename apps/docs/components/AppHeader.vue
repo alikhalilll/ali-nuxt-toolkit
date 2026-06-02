@@ -45,12 +45,59 @@ watch(
   }
 );
 
-// Lock body scroll while the mobile sheet is open so background content can't
-// scroll through the backdrop and the rubber-band on iOS doesn't reveal the
-// header behind the open sheet.
+// Sticky-safe scroll lock for the mobile sheet. Mutating `body { overflow }`
+// breaks `position: sticky` on the page underneath (header, mobile TOC bar) —
+// the moment body becomes a non-scrolling container, every sticky descendant
+// snaps out of its sticky offset and scrolls away with the content. Instead
+// we intercept wheel / touchmove / scroll-key events at document capture and
+// let only events whose target is inside `.mobile-sheet` through. The page
+// stays scrollable in DOM terms (sticky works) but visually frozen while open.
+const sheetRef = ref<HTMLElement | null>(null);
+
+function isInsideSheet(target: EventTarget | null): boolean {
+  if (!(target instanceof Node)) return false;
+  return sheetRef.value?.contains(target) ?? false;
+}
+function onPageWheel(e: WheelEvent) {
+  const t = (e.composedPath()[0] ?? e.target) as EventTarget | null;
+  if (!isInsideSheet(t)) e.preventDefault();
+}
+function onPageTouchMove(e: TouchEvent) {
+  const t = (e.composedPath()[0] ?? e.target) as EventTarget | null;
+  if (!isInsideSheet(t)) e.preventDefault();
+}
+const SCROLL_KEYS = new Set([
+  'ArrowUp',
+  'ArrowDown',
+  'ArrowLeft',
+  'ArrowRight',
+  'PageUp',
+  'PageDown',
+  'Home',
+  'End',
+  ' ',
+]);
+function onPageKeyScroll(e: KeyboardEvent) {
+  if (!SCROLL_KEYS.has(e.key)) return;
+  if (!isInsideSheet(e.target)) e.preventDefault();
+}
+
 watch(mobileNavOpen, (open) => {
   if (typeof document === 'undefined') return;
-  document.body.style.overflow = open ? 'hidden' : '';
+  if (open) {
+    document.addEventListener('wheel', onPageWheel, { passive: false, capture: true });
+    document.addEventListener('touchmove', onPageTouchMove, { passive: false, capture: true });
+    document.addEventListener('keydown', onPageKeyScroll, { capture: true });
+  } else {
+    document.removeEventListener('wheel', onPageWheel, { capture: true });
+    document.removeEventListener('touchmove', onPageTouchMove, { capture: true });
+    document.removeEventListener('keydown', onPageKeyScroll, { capture: true });
+  }
+});
+onBeforeUnmount(() => {
+  document.removeEventListener('wheel', onPageWheel, { capture: true });
+  document.removeEventListener('touchmove', onPageTouchMove, { capture: true });
+  document.removeEventListener('keydown', onPageKeyScroll, { capture: true });
 });
 
 // ESC closes whichever overlay is open — popovers AND the mobile sheet.
@@ -485,6 +532,7 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
       <Transition name="mobile-slide">
         <aside
           v-if="mobileNavOpen"
+          ref="sheetRef"
           class="mobile-sheet md:hidden"
           role="dialog"
           aria-modal="true"
