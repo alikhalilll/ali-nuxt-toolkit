@@ -214,16 +214,17 @@ async function copy() {
 /* --- Body -----------------------------------------------------------------
    Holds the actual code. We don't style the `<pre>` directly here — the slot
    content (Shiki HTML, hand-coded spans, raw text) already brings its own
-   `<pre>`. We just give it consistent padding + horizontal scroll. Tight
-   line-height (1.45) so the panel reads like a real editor, not a marketing
-   code sample. Background sits at the dark `--color-code-bg` while the outer
-   frame is one shade lighter — a thin two-tone editor effect. */
+   `<pre>`. Font-size / line-height mirror the homepage `Showcase` panel
+   (`12.5px / 1.6`) so every code surface — prose, demo Code panes, hero —
+   shares one rhythm. The body's background is the dark `--color-code-bg`
+   while the outer frame is one shade lighter, producing the two-tone
+   editor effect. */
 .doc-code__body {
   position: relative;
   max-height: 480px;
   overflow: auto;
   font-size: 12.5px;
-  line-height: 1.45;
+  line-height: 1.6;
   background: var(--color-code-bg);
   border-radius: 0 0 8px 8px;
   counter-reset: doc-code-line;
@@ -243,9 +244,10 @@ async function copy() {
 .doc-code__body .shiki,
 .doc-code__body .shiki-fallback {
   margin: 0;
-  /* `0.75rem 0` (no horizontal padding) — the inner `.line` elements pick up
-     left padding to leave room for the gutter. */
-  padding: 0.75rem 0;
+  /* `14px 0` matches the Showcase panel's vertical padding. Horizontal
+     padding sits on the inner `.line` elements so the gutter alignment is
+     consistent. */
+  padding: 14px 0;
   background: transparent !important;
   background-color: transparent !important;
   font-family: inherit;
@@ -283,8 +285,10 @@ async function copy() {
 .doc-code__body .line {
   display: block;
   position: relative;
-  min-height: 1lh;
-  padding: 0 0.875rem 0 3.25rem;
+  /* No min-height — let `line-height: 1.6` (inherited) define the row.
+     Forcing `min-height: 1lh` produced the airy "marketing sample" look
+     the user explicitly wanted to remove. */
+  padding: 0 16px 0 2.75rem;
   counter-increment: doc-code-line;
 }
 .doc-code__body .line::before {
@@ -292,16 +296,16 @@ async function copy() {
   position: absolute;
   left: 0;
   top: 0;
-  width: 2.5rem;
-  padding-right: 0.625rem;
+  width: 2rem;
+  padding-right: 0.5rem;
   text-align: right;
   font-size: 10px;
   font-variant-numeric: tabular-nums;
   line-height: inherit;
-  color: color-mix(in oklab, var(--color-text-muted) 60%, transparent);
+  color: color-mix(in oklab, var(--color-text-muted) 55%, transparent);
   user-select: none;
   pointer-events: none;
-  border-right: 1px solid color-mix(in oklab, var(--color-border) 35%, transparent);
+  border-right: 1px solid color-mix(in oklab, var(--color-border) 30%, transparent);
 }
 
 /* Highlight the gutter number when a line is hovered — subtle editor-style
@@ -315,7 +319,7 @@ async function copy() {
    the gutter falls back to no numbering. Pad the body so it still aligns
    visually with the Shiki path. */
 .doc-code__body .shiki-fallback {
-  padding-left: 3.25rem;
+  padding-left: 2.75rem;
 }
 
 /* Hide scrollbars inside the panel (wheel / touch / keyboard still work). */
