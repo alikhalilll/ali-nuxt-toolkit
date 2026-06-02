@@ -19,12 +19,6 @@ const open = defineModel<boolean>('open');
 const isDesktop = useMediaQuery(() => props.breakpoint);
 
 /**
- * Pre-imported on both branches — do NOT lazy-load. Switching the component identity at runtime
- * means we still hydrate the right tree client-side.
- */
-const Root = computed(() => (isDesktop.value ? APopover : ADrawer));
-
-/**
  * Per-branch `modal` resolution — the two roots interpret the prop differently:
  *
  *   APopover (desktop, reka-ui): `modal=true` triggers `PopoverContentModal` + its
@@ -41,7 +35,13 @@ const rekaModal = computed(() => {
   return props.scrollLock === 'body';
 });
 const drawerModal = computed(() => props.modal !== false);
-const rootModal = computed(() => (isDesktop.value ? rekaModal.value : drawerModal.value));
+
+// Suppress vaul-vue's body-style scroll lock (which sets `body { overflow:hidden;
+// position:fixed }` and breaks `position: sticky` everywhere on the page) whenever
+// the caller is using the sticky-safe event lock — the desktop popover branch is
+// already sticky-safe via `useEventScrollLock`, and we want the mobile drawer to
+// behave identically. Only the legacy `'body'` strategy keeps vaul's default lock.
+const drawerNoBodyStyles = computed(() => props.scrollLock !== 'body');
 
 provideResponsivePopoverContext({
   open: computed(() => open.value ?? false),
@@ -51,7 +51,16 @@ provideResponsivePopoverContext({
 </script>
 
 <template>
-  <component :is="Root" v-model:open="open" :modal="rootModal" data-slot="responsive-popover">
-    <slot :is-desktop="isDesktop" />
-  </component>
+  <APopover v-if="isDesktop" v-model:open="open" :modal="rekaModal" data-slot="responsive-popover">
+    <slot :is-desktop="true" />
+  </APopover>
+  <ADrawer
+    v-else
+    v-model:open="open"
+    :modal="drawerModal"
+    :no-body-styles="drawerNoBodyStyles"
+    data-slot="responsive-popover"
+  >
+    <slot :is-desktop="false" />
+  </ADrawer>
 </template>
