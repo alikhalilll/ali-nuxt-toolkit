@@ -18,19 +18,8 @@ Symmetric encryption for Nuxt 3 / 4 built on the native **Web Crypto API**. Defa
 
 ## Install
 
-```bash
-# pnpm
-pnpm add @alikhalilll/nuxt-crypto
-
-# npm
-npm install @alikhalilll/nuxt-crypto
-
-# yarn
-yarn add @alikhalilll/nuxt-crypto
-
-# bun
-bun add @alikhalilll/nuxt-crypto
-```
+::doc-install{pkg="@alikhalilll/nuxt-crypto"}
+::
 
 ## Register the module
 

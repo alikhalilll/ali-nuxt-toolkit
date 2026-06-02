@@ -20,19 +20,8 @@ A strongly-typed `fetch` client for Nuxt 3 / 4 with interceptors, retry/backoff,
 
 ## Install
 
-```bash
-# pnpm
-pnpm add @alikhalilll/nuxt-api-provider
-
-# npm
-npm install @alikhalilll/nuxt-api-provider
-
-# yarn
-yarn add @alikhalilll/nuxt-api-provider
-
-# bun
-bun add @alikhalilll/nuxt-api-provider
-```
+::doc-install{pkg="@alikhalilll/nuxt-api-provider"}
+::
 
 ## Register the module
 

@@ -82,15 +82,16 @@ const result = computed(() =>
         <div class="compose-stage__field">
           <!-- Row 1 — full-width country trigger. The ACountrySelect's own
                trigger is given `w-full` so it fills the visual width and the
-               row reads as a single "picker card". -->
+               row reads as a single "picker card". `ACountrySelect` has a
+               fragment root (renders reka-ui's PopoverRoot which is a slot),
+               so a regular `class` prop on the component would be discarded —
+               we wrap it in an explicit `<div>` so our `:deep()` selectors
+               below have a real element to scope against. -->
           <div class="compose-stage__row compose-stage__row--picker">
             <span class="compose-stage__hint">Country</span>
-            <ACountrySelect
-              v-model:selected="country"
-              size="md"
-              class="compose-stage__picker"
-              trigger-class="w-full"
-            />
+            <div class="compose-stage__picker">
+              <ACountrySelect v-model:selected="country" size="md" trigger-class="w-full" />
+            </div>
           </div>
 
           <!-- Row 2 — national-number input on the left, E.164 chip on the right.
@@ -178,22 +179,48 @@ const result = computed(() =>
   padding-left: 2px;
 }
 
-/* The country picker fills the row; the inherited trigger styles already
-   handle border + bg, we just add elevation when focused. */
+/* The country picker fills the row. Make it look like a native `<select>`:
+   - full-width filled box with a visible border + soft surface fill
+   - flag sits flush on the left, chevron pinned to the right (the trigger
+     uses `inline-flex` so `justify-content: space-between` would collapse
+     against its own content — we add a spacer pseudo via gap instead, and
+     stretch by giving the flag a fixed slot width)
+   - focus / hover lift with a brand-tinted ring */
 .compose-stage__picker {
   width: 100%;
 }
 .compose-stage__picker :deep([data-slot='country-select-trigger']) {
   width: 100%;
+  justify-content: flex-start;
+  gap: 0.625rem;
+  padding: 0 0.75rem;
   border-radius: 8px;
   border: 1px solid color-mix(in oklab, var(--color-border) 80%, transparent);
   background: color-mix(in oklab, var(--bg) 60%, var(--surface));
+  color: var(--color-text);
   transition:
     border-color 0.15s ease,
-    box-shadow 0.15s ease;
+    box-shadow 0.15s ease,
+    background 0.15s ease;
 }
 .compose-stage__picker :deep([data-slot='country-select-trigger']:hover) {
   border-color: color-mix(in oklab, var(--color-brand) 35%, var(--color-border));
+  background: color-mix(in oklab, var(--bg) 80%, var(--surface));
+}
+.compose-stage__picker :deep([data-slot='country-select-trigger'][data-state='open']),
+.compose-stage__picker :deep([data-slot='country-select-trigger']:focus-visible) {
+  border-color: color-mix(in oklab, var(--color-brand) 55%, var(--color-border));
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-brand) 18%, transparent);
+}
+/* Push the chevron to the right edge — the trigger's children are: flag,
+   (label?), chevron. A flex grow on a synthetic spacer before the chevron
+   would require slot markup we don't own. Instead, give the chevron itself
+   `margin-inline-start: auto` so it floats right against the trigger border. */
+.compose-stage__picker :deep(.a-country-select__chevron) {
+  margin-inline-start: auto;
+  width: 1rem;
+  height: 1rem;
+  color: var(--color-text-muted);
 }
 
 /* National-number row. Stacks the hint label above its own input, so the

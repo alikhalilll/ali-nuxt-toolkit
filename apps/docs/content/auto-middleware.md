@@ -18,19 +18,8 @@ Declarative, layout-based route middleware for Nuxt 3 / 4. Map layouts to middle
 
 ## Install
 
-```bash
-# pnpm
-pnpm add @alikhalilll/nuxt-auto-middleware
-
-# npm
-npm install @alikhalilll/nuxt-auto-middleware
-
-# yarn
-yarn add @alikhalilll/nuxt-auto-middleware
-
-# bun
-bun add @alikhalilll/nuxt-auto-middleware
-```
+::doc-install{pkg="@alikhalilll/nuxt-auto-middleware"}
+::
 
 ## Register the module
 

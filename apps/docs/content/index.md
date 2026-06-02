@@ -21,19 +21,8 @@ Four focused packages published under the `@alikhalilll` npm scope: three Nuxt m
 
 The Nuxt modules — install whichever you need and register them in `nuxt.config.ts`:
 
-```bash
-# pnpm
-pnpm add @alikhalilll/nuxt-api-provider @alikhalilll/nuxt-crypto @alikhalilll/nuxt-auto-middleware
-
-# npm
-npm install @alikhalilll/nuxt-api-provider @alikhalilll/nuxt-crypto @alikhalilll/nuxt-auto-middleware
-
-# yarn
-yarn add @alikhalilll/nuxt-api-provider @alikhalilll/nuxt-crypto @alikhalilll/nuxt-auto-middleware
-
-# bun
-bun add @alikhalilll/nuxt-api-provider @alikhalilll/nuxt-crypto @alikhalilll/nuxt-auto-middleware
-```
+::doc-install{pkgs="@alikhalilll/nuxt-api-provider @alikhalilll/nuxt-crypto @alikhalilll/nuxt-auto-middleware"}
+::
 
 ```ts
 export default defineNuxtConfig({
@@ -47,19 +36,8 @@ export default defineNuxtConfig({
 
 The UI component — installed independently of the Nuxt modules:
 
-```bash
-# pnpm
-pnpm add @alikhalilll/a-tel-input
-
-# npm
-npm install @alikhalilll/a-tel-input
-
-# yarn
-yarn add @alikhalilll/a-tel-input
-
-# bun
-bun add @alikhalilll/a-tel-input
-```
+::doc-install{pkg="@alikhalilll/a-tel-input"}
+::
 
 ```ts
 import { ATelInput, ACountrySelect } from '@alikhalilll/a-tel-input';

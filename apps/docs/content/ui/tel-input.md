@@ -29,19 +29,8 @@ order: 1
 
 ## Install
 
-```bash
-# pnpm
-pnpm add @alikhalilll/a-tel-input
-
-# npm
-npm install @alikhalilll/a-tel-input
-
-# yarn
-yarn add @alikhalilll/a-tel-input
-
-# bun
-bun add @alikhalilll/a-tel-input
-```
+::doc-install{pkg="@alikhalilll/a-tel-input"}
+::
 
 ```ts
 import { ATelInput } from '@alikhalilll/a-tel-input';
@@ -214,19 +203,8 @@ The component supports two binding contracts:
 
 Two subpath entries also ship for first-class **VeeValidate** + **Zod** integration, including async / server-side validation:
 
-```bash
-# pnpm
-pnpm add vee-validate @vee-validate/zod zod
-
-# npm
-npm install vee-validate @vee-validate/zod zod
-
-# yarn
-yarn add vee-validate @vee-validate/zod zod
-
-# bun
-bun add vee-validate @vee-validate/zod zod
-```
+::doc-install{pkgs="vee-validate @vee-validate/zod zod"}
+::
 
 ### Drop-in `<Field v-slot="{ field, errors }">` — `v-bind="field"` just works
 
@@ -270,23 +248,17 @@ That's the whole integration. No `useTelField()`, no manual `handleBlur`, no ext
 ::DemoTelInputVeeValidate
 ::
 
-::DemoTelInputVeeValidate
-::
+`useTelField(name, options)` (from `@alikhalilll/a-tel-input/vee-validate`) owns the two v-models (`phone` + `country`), composes them into an E.164 string for VeeValidate's schema, and returns a ready-to-bind prop bag. Pair it with `zPhone()` for a Zod schema that shares the same `libphonenumber-js` engine the component uses — schema and field can never disagree.
 
-`useTelField(name, options)` (from `@alikhalilll/a-tel-input/vee-validate`) owns the two v-models (`phone` + `country`), composes them into an E.164 string for VeeValidate's schema, and returns a ready-to-bind prop bag. Pair it with `zPhone()` (from `@alikhalilll/a-tel-input/zod`) for a Zod schema that delegates to the same `libphonenumber-js` engine the component uses — so the schema can never disagree with the in-field validation state.
+Server-side checks ride the schema via `z.refine(async)` — vee-validate ignores field-level rules when `useForm` has a `validationSchema`, so the refine is what `handleSubmit` awaits and what drives `useTelField`'s `validating` ref (→ in-field spinner).
 
 ```ts
-import { ATelInput } from '@alikhalilll/a-tel-input';
 import { useTelField } from '@alikhalilll/a-tel-input/vee-validate';
 import { zPhone } from '@alikhalilll/a-tel-input/zod';
 import { useForm } from 'vee-validate';
 import { toTypedSchema } from '@vee-validate/zod';
 import { z } from 'zod';
 
-// Important: vee-validate ignores field-level `rules` when `useForm` has a
-// `validationSchema`. To run an async server check, chain it onto the schema via
-// `z.refine(async)` — that's what `handleSubmit` actually awaits, and what drives
-// `useTelField`'s `validating` ref (via `meta.pending` → in-field spinner).
 const phoneSchema = zPhone().refine(
   async (value) => {
     if (!value) return true;

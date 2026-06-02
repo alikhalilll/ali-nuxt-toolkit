@@ -100,48 +100,91 @@ function onKeyDown(e: KeyboardEvent) {
   e.preventDefault();
 }
 
-// Snapshot the host page's `body` inline styles before any third-party body lock
-// (reka-ui's `useBodyScrollLock`, vaul-vue's Safari lock, …) runs. We restore
-// them while our event lock is active so the host's `position: sticky` keeps
-// working — the legacy approach was for the popover to set `body { overflow:
-// hidden; pointer-events: none }` itself; multiple modal libraries do the same,
-// and any of them silently break sticky on the host page.
+// Protect `body` from third-party scroll locks (reka-ui's `useBodyScrollLock`,
+// vaul-vue's Safari lock, …) while our own event lock is active. The legacy
+// approach was for the popover to set `body { overflow: hidden; pointer-events:
+// none }` itself; multiple modal libraries still do the same on every mount,
+// and any one of them silently breaks `position: sticky` on the host page.
+//
+// We deliberately don't snapshot the host's prior values — those locks usually
+// fire *during* setup (synchronously, in the same tick our lock activates), so
+// by the time our `flush: 'post'` watch runs the snapshot would already capture
+// the broken state. Instead we treat the four "lock-disabling" values as
+// blacklisted while our lock is engaged: any time they appear we clear them
+// back to empty. The host's *legitimate* values are typically the empty string
+// anyway, since hosts that rely on body overflow set it via CSS, not inline
+// style. The blacklist matches exactly what each upstream lock writes.
 const PROTECTED_PROPS = ['overflow', 'overflowY', 'overflowX', 'pointerEvents'] as const;
-type ProtectedProp = (typeof PROTECTED_PROPS)[number];
-let bodyStyleSnapshot: Partial<Record<ProtectedProp, string>> | null = null;
 let bodyStyleObserver: MutationObserver | null = null;
+let bodyStyleHtmlObserver: MutationObserver | null = null;
+let bodyClassObserver: MutationObserver | null = null;
 
-function snapshotBodyStyle() {
+const BAD_OVERFLOW_VALUES = new Set(['hidden', 'clip']);
+
+function clearBadBodyStyles() {
   if (typeof document === 'undefined') return;
   const s = document.body.style;
-  bodyStyleSnapshot = {
-    overflow: s.overflow,
-    overflowY: s.overflowY,
-    overflowX: s.overflowX,
-    pointerEvents: s.pointerEvents,
-  };
+  if (BAD_OVERFLOW_VALUES.has(s.overflow)) s.overflow = '';
+  if (BAD_OVERFLOW_VALUES.has(s.overflowY)) s.overflowY = '';
+  if (BAD_OVERFLOW_VALUES.has(s.overflowX)) s.overflowX = '';
+  if (s.pointerEvents === 'none') s.pointerEvents = '';
+  // vaul-vue / reka-ui both also try `position: fixed` + `top: -{n}px` on
+  // Safari to lock scroll. Same sticky-breaking story — neutralise.
+  if (s.position === 'fixed') s.position = '';
+  if (s.top.startsWith('-')) s.top = '';
+  if (s.left.startsWith('-')) s.left = '';
+  if (s.right === '0px') s.right = '';
+  if (s.height === 'auto' || s.height === '100%') s.height = '';
+  // reka-ui adds margin-right + padding-right compensation when the scrollbar
+  // disappears. Without an actual lock those create visible reflow.
+  if (s.marginRight && s.marginRight !== '0px') s.marginRight = '';
+  if (s.paddingRight && s.paddingRight !== '0px') s.paddingRight = '';
 }
 
-function applyBodyStyleSnapshot() {
-  if (!bodyStyleSnapshot || typeof document === 'undefined') return;
-  const s = document.body.style;
-  for (const key of PROTECTED_PROPS) {
-    const want = bodyStyleSnapshot[key] ?? '';
-    if (s[key] !== want) s[key] = want;
-  }
+function clearBadHtmlStyles() {
+  if (typeof document === 'undefined') return;
+  const s = document.documentElement.style;
+  if (BAD_OVERFLOW_VALUES.has(s.overflow)) s.overflow = '';
+  if (BAD_OVERFLOW_VALUES.has(s.overflowY)) s.overflowY = '';
+  if (BAD_OVERFLOW_VALUES.has(s.overflowX)) s.overflowX = '';
+  // vaul's shouldScaleBackground path writes a `--scrollbar-width` custom
+  // property to the documentElement when locking; harmless but removed for
+  // cleanliness so the host doesn't see ghost vars after close.
 }
 
 function startBodyStyleProtection() {
-  if (bodyStyleObserver || typeof document === 'undefined') return;
-  snapshotBodyStyle();
-  bodyStyleObserver = new MutationObserver(() => applyBodyStyleSnapshot());
-  bodyStyleObserver.observe(document.body, { attributes: true, attributeFilter: ['style'] });
+  if (typeof document === 'undefined') return;
+  // 1) Sweep the current state immediately — covers the case where reka-ui or
+  //    vaul already locked the body BEFORE our `flush: 'post'` watch fired.
+  clearBadBodyStyles();
+  clearBadHtmlStyles();
+
+  if (!bodyStyleObserver) {
+    bodyStyleObserver = new MutationObserver(() => clearBadBodyStyles());
+    bodyStyleObserver.observe(document.body, { attributes: true, attributeFilter: ['style'] });
+  }
+  if (!bodyStyleHtmlObserver) {
+    bodyStyleHtmlObserver = new MutationObserver(() => clearBadHtmlStyles());
+    bodyStyleHtmlObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['style'],
+    });
+  }
+  // Also watch for class additions (some libs add a `scroll-lock` class that
+  // pairs with a global CSS rule); re-sweep on every body class change.
+  if (!bodyClassObserver) {
+    bodyClassObserver = new MutationObserver(() => clearBadBodyStyles());
+    bodyClassObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  }
 }
 
 function stopBodyStyleProtection() {
   bodyStyleObserver?.disconnect();
   bodyStyleObserver = null;
-  bodyStyleSnapshot = null;
+  bodyStyleHtmlObserver?.disconnect();
+  bodyStyleHtmlObserver = null;
+  bodyClassObserver?.disconnect();
+  bodyClassObserver = null;
 }
 
 function activate() {

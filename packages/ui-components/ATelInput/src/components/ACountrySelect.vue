@@ -529,24 +529,39 @@ defineExpose({
   cursor: not-allowed;
   opacity: 0.5;
 }
+/* Per-size padding, font-size, and a `min-height` fallback. The trigger uses
+   `height: 100%` so that when it's embedded in `<ATelInput>`'s row (which sets
+   its own height per size) it stretches to fill the row. But when the picker
+   is used standalone (e.g. composed into a custom field via `<ACountrySelect>`
+   directly) there is no parent height to inherit — `height: 100%` then collapses
+   to the trigger's natural content height (~22px). `min-height` guarantees the
+   correct standalone size, and harmlessly defers to `height: 100%` whenever a
+   taller row drives the actual height. Values match the input row heights from
+   `ATelInput.vue` so a standalone picker visually pairs with a native `<input>`
+   set to the same size. */
 .a-country-select__trigger[data-size='xs'] {
   padding: 0 0.5rem;
+  min-height: 1.75rem; /* 28px — matches the xs ATelInput row */
   font-size: 0.75rem;
 }
 .a-country-select__trigger[data-size='sm'] {
   padding: 0 0.625rem;
+  min-height: 2.25rem; /* 36px */
   font-size: 0.875rem;
 }
 .a-country-select__trigger[data-size='md'] {
   padding: 0 0.75rem;
+  min-height: 2.5rem; /* 40px */
   font-size: 0.875rem;
 }
 .a-country-select__trigger[data-size='lg'] {
   padding: 0 0.875rem;
+  min-height: 2.75rem; /* 44px */
   font-size: 1rem;
 }
 .a-country-select__trigger[data-size='xl'] {
   padding: 0 1rem;
+  min-height: 3rem; /* 48px */
   font-size: 1rem;
 }
 
