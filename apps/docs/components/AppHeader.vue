@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onClickOutside } from '@vueuse/core';
+import { onClickOutside, useEventListener } from '@vueuse/core';
 import { ChevronDownIcon } from '~/components/icons';
 
 const route = useRoute();
@@ -44,6 +44,22 @@ watch(
     uiNavOpen.value = false;
   }
 );
+
+// Lock body scroll while the mobile sheet is open so background content can't
+// scroll through the backdrop and the rubber-band on iOS doesn't reveal the
+// header behind the open sheet.
+watch(mobileNavOpen, (open) => {
+  if (typeof document === 'undefined') return;
+  document.body.style.overflow = open ? 'hidden' : '';
+});
+
+// ESC closes whichever overlay is open — popovers AND the mobile sheet.
+useEventListener('keydown', (e: KeyboardEvent) => {
+  if (e.key !== 'Escape') return;
+  if (mobileNavOpen.value) mobileNavOpen.value = false;
+  else if (uiNavOpen.value) uiNavOpen.value = false;
+  else if (themePopoverOpen.value) themePopoverOpen.value = false;
+});
 
 // Subtle micro-shift to the header background on scroll — denser blur + a hairline
 // shadow once the page has scrolled past the fold, so the bar feels anchored.
@@ -207,14 +223,8 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
               aria-hidden="true"
             />
           </button>
-          <!-- UI mega-menu — glassy panel with a brand monogram per component,
-               component name + npm pkg badge, and a "Browse all" footer link. -->
-          <div v-if="uiNavOpen" class="ui-mega absolute left-0 top-full mt-3 w-[22rem]" role="menu">
-            <div class="ui-mega__eyebrow">
-              <span class="ui-mega__eyebrow-dot" aria-hidden="true" />
-              <span>@alikhalilll · UI</span>
-              <span class="ui-mega__eyebrow-tag">Vue 3 · headless</span>
-            </div>
+          <!-- UI dropdown — tight 18rem panel, refined rows, quiet footer. -->
+          <div v-if="uiNavOpen" class="ui-mega absolute left-0 top-full mt-3" role="menu">
             <div class="ui-mega__grid">
               <NuxtLink
                 v-for="item in uiNavItems"
@@ -225,19 +235,18 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
                 active-class="ui-mega__item--active"
                 @click="uiNavOpen = false"
               >
-                <span class="ui-mega__mark" aria-hidden="true">
-                  {{ item.pkg ? item.label.charAt(1).toUpperCase() : '◇' }}
-                </span>
                 <span class="ui-mega__body">
                   <span class="ui-mega__label">{{ item.label }}</span>
-                  <span v-if="item.pkg" class="ui-mega__pkg"> @alikhalilll/{{ item.pkg }} </span>
-                  <span v-else class="ui-mega__pkg ui-mega__pkg--muted"> Overview · theming </span>
+                  <span v-if="item.pkg" class="ui-mega__pkg">@alikhalilll/{{ item.pkg }}</span>
+                  <span v-else class="ui-mega__pkg ui-mega__pkg--muted">
+                    Overview &middot; theming
+                  </span>
                 </span>
                 <span class="ui-mega__chev" aria-hidden="true">→</span>
               </NuxtLink>
             </div>
             <NuxtLink to="/ui" class="ui-mega__footer" @click="uiNavOpen = false">
-              Browse all components
+              <span>Browse all components</span>
               <span aria-hidden="true">→</span>
             </NuxtLink>
           </div>
@@ -461,75 +470,252 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
       </div>
     </div>
 
-    <!-- Mobile page nav -->
-    <div v-if="mobileNavOpen" class="border-t border-border bg-bg md:hidden">
-      <nav class="mx-auto max-w-[1400px] px-4 py-3 text-sm">
-        <ul class="m-0 list-none p-0">
-          <li>
-            <NuxtLink
-              to="/"
-              class="block rounded-md px-3 py-2 text-text-dim transition-colors hover:bg-surface hover:text-text hover:no-underline"
-              active-class="!text-accent-2 font-medium"
-              exact-active-class="!text-accent-2 font-medium"
+    <!-- Mobile sheet — slide-in panel from the right with backdrop blur.
+         Teleported to <body> because the parent .app-header uses backdrop-filter,
+         which creates a containing block that would trap `position: fixed`
+         children and squish the sheet to the header's own height. -->
+    <Teleport to="body">
+      <Transition name="mobile-fade">
+        <div
+          v-if="mobileNavOpen"
+          class="mobile-sheet__backdrop md:hidden"
+          @click="mobileNavOpen = false"
+        />
+      </Transition>
+      <Transition name="mobile-slide">
+        <aside
+          v-if="mobileNavOpen"
+          class="mobile-sheet md:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Site navigation"
+        >
+          <div class="mobile-sheet__head">
+            <span class="mobile-sheet__brand">
+              <span class="mobile-sheet__brand-scope">ali-nuxt</span>
+              <span class="mobile-sheet__brand-sep">/</span>
+              <span class="mobile-sheet__brand-name">toolkit</span>
+            </span>
+            <button
+              type="button"
+              class="mobile-sheet__close"
+              aria-label="Close navigation"
               @click="mobileNavOpen = false"
             >
-              Introduction
-            </NuxtLink>
-          </li>
-          <li v-for="link in navLinks" :key="link.to">
-            <NuxtLink
-              :to="link.to"
-              class="block rounded-md px-3 py-2 text-text-dim transition-colors hover:bg-surface hover:text-text hover:no-underline"
-              active-class="!text-accent-2 font-medium"
-              @click="mobileNavOpen = false"
-            >
-              {{ link.label }}
-            </NuxtLink>
-          </li>
-          <li>
-            <div
-              class="mt-1 px-3 pt-2 pb-1 text-[11px] font-medium tracking-wider text-text-dim uppercase"
-            >
-              ui
-            </div>
-            <ul class="m-0 list-none p-0">
-              <li v-for="item in uiNavItems" :key="item.to">
-                <NuxtLink
-                  :to="item.to"
-                  class="mobile-ui-item block rounded-md px-3 py-2 text-text-dim transition-colors hover:bg-surface hover:text-text hover:no-underline"
-                  active-class="!text-accent-2 font-medium"
-                  @click="mobileNavOpen = false"
-                >
-                  <span class="block leading-tight">{{ item.label }}</span>
-                  <!--
-                    Package badge mirrors the desktop dropdown — keeps the new split
-                    structure obvious on touch devices too.
-                  -->
-                  <span
-                    v-if="item.pkg"
-                    class="block font-mono text-[10.5px] leading-tight text-text-muted/70"
-                  >
-                    @alikhalilll/{{ item.pkg }}
-                  </span>
-                </NuxtLink>
-              </li>
-            </ul>
-          </li>
-        </ul>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
 
-        <div class="mt-4 border-t border-border pt-3">
-          <a
-            href="https://github.com/alikhalilll/ali-nuxt-toolkit"
-            target="_blank"
-            rel="noopener"
-            class="block rounded-md px-3 py-2 text-text-dim transition-colors hover:bg-surface hover:text-text hover:no-underline"
-            @click="mobileNavOpen = false"
-          >
-            GitHub →
-          </a>
-        </div>
-      </nav>
-    </div>
+          <div class="mobile-sheet__body">
+            <section class="mobile-sheet__section">
+              <h4 class="mobile-sheet__eyebrow">Documentation</h4>
+              <ul class="mobile-sheet__list">
+                <li>
+                  <NuxtLink
+                    to="/"
+                    class="mobile-sheet__item"
+                    active-class="mobile-sheet__item--active"
+                    exact-active-class="mobile-sheet__item--active"
+                    @click="mobileNavOpen = false"
+                  >
+                    <span>Introduction</span>
+                  </NuxtLink>
+                </li>
+              </ul>
+            </section>
+
+            <section class="mobile-sheet__section">
+              <h4 class="mobile-sheet__eyebrow">
+                <span>Packages</span>
+                <span class="mobile-sheet__count">{{ navLinks.length + 1 }}</span>
+              </h4>
+              <ul class="mobile-sheet__list">
+                <li
+                  v-for="link in navLinks"
+                  :key="link.to"
+                  :class="`pkg-${link.to.replace('/', '').split('-')[0]}`"
+                >
+                  <NuxtLink
+                    :to="link.to"
+                    class="mobile-sheet__item mobile-sheet__item--mono"
+                    active-class="mobile-sheet__item--active"
+                    @click="mobileNavOpen = false"
+                  >
+                    <span class="mobile-sheet__dot" aria-hidden="true" />
+                    <span>{{ link.label }}</span>
+                  </NuxtLink>
+                </li>
+                <li class="pkg-ui">
+                  <NuxtLink
+                    to="/ui"
+                    class="mobile-sheet__item mobile-sheet__item--mono"
+                    :class="uiIsActive && 'mobile-sheet__item--active'"
+                    @click="mobileNavOpen = false"
+                  >
+                    <span class="mobile-sheet__dot" aria-hidden="true" />
+                    <span>ui</span>
+                  </NuxtLink>
+                </li>
+              </ul>
+            </section>
+
+            <section class="mobile-sheet__section">
+              <h4 class="mobile-sheet__eyebrow">UI Components</h4>
+              <ul class="mobile-sheet__list">
+                <li v-for="item in uiNavItems" :key="item.to">
+                  <NuxtLink
+                    :to="item.to"
+                    :title="item.pkg ? `${item.label} · @alikhalilll/${item.pkg}` : item.label"
+                    class="mobile-sheet__item mobile-sheet__item--block"
+                    active-class="mobile-sheet__item--active"
+                    @click="mobileNavOpen = false"
+                  >
+                    <span class="mobile-sheet__item-title">{{ item.label }}</span>
+                    <span v-if="item.pkg" class="mobile-sheet__badge">{{ item.pkg }}</span>
+                  </NuxtLink>
+                </li>
+              </ul>
+            </section>
+          </div>
+
+          <footer class="mobile-sheet__foot">
+            <div class="mobile-sheet__theme" role="group" aria-label="Theme">
+              <button
+                v-for="opt in themeOptions"
+                :key="opt.value"
+                type="button"
+                :aria-label="opt.label"
+                :aria-pressed="opt.value === pref"
+                :class="[
+                  'mobile-sheet__theme-btn',
+                  opt.value === pref ? 'mobile-sheet__theme-btn--active' : '',
+                ]"
+                @click="selectTheme(opt.value)"
+              >
+                <!-- Sun -->
+                <svg
+                  v-if="opt.value === 'light'"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="4" />
+                  <path d="M12 2v2" />
+                  <path d="M12 20v2" />
+                  <path d="m4.93 4.93 1.41 1.41" />
+                  <path d="m17.66 17.66 1.41 1.41" />
+                  <path d="M2 12h2" />
+                  <path d="M20 12h2" />
+                  <path d="m6.34 17.66-1.41 1.41" />
+                  <path d="m19.07 4.93-1.41 1.41" />
+                </svg>
+                <!-- Moon -->
+                <svg
+                  v-else-if="opt.value === 'dark'"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                </svg>
+                <!-- System -->
+                <svg
+                  v-else
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <rect width="20" height="14" x="2" y="3" rx="2" />
+                  <line x1="8" x2="16" y1="21" y2="21" />
+                  <line x1="12" x2="12" y1="17" y2="21" />
+                </svg>
+                <span>{{ opt.label }}</span>
+              </button>
+            </div>
+
+            <div class="mobile-sheet__socials">
+              <a
+                href="https://github.com/alikhalilll/ali-nuxt-toolkit"
+                target="_blank"
+                rel="noopener"
+                aria-label="GitHub repository"
+                class="mobile-sheet__social"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M12 .5C5.73.5.5 5.73.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56 0-.28-.01-1.02-.02-2-3.2.7-3.88-1.54-3.88-1.54-.52-1.34-1.28-1.7-1.28-1.7-1.04-.72.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.23-1.28-5.23-5.72 0-1.26.45-2.3 1.19-3.11-.12-.3-.52-1.47.11-3.06 0 0 .97-.31 3.18 1.19.92-.26 1.91-.39 2.89-.39.98 0 1.97.13 2.89.39 2.21-1.5 3.18-1.19 3.18-1.19.63 1.59.23 2.76.11 3.06.74.81 1.19 1.85 1.19 3.11 0 4.45-2.69 5.43-5.25 5.71.41.36.78 1.06.78 2.14 0 1.55-.01 2.8-.01 3.18 0 .31.21.68.8.56A11.5 11.5 0 0 0 23.5 12C23.5 5.73 18.27.5 12 .5z"
+                  />
+                </svg>
+                <span>GitHub</span>
+              </a>
+              <a
+                href="https://www.linkedin.com/in/alikhalilll"
+                target="_blank"
+                rel="noopener"
+                aria-label="LinkedIn"
+                class="mobile-sheet__social"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M20.45 20.45h-3.55v-5.56c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.13 1.45-2.13 2.95v5.65H9.37V9h3.41v1.56h.05c.47-.9 1.64-1.85 3.37-1.85 3.6 0 4.26 2.37 4.26 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.23 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.46c.98 0 1.77-.77 1.77-1.72V1.72C24 .77 23.21 0 22.23 0z"
+                  />
+                </svg>
+                <span>LinkedIn</span>
+              </a>
+            </div>
+          </footer>
+        </aside>
+      </Transition>
+    </Teleport>
   </header>
 </template>
 
@@ -608,65 +794,59 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
   color: var(--text);
 }
 
-/* Nav links — brand-tinted glassy pill that morphs in on hover, locks in on active.
-   Replaces the older animated underline with a richer, more product-feel highlight. */
+/* --- Desktop nav links ----------------------------------------------------
+   Restrained, text-first treatment. Hover shifts text from dim → primary +
+   adds a hairline surface tint. The active state gets a single sliding
+   underline that scales from the centre — the only color signal beyond the
+   text itself. Mirrors the restraint of Vercel/Linear/Stripe nav. */
 .nav-links {
-  font-size: 14px;
+  font-size: 13.5px;
 }
 .nav-link {
   position: relative;
   display: inline-flex;
   align-items: center;
-  padding: 6px 12px;
-  border-radius: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
   color: var(--text-dim);
   font-weight: 500;
-  isolation: isolate;
-  transition: color 0.15s ease;
-}
-.nav-link::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  background: linear-gradient(
-    135deg,
-    color-mix(in oklab, var(--color-brand) 14%, transparent),
-    color-mix(in oklab, var(--color-brand-2) 14%, transparent)
-  );
-  box-shadow: 0 0 0 1px color-mix(in oklab, var(--color-brand) 22%, transparent);
-  opacity: 0;
-  transform: scale(0.92);
+  letter-spacing: -0.005em;
+  text-decoration: none;
   transition:
-    opacity 0.2s ease,
-    transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    color 0.16s ease,
+    background 0.16s ease;
 }
 .nav-link:hover {
   color: var(--text);
-}
-.nav-link:hover::before {
-  opacity: 0.65;
-  transform: scale(1);
+  background: color-mix(in oklab, var(--surface) 50%, transparent);
+  text-decoration: none;
 }
 .nav-link--active {
   color: var(--text);
 }
-.nav-link--active::before {
-  opacity: 1;
-  transform: scale(1);
-  background: linear-gradient(
-    135deg,
-    color-mix(in oklab, var(--color-brand) 22%, transparent),
-    color-mix(in oklab, var(--color-brand-2) 18%, transparent)
-  );
-  box-shadow:
-    0 0 0 1px color-mix(in oklab, var(--color-brand) 36%, transparent),
-    0 4px 16px -4px color-mix(in oklab, var(--color-brand) 28%, transparent);
+.nav-link::after {
+  content: '';
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 4px;
+  height: 1.5px;
+  background: var(--color-brand);
+  border-radius: 2px;
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.nav-link:hover::after {
+  transform: scaleX(0.55);
+}
+.nav-link--active::after {
+  transform: scaleX(1);
+  box-shadow: 0 0 8px color-mix(in oklab, var(--color-brand) 50%, transparent);
 }
 
-/* The dropdown trigger reuses .nav-link styling so it sits identically alongside
-   the NuxtLink siblings. Strip default button chrome. */
+/* Dropdown trigger reuses .nav-link so it aligns with NuxtLink siblings.
+   Strip default button chrome. */
 .nav-link--trigger {
   display: inline-flex;
   align-items: center;
@@ -680,99 +860,61 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
   outline-offset: 2px;
 }
 
-/* UI mega-menu — glassy panel with eyebrow, gradient marks per component,
-   and a brand-tinted halo. Replaces the old simple dropdown. */
+/* --- UI dropdown ----------------------------------------------------------
+   Tight 18rem panel. Drops the eyebrow strip and per-item brand monogram
+   that the old "mega-menu" carried — for a 2-item list those felt like
+   peacocking. Now: list of refined rows + a quiet "Browse all" footer. */
 .ui-mega {
-  border-radius: 16px;
-  background: color-mix(in oklab, var(--bg) 78%, transparent);
-  backdrop-filter: blur(20px) saturate(140%);
-  -webkit-backdrop-filter: blur(20px) saturate(140%);
-  border: 1px solid color-mix(in oklab, var(--color-brand) 18%, var(--border));
-  padding: 10px;
+  width: 18rem;
+  border-radius: 12px;
+  background: color-mix(in oklab, var(--bg) 86%, transparent);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
+  padding: 6px;
   box-shadow:
-    0 1px 0 0 color-mix(in oklab, #fff 6%, transparent) inset,
-    0 24px 56px -16px color-mix(in oklab, var(--color-brand) 38%, transparent),
-    0 6px 16px -6px rgba(0, 0, 0, 0.18);
+    0 1px 0 0 color-mix(in oklab, #fff 5%, transparent) inset,
+    0 14px 36px -12px rgba(0, 0, 0, 0.22),
+    0 4px 10px -4px rgba(0, 0, 0, 0.1);
   z-index: 50;
-}
-.ui-mega__eyebrow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px 10px;
-  font-family: ui-monospace, 'JetBrains Mono', monospace;
-  font-size: 10.5px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-}
-.ui-mega__eyebrow-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, var(--color-brand), var(--color-brand-2));
-  box-shadow: 0 0 8px color-mix(in oklab, var(--color-brand) 60%, transparent);
-}
-.ui-mega__eyebrow-tag {
-  margin-inline-start: auto;
-  padding: 2px 7px;
-  border-radius: 999px;
-  border: 1px solid color-mix(in oklab, var(--color-brand) 25%, var(--border));
-  color: color-mix(in oklab, var(--color-brand) 80%, var(--text));
-  font-size: 9.5px;
 }
 .ui-mega__grid {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 .ui-mega__item {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  border-radius: 12px;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
   color: var(--text-dim);
   text-decoration: none;
   transition:
-    background 0.18s ease,
-    color 0.18s ease,
-    transform 0.18s ease;
+    background 0.16s ease,
+    color 0.16s ease;
 }
 .ui-mega__item:hover {
   color: var(--text);
-  background: color-mix(in oklab, var(--surface) 60%, transparent);
+  background: color-mix(in oklab, var(--surface) 70%, transparent);
   text-decoration: none;
-  transform: translateX(1px);
 }
 .ui-mega__item--active {
   color: var(--text);
-  background: linear-gradient(
-    135deg,
-    color-mix(in oklab, var(--color-brand) 18%, transparent),
-    color-mix(in oklab, var(--color-brand-2) 12%, transparent)
-  );
-  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-brand) 32%, transparent);
+  background: color-mix(in oklab, var(--color-brand) 10%, transparent);
 }
-.ui-mega__mark {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, var(--color-brand), var(--color-brand-2));
-  color: #fff;
-  font-family: ui-monospace, 'JetBrains Mono', monospace;
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.25),
-    0 4px 10px -2px color-mix(in oklab, var(--color-brand) 40%, transparent);
+.ui-mega__item--active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  background: var(--color-brand);
+  border-radius: 0 2px 2px 0;
+  box-shadow: 0 0 8px color-mix(in oklab, var(--color-brand) 50%, transparent);
 }
 .ui-mega__body {
   display: flex;
@@ -782,36 +924,36 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
   flex: 1;
 }
 .ui-mega__label {
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: -0.005em;
-  line-height: 1.15;
+  line-height: 1.2;
   color: var(--text);
 }
 .ui-mega__pkg {
   font-family: ui-monospace, 'JetBrains Mono', monospace;
   font-size: 10.5px;
   line-height: 1.2;
-  color: color-mix(in oklab, var(--text-dim) 85%, transparent);
+  color: var(--text-muted, var(--text-dim));
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .ui-mega__pkg--muted {
-  color: var(--text-muted, var(--text-dim));
-  font-style: italic;
   font-family: inherit;
-  font-size: 11px;
+  font-size: 10.5px;
+  color: var(--text-muted, var(--text-dim));
 }
 .ui-mega__chev {
   flex-shrink: 0;
   opacity: 0;
-  transform: translateX(-4px);
-  color: color-mix(in oklab, var(--color-brand) 80%, var(--text));
+  transform: translateX(-3px);
+  color: var(--color-brand);
+  font-size: 13px;
   font-weight: 600;
   transition:
-    opacity 0.2s ease,
-    transform 0.2s ease;
+    opacity 0.18s ease,
+    transform 0.18s ease;
 }
 .ui-mega__item:hover .ui-mega__chev,
 .ui-mega__item--active .ui-mega__chev {
@@ -819,25 +961,25 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
   transform: translateX(0);
 }
 .ui-mega__footer {
-  margin-top: 6px;
+  margin-top: 4px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 10px 12px;
-  border-top: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
-  font-size: 12.5px;
+  padding: 8px 10px;
+  border-top: 1px solid color-mix(in oklab, var(--border) 60%, transparent);
+  font-size: 12px;
   font-weight: 500;
-  color: color-mix(in oklab, var(--color-brand) 78%, var(--text));
+  color: var(--text-dim);
   text-decoration: none;
+  border-radius: 0 0 8px 8px;
   transition:
     color 0.15s ease,
     background 0.15s ease;
-  border-radius: 0 0 12px 12px;
 }
 .ui-mega__footer:hover {
-  color: var(--text);
-  background: color-mix(in oklab, var(--color-brand) 8%, transparent);
+  color: var(--color-brand);
+  background: color-mix(in oklab, var(--color-brand) 6%, transparent);
   text-decoration: none;
 }
 
@@ -902,12 +1044,316 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
   }
 }
 
+/* --- Mobile sheet ---------------------------------------------------------
+   Slide-in panel from the right with a blurred backdrop. Replaces the
+   inline accordion that used to push page content down. Body scroll is
+   locked while open (handled in <script>). Z-index sits above the header
+   (z-30) and the picker portal (z-50) gives the close button focus. */
+.mobile-sheet__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  background: color-mix(in oklab, var(--bg) 55%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.mobile-sheet {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(88vw, 360px);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  border-left: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
+  box-shadow: -24px 0 64px -16px rgba(0, 0, 0, 0.28);
+  overscroll-behavior: contain;
+}
+
+/* Sheet header. Brand wordmark left, close button right. */
+.mobile-sheet__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+  padding: 0 16px;
+  border-bottom: 1px solid color-mix(in oklab, var(--border) 60%, transparent);
+}
+.mobile-sheet__brand {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 1px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.mobile-sheet__brand-scope {
+  color: var(--text-dim);
+  font-weight: 500;
+}
+.mobile-sheet__brand-sep {
+  color: var(--color-brand);
+  margin: 0 1px;
+}
+.mobile-sheet__brand-name {
+  color: var(--text);
+}
+.mobile-sheet__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
+}
+.mobile-sheet__close:hover {
+  color: var(--text);
+  background: color-mix(in oklab, var(--surface) 60%, transparent);
+}
+.mobile-sheet__close:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--color-brand) 60%, transparent);
+  outline-offset: 2px;
+}
+
+/* Sheet body — scrollable section list. */
+.mobile-sheet__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px 12px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.mobile-sheet__section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mobile-sheet__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 2px;
+  padding: 0 12px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-muted, var(--text-dim));
+}
+.mobile-sheet__count {
+  margin-inline-start: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--surface) 70%, transparent);
+  border: 1px solid color-mix(in oklab, var(--border) 60%, transparent);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--text-muted, var(--text-dim));
+}
+.mobile-sheet__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.mobile-sheet__item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  color: var(--text);
+  text-decoration: none;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
+}
+.mobile-sheet__item:hover {
+  background: color-mix(in oklab, var(--surface) 55%, transparent);
+  text-decoration: none;
+}
+.mobile-sheet__item--mono {
+  font-family: ui-monospace, 'JetBrains Mono', monospace;
+  font-size: 13px;
+  letter-spacing: -0.01em;
+}
+.mobile-sheet__item--block {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+.mobile-sheet__item-title {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--text);
+}
+.mobile-sheet__badge {
+  font-family: ui-monospace, 'JetBrains Mono', monospace;
+  font-size: 11px;
+  line-height: 1.2;
+  color: var(--text-muted, var(--text-dim));
+}
+.mobile-sheet__dot {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--pkg-color, var(--text-muted));
+  transition: box-shadow 0.15s ease;
+}
+.mobile-sheet__item:hover .mobile-sheet__dot {
+  box-shadow: 0 0 8px color-mix(in oklab, var(--pkg-color, var(--text-muted)) 60%, transparent);
+}
+.mobile-sheet__item--active {
+  color: var(--color-brand);
+  background: color-mix(in oklab, var(--color-brand) 10%, transparent);
+}
+.mobile-sheet__item--active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 2px;
+  background: var(--color-brand);
+  border-radius: 0 2px 2px 0;
+}
+.mobile-sheet__item--active .mobile-sheet__dot {
+  background: var(--color-brand);
+  opacity: 1;
+  box-shadow: 0 0 8px color-mix(in oklab, var(--color-brand) 50%, transparent);
+}
+.mobile-sheet__item--active .mobile-sheet__badge {
+  color: color-mix(in oklab, var(--color-brand) 80%, var(--text-dim));
+}
+
+/* Sheet footer — theme segmented control + social icons. */
+.mobile-sheet__foot {
+  border-top: 1px solid color-mix(in oklab, var(--border) 60%, transparent);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.mobile-sheet__theme {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 10px;
+  background: color-mix(in oklab, var(--surface) 60%, transparent);
+  border: 1px solid color-mix(in oklab, var(--border) 60%, transparent);
+}
+.mobile-sheet__theme-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 7px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-dim);
+  transition:
+    color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.mobile-sheet__theme-btn:hover {
+  color: var(--text);
+}
+.mobile-sheet__theme-btn--active {
+  color: var(--text);
+  background: var(--bg);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.06),
+    inset 0 0 0 1px color-mix(in oklab, var(--color-brand) 24%, var(--border));
+}
+.mobile-sheet__socials {
+  display: flex;
+  gap: 8px;
+}
+.mobile-sheet__social {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 38px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in oklab, var(--border) 60%, transparent);
+  background: transparent;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-dim);
+  text-decoration: none;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+.mobile-sheet__social:hover {
+  color: var(--text);
+  background: color-mix(in oklab, var(--surface) 60%, transparent);
+  border-color: color-mix(in oklab, var(--color-brand) 30%, var(--border));
+  text-decoration: none;
+}
+
+/* Sheet transitions — slide-from-right + backdrop fade. */
+.mobile-slide-enter-active,
+.mobile-slide-leave-active {
+  transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.mobile-slide-enter-from,
+.mobile-slide-leave-to {
+  transform: translateX(100%);
+}
+.mobile-fade-enter-active,
+.mobile-fade-leave-active {
+  transition: opacity 0.24s ease;
+}
+.mobile-fade-enter-from,
+.mobile-fade-leave-to {
+  opacity: 0;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .brand-mark,
-  .nav-link::before,
+  .nav-link,
+  .nav-link::after,
   .ui-mega__item,
   .ui-mega__chev,
-  .version-chip__dot {
+  .version-chip__dot,
+  .mobile-slide-enter-active,
+  .mobile-slide-leave-active,
+  .mobile-fade-enter-active,
+  .mobile-fade-leave-active {
     transition: none !important;
     animation: none !important;
   }
