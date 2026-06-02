@@ -6,15 +6,20 @@
  *
  * Keeps every demo visually consistent and copy-paste friendly without each demo having
  * to re-implement tabs + clipboard handling.
+ *
+ * The Code pane renders Shiki dual-theme HTML so it visually matches the prose code
+ * blocks emitted by Nuxt Content — `--shiki-light` / `--shiki-dark` token colours
+ * swap on the `.dark` class toggle without a reload.
  */
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { CheckIcon, CopyIcon } from '~/components/icons';
+import { highlight } from '~/composables/useShiki';
 
 const props = withDefaults(
   defineProps<{
     /** The source string rendered in the Code tab. */
     code: string;
-    /** Shiki/HLJS-style language hint shown next to the Copy button. */
+    /** Shiki language hint — passed straight to the highlighter. */
     lang?: string;
   }>(),
   { lang: 'vue' }
@@ -22,6 +27,39 @@ const props = withDefaults(
 
 const activeTab = ref<'preview' | 'code'>('preview');
 const copied = ref(false);
+const highlighted = ref<string>('');
+
+watch(
+  () => [props.code, props.lang] as const,
+  async ([code, lang]) => {
+    if (!code) {
+      highlighted.value = '';
+      return;
+    }
+    try {
+      highlighted.value = await highlight(code, lang);
+    } catch {
+      // Shiki failed (lazy chunk missing, offline, etc.) — fall back to escaped plain
+      // text so the user still sees the source.
+      highlighted.value = `<pre class="shiki-fallback"><code>${escapeHtml(code)}</code></pre>`;
+    }
+  },
+  { immediate: true }
+);
+
+function escapeHtml(s: string): string {
+  return s.replace(
+    /[&<>"']/g,
+    (c) =>
+      ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+      })[c]!
+  );
+}
 
 async function copy() {
   try {
@@ -92,10 +130,24 @@ async function copy() {
       <slot />
     </div>
 
-    <!-- Code pane -->
-    <pre
+    <!-- Code pane — Shiki dual-theme HTML; theme swap driven by `.dark` on <html>. -->
+    <div
       v-show="activeTab === 'code'"
-      class="!m-0 max-h-[480px] overflow-auto bg-code-bg !p-4 font-mono text-[12px] leading-relaxed text-text"
-    ><code>{{ code }}</code></pre>
+      class="demo-tabs__code max-h-[480px] overflow-auto bg-code-bg text-text"
+      v-html="highlighted"
+    />
   </div>
 </template>
+
+<style scoped>
+/* Match prose <pre> styling so demo code panes look identical to markdown blocks. */
+.demo-tabs__code :deep(.shiki),
+.demo-tabs__code :deep(.shiki-fallback) {
+  margin: 0;
+  padding: 1rem;
+  background: transparent !important;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.65;
+}
+</style>

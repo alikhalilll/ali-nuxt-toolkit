@@ -120,7 +120,7 @@ const onSubmit = handleSubmit((values) => {
     </p>
 
     <DemoTabs :code="source">
-      <form class="p-5" novalidate @submit="onSubmit">
+      <form class="p-5" novalidate @submit.prevent="onSubmit">
         <div class="max-w-sm space-y-3">
           <ATelInput
             v-model:phone="phone"

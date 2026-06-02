@@ -42,7 +42,7 @@ function scrollTo(id: string, e: MouseEvent) {
   <div
     v-if="flatSections.length"
     data-mobile-toc-bar
-    class="sticky top-14 z-20 -mx-4 mb-4 border-b border-border bg-bg/85 backdrop-blur-md md:hidden"
+    class="sticky top-16 z-20 -mx-4 mb-4 border-b border-border bg-bg/90 backdrop-blur-md md:hidden"
   >
     <button
       type="button"
@@ -78,7 +78,10 @@ function scrollTo(id: string, e: MouseEvent) {
       </svg>
     </button>
 
-    <div v-if="isOpen" class="max-h-[60vh] overflow-y-auto border-t border-border bg-bg px-4 py-3">
+    <div
+      v-if="isOpen"
+      class="max-h-[calc(100dvh-8rem)] overflow-y-auto border-t border-border bg-bg px-4 py-3"
+    >
       <ul class="m-0 list-none border-l border-border p-0">
         <li
           v-for="section in flatSections"

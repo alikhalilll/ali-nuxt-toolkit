@@ -207,22 +207,38 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
               aria-hidden="true"
             />
           </button>
-          <div
-            v-if="uiNavOpen"
-            class="absolute left-0 top-full mt-2 w-56 rounded-md border border-border bg-surface p-1 shadow-lg"
-            role="menu"
-          >
-            <NuxtLink
-              v-for="item in uiNavItems"
-              :key="item.to"
-              :to="item.to"
-              :title="item.pkg ? `${item.label} · @alikhalilll/${item.pkg}` : item.label"
-              class="ui-menu-item"
-              active-class="ui-menu-item--active"
-              @click="uiNavOpen = false"
-            >
-              <span class="ui-menu-item__label">{{ item.label }}</span>
-              <span v-if="item.pkg" class="ui-menu-item__pkg">@alikhalilll/{{ item.pkg }}</span>
+          <!-- UI mega-menu — glassy panel with a brand monogram per component,
+               component name + npm pkg badge, and a "Browse all" footer link. -->
+          <div v-if="uiNavOpen" class="ui-mega absolute left-0 top-full mt-3 w-[22rem]" role="menu">
+            <div class="ui-mega__eyebrow">
+              <span class="ui-mega__eyebrow-dot" aria-hidden="true" />
+              <span>@alikhalilll · UI</span>
+              <span class="ui-mega__eyebrow-tag">Vue 3 · headless</span>
+            </div>
+            <div class="ui-mega__grid">
+              <NuxtLink
+                v-for="item in uiNavItems"
+                :key="item.to"
+                :to="item.to"
+                :title="item.pkg ? `${item.label} · @alikhalilll/${item.pkg}` : item.label"
+                class="ui-mega__item"
+                active-class="ui-mega__item--active"
+                @click="uiNavOpen = false"
+              >
+                <span class="ui-mega__mark" aria-hidden="true">
+                  {{ item.pkg ? item.label.charAt(1).toUpperCase() : '◇' }}
+                </span>
+                <span class="ui-mega__body">
+                  <span class="ui-mega__label">{{ item.label }}</span>
+                  <span v-if="item.pkg" class="ui-mega__pkg"> @alikhalilll/{{ item.pkg }} </span>
+                  <span v-else class="ui-mega__pkg ui-mega__pkg--muted"> Overview · theming </span>
+                </span>
+                <span class="ui-mega__chev" aria-hidden="true">→</span>
+              </NuxtLink>
+            </div>
+            <NuxtLink to="/ui" class="ui-mega__footer" @click="uiNavOpen = false">
+              Browse all components
+              <span aria-hidden="true">→</span>
             </NuxtLink>
           </div>
         </div>
@@ -592,45 +608,61 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
   color: var(--text);
 }
 
-/* Nav links — animated underline that scales from center on hover/active. */
+/* Nav links — brand-tinted glassy pill that morphs in on hover, locks in on active.
+   Replaces the older animated underline with a richer, more product-feel highlight. */
 .nav-links {
   font-size: 14px;
 }
 .nav-link {
   position: relative;
-  padding: 6px 10px;
-  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 8px;
   color: var(--text-dim);
   font-weight: 500;
+  isolation: isolate;
+  transition: color 0.15s ease;
+}
+.nav-link::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--color-brand) 14%, transparent),
+    color-mix(in oklab, var(--color-brand-2) 14%, transparent)
+  );
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--color-brand) 22%, transparent);
+  opacity: 0;
+  transform: scale(0.92);
   transition:
-    color 0.15s ease,
-    background 0.15s ease;
+    opacity 0.2s ease,
+    transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .nav-link:hover {
   color: var(--text);
-  background: color-mix(in oklab, var(--surface) 60%, transparent);
 }
-.nav-link::after {
-  content: '';
-  position: absolute;
-  left: 10px;
-  right: 10px;
-  bottom: 2px;
-  height: 2px;
-  border-radius: 2px;
-  background: linear-gradient(90deg, var(--color-brand), var(--color-brand-2));
-  transform: scaleX(0);
-  transform-origin: center;
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.nav-link:hover::after {
-  transform: scaleX(0.6);
+.nav-link:hover::before {
+  opacity: 0.65;
+  transform: scale(1);
 }
 .nav-link--active {
   color: var(--text);
 }
-.nav-link--active::after {
-  transform: scaleX(1);
+.nav-link--active::before {
+  opacity: 1;
+  transform: scale(1);
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--color-brand) 22%, transparent),
+    color-mix(in oklab, var(--color-brand-2) 18%, transparent)
+  );
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--color-brand) 36%, transparent),
+    0 4px 16px -4px color-mix(in oklab, var(--color-brand) 28%, transparent);
 }
 
 /* The dropdown trigger reuses .nav-link styling so it sits identically alongside
@@ -648,45 +680,165 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
   outline-offset: 2px;
 }
 
-/* Dropdown menu rows — matched to nav-link tones for visual continuity. */
-.ui-menu-item {
+/* UI mega-menu — glassy panel with eyebrow, gradient marks per component,
+   and a brand-tinted halo. Replaces the old simple dropdown. */
+.ui-mega {
+  border-radius: 16px;
+  background: color-mix(in oklab, var(--bg) 78%, transparent);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid color-mix(in oklab, var(--color-brand) 18%, var(--border));
+  padding: 10px;
+  box-shadow:
+    0 1px 0 0 color-mix(in oklab, #fff 6%, transparent) inset,
+    0 24px 56px -16px color-mix(in oklab, var(--color-brand) 38%, transparent),
+    0 6px 16px -6px rgba(0, 0, 0, 0.18);
+  z-index: 50;
+}
+.ui-mega__eyebrow {
   display: flex;
-  flex-direction: column;
-  gap: 1px;
-  padding: 8px 10px;
-  border-radius: 6px;
-  color: var(--text-dim);
-  font-size: 13px;
-  text-decoration: none;
-  transition:
-    color 0.12s ease,
-    background 0.12s ease;
-}
-.ui-menu-item:hover,
-.ui-menu-item:focus-visible {
-  color: var(--text);
-  background: color-mix(in oklab, var(--surface-2, var(--surface)) 60%, transparent);
-  text-decoration: none;
-  outline: none;
-}
-.ui-menu-item--active {
-  color: var(--text);
-  background: color-mix(in oklab, var(--surface-2, var(--surface)) 50%, transparent);
-}
-.ui-menu-item__label {
-  line-height: 1.15;
-}
-/* Independent-package badge — communicates the new split structure without
-   competing visually with the component name above. */
-.ui-menu-item__pkg {
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px 10px;
   font-family: ui-monospace, 'JetBrains Mono', monospace;
   font-size: 10.5px;
-  line-height: 1.15;
-  color: color-mix(in oklab, var(--text-muted, var(--text-dim)) 80%, transparent);
-}
-.ui-menu-item:hover .ui-menu-item__pkg,
-.ui-menu-item--active .ui-menu-item__pkg {
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--text-dim);
+}
+.ui-mega__eyebrow-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--color-brand), var(--color-brand-2));
+  box-shadow: 0 0 8px color-mix(in oklab, var(--color-brand) 60%, transparent);
+}
+.ui-mega__eyebrow-tag {
+  margin-inline-start: auto;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--color-brand) 25%, var(--border));
+  color: color-mix(in oklab, var(--color-brand) 80%, var(--text));
+  font-size: 9.5px;
+}
+.ui-mega__grid {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ui-mega__item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  color: var(--text-dim);
+  text-decoration: none;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
+}
+.ui-mega__item:hover {
+  color: var(--text);
+  background: color-mix(in oklab, var(--surface) 60%, transparent);
+  text-decoration: none;
+  transform: translateX(1px);
+}
+.ui-mega__item--active {
+  color: var(--text);
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--color-brand) 18%, transparent),
+    color-mix(in oklab, var(--color-brand-2) 12%, transparent)
+  );
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-brand) 32%, transparent);
+}
+.ui-mega__mark {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--color-brand), var(--color-brand-2));
+  color: #fff;
+  font-family: ui-monospace, 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.25),
+    0 4px 10px -2px color-mix(in oklab, var(--color-brand) 40%, transparent);
+}
+.ui-mega__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.ui-mega__label {
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  line-height: 1.15;
+  color: var(--text);
+}
+.ui-mega__pkg {
+  font-family: ui-monospace, 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  line-height: 1.2;
+  color: color-mix(in oklab, var(--text-dim) 85%, transparent);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ui-mega__pkg--muted {
+  color: var(--text-muted, var(--text-dim));
+  font-style: italic;
+  font-family: inherit;
+  font-size: 11px;
+}
+.ui-mega__chev {
+  flex-shrink: 0;
+  opacity: 0;
+  transform: translateX(-4px);
+  color: color-mix(in oklab, var(--color-brand) 80%, var(--text));
+  font-weight: 600;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+.ui-mega__item:hover .ui-mega__chev,
+.ui-mega__item--active .ui-mega__chev {
+  opacity: 1;
+  transform: translateX(0);
+}
+.ui-mega__footer {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: color-mix(in oklab, var(--color-brand) 78%, var(--text));
+  text-decoration: none;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
+  border-radius: 0 0 12px 12px;
+}
+.ui-mega__footer:hover {
+  color: var(--text);
+  background: color-mix(in oklab, var(--color-brand) 8%, transparent);
+  text-decoration: none;
 }
 
 /* Generic round icon button — used for theme/GitHub/LinkedIn. Subtle glow halo
@@ -752,7 +904,9 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
 
 @media (prefers-reduced-motion: reduce) {
   .brand-mark,
-  .nav-link::after,
+  .nav-link::before,
+  .ui-mega__item,
+  .ui-mega__chev,
   .version-chip__dot {
     transition: none !important;
     animation: none !important;
