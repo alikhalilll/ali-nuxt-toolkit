@@ -94,6 +94,7 @@
   "files": [
     "dist",
     "src",
+    ".media",
     "web-types.json",
     "README.md",
     "LICENSE"

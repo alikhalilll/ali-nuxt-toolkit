@@ -1,12 +1,24 @@
 # `@alikhalilll/a-tel-input`
 
+<p align="center">
+  <img
+    src="https://raw.githubusercontent.com/alikhalilll/ali-nuxt-toolkit/master/packages/ui-components/ATelInput/.media/hero.png"
+    alt="ATelInput — input on the left with the country picker open next to it, showing flags, country names, and dial codes"
+    width="820"
+  />
+</p>
+
+<p align="center">
+  <sub>Headless picker — popover on desktop, bottom-sheet on mobile.</sub>
+</p>
+
 > A headless, shadcn-vue style **international telephone input** for Vue 3 / Nuxt 3+.
 > Country auto-detect · libphonenumber-js validation · responsive picker (popover ⇆ drawer) ·
 > RTL & i18n ready · first-class VeeValidate + Zod integration · server-side validation hook.
 
-[![npm version](https://img.shields.io/npm/v/%40alikhalilll%2Fa-tel-input.svg?label=npm)](https://www.npmjs.com/package/@alikhalilll/a-tel-input)
-[![license](https://img.shields.io/npm/l/%40alikhalilll%2Fa-tel-input.svg)](./LICENSE)
-[![types](https://img.shields.io/npm/types/%40alikhalilll%2Fa-tel-input.svg)](https://www.npmjs.com/package/@alikhalilll/a-tel-input)
+[![npm version](https://img.shields.io/npm/v/%40alikhalilll%2Fa-tel-input.svg?style=for-the-badge&label=npm&labelColor=0a0a0a&color=635bff)](https://www.npmjs.com/package/@alikhalilll/a-tel-input)
+[![license](https://img.shields.io/npm/l/%40alikhalilll%2Fa-tel-input.svg?style=for-the-badge&labelColor=0a0a0a&color=635bff)](./LICENSE)
+[![types](https://img.shields.io/npm/types/%40alikhalilll%2Fa-tel-input.svg?style=for-the-badge&labelColor=0a0a0a&color=635bff)](https://www.npmjs.com/package/@alikhalilll/a-tel-input)
 
 ```bash
 # pnpm
