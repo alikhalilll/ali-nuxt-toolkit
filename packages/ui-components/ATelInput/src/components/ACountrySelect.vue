@@ -586,7 +586,9 @@ defineExpose({
 
 .a-country-select__search {
   border-bottom: 1px solid hsl(var(--ak-ui-border) / 0.7);
-  padding: 0.375rem;
+  /* Drop bottom padding — the list owns the gap below the search border so the
+     sticky group header can overlap it and sit flush against the search bar. */
+  padding: 0.375rem 0.375rem 0;
 }
 .a-country-select__search-box {
   position: relative;
@@ -654,6 +656,10 @@ defineExpose({
 .a-country-select__list {
   flex: 1;
   overflow-y: auto;
+  /* Top padding lives inside the scroll container so the first sticky group header
+     can overlap it (via negative `top`) and sit flush against the search border
+     with zero visible gap. */
+  padding-top: 0.375rem;
   /* Themed scrollbar — Firefox + WebKit/Blink. Resolves the browser-default
      light-grey scrollbar that didn't match the popover surface in dark mode. */
   scrollbar-width: thin;
@@ -683,16 +689,24 @@ defineExpose({
 
 .a-country-select__group-header {
   position: sticky;
-  top: 0;
+  /* Negative top equal to the list's `padding-top` makes the sticky header
+     overlap that padding band so when the user scrolls it sits flush against
+     the search bar's bottom border — no visible gap. */
+  top: -0.375rem;
   z-index: 10;
   background: hsl(var(--ak-ui-popover));
   color: hsl(var(--ak-ui-muted-foreground));
-  padding: 0.375rem 0.75rem;
+  /* Extra top padding compensates for the negative `top` offset so the visible
+     label keeps its usual breathing room. */
+  padding: 0.5rem 0.75rem 0.375rem;
   font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   margin: 0;
+  /* Hairline under the header that only shows once it's stuck — helps it read
+     as a distinct band from the search border above. */
+  box-shadow: 0 1px 0 0 hsl(var(--ak-ui-border) / 0.5);
 }
 
 .a-country-select__group-list {
