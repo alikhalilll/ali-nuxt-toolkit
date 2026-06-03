@@ -1,5 +1,9 @@
 # `@alikhalilll/a-tel-input`
 
+> A headless, shadcn-vue style **international telephone input** for Vue 3 / Nuxt 3+.
+> Country auto-detect · libphonenumber-js validation · responsive picker (popover ⇆ drawer) ·
+> RTL & i18n ready · first-class VeeValidate + Zod integration · server-side validation hook.
+
 <p align="center">
   <img
     src="https://raw.githubusercontent.com/alikhalilll/ali-nuxt-toolkit/master/packages/ui-components/ATelInput/.media/hero.png"
@@ -12,32 +16,50 @@
   <sub>Headless picker — popover on desktop, bottom-sheet on mobile.</sub>
 </p>
 
-> A headless, shadcn-vue style **international telephone input** for Vue 3 / Nuxt 3+.
-> Country auto-detect · libphonenumber-js validation · responsive picker (popover ⇆ drawer) ·
-> RTL & i18n ready · first-class VeeValidate + Zod integration · server-side validation hook.
-
 [![npm version](https://img.shields.io/npm/v/%40alikhalilll%2Fa-tel-input.svg?style=for-the-badge&label=npm&labelColor=0a0a0a&color=635bff)](https://www.npmjs.com/package/@alikhalilll/a-tel-input)
 [![license](https://img.shields.io/npm/l/%40alikhalilll%2Fa-tel-input.svg?style=for-the-badge&labelColor=0a0a0a&color=635bff)](./LICENSE)
 [![types](https://img.shields.io/npm/types/%40alikhalilll%2Fa-tel-input.svg?style=for-the-badge&labelColor=0a0a0a&color=635bff)](https://www.npmjs.com/package/@alikhalilll/a-tel-input)
 
-**Install**
+## Setup
 
-```sh
+### Nuxt 3 / 4
+
+```bash
+pnpm add @alikhalilll/a-tel-input
+# npm install @alikhalilll/a-tel-input
+# yarn add @alikhalilll/a-tel-input
+# bun add @alikhalilll/a-tel-input
+```
+
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  modules: ['@alikhalilll/a-tel-input/nuxt'],
+  css: ['@alikhalilll/a-tel-input/styles.css'],
+});
+```
+
+`ATelInput`, `ACountrySelect`, and `ACountryFlag` are auto-imported — no `import` statement needed in your `.vue` files.
+
+### Vue + Vite
+
+```bash
 pnpm add @alikhalilll/a-tel-input
 ```
 
-<sub>npm · `npm install @alikhalilll/a-tel-input` &nbsp; · &nbsp; yarn · `yarn add @alikhalilll/a-tel-input` &nbsp; · &nbsp; bun · `bun add @alikhalilll/a-tel-input`</sub>
-
-**Single E.164 string** — what VeeValidate's `<Field v-slot="{ field }">` and native forms expect:
-
-```html
-<ATelInput v-model="phone" default-country="SA" show-validation />
+```ts
+// main.ts
+import '@alikhalilll/a-tel-input/styles.css';
 ```
 
-**Or split phone + country** into two v-models:
+Optional auto-resolve via `unplugin-vue-components`:
 
-```html
-<ATelInput v-model:phone="phone" v-model:country="country" default-country="SA" show-validation />
+```ts
+// vite.config.ts
+import Components from 'unplugin-vue-components/vite';
+import { ATelInputResolver } from '@alikhalilll/a-tel-input/resolver';
+
+export default { plugins: [Components({ resolvers: [ATelInputResolver()] })] };
 ```
 
 ---
@@ -74,7 +96,7 @@ pnpm add @alikhalilll/a-tel-input
 
 ## Table of contents
 
-- [Install](#install)
+- [Setup](#setup)
 - [Quick start](#quick-start)
 - [Form integration](#form-integration)
   - [VeeValidate + Zod](#veevalidate--zod)
@@ -88,41 +110,11 @@ pnpm add @alikhalilll/a-tel-input
   - [Composables](#composables)
 - [Theming](#theming)
 - [Accessibility](#accessibility)
-- [Auto-import](#auto-import)
 - [SSR](#ssr)
 - [TypeScript](#typescript)
 - [Browser support](#browser-support)
 - [Troubleshooting](#troubleshooting)
 - [License](#license)
-
----
-
-## Install
-
-Pick your package manager:
-
-```bash
-# pnpm
-pnpm add @alikhalilll/a-tel-input
-
-# npm
-npm install @alikhalilll/a-tel-input
-
-# yarn
-yarn add @alikhalilll/a-tel-input
-
-# bun
-bun add @alikhalilll/a-tel-input
-```
-
-**One CSS import — everything in.** The popover, drawer, and design tokens are all
-bundled into the same stylesheet:
-
-```ts
-import '@alikhalilll/a-tel-input/styles.css';
-```
-
-No separate `a-popover` / `a-drawer` / `a-ui-base` imports needed.
 
 ---
 
@@ -543,31 +535,6 @@ Light / dark is driven entirely by the `--ak-ui-*` tokens — set them to dark v
   Esc to close.
 - Focus management is handled by the underlying popover/drawer — focus returns to the
   trigger on close.
-
----
-
-## Auto-import
-
-### Nuxt
-
-```ts
-export default defineNuxtConfig({
-  modules: ['@alikhalilll/a-tel-input/nuxt'],
-  // The single tel-input stylesheet already bundles popover + drawer styles + design tokens.
-  css: ['@alikhalilll/a-tel-input/styles.css'],
-});
-```
-
-### Vite + `unplugin-vue-components`
-
-Register `@alikhalilll/a-tel-input/resolver`:
-
-```ts
-import Components from 'unplugin-vue-components/vite';
-import { ATelInputResolver } from '@alikhalilll/a-tel-input/resolver';
-
-export default { plugins: [Components({ resolvers: [ATelInputResolver()] })] };
-```
 
 ---
 

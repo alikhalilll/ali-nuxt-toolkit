@@ -9,53 +9,29 @@ order: 1
 
 **An international telephone input that gets out of the way.** The field starts as a single clean input — no picker, no clutter — and reveals the country flag the moment your number's dial code is recognised. Numbers validate in real time against `libphonenumber-js`, the picker is a popover on desktop and a bottom-sheet on mobile, and the whole thing plugs straight into VeeValidate + Zod with built-in support for async server-side checks.
 
-`v-model:phone` is the **digits-only national number**. `v-model:country` is the **dial-code number** (`20` for Egypt, `44` for the UK, `1` for the NANP block, `null` for none).
+## Install & Setup
 
-::DemoTelInputBasic
-::
+The shipped CSS is self-contained — design tokens + utility classes are pre-compiled. Install the package, register the module (Nuxt) or import the stylesheet (Vue + Vite), and the field renders themed out of the box. No Tailwind config, no `@theme` block.
 
-### What's in the box
-
-- **Universal country detection** — debounced parse against the **full libphonenumber metadata (~250 countries)**, with a priority chain (env hint → current → recents → popular shortlist → all countries). Works for international format (`+201066105963`) AND local format (`01066105963` resolves to Egypt even when the env hint is Saudi).
-- **libphonenumber-js validation** — seven failure reasons, format hint, E.164 output, all reactive.
-- **Responsive picker** — popover on desktop, vaul-vue bottom-sheet on mobile, sticky-safe scroll lock on **both** (the page underneath never scrolls; the picker's inner list does).
-- **Form-library ready** — controlled `error` prop, `@blur` event, `useTelField()` composable for VeeValidate, `zPhone()` factory for Zod, plus an in-field spinner for async server-side validation.
-- **Two binding contracts** — single `v-model` (E.164 string, drops into VeeValidate's `<Field v-slot="{ field }">` via `v-bind="field"`) or split `v-model:phone` + `v-model:country`. Both stay in sync.
-- **i18n + RTL** — country names via `Intl.DisplayNames`, numerals localised in the format hint, RTL inherited from the page, alternative numerals (Arabic-Indic, Persian, Devanagari, Bengali) folded to ASCII on input.
-- **Headless slots** for every visual region — trigger, chevron, flag, item, search, hint, error, the lot.
-- **Efficient by default** — REST Countries fetch + IP geolocation request deduped to one network call per page across every `<ATelInput>` / `<ACountrySelect>` / `useTelField()` / `zPhone()` instance. LRU-cached matcher.
-- **SSR-safe** — country detection runs after mount, hydration is clean.
-- **TypeScript-first** — every prop, slot, and event typed; web-types ship for JetBrains IDEs.
-
-## Install
+### Nuxt 3 / 4
 
 ::doc-install{pkg="@alikhalilll/a-tel-input"}
 ::
 
 ```ts
-import { ATelInput } from '@alikhalilll/a-tel-input';
-```
-
-## Setup
-
-The shipped CSS is self-contained — design tokens + utility classes are pre-compiled. Import the stylesheet once and the field renders themed out of the box (no Tailwind config, no `@theme` block).
-
-### Nuxt 3 / 4
-
-```ts
 // nuxt.config.ts
 export default defineNuxtConfig({
+  modules: ['@alikhalilll/a-tel-input/nuxt'],
   css: ['@alikhalilll/a-tel-input/styles.css'],
 });
 ```
 
-For auto-imports (use `<ATelInput>` / `<ACountrySelect>` / `<ACountryFlag>` with no `import`), also register the bundled module:
-
-```ts
-modules: ['@alikhalilll/a-tel-input/nuxt'],
-```
+After the module is registered, `ATelInput`, `ACountrySelect`, and `ACountryFlag` are auto-imported app-wide — no `import` statement required in your `.vue` files.
 
 ### Vue + Vite
+
+::doc-install{pkg="@alikhalilll/a-tel-input"}
+::
 
 ```ts
 // main.ts
@@ -83,13 +59,12 @@ app: { head: { htmlAttrs: { class: 'dark' } } },
 
 > Theming tokens, UnoCSS interplay, monorepo CSS gotcha, full public API — see the [UI overview](/ui).
 
-## Usage
+## Usage in Nuxt
+
+After the module is registered (see above), drop `<ATelInput>` anywhere in a `.vue` file. No `import`, no manual registration — Nuxt's auto-import resolves it for you.
 
 ```vue
 <script setup lang="ts">
-import { ref } from 'vue';
-import { ATelInput } from '@alikhalilll/a-tel-input';
-
 const phone = ref('');
 const country = ref<number | null>(null);
 </script>
@@ -99,7 +74,25 @@ const country = ref<number | null>(null);
 </template>
 ```
 
+::DemoTelInputBasic
+::
+
 Type `+447911123456`, `01066105963`, or paste any well-formed international number — the flag trigger reveals at the end of the field with the detected country, the dial code appears as a prefix inside the input, and `phone` normalises to the national significant number (`7911123456`, `1066105963`).
+
+`v-model:phone` is the **digits-only national number**. `v-model:country` is the **dial-code number** (`20` for Egypt, `44` for the UK, `1` for the NANP block, `null` for none). Prefer a single canonical E.164 value? Use the default `v-model` instead — see [Form integration](#form-integration).
+
+### What's in the box
+
+- **Universal country detection** — debounced parse against the **full libphonenumber metadata (~250 countries)**, with a priority chain (env hint → current → recents → popular shortlist → all countries). Works for international format (`+201066105963`) AND local format (`01066105963` resolves to Egypt even when the env hint is Saudi).
+- **libphonenumber-js validation** — seven failure reasons, format hint, E.164 output, all reactive.
+- **Responsive picker** — popover on desktop, vaul-vue bottom-sheet on mobile, sticky-safe scroll lock on **both** (the page underneath never scrolls; the picker's inner list does).
+- **Form-library ready** — controlled `error` prop, `@blur` event, `useTelField()` composable for VeeValidate, `zPhone()` factory for Zod, plus an in-field spinner for async server-side validation.
+- **Two binding contracts** — single `v-model` (E.164 string, drops into VeeValidate's `<Field v-slot="{ field }">` via `v-bind="field"`) or split `v-model:phone` + `v-model:country`. Both stay in sync.
+- **i18n + RTL** — country names via `Intl.DisplayNames`, numerals localised in the format hint, RTL inherited from the page, alternative numerals (Arabic-Indic, Persian, Devanagari, Bengali) folded to ASCII on input.
+- **Headless slots** for every visual region — trigger, chevron, flag, item, search, hint, error, the lot.
+- **Efficient by default** — REST Countries fetch + IP geolocation request deduped to one network call per page across every `<ATelInput>` / `<ACountrySelect>` / `useTelField()` / `zPhone()` instance. LRU-cached matcher.
+- **SSR-safe** — country detection runs after mount, hydration is clean.
+- **TypeScript-first** — every prop, slot, and event typed; web-types ship for JetBrains IDEs.
 
 ## Props
 
