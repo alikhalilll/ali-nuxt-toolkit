@@ -11,6 +11,7 @@ export default defineNuxtConfig({
     '@alikhalilll/a-responsive-popover/styles.css',
     '@alikhalilll/a-input/styles.css',
     '@alikhalilll/a-tel-input/styles.css',
+    '@alikhalilll/a-skeleton/styles.css',
     '~/assets/main.css',
   ],
   app: {
@@ -34,6 +35,7 @@ export default defineNuxtConfig({
     '@alikhalilll/a-drawer/nuxt',
     '@alikhalilll/a-responsive-popover/nuxt',
     '@alikhalilll/a-tel-input/nuxt',
+    '@alikhalilll/a-skeleton/nuxt',
   ],
   apiProvider: {
     baseURL: 'https://jsonplaceholder.typicode.com',

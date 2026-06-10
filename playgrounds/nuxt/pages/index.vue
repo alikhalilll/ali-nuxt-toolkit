@@ -68,6 +68,22 @@
       </div>
 
       <div class="rounded-xl border border-brand-border bg-surface p-5">
+        <h2 class="mb-2 border-l-[3px] border-brand pl-2 text-lg font-semibold">skeleton</h2>
+        <p class="mb-3 text-sm text-text-dim">
+          <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-brand-2">ASkeleton</code>
+          measures the component it wraps and replays a pixel-aligned shimmer on subsequent loads.
+          No hand-drawn placeholders.
+        </p>
+        <NuxtLink to="/skeleton">
+          <button
+            class="cursor-pointer rounded border border-brand bg-brand px-3.5 py-1.5 text-sm font-semibold text-bg hover:brightness-110"
+          >
+            Open demo →
+          </button>
+        </NuxtLink>
+      </div>
+
+      <div class="rounded-xl border border-brand-border bg-surface p-5">
         <h2 class="mb-2 border-l-[3px] border-brand pl-2 text-lg font-semibold">Live layouts</h2>
         <p class="text-sm text-text-dim">
           <NuxtLink to="/dashboard" class="text-brand">/dashboard</NuxtLink>
