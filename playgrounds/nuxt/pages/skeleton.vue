@@ -156,8 +156,8 @@ const themePresets: ThemePreset[] = [
 
 const themeIdx = ref(0);
 const themedLoading = ref(true);
-const themeVars = computed(() => themePresets[themeIdx.value].vars);
-const themeAnim = computed(() => themePresets[themeIdx.value].animation);
+const themeVars = computed(() => themePresets[themeIdx.value]!.vars);
+const themeAnim = computed(() => themePresets[themeIdx.value]!.animation);
 </script>
 
 <template>
