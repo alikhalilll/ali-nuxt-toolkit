@@ -1,5 +1,9 @@
+# pnpm 11 build-scripts allowlist for the playground when run under
+# `--ignore-workspace` (i.e. `pnpm tk dev play:packed`). The same packages
+# are allowed by the workspace root's `pnpm.onlyBuiltDependencies` for normal
+# workspace mode — duplicating them here keeps the packed-mode install green.
 allowBuilds:
-  '@parcel/watcher': set this to true or false
-  esbuild: set this to true or false
-  vue-demi: set this to true or false
+  '@parcel/watcher': true
+  esbuild: true
+  vue-demi: true
 strictDepBuilds: false
