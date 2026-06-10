@@ -19,15 +19,16 @@ export const PUBLISHABLE_PACKAGES = [
   'crypto',
   'auto-middleware',
   'a-tel-input',
+  'a-skeleton',
 ] as const;
 export type PublishablePackage = (typeof PUBLISHABLE_PACKAGES)[number];
 
 /**
- * Workspace packages whose source is bundled into a publishable package (currently
- * all four flow into a-tel-input via the @import chain + tsdown). They are still
- * real workspace packages — buildable, typecheckable, importable from siblings —
- * but `pack --all`, `release`, `validate-dist`, etc. skip them because they have
- * no npm presence.
+ * Workspace packages whose source is bundled into a publishable package — the
+ * four UI primitives flow into a-tel-input via the @import chain + tsdown. They
+ * are still real workspace packages — buildable, typecheckable, importable from
+ * siblings — but `pack --all`, `release`, `validate-dist`, etc. skip them because
+ * they have no npm presence.
  */
 export const INTERNAL_PACKAGES = [
   'a-input',
@@ -54,6 +55,7 @@ const UI_COMPONENT_DIRS: Record<string, string> = {
   'a-drawer': 'ADrawer',
   'a-responsive-popover': 'AResponsivePopover',
   'a-tel-input': 'ATelInput',
+  'a-skeleton': 'ASkeleton',
 };
 
 /** Absolute directory for any workspace package, accounting for the nested ui-components set. */
@@ -74,6 +76,7 @@ export const ATTW_IGNORE_NO_RESOLUTION: Record<PublishablePackage, string[]> = {
   'auto-middleware': [],
   crypto: [],
   'a-tel-input': ['./styles.css'],
+  'a-skeleton': ['./styles.css'],
 };
 
 export const BUMP_TYPES = ['patch', 'minor', 'major', 'prerelease', 'none'] as const;

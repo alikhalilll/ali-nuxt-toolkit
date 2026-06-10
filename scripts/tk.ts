@@ -119,7 +119,7 @@ ${pc.bold('Examples:')}
 
 ${pc.bold('Packages:')}
   publishable  ${pc.dim(PUBLISHABLE_PACKAGES.join(', '))}
-  internal     ${pc.dim(INTERNAL_PACKAGES.join(', ') + ' (bundled into a-tel-input)')}
+  internal     ${pc.dim(INTERNAL_PACKAGES.join(', ') + ' (workspace-only, no npm presence)')}
 
 ${pc.bold('Flags:')}
   --pkg <name>     ${pc.dim('Alternative to positional target (all|<package>)')}
