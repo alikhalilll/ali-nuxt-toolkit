@@ -572,32 +572,32 @@ importers:
   playgrounds/nuxt:
     dependencies:
       '@alikhalilll/a-drawer':
-        specifier: file:./.tarballs/alikhalilll-a-drawer-1.0.1.tgz
-        version: file:playgrounds/nuxt/.tarballs/alikhalilll-a-drawer-1.0.1.tgz(@nuxt/kit@4.4.2(magicast@0.5.2))(@vueuse/core@14.3.0(vue@3.5.32(typescript@5.9.3)))(unplugin-vue-components@32.1.0(@nuxt/kit@4.4.2(magicast@0.5.2))(vue@3.5.32(typescript@5.9.3)))(vue@3.5.32(typescript@5.9.3))
+        specifier: workspace:*
+        version: link:../../packages/ui-components/ADrawer
       '@alikhalilll/a-input':
-        specifier: file:./.tarballs/alikhalilll-a-input-1.0.1.tgz
-        version: file:playgrounds/nuxt/.tarballs/alikhalilll-a-input-1.0.1.tgz(@nuxt/kit@4.4.2(magicast@0.5.2))(@vueuse/core@14.3.0(vue@3.5.32(typescript@5.9.3)))(unplugin-vue-components@32.1.0(@nuxt/kit@4.4.2(magicast@0.5.2))(vue@3.5.32(typescript@5.9.3)))(vue@3.5.32(typescript@5.9.3))
+        specifier: workspace:*
+        version: link:../../packages/ui-components/AInput
       '@alikhalilll/a-popover':
-        specifier: file:./.tarballs/alikhalilll-a-popover-1.0.1.tgz
-        version: file:playgrounds/nuxt/.tarballs/alikhalilll-a-popover-1.0.1.tgz(@nuxt/kit@4.4.2(magicast@0.5.2))(@vueuse/core@14.3.0(vue@3.5.32(typescript@5.9.3)))(unplugin-vue-components@32.1.0(@nuxt/kit@4.4.2(magicast@0.5.2))(vue@3.5.32(typescript@5.9.3)))(vue@3.5.32(typescript@5.9.3))
+        specifier: workspace:*
+        version: link:../../packages/ui-components/APopover
       '@alikhalilll/a-responsive-popover':
-        specifier: file:./.tarballs/alikhalilll-a-responsive-popover-1.0.1.tgz
-        version: file:playgrounds/nuxt/.tarballs/alikhalilll-a-responsive-popover-1.0.1.tgz(@nuxt/kit@4.4.2(magicast@0.5.2))(@vueuse/core@14.3.0(vue@3.5.32(typescript@5.9.3)))(unplugin-vue-components@32.1.0(@nuxt/kit@4.4.2(magicast@0.5.2))(vue@3.5.32(typescript@5.9.3)))(vue@3.5.32(typescript@5.9.3))
+        specifier: workspace:*
+        version: link:../../packages/ui-components/AResponsivePopover
       '@alikhalilll/a-skeleton':
-        specifier: file:./.tarballs/alikhalilll-a-skeleton-0.1.0.tgz
-        version: file:playgrounds/nuxt/.tarballs/alikhalilll-a-skeleton-0.1.0.tgz(@nuxt/kit@4.4.2(magicast@0.5.2))(@vueuse/core@14.3.0(vue@3.5.32(typescript@5.9.3)))(unplugin-vue-components@32.1.0(@nuxt/kit@4.4.2(magicast@0.5.2))(vue@3.5.32(typescript@5.9.3)))(vue@3.5.32(typescript@5.9.3))
+        specifier: workspace:*
+        version: link:../../packages/ui-components/ASkeleton
       '@alikhalilll/a-tel-input':
-        specifier: file:./.tarballs/alikhalilll-a-tel-input-1.2.1.tgz
-        version: file:playgrounds/nuxt/.tarballs/alikhalilll-a-tel-input-1.2.1.tgz(@nuxt/kit@4.4.2(magicast@0.5.2))(@vueuse/core@14.3.0(vue@3.5.32(typescript@5.9.3)))(unplugin-vue-components@32.1.0(@nuxt/kit@4.4.2(magicast@0.5.2))(vue@3.5.32(typescript@5.9.3)))(vee-validate@4.15.1(vue@3.5.32(typescript@5.9.3)))(vue@3.5.32(typescript@5.9.3))(zod@3.25.76)
+        specifier: workspace:*
+        version: link:../../packages/ui-components/ATelInput
       '@alikhalilll/nuxt-api-provider':
-        specifier: file:./.tarballs/alikhalilll-nuxt-api-provider-1.3.0.tgz
-        version: file:playgrounds/nuxt/.tarballs/alikhalilll-nuxt-api-provider-1.3.0.tgz(@nuxt/kit@4.4.2(magicast@0.5.2))
+        specifier: workspace:*
+        version: link:../../packages/api-provider
       '@alikhalilll/nuxt-auto-middleware':
-        specifier: file:./.tarballs/alikhalilll-nuxt-auto-middleware-1.2.0.tgz
-        version: file:playgrounds/nuxt/.tarballs/alikhalilll-nuxt-auto-middleware-1.2.0.tgz(@nuxt/kit@4.4.2(magicast@0.5.2))
+        specifier: workspace:*
+        version: link:../../packages/auto-middleware
       '@alikhalilll/nuxt-crypto':
-        specifier: file:./.tarballs/alikhalilll-nuxt-crypto-1.3.0.tgz
-        version: file:playgrounds/nuxt/.tarballs/alikhalilll-nuxt-crypto-1.3.0.tgz(@nuxt/kit@4.4.2(magicast@0.5.2))(h3@1.15.11)
+        specifier: workspace:*
+        version: link:../../packages/crypto
       '@vee-validate/zod':
         specifier: ^4.13.0
         version: 4.15.1(vue@3.5.32(typescript@5.9.3))(zod@3.25.76)
@@ -634,132 +634,6 @@ importers:
         version: 3.3.1(typescript@5.9.3)
 
 packages:
-
-  '@alikhalilll/a-drawer@file:playgrounds/nuxt/.tarballs/alikhalilll-a-drawer-1.0.1.tgz':
-    resolution: {integrity: sha512-Bomfyi0wWFexr7s42WbBotRvXebg5UVRXziGOC7qnRd0pbbJodt5mzepmAZf4c4Xnp/6NZEtENN1gcESW5HJeQ==, tarball: file:playgrounds/nuxt/.tarballs/alikhalilll-a-drawer-1.0.1.tgz}
-    version: 1.0.1
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@nuxt/kit': ^3.0.0 || ^4.0.0
-      '@vueuse/core': ^14.0.0
-      unplugin-vue-components: ^28.0.0 || ^29.0.0 || ^30.0.0 || ^31.0.0 || ^32.0.0
-      vue: ^3.5.0
-    peerDependenciesMeta:
-      '@nuxt/kit':
-        optional: true
-      unplugin-vue-components:
-        optional: true
-
-  '@alikhalilll/a-input@file:playgrounds/nuxt/.tarballs/alikhalilll-a-input-1.0.1.tgz':
-    resolution: {integrity: sha512-F860GYal089eapCMfuXH9w9S5SDLSh5CGwssm/nGXO8D+AUfUTCeeWA3YJSROFK0vWWF/G4xkAnqzKM4gbPXgQ==, tarball: file:playgrounds/nuxt/.tarballs/alikhalilll-a-input-1.0.1.tgz}
-    version: 1.0.1
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@nuxt/kit': ^3.0.0 || ^4.0.0
-      '@vueuse/core': ^14.0.0
-      unplugin-vue-components: ^28.0.0 || ^29.0.0 || ^30.0.0 || ^31.0.0 || ^32.0.0
-      vue: ^3.5.0
-    peerDependenciesMeta:
-      '@nuxt/kit':
-        optional: true
-      unplugin-vue-components:
-        optional: true
-
-  '@alikhalilll/a-popover@file:playgrounds/nuxt/.tarballs/alikhalilll-a-popover-1.0.1.tgz':
-    resolution: {integrity: sha512-uuEglsMV4ym7nPOXCxyLK6+glNwd099c6uvpnSi4yACG45acKYSDK+Cai8Uc1n2LAZXbrGznbiaERnONw82ibQ==, tarball: file:playgrounds/nuxt/.tarballs/alikhalilll-a-popover-1.0.1.tgz}
-    version: 1.0.1
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@nuxt/kit': ^3.0.0 || ^4.0.0
-      '@vueuse/core': ^14.0.0
-      unplugin-vue-components: ^28.0.0 || ^29.0.0 || ^30.0.0 || ^31.0.0 || ^32.0.0
-      vue: ^3.5.0
-    peerDependenciesMeta:
-      '@nuxt/kit':
-        optional: true
-      unplugin-vue-components:
-        optional: true
-
-  '@alikhalilll/a-responsive-popover@file:playgrounds/nuxt/.tarballs/alikhalilll-a-responsive-popover-1.0.1.tgz':
-    resolution: {integrity: sha512-1IdSia2SB2O1AI+TVzpvhPrtcbUymw8RaBDAy/UReJaFIPTxqrHGc1cXVFYuLiylQxFkcG1lhwNnk4Uucmz9Xw==, tarball: file:playgrounds/nuxt/.tarballs/alikhalilll-a-responsive-popover-1.0.1.tgz}
-    version: 1.0.1
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@nuxt/kit': ^3.0.0 || ^4.0.0
-      '@vueuse/core': ^14.0.0
-      unplugin-vue-components: ^28.0.0 || ^29.0.0 || ^30.0.0 || ^31.0.0 || ^32.0.0
-      vue: ^3.5.0
-    peerDependenciesMeta:
-      '@nuxt/kit':
-        optional: true
-      unplugin-vue-components:
-        optional: true
-
-  '@alikhalilll/a-skeleton@file:playgrounds/nuxt/.tarballs/alikhalilll-a-skeleton-0.1.0.tgz':
-    resolution: {integrity: sha512-9aHMKyT3JFPYkKUVTezumybVQJoRwyTAR18t+b7Q8vTtzfC4RBubZp75UTVqK5c1lOHcYyB8/jvu8QHQUyWNmw==, tarball: file:playgrounds/nuxt/.tarballs/alikhalilll-a-skeleton-0.1.0.tgz}
-    version: 0.1.0
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@nuxt/kit': ^3.0.0 || ^4.0.0
-      '@vueuse/core': ^14.0.0
-      unplugin-vue-components: ^28.0.0 || ^29.0.0 || ^30.0.0 || ^31.0.0 || ^32.0.0
-      vue: ^3.5.0
-    peerDependenciesMeta:
-      '@nuxt/kit':
-        optional: true
-      unplugin-vue-components:
-        optional: true
-
-  '@alikhalilll/a-tel-input@file:playgrounds/nuxt/.tarballs/alikhalilll-a-tel-input-1.2.1.tgz':
-    resolution: {integrity: sha512-3uYH3aHbCY/BhPiw2Bo3nMRjeFfumYMg3UiaV7ViIVSwHTgdPGcpTES7o0ib33OrBJvR+z5qoucli/PsUe0MgQ==, tarball: file:playgrounds/nuxt/.tarballs/alikhalilll-a-tel-input-1.2.1.tgz}
-    version: 1.2.1
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@nuxt/kit': ^3.0.0 || ^4.0.0
-      '@vueuse/core': ^14.0.0
-      unplugin-vue-components: ^28.0.0 || ^29.0.0 || ^30.0.0 || ^31.0.0 || ^32.0.0
-      vee-validate: ^4.13.0
-      vue: ^3.5.0
-      zod: ^3.23.0 || ^4.0.0
-    peerDependenciesMeta:
-      '@nuxt/kit':
-        optional: true
-      unplugin-vue-components:
-        optional: true
-      vee-validate:
-        optional: true
-      zod:
-        optional: true
-
-  '@alikhalilll/nuxt-api-provider@file:playgrounds/nuxt/.tarballs/alikhalilll-nuxt-api-provider-1.3.0.tgz':
-    resolution: {integrity: sha512-XtXNcyTuMa6AmSKHbINrt01GJesta3xZxdDMBzVu5Jn0ksjR+N25CDHbefGqddrm/Cz3hi6iLGJ9Uk+NjwMFnQ==, tarball: file:playgrounds/nuxt/.tarballs/alikhalilll-nuxt-api-provider-1.3.0.tgz}
-    version: 1.3.0
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@nuxt/kit': ^3.0.0 || ^4.0.0
-    peerDependenciesMeta:
-      '@nuxt/kit':
-        optional: true
-
-  '@alikhalilll/nuxt-auto-middleware@file:playgrounds/nuxt/.tarballs/alikhalilll-nuxt-auto-middleware-1.2.0.tgz':
-    resolution: {integrity: sha512-3JPOxHEHI1VqjZIPEl+miI+s4dbMnftKDTSTfaQ9AqdaT8VRYwel1ZhJod4Kh+aQE4KwDw0RjBMLHuTMUxQ+OQ==, tarball: file:playgrounds/nuxt/.tarballs/alikhalilll-nuxt-auto-middleware-1.2.0.tgz}
-    version: 1.2.0
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@nuxt/kit': ^3.0.0 || ^4.0.0
-
-  '@alikhalilll/nuxt-crypto@file:playgrounds/nuxt/.tarballs/alikhalilll-nuxt-crypto-1.3.0.tgz':
-    resolution: {integrity: sha512-WIPxFPif4a1j2z144bIzrJOFkkhPzMVveuw0SfY7SMKzxlJ9kg8EPJB553ODOpq47EaEDdTbpBIfU1T7f8olaw==, tarball: file:playgrounds/nuxt/.tarballs/alikhalilll-nuxt-crypto-1.3.0.tgz}
-    version: 1.3.0
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@nuxt/kit': ^3.0.0 || ^4.0.0
-      h3: ^1.0.0 || ^2.0.0
-    peerDependenciesMeta:
-      '@nuxt/kit':
-        optional: true
-      h3:
-        optional: true
 
   '@ampproject/remapping@2.3.0':
     resolution: {integrity: sha512-30iZtAPgz+LTIYoeivqYo853f02jBYSd5uGnGpkFV0M3xOt9aN73erkgYAmZU43x4VfqcnLxW9Kpg3R5LC4YYw==}
@@ -7244,78 +7118,6 @@ packages:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
 
 snapshots:
-
-  '@alikhalilll/a-drawer@file:playgrounds/nuxt/.tarballs/alikhalilll-a-drawer-1.0.1.tgz(@nuxt/kit@4.4.2(magicast@0.5.2))(@vueuse/core@14.3.0(vue@3.5.32(typescript@5.9.3)))(unplugin-vue-components@32.1.0(@nuxt/kit@4.4.2(magicast@0.5.2))(vue@3.5.32(typescript@5.9.3)))(vue@3.5.32(typescript@5.9.3))':
-    dependencies:
-      '@vueuse/core': 14.3.0(vue@3.5.32(typescript@5.9.3))
-      reka-ui: 2.9.7(vue@3.5.32(typescript@5.9.3))
-      vaul-vue: 0.4.1(reka-ui@2.9.7(vue@3.5.32(typescript@5.9.3)))(vue@3.5.32(typescript@5.9.3))
-      vue: 3.5.32(typescript@5.9.3)
-    optionalDependencies:
-      '@nuxt/kit': 4.4.2(magicast@0.5.2)
-      unplugin-vue-components: 32.1.0(@nuxt/kit@4.4.2(magicast@0.5.2))(vue@3.5.32(typescript@5.9.3))
-    transitivePeerDependencies:
-      - '@vue/composition-api'
-
-  '@alikhalilll/a-input@file:playgrounds/nuxt/.tarballs/alikhalilll-a-input-1.0.1.tgz(@nuxt/kit@4.4.2(magicast@0.5.2))(@vueuse/core@14.3.0(vue@3.5.32(typescript@5.9.3)))(unplugin-vue-components@32.1.0(@nuxt/kit@4.4.2(magicast@0.5.2))(vue@3.5.32(typescript@5.9.3)))(vue@3.5.32(typescript@5.9.3))':
-    dependencies:
-      '@vueuse/core': 14.3.0(vue@3.5.32(typescript@5.9.3))
-      vue: 3.5.32(typescript@5.9.3)
-    optionalDependencies:
-      '@nuxt/kit': 4.4.2(magicast@0.5.2)
-      unplugin-vue-components: 32.1.0(@nuxt/kit@4.4.2(magicast@0.5.2))(vue@3.5.32(typescript@5.9.3))
-
-  '@alikhalilll/a-popover@file:playgrounds/nuxt/.tarballs/alikhalilll-a-popover-1.0.1.tgz(@nuxt/kit@4.4.2(magicast@0.5.2))(@vueuse/core@14.3.0(vue@3.5.32(typescript@5.9.3)))(unplugin-vue-components@32.1.0(@nuxt/kit@4.4.2(magicast@0.5.2))(vue@3.5.32(typescript@5.9.3)))(vue@3.5.32(typescript@5.9.3))':
-    dependencies:
-      '@vueuse/core': 14.3.0(vue@3.5.32(typescript@5.9.3))
-      reka-ui: 2.9.7(vue@3.5.32(typescript@5.9.3))
-      vue: 3.5.32(typescript@5.9.3)
-    optionalDependencies:
-      '@nuxt/kit': 4.4.2(magicast@0.5.2)
-      unplugin-vue-components: 32.1.0(@nuxt/kit@4.4.2(magicast@0.5.2))(vue@3.5.32(typescript@5.9.3))
-    transitivePeerDependencies:
-      - '@vue/composition-api'
-
-  '@alikhalilll/a-responsive-popover@file:playgrounds/nuxt/.tarballs/alikhalilll-a-responsive-popover-1.0.1.tgz(@nuxt/kit@4.4.2(magicast@0.5.2))(@vueuse/core@14.3.0(vue@3.5.32(typescript@5.9.3)))(unplugin-vue-components@32.1.0(@nuxt/kit@4.4.2(magicast@0.5.2))(vue@3.5.32(typescript@5.9.3)))(vue@3.5.32(typescript@5.9.3))':
-    dependencies:
-      '@vueuse/core': 14.3.0(vue@3.5.32(typescript@5.9.3))
-      vue: 3.5.32(typescript@5.9.3)
-    optionalDependencies:
-      '@nuxt/kit': 4.4.2(magicast@0.5.2)
-      unplugin-vue-components: 32.1.0(@nuxt/kit@4.4.2(magicast@0.5.2))(vue@3.5.32(typescript@5.9.3))
-
-  '@alikhalilll/a-skeleton@file:playgrounds/nuxt/.tarballs/alikhalilll-a-skeleton-0.1.0.tgz(@nuxt/kit@4.4.2(magicast@0.5.2))(@vueuse/core@14.3.0(vue@3.5.32(typescript@5.9.3)))(unplugin-vue-components@32.1.0(@nuxt/kit@4.4.2(magicast@0.5.2))(vue@3.5.32(typescript@5.9.3)))(vue@3.5.32(typescript@5.9.3))':
-    dependencies:
-      '@vueuse/core': 14.3.0(vue@3.5.32(typescript@5.9.3))
-      vue: 3.5.32(typescript@5.9.3)
-    optionalDependencies:
-      '@nuxt/kit': 4.4.2(magicast@0.5.2)
-      unplugin-vue-components: 32.1.0(@nuxt/kit@4.4.2(magicast@0.5.2))(vue@3.5.32(typescript@5.9.3))
-
-  '@alikhalilll/a-tel-input@file:playgrounds/nuxt/.tarballs/alikhalilll-a-tel-input-1.2.1.tgz(@nuxt/kit@4.4.2(magicast@0.5.2))(@vueuse/core@14.3.0(vue@3.5.32(typescript@5.9.3)))(unplugin-vue-components@32.1.0(@nuxt/kit@4.4.2(magicast@0.5.2))(vue@3.5.32(typescript@5.9.3)))(vee-validate@4.15.1(vue@3.5.32(typescript@5.9.3)))(vue@3.5.32(typescript@5.9.3))(zod@3.25.76)':
-    dependencies:
-      '@vueuse/core': 14.3.0(vue@3.5.32(typescript@5.9.3))
-      class-variance-authority: 0.7.1
-      libphonenumber-js: 1.13.2
-      vue: 3.5.32(typescript@5.9.3)
-    optionalDependencies:
-      '@nuxt/kit': 4.4.2(magicast@0.5.2)
-      unplugin-vue-components: 32.1.0(@nuxt/kit@4.4.2(magicast@0.5.2))(vue@3.5.32(typescript@5.9.3))
-      vee-validate: 4.15.1(vue@3.5.32(typescript@5.9.3))
-      zod: 3.25.76
-
-  '@alikhalilll/nuxt-api-provider@file:playgrounds/nuxt/.tarballs/alikhalilll-nuxt-api-provider-1.3.0.tgz(@nuxt/kit@4.4.2(magicast@0.5.2))':
-    optionalDependencies:
-      '@nuxt/kit': 4.4.2(magicast@0.5.2)
-
-  '@alikhalilll/nuxt-auto-middleware@file:playgrounds/nuxt/.tarballs/alikhalilll-nuxt-auto-middleware-1.2.0.tgz(@nuxt/kit@4.4.2(magicast@0.5.2))':
-    dependencies:
-      '@nuxt/kit': 4.4.2(magicast@0.5.2)
-
-  '@alikhalilll/nuxt-crypto@file:playgrounds/nuxt/.tarballs/alikhalilll-nuxt-crypto-1.3.0.tgz(@nuxt/kit@4.4.2(magicast@0.5.2))(h3@1.15.11)':
-    optionalDependencies:
-      '@nuxt/kit': 4.4.2(magicast@0.5.2)
-      h3: 1.15.11
 
   '@ampproject/remapping@2.3.0':
     dependencies:
