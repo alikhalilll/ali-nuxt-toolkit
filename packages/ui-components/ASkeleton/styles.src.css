@@ -1,0 +1,178 @@
+/*
+ * @alikhalilll/a-skeleton — compiled stylesheet source.
+ *
+ * Tailwind compiles this into `dist/styles.css` (utilities this component uses +
+ * its bundled SFC styles). Theme tokens + animation keyframes live here in global
+ * CSS rather than `<style scoped>` so consumers can override the look from anywhere
+ * in their cascade.
+ *
+ *   import '@alikhalilll/a-ui-base/tokens.css';
+ *   import '@alikhalilll/a-skeleton/styles.css';
+ */
+@import '@alikhalilll/a-ui-base/tokens.css';
+@import '@alikhalilll/a-ui-base/theme.css';
+
+@source './src/**/*.{vue,ts}';
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * Theme tokens — override on `:root`, on a wrapper class (multi-tenant), or
+ * inline (`style="--ak-skeleton-block: hotpink"`). Defaults inherit from the
+ * shared `@alikhalilll/a-ui-base` token set so the skeleton matches whatever
+ * theme the rest of the toolkit is using.
+ *
+ *   --ak-skeleton-block          base block colour (top of the vertical gradient)
+ *   --ak-skeleton-block-soft     fade colour (bottom of the vertical gradient)
+ *   --ak-skeleton-shimmer        moving-highlight colour of the shimmer sweep
+ *   --ak-skeleton-radius         default border radius for blocks
+ *   --ak-skeleton-duration       animation duration (shimmer + pulse)
+ *   --ak-skeleton-pulse-opacity  min opacity at the trough of the pulse cycle
+ *   --ak-skeleton-shimmer-angle  shimmer sweep angle (default 110deg = diagonal)
+ *   --ak-skeleton-ring           subtle 1px inset border colour
+ * ───────────────────────────────────────────────────────────────────────────── */
+:root {
+  --ak-skeleton-block: hsl(var(--ak-ui-muted) / 0.55);
+  --ak-skeleton-block-soft: hsl(var(--ak-ui-muted) / 0.32);
+  --ak-skeleton-shimmer: hsl(var(--ak-ui-foreground) / 0.08);
+  --ak-skeleton-radius: 0.375rem;
+  --ak-skeleton-duration: 1.6s;
+  --ak-skeleton-pulse-opacity: 0.48;
+  --ak-skeleton-shimmer-angle: 110deg;
+  --ak-skeleton-ring: hsl(var(--ak-ui-foreground) / 0.04);
+}
+
+/* In dark mode the foreground token is brighter than the background, so the
+ * default shimmer derived from `--ak-ui-foreground` already reads as a lighter
+ * sweep over a darker block. In light mode we want the same polarity (lighter
+ * sweep over the muted block) — boost the shimmer slightly with a brighter
+ * default so it stays visible against the lighter base. */
+.light {
+  --ak-skeleton-shimmer: hsl(0 0% 100% / 0.85);
+  --ak-skeleton-ring: hsl(0 0% 0% / 0.05);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * Block primitives
+ *
+ * `.a-skel-block` is a `background: linear-gradient(...)` layered surface so
+ * blocks look like soft cards instead of flat fills. A 1-px inset ring picks up
+ * the theme colour and gives blocks definition without a hard border.
+ *
+ * The shimmer animation is a `transform: translateX(...)` on a pseudo-element
+ * — the only property changing each frame is a composited transform, so 500
+ * blocks animating in parallel stay GPU-bound. The `inset: 0 -25%` extends the
+ * gradient beyond the block's left/right edges so a diagonal sweep never shows
+ * its hard start / end inside the clip.
+ * ───────────────────────────────────────────────────────────────────────────── */
+.a-skel-block {
+  background-image: linear-gradient(
+    180deg,
+    var(--ak-skeleton-block) 0%,
+    var(--ak-skeleton-block-soft) 100%
+  );
+  background-color: var(--ak-skeleton-block);
+  border-radius: var(--ak-skeleton-radius);
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 0 0 1px var(--ak-skeleton-ring);
+  /* Always-on subtle vertical sheen via a static gradient — gives plain blocks
+   * a hint of dimension even when the shimmer pseudo isn't running. */
+  isolation: isolate;
+}
+
+.a-skel-block--anim-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0 -25%;
+  background-image: linear-gradient(
+    var(--ak-skeleton-shimmer-angle),
+    transparent 30%,
+    var(--ak-skeleton-shimmer) 50%,
+    transparent 70%
+  );
+  transform: translateX(-110%);
+  will-change: transform;
+  animation: a-skel-shimmer var(--ak-skeleton-duration) cubic-bezier(0.42, 0, 0.58, 1) infinite;
+  z-index: 1;
+}
+
+.a-skel-block--anim-pulse {
+  animation: a-skel-pulse var(--ak-skeleton-duration) cubic-bezier(0.42, 0, 0.58, 1) infinite;
+  will-change: opacity;
+}
+
+@keyframes a-skel-shimmer {
+  0% {
+    transform: translateX(-110%);
+  }
+  100% {
+    transform: translateX(110%);
+  }
+}
+
+@keyframes a-skel-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: var(--ak-skeleton-pulse-opacity);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .a-skel-block--anim-shimmer::after,
+  .a-skel-block--anim-pulse {
+    animation: none;
+    will-change: auto;
+  }
+  .a-skel-block--anim-shimmer::after {
+    /* Park the highlight gently in the middle so the block doesn't look like
+     * a flat slab when motion is disabled. */
+    transform: translateX(0);
+    opacity: 0.5;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * Layer primitives — shared by `<ASkeleton>`'s cache-hit render and the public
+ * `<ASkeletonLayer>` component. Containment isolates per-block animation work
+ * so a layer with 500 shimmer blocks doesn't trigger sibling layout/paint.
+ * ───────────────────────────────────────────────────────────────────────────── */
+.a-skeleton__layer {
+  position: relative;
+  contain: layout style paint;
+  content-visibility: auto;
+}
+
+.a-skeleton__layer > .a-skel-block {
+  position: absolute;
+  contain: strict;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * Variant hooks — type-specific tweaks that the SFC applies via class names.
+ * Keep them subtle: the goal is "this is a text bar, not a button" not a
+ * complete visual overhaul.
+ * ───────────────────────────────────────────────────────────────────────────── */
+.a-skel-block--text {
+  /* Slightly tighter radius for text bars — they read as type, not blocks. */
+  border-radius: calc(var(--ak-skeleton-radius) * 0.6);
+}
+
+.a-skel-block--circle {
+  /* Match the captured radius (≈ 50%) but never let inset-ring round off. */
+  background-image: radial-gradient(
+    circle at 35% 30%,
+    var(--ak-skeleton-block) 0%,
+    var(--ak-skeleton-block-soft) 100%
+  );
+}
+
+.a-skel-block--image {
+  background-image: linear-gradient(
+    160deg,
+    var(--ak-skeleton-block) 0%,
+    var(--ak-skeleton-block-soft) 60%,
+    var(--ak-skeleton-block) 100%
+  );
+}
