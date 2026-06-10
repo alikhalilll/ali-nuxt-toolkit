@@ -16,6 +16,7 @@
     "@alikhalilll/nuxt-auto-middleware": "workspace:*",
     "@alikhalilll/a-ui-base": "workspace:*",
     "@alikhalilll/a-tel-input": "workspace:*",
+    "@alikhalilll/a-skeleton": "workspace:*",
     "@nuxt/content": "^3.0.0",
     "@vee-validate/zod": "^4.13.0",
     "better-sqlite3": "^12.0.0",

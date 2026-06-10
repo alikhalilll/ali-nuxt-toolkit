@@ -28,14 +28,19 @@ const analyticsScripts = cfAnalyticsToken
 export default defineNuxtConfig({
   compatibilityDate: '2026-04-01',
   srcDir: '.',
-  modules: ['@nuxt/content', '@alikhalilll/nuxt-api-provider', '@alikhalilll/nuxt-crypto'],
+  modules: [
+    '@nuxt/content',
+    '@alikhalilll/nuxt-api-provider',
+    '@alikhalilll/nuxt-crypto',
+    '@alikhalilll/a-skeleton/nuxt',
+  ],
   // Note: @alikhalilll/a-ui-base/tokens.css is @imported from the top of docs.css instead of
   // listed here. Vite + pnpm workspaces resolves the same workspace-symlinked CSS via
   // two different canonical paths when it's referenced both as a Nuxt CSS entry AND
   // implicitly via the package's subpath — the second copy lands AFTER docs.css in the
   // <head> cascade and the lib's `.hidden { display: none }` ends up overriding the
   // docs site's `.md\:flex` responsive utility, breaking the desktop nav + sidebars.
-  css: ['~/assets/docs.css'],
+  css: ['~/assets/docs.css', '@alikhalilll/a-skeleton/styles.css'],
   vite: {
     plugins: [tailwindcss()],
   },
@@ -66,6 +71,7 @@ export default defineNuxtConfig({
         '/auto-middleware',
         '/ui',
         '/ui/tel-input',
+        '/ui/skeleton',
       ],
       failOnError: false,
     },

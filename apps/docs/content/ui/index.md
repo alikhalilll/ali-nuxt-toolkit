@@ -1,15 +1,18 @@
 ---
 title: ui
-description: Headless, shadcn-vue style phone input. Built on reka-ui and vaul-vue, fully typed, themed via CSS variables.
-package: '@alikhalilll/a-tel-input'
+description: Headless Vue 3 / Nuxt 3+ components — international phone input on reka-ui + vaul-vue, and a self-generating skeleton loader. Fully typed, themed via CSS variables.
+package: '@alikhalilll/a-*'
 order: 4
 ---
 
-# @alikhalilll/a-tel-input
+# UI components
 
-A headless, [shadcn-vue](https://www.shadcn-vue.com/) style phone input for Vue 3 + Nuxt 3/4. Built on [reka-ui](https://reka-ui.com) and [vaul-vue](https://github.com/unovue/vaul-vue). Fully typed, themed via CSS variables — the country picker is a popover on desktop and a drawer on mobile, themable end-to-end.
+Headless, [shadcn-vue](https://www.shadcn-vue.com/) style components for Vue 3 + Nuxt 3/4. Each component ships as its own independently-versioned package — install only what you need. Fully typed, themed via CSS variables, dark-mode out of the box.
 
-See the [`ATelInput`](/ui/tel-input) page for install, setup, props, slots, and live demos.
+## Components
+
+- [**`ATelInput`**](/ui/tel-input) — international phone input. Built on [reka-ui](https://reka-ui.com) and [vaul-vue](https://github.com/unovue/vaul-vue). Country auto-detect, libphonenumber-js validation, responsive popover/drawer picker, VeeValidate + Zod integration.
+- [**`ASkeleton`**](/ui/skeleton) — auto-generating skeleton loader. First paint mirrors the slot's HTML structure; second load replays a pixel-aligned shape captured from the real DOM. Public composable + primitives for crafting custom skeleton flows.
 
 ## Theming
 

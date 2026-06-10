@@ -16,6 +16,8 @@ interface SubPage {
    * ships as its own independently-versioned package (e.g. `a-tel-input`).
    */
   pkg?: string;
+  /** Show a gradient NEW pill next to the title. */
+  isNew?: boolean;
 }
 
 interface SubGroup {
@@ -45,7 +47,16 @@ const modules: ModuleEntry[] = [
       },
       {
         label: 'Components',
-        items: [{ path: '/ui/tel-input', title: 'TelInput', kind: 'page', pkg: 'a-tel-input' }],
+        items: [
+          { path: '/ui/tel-input', title: 'TelInput', kind: 'page', pkg: 'a-tel-input' },
+          {
+            path: '/ui/skeleton',
+            title: 'Skeleton',
+            kind: 'page',
+            pkg: 'a-skeleton',
+            isNew: true,
+          },
+        ],
       },
     ],
   },
@@ -138,7 +149,10 @@ function scrollTo(id: string, e: MouseEvent) {
                           isSubpageActive(sub) ? 'doc-tree__link--active' : '',
                         ]"
                       >
-                        <span class="doc-tree__name">{{ sub.title }}</span>
+                        <span class="doc-tree__name">
+                          {{ sub.title }}
+                          <span v-if="sub.isNew" class="badge-new">NEW</span>
+                        </span>
                         <span v-if="sub.pkg" class="doc-tree__pkg">{{ sub.pkg }}</span>
                       </NuxtLink>
                     </li>

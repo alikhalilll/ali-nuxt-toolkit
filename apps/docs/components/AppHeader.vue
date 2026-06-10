@@ -12,9 +12,10 @@ const navLinks = [
   { to: '/auto-middleware', label: 'auto-middleware' },
 ];
 
-const uiNavItems: { to: string; label: string; pkg?: string }[] = [
+const uiNavItems: { to: string; label: string; pkg?: string; isNew?: boolean }[] = [
   { to: '/ui', label: 'Overview' },
   { to: '/ui/tel-input', label: 'ATelInput', pkg: 'a-tel-input' },
+  { to: '/ui/skeleton', label: 'ASkeleton', pkg: 'a-skeleton', isNew: true },
 ];
 
 const uiNavOpen = ref(false);
@@ -283,7 +284,10 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
                 @click="uiNavOpen = false"
               >
                 <span class="ui-mega__body">
-                  <span class="ui-mega__label">{{ item.label }}</span>
+                  <span class="ui-mega__label">
+                    {{ item.label }}
+                    <span v-if="item.isNew" class="badge-new">NEW</span>
+                  </span>
                   <span v-if="item.pkg" class="ui-mega__pkg">@alikhalilll/{{ item.pkg }}</span>
                   <span v-else class="ui-mega__pkg ui-mega__pkg--muted">
                     Overview &middot; theming
@@ -632,7 +636,10 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
                     active-class="mobile-sheet__item--active"
                     @click="mobileNavOpen = false"
                   >
-                    <span class="mobile-sheet__item-title">{{ item.label }}</span>
+                    <span class="mobile-sheet__item-title">
+                      {{ item.label }}
+                      <span v-if="item.isNew" class="badge-new">NEW</span>
+                    </span>
                     <span v-if="item.pkg" class="mobile-sheet__badge">{{ item.pkg }}</span>
                   </NuxtLink>
                 </li>

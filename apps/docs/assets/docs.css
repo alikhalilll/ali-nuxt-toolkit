@@ -736,3 +736,46 @@ pre.bg-code-bg::-webkit-scrollbar-thumb {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-surface-2);
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * NEW badge — used in the nav UI dropdown, sidebar, packages grid, and
+ * anywhere we want to highlight a freshly-shipped component.
+ * ───────────────────────────────────────────────────────────────────────────── */
+.badge-new {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-family: ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.4;
+  background: linear-gradient(135deg, #22d3ee, #a78bfa 50%, #f472b6);
+  background-size: 200% 200%;
+  color: #fff;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.15);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.18) inset,
+    0 4px 12px -4px rgba(167, 139, 250, 0.5);
+  animation: badge-new-shift 4s ease-in-out infinite;
+  vertical-align: middle;
+}
+
+@keyframes badge-new-shift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .badge-new {
+    animation: none;
+  }
+}

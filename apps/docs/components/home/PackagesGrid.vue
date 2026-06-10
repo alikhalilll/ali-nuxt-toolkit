@@ -14,6 +14,8 @@ interface PackageCard {
    *  subpath (`/core`) usable in any JS/TS project. */
   mode: 'core' | 'vue' | 'nuxt-only';
   modeLabel: string;
+  /** Show a gradient NEW pill on the card. */
+  isNew?: boolean;
 }
 
 const packages: PackageCard[] = [
@@ -49,13 +51,24 @@ const packages: PackageCard[] = [
   },
   {
     name: '@alikhalilll/a-tel-input',
-    docs: '/ui',
+    docs: '/ui/tel-input',
     npm: 'https://www.npmjs.com/package/@alikhalilll/a-tel-input',
     description:
       'Headless Vue 3 phone input — ATelInput with auto country detection, libphonenumber validation, and a popover/drawer country picker. All in one package.',
     accent: 'ui',
     mode: 'vue',
     modeLabel: 'Vue 3 (Nuxt + non-Nuxt)',
+  },
+  {
+    name: '@alikhalilll/a-skeleton',
+    docs: '/ui/skeleton',
+    npm: 'https://www.npmjs.com/package/@alikhalilll/a-skeleton',
+    description:
+      'Self-generating skeleton loader — first paint mirrors the slot HTML structure, second load replays a pixel-aligned shape captured from the real DOM. Themeable via CSS vars.',
+    accent: 'ui',
+    mode: 'vue',
+    modeLabel: 'Vue 3 (Nuxt + non-Nuxt)',
+    isNew: true,
   },
 ];
 
@@ -100,6 +113,7 @@ onMounted(() => {
         <div class="mb-2 flex items-center gap-2">
           <span class="pkg-dot" aria-hidden="true" />
           <h3 class="font-mono text-[13px] font-semibold text-text">{{ pkg.name }}</h3>
+          <span v-if="pkg.isNew" class="badge-new ml-auto">NEW</span>
         </div>
         <span :class="['pkg-mode', `pkg-mode--${pkg.mode}`]" :title="pkg.modeLabel">
           <svg
