@@ -1,0 +1,114 @@
+{
+  "name": "@yourname/emoji-favicon",
+  "version": "0.0.0",
+  "description": "Dynamic emoji favicons for Vue, Nuxt, and Vite — framework-agnostic core with thin per-framework adapters.",
+  "license": "MIT",
+  "author": "yourname",
+  "homepage": "https://github.com/yourname/emoji-favicon#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourname/emoji-favicon.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourname/emoji-favicon/issues"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "favicon",
+    "emoji",
+    "vue",
+    "vue3",
+    "vue-plugin",
+    "nuxt",
+    "nuxt-module",
+    "vite",
+    "vite-plugin"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./vite": {
+      "types": "./dist/vite/index.d.ts",
+      "import": "./dist/vite/index.js",
+      "require": "./dist/vite/index.cjs"
+    },
+    "./vue": {
+      "types": "./dist/vue/index.d.ts",
+      "import": "./dist/vue/index.js",
+      "require": "./dist/vue/index.cjs"
+    },
+    "./nuxt": {
+      "types": "./dist/nuxt/index.d.ts",
+      "import": "./dist/nuxt/index.js",
+      "require": "./dist/nuxt/index.cjs"
+    },
+    "./resolver": {
+      "types": "./dist/resolver/index.d.ts",
+      "import": "./dist/resolver/index.js",
+      "require": "./dist/resolver/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev:prepare": "tsdown --stub",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "prepare": "husky"
+  },
+  "peerDependencies": {
+    "@nuxt/kit": "^3.0.0 || ^4.0.0",
+    "unplugin-vue-components": "^28.0.0 || ^29.0.0 || ^30.0.0",
+    "vite": "^5.0.0 || ^6.0.0 || ^7.0.0",
+    "vue": "^3.5.0"
+  },
+  "peerDependenciesMeta": {
+    "@nuxt/kit": {
+      "optional": true
+    },
+    "unplugin-vue-components": {
+      "optional": true
+    },
+    "vite": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.0.0",
+    "@commitlint/config-conventional": "^19.0.0",
+    "@nuxt/kit": "^4.0.0",
+    "@types/node": "^22.0.0",
+    "eslint": "^9.0.0",
+    "husky": "^9.0.0",
+    "lint-staged": "^15.0.0",
+    "prettier": "^3.0.0",
+    "tsdown": "^0.6.0",
+    "typescript": "^5.5.0",
+    "vite": "^6.0.0",
+    "vitest": "^2.0.0",
+    "vue": "^3.5.0"
+  },
+  "lint-staged": {
+    "*.{ts,vue}": "eslint --fix",
+    "*.{ts,vue,md,json}": "prettier --write"
+  }
+}

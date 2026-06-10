@@ -4,6 +4,25 @@ Runnable, focused recipes — one scenario per folder. These complement the full
 
 > **Looking for a quick browser repro?** Use the Stackblitz template linked from the [root README](../README.md#quick-start).
 
+## Available
+
+### [`emoji-favicon/`](./emoji-favicon/) — the worked example for the **"How to build your own plugin"** LinkedIn series
+
+A self-contained, framework-agnostic plugin with four published subpaths (`.`, `./vite`, `./vue`, `./nuxt`, `./resolver`). Demonstrates every concept the series teaches:
+
+- Pure-TS core (`src/core/`)
+- Vite plugin (`src/vite/`)
+- Vue 3 plugin + composable + component (`src/vue/`)
+- Nuxt module + runtime plugin (`src/nuxt/`)
+- `unplugin-vue-components` resolver (`src/resolver/`)
+- Full `package.json` with conditional `exports`, peer deps, provenance config
+- Husky + commitlint + lint-staged + prettier + eslint pre-wired
+- GitHub Actions CI + release workflow
+- Vitest unit suite
+- Playground Nuxt app for manual dogfooding
+
+Series source: [`../social-media/series-how-build-your-own-plugin/`](../social-media/series-how-build-your-own-plugin/) — 15 carousel posts mapping 1:1 to features of this package.
+
 ## Planned / wanted
 
 We'd love community contributions for:

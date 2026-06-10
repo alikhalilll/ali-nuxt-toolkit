@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm test
+      - run: pnpm build
+
+  # Guard the build/runtime split: src/**/runtime/ must NEVER import @nuxt/kit.
+  # If this check fails, see post 13 of the LinkedIn series.
+  runtime-purity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: No @nuxt/kit imports in runtime/
+        run: |
+          if grep -r "from '@nuxt/kit'" src/**/runtime/ 2>/dev/null; then
+            echo "::error::Found @nuxt/kit import in src/**/runtime/. Build-time only."
+            exit 1
+          fi

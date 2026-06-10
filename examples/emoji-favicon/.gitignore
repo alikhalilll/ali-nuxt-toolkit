@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.cache/
+.DS_Store
+*.log
+
+# Local Nuxt build output (playground)
+playground/.nuxt/
+playground/.output/
+playground/node_modules/

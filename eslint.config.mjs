@@ -7,7 +7,9 @@ import globals from 'globals';
 import prettierRecommended from 'eslint-plugin-prettier/recommended';
 
 export default [
-  // 1. Ignore build artefacts
+  // 1. Ignore build artefacts + example sub-projects (each example ships its
+  //    own ESLint + tsconfig; the root parser has no project ref for them and
+  //    would fail on type-only / Vue-specific syntax).
   {
     ignores: [
       '**/node_modules/**',
@@ -16,6 +18,7 @@ export default [
       '**/dist/**',
       '**/coverage/**',
       '**/artifacts/**',
+      'examples/*/**',
       'WALKTHROUGH.md',
     ],
   },
