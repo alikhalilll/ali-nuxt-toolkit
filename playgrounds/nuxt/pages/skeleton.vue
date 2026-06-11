@@ -158,6 +158,38 @@ const themeIdx = ref(0);
 const themedLoading = ref(true);
 const themeVars = computed(() => themePresets[themeIdx.value]!.vars);
 const themeAnim = computed(() => themePresets[themeIdx.value]!.animation);
+
+/* ---------- Public-API demo 5: auto cacheKey is per-instance, plus truncation warning ----------
+ * Two <ASkeleton> wrappers below render the same component with NO explicit cacheKey.
+ *   - The auto-generated key is `<slot-name>:<useId()>`, so each wrapper has its own slot.
+ *   - One wrapper is narrowed via `max-w-[260px]`, so the captured shapes diverge in width.
+ *   - On the next loading flip, each wrapper replays its own shape — proof that the slots
+ *     are not colliding.
+ * The shared `autoMaxNodes` input drives `max-nodes` on both wrappers. Drop it to 5 to
+ * force `truncated: true`, and `<ASkeleton>` will console.warn once per instance. */
+const autoLoading = ref(true);
+const autoProfile = ref<{ name: string; role: string; bio: string; avatar: string } | null>(null);
+const autoMaxNodes = ref(500);
+
+async function loadAutoProfile() {
+  autoLoading.value = true;
+  autoProfile.value = null;
+  await new Promise((r) => setTimeout(r, 600));
+  autoProfile.value = {
+    name: 'Jordan Park',
+    role: 'Staff Frontend Engineer',
+    bio: 'Maintains a self-generating skeleton library. Prefers boring solutions that scale.',
+    avatar: 'https://i.pravatar.cc/96?img=12',
+  };
+  autoLoading.value = false;
+}
+
+function resetAutoProfile() {
+  autoProfile.value = null;
+  autoLoading.value = true;
+}
+
+loadAutoProfile();
 </script>
 
 <template>
@@ -531,6 +563,97 @@ const themeAnim = computed(() => themePresets[themeIdx.value]!.animation);
             </div>
           </div>
         </ASkeleton>
+      </div>
+    </div>
+
+    <h2 class="mt-10 mb-2 text-xl font-semibold tracking-tight">
+      Auto cache key · per-instance · truncation surface
+    </h2>
+    <p class="mb-4 text-sm text-text-dim">
+      Both wrappers below render the <strong>same</strong> component with
+      <strong>no</strong> explicit <code>cache-key</code>. The default key is
+      <code>&lt;slot-name&gt;:&lt;useId()&gt;</code> — distinct per instance — so the narrow
+      wrapper's captured shape never replays inside the wide one. Drop <code>max-nodes</code> to
+      <code>5</code> and open DevTools: you'll see
+      <code>[ASkeleton] Capture truncated…</code> exactly once per instance, even after multiple
+      reloads of the same wrapper.
+    </p>
+
+    <div class="mb-4 flex flex-wrap items-center gap-3 text-sm">
+      <label class="flex items-center gap-2">
+        <span>max-nodes:</span>
+        <input
+          v-model.number="autoMaxNodes"
+          type="number"
+          min="3"
+          max="500"
+          class="w-20 rounded border border-brand-border bg-surface-2 px-2 py-1"
+        />
+      </label>
+
+      <button
+        class="cursor-pointer rounded border border-brand bg-brand px-3 py-1.5 font-semibold text-bg hover:brightness-110"
+        @click="loadAutoProfile"
+      >
+        Reload both
+      </button>
+      <button
+        class="cursor-pointer rounded border border-brand-border px-3 py-1.5 text-text-dim hover:bg-surface-2"
+        @click="resetAutoProfile"
+      >
+        Show skeleton
+      </button>
+    </div>
+
+    <div class="mb-10 grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div class="rounded-lg border border-brand-border bg-surface p-4">
+        <p class="mb-2 text-[11px] font-bold uppercase tracking-widest text-text-dim">
+          Wide instance · no cacheKey
+        </p>
+        <ASkeleton :loading="autoLoading" :max-nodes="autoMaxNodes">
+          <div class="flex items-start gap-4 p-2">
+            <img
+              v-if="autoProfile?.avatar"
+              :src="autoProfile.avatar"
+              :alt="autoProfile.name"
+              class="size-16 shrink-0 rounded-full object-cover"
+            />
+            <div v-else class="size-16 shrink-0 rounded-full" />
+            <div class="flex-1">
+              <h3 class="text-base font-semibold">{{ autoProfile?.name }}</h3>
+              <p class="mt-0.5 text-xs uppercase tracking-wide text-text-dim">
+                {{ autoProfile?.role }}
+              </p>
+              <p class="mt-2 text-sm leading-relaxed">{{ autoProfile?.bio }}</p>
+            </div>
+          </div>
+        </ASkeleton>
+      </div>
+
+      <div class="rounded-lg border border-brand-border bg-surface p-4">
+        <p class="mb-2 text-[11px] font-bold uppercase tracking-widest text-text-dim">
+          Narrow instance · no cacheKey
+        </p>
+        <div class="max-w-[260px]">
+          <ASkeleton :loading="autoLoading" :max-nodes="autoMaxNodes">
+            <div class="flex items-start gap-4 p-2">
+              <img
+                v-if="autoProfile?.avatar"
+                :src="autoProfile.avatar"
+                :alt="autoProfile.name"
+                class="size-16 shrink-0 rounded-full object-cover"
+              />
+              <div v-else class="size-16 shrink-0 rounded-full" />
+              <div class="flex-1">
+                <h3 class="text-base font-semibold">{{ autoProfile?.name }}</h3>
+                <p class="mt-0.5 text-xs uppercase tracking-wide text-text-dim">
+                  {{ autoProfile?.role }}
+                </p>
+                <p class="mt-2 text-sm leading-relaxed">{{ autoProfile?.bio }}</p>
+              </div>
+            </div>
+          </ASkeleton>
+        </div>
       </div>
     </div>
 

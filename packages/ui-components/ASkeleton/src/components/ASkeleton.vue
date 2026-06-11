@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, shallowRef, useSlots, watch, type CSSProperties } from 'vue';
+import { computed, ref, shallowRef, useId, useSlots, watch, type CSSProperties } from 'vue';
 import { cn } from '@alikhalilll/a-ui-base';
 import type { ASkeletonProps, ASkeletonSlots, CachedShape, ShapeNodeType } from '../types';
 import { useShapeProbe } from '../composables/useShapeProbe';
@@ -19,7 +19,18 @@ defineSlots<ASkeletonSlots>();
 
 const slots = useSlots();
 
-const resolvedKey = computed(() => props.cacheKey ?? fingerprintSlot(slots.default?.()));
+/* Per-instance suffix from Vue's useId() — deterministic across SSR/hydration
+ * and stable across re-renders, but distinct per <ASkeleton> instance. Two
+ * <ASkeleton><UserCard/></ASkeleton> on the same page therefore never collide
+ * on the auto-generated key. Pass an explicit `cacheKey` to share a shape
+ * across instances on purpose. */
+const instanceId = useId();
+
+const resolvedKey = computed(
+  () => props.cacheKey ?? `${fingerprintSlot(slots.default?.())}:${instanceId}`
+);
+
+const warnedKeys = new Set<string>();
 
 const cached = shallowRef<CachedShape | undefined>(getCached(resolvedKey.value, props.persist));
 
@@ -38,6 +49,14 @@ useShapeProbe(() => (props.loading ? null : wrapperRef.value), {
   onCapture: (shape) => {
     setCached(resolvedKey.value, shape, props.persist);
     cached.value = shape;
+    if (shape.truncated && !warnedKeys.has(resolvedKey.value)) {
+      warnedKeys.add(resolvedKey.value);
+      console.warn(
+        `[ASkeleton] Capture truncated at maxNodes=${props.maxNodes} for cacheKey="${resolvedKey.value}". ` +
+          `The replayed skeleton will be missing nodes. Raise \`max-nodes\` or mark dense subtrees with ` +
+          `\`data-skeleton-stop\` to collapse them into a single block.`
+      );
+    }
   },
 });
 

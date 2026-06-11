@@ -216,17 +216,17 @@ useShapeProbe(() => containerRef.value, {
 
 ## `<ASkeleton>` props
 
-| Prop          | Type                             | Default     | Description                                                                                          |
-| ------------- | -------------------------------- | ----------- | ---------------------------------------------------------------------------------------------------- |
-| `loading`     | `boolean`                        | —           | When `true`, show the skeleton.                                                                      |
-| `cacheKey`    | `string`                         | slot's name | Identifier for the shape cache. Pass explicitly when one component renders different shapes by prop. |
-| `maxDepth`    | `number`                         | `6`         | Max recursion depth when capturing shape.                                                            |
-| `maxNodes`    | `number`                         | `500`       | Hard cap on captured / structural nodes. Walk bails out beyond this with `truncated: true`.          |
-| `minNodeSize` | `number`                         | `4`         | Skip elements smaller than this many CSS pixels (either axis) during capture.                        |
-| `persist`     | `boolean`                        | `false`     | Mirror captured shape to `localStorage` so first-visit-after-reload skips the cold-start fallback.   |
-| `animation`   | `'shimmer' \| 'pulse' \| 'none'` | `'shimmer'` | Animation variant. `prefers-reduced-motion` disables animation automatically.                        |
-| `fallback`    | `'shimmer' \| 'block'`           | `'shimmer'` | Default cache-miss UI when no `#fallback` slot is provided.                                          |
-| `class`       | `HTMLAttributes['class']`        | —           | Class on the outer wrapper.                                                                          |
+| Prop          | Type                             | Default            | Description                                                                                                                                                                                                               |
+| ------------- | -------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `loading`     | `boolean`                        | —                  | When `true`, show the skeleton.                                                                                                                                                                                           |
+| `cacheKey`    | `string`                         | auto, per-instance | Identifier for the shape cache. Auto-generated as `"<slot-name>:<useId()>"` so each instance has its own slot. Pass explicitly to share a shape across instances, or when one instance renders different shapes per prop. |
+| `maxDepth`    | `number`                         | `6`                | Max recursion depth when capturing shape.                                                                                                                                                                                 |
+| `maxNodes`    | `number`                         | `500`              | Hard cap on captured / structural nodes. Walk bails out beyond this with `truncated: true`.                                                                                                                               |
+| `minNodeSize` | `number`                         | `4`                | Skip elements smaller than this many CSS pixels (either axis) during capture.                                                                                                                                             |
+| `persist`     | `boolean`                        | `false`            | Mirror captured shape to `localStorage` so first-visit-after-reload skips the cold-start fallback.                                                                                                                        |
+| `animation`   | `'shimmer' \| 'pulse' \| 'none'` | `'shimmer'`        | Animation variant. `prefers-reduced-motion` disables animation automatically.                                                                                                                                             |
+| `fallback`    | `'shimmer' \| 'block'`           | `'shimmer'`        | Default cache-miss UI when no `#fallback` slot is provided.                                                                                                                                                               |
+| `class`       | `HTMLAttributes['class']`        | —                  | Class on the outer wrapper.                                                                                                                                                                                               |
 
 ### Slots
 
@@ -254,6 +254,8 @@ clearCached('user-card'); // wipe one key
 setCached('user-card', shape, true); // write + persist
 const shape = getCached('user-card', true);
 ```
+
+Persisted entries carry a schema version. Whenever the `ShapeNode` / `CachedShape` shape changes between releases the version is bumped, and `getCached` purges stale payloads on read — so an upgrade can't replay wrong geometry from a previous version's cache.
 
 ---
 
@@ -305,7 +307,7 @@ The `.light` scope overrides `--ak-skeleton-shimmer` to a brighter value so pola
 
 Designed for components with hundreds of leaf elements (busy dashboards, long lists, dense forms). Cost is bounded at every layer:
 
-- **Walk budget** — `walkDom` stops emitting after `maxNodes` (default 500) and returns `CachedShape.truncated: true`. A 5000-row table will not lock up the main thread. The structural pass enforces a separate cap (default 300).
+- **Walk budget** — `walkDom` stops emitting after `maxNodes` (default 500) and returns `CachedShape.truncated: true`. A 5000-row table will not lock up the main thread. The structural pass enforces a separate cap (default 300). `<ASkeleton>` logs a one-time `console.warn` per `cacheKey` whenever a capture truncates, so missing nodes surface during development instead of silently replaying a clipped shape.
 - **Min-size filter** — `minNodeSize` (default 4 px) drops hairlines / spacer dots.
 - **Allocation-free render** — captured `ShapeNode`s carry frozen, pre-computed `style` and `lineStyles` objects. Per-type block class strings are pre-joined once per animation value. The cache-hit render loop reads them directly with no per-node function calls.
 - **Batched DOM reads** — `getBoundingClientRect` + `getComputedStyle` happen in one top-down pass with no intervening writes. One layout up front instead of one per element.
@@ -318,6 +320,7 @@ Designed for components with hundreds of leaf elements (busy dashboards, long li
 - The structural pass mirrors what the slot's template actually renders during loading. Gate everything on `v-if="data"` and the walker sees only a comment — fall back to the generic shimmer.
 - Captured shapes are snapshots. `ResizeObserver` re-measures when the wrapper resizes (debounced 150 ms). If you resize _during_ a skeleton render, the cached shape replays unchanged.
 - SSR: the structural skeleton works during SSR (no `window` access needed). Pixel-aligned positioned blocks require a captured shape, which only happens client-side after mount.
+- Two `<ASkeleton>` instances rendering the same component get separate caches by default — the auto-generated key includes `useId()`, so the slot is per-instance. Pass an explicit `cacheKey` to share one captured shape across, e.g., a list of identical cards.
 
 ## License
 

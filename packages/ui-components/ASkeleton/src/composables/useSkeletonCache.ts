@@ -5,20 +5,43 @@ const memory = new Map<string, CachedShape>();
 const STORAGE_PREFIX = 'a-skeleton:';
 
 /**
+ * Schema version for persisted entries. Bump whenever the `ShapeNode` /
+ * `CachedShape` field set changes so stale localStorage payloads from older
+ * releases get dropped on read instead of rehydrating into a wrong layout.
+ */
+const SCHEMA_VERSION = 1;
+
+interface PersistedShape {
+  v: number;
+  width: number;
+  height: number;
+  nodes: Partial<ShapeNode>[];
+  truncated?: boolean;
+}
+
+/**
  * Lookup a captured shape by key. Reads in-memory first, then `localStorage` if
  * `persist` is enabled. SSR-safe — bypasses `window` access on the server.
  * Rehydrates pre-computed styles for shapes deserialized from older sessions
  * (Object.freeze + style/lineStyles don't survive `JSON.stringify` round-trip).
+ * Drops the entry if it was written by a different schema version.
  */
 export function getCached(key: string, persist: boolean): CachedShape | undefined {
   const hit = memory.get(key);
   if (hit) return hit;
   if (!persist || typeof window === 'undefined') return undefined;
   try {
-    const raw = window.localStorage.getItem(STORAGE_PREFIX + key);
+    const storageKey = STORAGE_PREFIX + key;
+    const raw = window.localStorage.getItem(storageKey);
     if (!raw) return undefined;
-    const parsed = JSON.parse(raw) as CachedShape;
-    const rehydrated = rehydrateShape(parsed);
+    const parsed = JSON.parse(raw) as Partial<PersistedShape>;
+    if (parsed.v !== SCHEMA_VERSION) {
+      /* Stale payload from a previous release — purge so the next capture
+       * writes a fresh entry instead of rehydrating into a wrong layout. */
+      window.localStorage.removeItem(storageKey);
+      return undefined;
+    }
+    const rehydrated = rehydrateShape(parsed as PersistedShape);
     memory.set(key, rehydrated);
     return rehydrated;
   } catch {
@@ -32,7 +55,13 @@ export function setCached(key: string, value: CachedShape, persist: boolean): vo
   if (!persist || typeof window === 'undefined') return;
   try {
     /* Only the geometry survives the round-trip; styles get rebuilt on read. */
-    const lean = { width: value.width, height: value.height, nodes: leanNodes(value.nodes) };
+    const lean: PersistedShape = {
+      v: SCHEMA_VERSION,
+      width: value.width,
+      height: value.height,
+      nodes: leanNodes(value.nodes),
+      truncated: value.truncated,
+    };
     window.localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(lean));
   } catch {
     /* quota exceeded / disabled storage — silently degrade to in-memory only. */
@@ -67,8 +96,8 @@ export function clearCached(key?: string): void {
  * Walks the array in-place where possible and freezes the result so the render
  * path stays allocation-free.
  */
-function rehydrateShape(shape: CachedShape): CachedShape {
-  const nodes = shape.nodes.map((n) => (n.style ? n : freezeNodeStyles(n)));
+function rehydrateShape(shape: PersistedShape): CachedShape {
+  const nodes = shape.nodes.map((n) => freezeNodeStyles(n as ShapeNode));
   return Object.freeze({
     nodes: Object.freeze(nodes),
     width: shape.width,

@@ -42,9 +42,12 @@ export interface ASkeletonProps {
   /** When true, render the captured skeleton (or `fallback` slot) instead of the default slot. */
   loading: boolean;
   /**
-   * Identifier used to look up + persist the captured shape. Falls back to the
-   * slot's first child component name, then `'anonymous'`. Pass explicitly when
-   * the same component renders different shapes depending on props.
+   * Identifier used to look up + persist the captured shape. Defaults to
+   * `"<slot-fingerprint>:<useId()>"` so every `<ASkeleton>` instance gets its
+   * own cache slot automatically — two `<ASkeleton><UserCard/></ASkeleton>` on
+   * the same page never collide. Pass explicitly when you *want* multiple
+   * instances to share a captured shape (e.g. a list of identical cards), or
+   * when one instance renders different shapes depending on a prop.
    */
   cacheKey?: string;
   /** Max recursion depth during shape capture. Default 6. */

@@ -53,18 +53,18 @@ export default { plugins: [Components({ resolvers: [ASkeletonResolver()] })] };
 
 ## Public API at a glance
 
-| Export                                    | Kind       | When to reach for it                                                             |
-| ----------------------------------------- | ---------- | -------------------------------------------------------------------------------- |
-| `<ASkeleton>`                             | Component  | Default wrapper. Two-layer flow (structural pass → measured cache).              |
-| `<ASkeletonLayer>`                        | Component  | Render a `CachedShape` directly. Use when you don't want the wrapper.            |
-| `<ASkeletonBlock>`                        | Component  | Hand-crafted skeleton from primitive blocks. Flow-layout friendly.               |
-| `<StructuralSkeleton>`                    | Component  | Render a structural skeleton from any vnode tree (the cache-miss render path).   |
-| `useSkeleton()`                           | Composable | Wire probe + cache + reactivity around your own DOM. Returns a reactive `shape`. |
-| `useShapeProbe()`                         | Composable | Lower-level. `ResizeObserver` + debounced capture; you manage the cache.         |
-| `getCached` / `setCached` / `clearCached` | Function   | Imperative cache primitives. Read / write / wipe entries by key.                 |
-| `walkDom()`                               | Function   | Synchronous one-shot measurement. Returns a `CachedShape`.                       |
-| `buildStructuralSkeleton()`               | Function   | Pure: walk a vnode tree, return skeleton vnodes mirroring its layout.            |
-| `fingerprintSlot()`                       | Function   | Default `cacheKey` derivation — first non-comment vnode's component name.        |
+| Export                                    | Kind       | When to reach for it                                                                                               |
+| ----------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------ |
+| `<ASkeleton>`                             | Component  | Default wrapper. Two-layer flow (structural pass → measured cache).                                                |
+| `<ASkeletonLayer>`                        | Component  | Render a `CachedShape` directly. Use when you don't want the wrapper.                                              |
+| `<ASkeletonBlock>`                        | Component  | Hand-crafted skeleton from primitive blocks. Flow-layout friendly.                                                 |
+| `<StructuralSkeleton>`                    | Component  | Render a structural skeleton from any vnode tree (the cache-miss render path).                                     |
+| `useSkeleton()`                           | Composable | Wire probe + cache + reactivity around your own DOM. Returns a reactive `shape`.                                   |
+| `useShapeProbe()`                         | Composable | Lower-level. `ResizeObserver` + debounced capture; you manage the cache.                                           |
+| `getCached` / `setCached` / `clearCached` | Function   | Imperative cache primitives. Read / write / wipe entries by key.                                                   |
+| `walkDom()`                               | Function   | Synchronous one-shot measurement. Returns a `CachedShape`.                                                         |
+| `buildStructuralSkeleton()`               | Function   | Pure: walk a vnode tree, return skeleton vnodes mirroring its layout.                                              |
+| `fingerprintSlot()`                       | Function   | Slot-name fragment of the auto-generated default `cacheKey` (combined with `useId()` for per-instance uniqueness). |
 
 The corresponding types are all named: `ASkeletonProps`, `ASkeletonLayerProps`, `ASkeletonBlockProps`, `ASkeletonSlots`, `CachedShape`, `ShapeNode`, `UseSkeletonOptions`, `UseSkeletonReturn`, `WalkOptions`, `BuildOptions`, `ShapeProbeOptions`, `SkeletonAnimation`, `SkeletonFallback`.
 
@@ -249,17 +249,19 @@ useShapeProbe(() => containerRef.value, {
 
 ## `<ASkeleton>` props
 
-| Prop          | Type                             | Default     | Description                                                                                          |
-| ------------- | -------------------------------- | ----------- | ---------------------------------------------------------------------------------------------------- |
-| `loading`     | `boolean`                        | —           | When `true`, show the skeleton.                                                                      |
-| `cacheKey`    | `string`                         | slot's name | Identifier for the shape cache. Pass explicitly when one component renders different shapes by prop. |
-| `maxDepth`    | `number`                         | `6`         | Max recursion depth when capturing shape.                                                            |
-| `maxNodes`    | `number`                         | `500`       | Hard cap on captured / structural nodes. Walk bails out beyond this with `truncated: true`.          |
-| `minNodeSize` | `number`                         | `4`         | Skip elements smaller than this many CSS pixels (either axis) during capture.                        |
-| `persist`     | `boolean`                        | `false`     | Mirror captured shape to `localStorage` so first-visit-after-reload skips the cold-start fallback.   |
-| `animation`   | `'shimmer' \| 'pulse' \| 'none'` | `'shimmer'` | Animation variant. `prefers-reduced-motion` disables animation automatically.                        |
-| `fallback`    | `'shimmer' \| 'block'`           | `'shimmer'` | Default cache-miss UI when no `#fallback` slot is provided.                                          |
-| `class`       | `HTMLAttributes['class']`        | —           | Class on the outer wrapper.                                                                          |
+**Behaviour change in 1.x** — the default `cacheKey` is now per-instance (`<slot-name>:<useId()>`), so two unrelated `<ASkeleton>` wrappers no longer share a captured shape on the same page. Persisted localStorage entries from older builds carry no schema version, so they auto-purge on first read after upgrade. Pass an explicit `cacheKey` if you want the previous shared-cache behaviour (e.g. across a list of identical cards).
+
+| Prop          | Type                             | Default            | Description                                                                                                                                                                                               |
+| ------------- | -------------------------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `loading`     | `boolean`                        | —                  | When `true`, show the skeleton.                                                                                                                                                                           |
+| `cacheKey`    | `string`                         | auto, per instance | Auto-generated as `<slot-name>:<useId()>` so each instance has its own slot. Pass explicitly to share a captured shape across instances, or to differentiate prop-variant shapes from the same component. |
+| `maxDepth`    | `number`                         | `6`                | Max recursion depth when capturing shape.                                                                                                                                                                 |
+| `maxNodes`    | `number`                         | `500`              | Hard cap on captured / structural nodes. Walk bails out beyond this with `truncated: true`. `<ASkeleton>` logs a one-time `console.warn` per `cacheKey` when this cap is hit.                             |
+| `minNodeSize` | `number`                         | `4`                | Skip elements smaller than this many CSS pixels (either axis) during capture.                                                                                                                             |
+| `persist`     | `boolean`                        | `false`            | Mirror captured shape to `localStorage` so first-visit-after-reload skips the cold-start fallback. Payload is schema-versioned; entries from older releases auto-purge on read.                           |
+| `animation`   | `'shimmer' \| 'pulse' \| 'none'` | `'shimmer'`        | Animation variant. `prefers-reduced-motion` disables animation automatically.                                                                                                                             |
+| `fallback`    | `'shimmer' \| 'block'`           | `'shimmer'`        | Default cache-miss UI when no `#fallback` slot is provided.                                                                                                                                               |
+| `class`       | `HTMLAttributes['class']`        | —                  | Class on the outer wrapper.                                                                                                                                                                               |
 
 ### Slots
 
@@ -326,7 +328,7 @@ The `.light` scope overrides `--ak-skeleton-shimmer` to a brighter value so pola
 
 Designed for components with hundreds of leaf elements — busy dashboards, long lists, dense forms. Cost is bounded at every layer:
 
-- **Walk budget** — `walkDom` stops emitting after `maxNodes` (default 500) and returns `CachedShape.truncated: true`. A 5000-row table will not lock up the main thread.
+- **Walk budget** — `walkDom` stops emitting after `maxNodes` (default 500) and returns `CachedShape.truncated: true`. A 5000-row table will not lock up the main thread. `<ASkeleton>` logs a one-time `console.warn` per `cacheKey` when truncation happens, so missing nodes surface during development.
 - **Min-size filter** — `minNodeSize` (default 4 px) drops hairlines / spacer dots.
 - **Allocation-free render** — captured `ShapeNode`s carry frozen pre-computed styles. The cache-hit render loop reads them directly with no per-node function calls.
 - **Batched DOM reads** — `getBoundingClientRect` + `getComputedStyle` happen in one top-down pass with no intervening writes.
@@ -339,5 +341,6 @@ Designed for components with hundreds of leaf elements — busy dashboards, long
 - The structural pass mirrors what the slot's template actually renders during loading. Gate everything on `v-if="data"` and the walker sees only a comment — fall back to the generic shimmer.
 - Captured shapes are snapshots. `ResizeObserver` re-measures when the wrapper resizes (debounced 150 ms). If you resize _during_ a skeleton render, the cached shape replays unchanged.
 - SSR: the structural skeleton works during SSR (no `window` access needed). Pixel-aligned positioned blocks require a captured shape, which only happens client-side after mount.
+- Two `<ASkeleton>` instances rendering the same component get separate caches by default — the auto-generated key includes `useId()`, so the slot is per-instance. Pass an explicit `cacheKey` to share one captured shape across, e.g., a list of identical cards.
 
 > Theming tokens, multi-tenant CSS, and theming gotchas — see the [UI overview](/ui).
