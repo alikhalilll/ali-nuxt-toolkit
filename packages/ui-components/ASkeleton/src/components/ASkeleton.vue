@@ -1,157 +1,227 @@
 <script setup lang="ts">
-import { computed, ref, shallowRef, useId, useSlots, watch, type CSSProperties } from 'vue';
+import { computed, onBeforeUnmount, ref, shallowRef, useId, useSlots, watch } from 'vue';
 import { cn } from '@alikhalilll/a-ui-base';
-import type { ASkeletonProps, ASkeletonSlots, CachedShape, ShapeNodeType } from '../types';
-import { useShapeProbe } from '../composables/useShapeProbe';
-import { getCached, setCached } from '../composables/useSkeletonCache';
-import { fingerprintSlot } from '../utils/fingerprint';
+import type { ASkeletonProps, ASkeletonSlots } from '../types';
 import { StructuralSkeleton } from './StructuralSkeleton';
+import ASkeletonClone from './ASkeletonClone.vue';
+import { captureSnapshot, type CaptureSnapshot } from '../utils/captureStyles';
+
+/**
+ * `<ASkeleton>` — the package's headline wrapper.
+ *
+ * Two rendering strategies, selected via `mode`:
+ *   - `mirror` (default): walks the slot's vnode tree (`buildStructuralSkeleton`)
+ *     and preserves every element with its real `class` / inline `style`. Pure
+ *     Vue, SSR-safe, no DOM read.
+ *   - `clone`: mounts the slot off-screen once, snapshots every leaf's
+ *     `getComputedStyle()` (`captureSnapshot`), then replays the snapshot via
+ *     `<ASkeletonClone>` as positioned divs carrying every captured CSS
+ *     property. Pixel-identical regardless of styling system.
+ *
+ * The strategies are exclusive — picking one decides the entire loading-state
+ * render path. The wrapper itself only orchestrates: it doesn't decide
+ * per-element treatment (that's the strategies' job). Single Responsibility:
+ * orchestration + a11y + containment.
+ */
 
 const props = withDefaults(defineProps<ASkeletonProps>(), {
-  maxDepth: 6,
-  maxNodes: 500,
+  maxDepth: 16,
+  maxNodes: 600,
   minNodeSize: 4,
   persist: false,
   animation: 'shimmer',
   fallback: 'shimmer',
+  /* Default is `clone` — comprehensive computed-style snapshot + replay,
+   * works correctly regardless of how styles reach the DOM (Tailwind, inline
+   * style, CSS-in-JS hashes, scoped styles). Switch to `mirror` for SSR-safe,
+   * vnode-tree-based skeletons that don't need a client-side measurement pass. */
+  mode: 'clone',
 });
 defineSlots<ASkeletonSlots>();
 
 const slots = useSlots();
 
-/* Per-instance suffix from Vue's useId() — deterministic across SSR/hydration
- * and stable across re-renders, but distinct per <ASkeleton> instance. Two
- * <ASkeleton><UserCard/></ASkeleton> on the same page therefore never collide
- * on the auto-generated key. Pass an explicit `cacheKey` to share a shape
- * across instances on purpose. */
 const instanceId = useId();
-
-const resolvedKey = computed(
-  () => props.cacheKey ?? `${fingerprintSlot(slots.default?.())}:${instanceId}`
-);
-
-const warnedKeys = new Set<string>();
-
-const cached = shallowRef<CachedShape | undefined>(getCached(resolvedKey.value, props.persist));
-
-watch(resolvedKey, (key) => {
-  cached.value = getCached(key, props.persist);
-});
-
-const wrapperRef = ref<HTMLElement | null>(null);
-
-/* Probe runs whenever the real content is mounted (loading=false). The getter
- * returns null during loading so the watch tears down its ResizeObserver. */
-useShapeProbe(() => (props.loading ? null : wrapperRef.value), {
-  maxDepth: props.maxDepth,
-  maxNodes: props.maxNodes,
-  minSize: props.minNodeSize,
-  onCapture: (shape) => {
-    setCached(resolvedKey.value, shape, props.persist);
-    cached.value = shape;
-    if (shape.truncated && !warnedKeys.has(resolvedKey.value)) {
-      warnedKeys.add(resolvedKey.value);
-      console.warn(
-        `[ASkeleton] Capture truncated at maxNodes=${props.maxNodes} for cacheKey="${resolvedKey.value}". ` +
-          `The replayed skeleton will be missing nodes. Raise \`max-nodes\` or mark dense subtrees with ` +
-          `\`data-skeleton-stop\` to collapse them into a single block.`
-      );
-    }
-  },
-});
+void instanceId;
 
 const animationClass = computed(() =>
   props.animation === 'none' ? null : `a-skel-block--anim-${props.animation}`
 );
 
-const layerStyle = computed<CSSProperties>(() =>
-  cached.value ? { width: `${cached.value.width}px`, height: `${cached.value.height}px` } : {}
+const cloneAnimation = computed(() => props.animation);
+
+/* ─── `mirror` strategy state ─────────────────────────────────────────────── */
+const mirrorVNodes = computed(() => (props.loading ? (slots.default?.() ?? []) : []));
+const hasContent = computed(() => mirrorVNodes.value.length > 0);
+
+/* ─── `clone` strategy state ──────────────────────────────────────────────── */
+const captureRef = ref<HTMLElement | null>(null);
+const snapshot = shallowRef<CaptureSnapshot | undefined>(undefined);
+const snapshotValid = computed(
+  () => !!snapshot.value && snapshot.value.width > 0 && snapshot.value.height > 0
+);
+/* `snapshotRenderable` — only true when the snapshot has dimensions AND at
+ * least one captured node. An empty `nodes` array would render a transparent
+ * overlay that masks the mirror backdrop, so we hold the replay layer back
+ * until there's actually something to draw. */
+const snapshotRenderable = computed(
+  () => snapshotValid.value && (snapshot.value as CaptureSnapshot).nodes.length > 0
+);
+let captureFrame: number | undefined;
+let retryAttempts = 0;
+const MAX_RETRY_ATTEMPTS = 5;
+
+/* Take a snapshot once the off-screen mount is in the DOM. We schedule via a
+ * **double** `requestAnimationFrame` so the browser has time to (1) commit the
+ * mount and (2) run layout — without this, the first frame fires before the
+ * slot's geometry is measurable when `loading=true` is the initial state, the
+ * snapshot comes back with 0×0 dimensions, `<ASkeletonClone>` collapses to
+ * nothing, and the user sees a blank skeleton.
+ *
+ * If the second-frame snapshot still has zero dimensions (the slot is genuinely
+ * empty or the layout hasn't settled yet), we retry up to MAX_RETRY_ATTEMPTS
+ * times with an exponential-ish backoff via repeated rAF. Past that we give up
+ * and the `mirror--fallback` branch keeps showing — see the v-if/v-else-if
+ * chain in the template. */
+function takeSnapshot() {
+  if (captureFrame !== undefined) cancelAnimationFrame(captureFrame);
+  retryAttempts = 0;
+  scheduleCapture();
+}
+
+function scheduleCapture(): void {
+  captureFrame = requestAnimationFrame(() => {
+    captureFrame = requestAnimationFrame(() => {
+      captureFrame = undefined;
+      if (!captureRef.value) return;
+      const result = captureSnapshot(captureRef.value, {
+        maxDepth: props.maxDepth,
+        maxNodes: props.maxNodes,
+        minSize: props.minNodeSize,
+      });
+      if (result.width > 0 && result.height > 0) {
+        snapshot.value = result;
+        return;
+      }
+      /* Zero-size capture — slot likely hasn't laid out yet. Retry on a later
+       * frame, capped so we don't loop forever on a genuinely-empty slot. */
+      if (retryAttempts < MAX_RETRY_ATTEMPTS) {
+        retryAttempts++;
+        scheduleCapture();
+      }
+    });
+  });
+}
+
+watch(
+  captureRef,
+  (el) => {
+    if (props.mode !== 'clone') return;
+    if (el) takeSnapshot();
+  },
+  /* `flush: 'post'` so the watcher fires *after* Vue has committed the DOM
+   * update — the captureRef is set, but the surrounding layout state is also
+   * settled, which double-rAF then waits for completion of. */
+  { flush: 'post' }
 );
 
-/* Pre-join the per-type class strings once per animation value so the render
- * loop doesn't allocate a new `[a, b, c]` array per node per frame — meaningful
- * when a cache holds hundreds of nodes. */
-const blockClassByType = computed<Readonly<Record<ShapeNodeType, string>>>(() => {
-  const anim = animationClass.value;
-  const suffix = anim ? ` ${anim}` : '';
-  return Object.freeze({
-    block: `a-skel-block a-skel-block--block${suffix}`,
-    text: `a-skel-block a-skel-block--text${suffix}`,
-    image: `a-skel-block a-skel-block--image${suffix}`,
-    circle: `a-skel-block a-skel-block--circle${suffix}`,
-  });
-});
+/* Re-capture when the mode flips into clone OR when the slot's vnodes change
+ * shape (the watcher above runs on mount; this one covers in-place updates). */
+watch(
+  () => props.mode,
+  (mode) => {
+    if (mode === 'clone' && captureRef.value) takeSnapshot();
+  }
+);
 
-/* Cache-miss fallback path: walk the slot's vnodes synchronously so the FIRST
- * paint already shows a skeleton that mirrors the component's HTML structure
- * (same tags, classes, hierarchy → same flex/grid/spacing/sizing utilities
- * still apply). If the slot is empty / only renders comments (e.g. the user
- * gates the whole template on `v-if="data"`), we get an empty array back and
- * fall through to the generic shimmer block. */
-const structuralVNodes = computed(() => (props.loading ? (slots.default?.() ?? []) : []));
-const hasStructure = computed(() => structuralVNodes.value.length > 0);
+/* Re-capture when the slot's content shape changes (e.g. data arrives and
+ * `loading` flips false → true again with new vnodes). Without this the first
+ * snapshot is the only snapshot, and a second load shows the cached stale
+ * geometry from the very first mount. */
+watch(
+  () => props.loading,
+  (next, prev) => {
+    if (props.mode !== 'clone') return;
+    if (next && !prev && captureRef.value) takeSnapshot();
+  }
+);
+
+onBeforeUnmount(() => {
+  if (captureFrame !== undefined) cancelAnimationFrame(captureFrame);
+});
 </script>
 
 <template>
   <div
-    ref="wrapperRef"
-    :class="cn('a-skeleton', props.class)"
+    :class="cn('a-skeleton', `a-skeleton--mode-${props.mode}`, props.class)"
     :data-loading="props.loading ? '' : undefined"
+    role="status"
+    :aria-busy="props.loading ? 'true' : undefined"
+    :aria-live="props.loading ? 'polite' : undefined"
   >
-    <template v-if="props.loading">
-      <!-- Cache hit: pixel-aligned positioned blocks from a previous measurement.
-           Styles are pre-computed during capture so the loop below never calls
-           a function or allocates a style object per node. -->
+    <template v-if="props.mode === 'clone'">
+      <!-- Off-screen capture mount: the slot is always rendered (so we have a
+           live target to snapshot from) but visually suppressed while the
+           skeleton is showing. `aria-hidden` keeps it out of AT trees too. -->
       <div
-        v-if="cached"
-        class="a-skeleton__layer"
-        :style="layerStyle"
-        role="status"
-        aria-live="polite"
-        aria-busy="true"
+        ref="captureRef"
+        class="a-skeleton__capture"
+        :class="props.loading ? 'a-skeleton__capture--hidden' : null"
+        :aria-hidden="props.loading ? 'true' : undefined"
       >
-        <template v-for="(node, idx) in cached.nodes" :key="idx">
-          <template v-if="node.lineStyles">
-            <div
-              v-for="(lineStyle, i) in node.lineStyles"
-              :key="`${idx}-${i}`"
-              :class="blockClassByType.text"
-              :style="lineStyle"
-            />
-          </template>
-          <div v-else :class="blockClassByType[node.type]" :style="node.style" />
-        </template>
+        <slot />
       </div>
 
-      <!-- Cache miss + slot has structure: render a structural skeleton derived
-           from the slot's vnode tree. First paint already looks right. -->
+      <!-- Mirror fallback — **always rendered as a backdrop** while loading,
+           regardless of snapshot state. The replay layer below sits on top of
+           it (higher z-index). If the snapshot turns out to be empty / zero-
+           sized / otherwise unrenderable, the mirror underneath still gives the
+           user a structural skeleton instead of a blank wrapper. -->
       <div
-        v-else-if="hasStructure"
-        class="a-skeleton__structural"
-        role="status"
-        aria-live="polite"
-        aria-busy="true"
+        v-if="props.loading && hasContent"
+        class="a-skeleton__mirror a-skeleton__mirror--fallback"
       >
         <StructuralSkeleton
-          :vnodes="structuralVNodes"
+          :vnodes="mirrorVNodes"
           :animation="animationClass"
           :max-depth="maxDepth"
           :max-nodes="maxNodes"
         />
       </div>
 
-      <!-- Cache miss + nothing to walk: generic shimmer. -->
-      <div v-else class="a-skeleton__fallback" role="status" aria-busy="true">
-        <slot name="fallback">
-          <div
-            class="a-skel-block a-skel-block--block a-skel-fallback-default"
-            :class="animationClass"
-          />
-        </slot>
+      <!-- Replay layer — wrapped in a positioning div whose scoped styles
+           are GUARANTEED to apply (a child-component root only inherits the
+           parent's scope when no inner div is present; placing the absolute-
+           positioning on a regular div in the parent template removes that
+           ambiguity). Gated on `snapshotValid` (width AND height > 0) AND
+           snapshot.nodes.length > 0 so an empty capture doesn't render a
+           transparent overlay that masks the mirror underneath. -->
+      <div v-if="props.loading && snapshotRenderable" class="a-skeleton__replay">
+        <ASkeletonClone :shape="snapshot!" :animation="cloneAnimation" />
       </div>
     </template>
 
-    <slot v-else />
+    <template v-else>
+      <template v-if="props.loading">
+        <div v-if="hasContent" class="a-skeleton__mirror">
+          <StructuralSkeleton
+            :vnodes="mirrorVNodes"
+            :animation="animationClass"
+            :max-depth="maxDepth"
+            :max-nodes="maxNodes"
+          />
+        </div>
+        <div v-else class="a-skeleton__fallback">
+          <slot name="fallback">
+            <div
+              class="a-skel-block a-skel-block--block a-skel-fallback-default"
+              :class="animationClass"
+            />
+          </slot>
+        </div>
+      </template>
+      <slot v-else />
+    </template>
   </div>
 </template>
 
@@ -161,20 +231,20 @@ const hasStructure = computed(() => structuralVNodes.value.length > 0);
   position: relative;
 }
 
-/* `.a-skeleton__layer` + `.a-skeleton__layer > .a-skel-block` layout/containment
- * live in `styles.src.css` so they're shared with the public `<ASkeletonLayer>`
- * component. */
+.a-skeleton[data-loading] {
+  overflow: hidden;
+  overflow: clip;
+  overflow-clip-margin: 0;
+}
 
-.a-skeleton__structural :deep(*) {
-  /* Disable text caret/selection on the structural copy so it doesn't look
-   * interactive. Layout (flex/grid/spacing/sizing) flows through unchanged. */
+.a-skeleton__mirror :deep(*) {
   user-select: none;
   pointer-events: none;
 }
 
-.a-skeleton__structural :deep(button),
-.a-skeleton__structural :deep(input),
-.a-skeleton__structural :deep(a) {
+.a-skeleton__mirror :deep(button),
+.a-skeleton__mirror :deep(input),
+.a-skeleton__mirror :deep(a) {
   cursor: default;
 }
 
@@ -182,5 +252,34 @@ const hasStructure = computed(() => structuralVNodes.value.length > 0);
   width: 100%;
   height: 4rem;
   border-radius: 0.5rem;
+}
+
+/* Clone-mode capture mount: needs to be in the DOM so we can read computed
+ * styles from it, but invisible while the snapshot replay is showing. We use
+ * `visibility: hidden` (not `display: none`) so layout is preserved — the
+ * snapshot needs real geometry. `pointer-events: none` keeps it inert. */
+.a-skeleton__capture--hidden {
+  visibility: hidden;
+  pointer-events: none;
+  user-select: none;
+  /* The capture mount sits behind the replay (z-index 0 vs 1) so the replay
+   * paints over it. We keep it in normal flow so its `getBoundingClientRect`
+   * still reports the real layout (off-flow positioning would zero it). */
+}
+
+.a-skeleton__replay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.a-skeleton__mirror--fallback {
+  position: absolute;
+  inset: 0;
+  /* Sits BEHIND the clone replay (z-index: 0) so when the replay mounts on top
+   * it covers the mirror. If the replay turns out to be empty / sized wrong,
+   * the mirror underneath still gives the user a structural skeleton instead
+   * of a blank wrapper. */
+  z-index: 0;
 }
 </style>

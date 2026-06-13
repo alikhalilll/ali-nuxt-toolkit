@@ -1,52 +1,40 @@
 <script setup lang="ts">
-import { computed, type CSSProperties } from 'vue';
+import { computed } from 'vue';
 import { cn } from '@alikhalilll/a-ui-base';
-import type { ASkeletonLayerProps, ShapeNodeType } from '../types';
+import type { ASkeletonLayerProps } from '../types';
+import { StructuralLayerNode } from './StructuralLayerNode';
 
+/**
+ * `<ASkeletonLayer>` — replays a `StructuralShape` produced by
+ * `walkStructural` / `useSkeleton()` as a tree of preserved containers +
+ * a-skel leaf placeholders. The layer is a transparent shell with no
+ * width / height / position constraints, so it drops into the consumer's
+ * own container and lets the captured tree's flex/grid/spacing dictate
+ * how the skeleton lays itself out.
+ */
 const props = withDefaults(defineProps<ASkeletonLayerProps>(), {
   animation: 'shimmer',
 });
 
-const animationClass = computed(() =>
-  props.animation === 'none' ? null : `a-skel-block--anim-${props.animation}`
+const animationClass = computed<string | null>(() =>
+  props.animation === 'none' ? null : `a-skel-anim-${props.animation}`
 );
-
-const layerStyle = computed<CSSProperties>(() =>
-  props.shape ? { width: `${props.shape.width}px`, height: `${props.shape.height}px` } : {}
-);
-
-/* Pre-joined per-type class strings — see ASkeleton.vue for the rationale. */
-const blockClassByType = computed<Readonly<Record<ShapeNodeType, string>>>(() => {
-  const anim = animationClass.value;
-  const suffix = anim ? ` ${anim}` : '';
-  return Object.freeze({
-    block: `a-skel-block a-skel-block--block${suffix}`,
-    text: `a-skel-block a-skel-block--text${suffix}`,
-    image: `a-skel-block a-skel-block--image${suffix}`,
-    circle: `a-skel-block a-skel-block--circle${suffix}`,
-  });
-});
 </script>
 
 <template>
   <div
     v-if="shape"
     :class="cn('a-skeleton__layer', props.class)"
-    :style="layerStyle"
     role="status"
     aria-live="polite"
     aria-busy="true"
   >
-    <template v-for="(node, idx) in shape.nodes" :key="idx">
-      <template v-if="node.lineStyles">
-        <div
-          v-for="(lineStyle, i) in node.lineStyles"
-          :key="`${idx}-${i}`"
-          :class="blockClassByType.text"
-          :style="lineStyle"
-        />
-      </template>
-      <div v-else :class="blockClassByType[node.type]" :style="node.style" />
-    </template>
+    <StructuralLayerNode
+      v-for="(node, idx) in shape.nodes"
+      :key="idx"
+      :node="node"
+      :anim-class="animationClass"
+    />
+    <span class="a-skel-sr-only">Loading…</span>
   </div>
 </template>

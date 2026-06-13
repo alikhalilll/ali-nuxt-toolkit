@@ -1,12 +1,24 @@
 import { onBeforeUnmount, watch } from 'vue';
-import type { CachedShape } from '../types';
+import type { CachedShape, StructuralShape } from '../types';
 import { walkDom } from '../utils/walkDom';
 
-export interface ShapeProbeOptions {
+export type ProbeShape = CachedShape | StructuralShape;
+
+/**
+ * Pluggable capture strategy. `walkDom` is the default (flat, absolute-
+ * positioned `CachedShape`). Recipe 3 passes `walkStructural` to produce a
+ * tree-shaped `StructuralShape` instead.
+ */
+export type CaptureStrategy<S extends ProbeShape> = (
+  el: HTMLElement,
+  options: { maxDepth: number; maxNodes?: number; minSize?: number }
+) => S;
+
+export interface ShapeProbeOptions<S extends ProbeShape = CachedShape> {
   maxDepth: number;
-  /** Forwarded to `walkDom`. Default 500. */
+  /** Forwarded to the capture strategy. Default 500. */
   maxNodes?: number;
-  /** Forwarded to `walkDom`. Default 4. */
+  /** Forwarded to the capture strategy. Default 4. */
   minSize?: number;
   /**
    * Debounce window for `ResizeObserver`-triggered re-captures, in ms.
@@ -15,7 +27,12 @@ export interface ShapeProbeOptions {
    * always immediate via `requestAnimationFrame`.
    */
   resizeDebounceMs?: number;
-  onCapture: (shape: CachedShape) => void;
+  /**
+   * Capture strategy. Default: `walkDom` (flat positioned-block model).
+   * Pass `walkStructural` for the tree-shaped Recipe 3 model.
+   */
+  capture?: CaptureStrategy<S>;
+  onCapture: (shape: S) => void;
 }
 
 const DEFAULT_RESIZE_DEBOUNCE_MS = 150;
@@ -30,16 +47,20 @@ const DEFAULT_RESIZE_DEBOUNCE_MS = 150;
  *     render queue.
  *   - Subsequent `ResizeObserver` callbacks are debounced (default 150 ms) so a
  *     drag-resize doesn't trigger a fresh DOM walk per frame.
- *   - `walkDom` itself enforces `maxNodes` so even a worst-case capture (10k
- *     descendants) returns in bounded time.
+ *   - The capture strategy itself enforces `maxNodes` so even a worst-case
+ *     capture (10k descendants) returns in bounded time.
  */
-export function useShapeProbe(getTarget: () => HTMLElement | null, options: ShapeProbeOptions) {
+export function useShapeProbe<S extends ProbeShape = CachedShape>(
+  getTarget: () => HTMLElement | null,
+  options: ShapeProbeOptions<S>
+): void {
   let observer: ResizeObserver | undefined;
   let frame: number | undefined;
   let timer: ReturnType<typeof setTimeout> | undefined;
   let hasCaptured = false;
 
   const debounceMs = options.resizeDebounceMs ?? DEFAULT_RESIZE_DEBOUNCE_MS;
+  const captureFn = options.capture ?? (walkDom as unknown as CaptureStrategy<S>);
 
   function cleanup() {
     if (observer) {
@@ -57,11 +78,14 @@ export function useShapeProbe(getTarget: () => HTMLElement | null, options: Shap
   }
 
   function capture(el: HTMLElement) {
-    const result = walkDom(el, {
+    const result = captureFn(el, {
       maxDepth: options.maxDepth,
       maxNodes: options.maxNodes,
       minSize: options.minSize,
     });
+    /* Both shape variants expose `width`, `height`, `nodes` — guard against an
+     * empty capture (target rendered with zero size or an unreachable subtree)
+     * so the cache never receives a meaningless entry. */
     if (result.width > 0 && result.height > 0 && result.nodes.length > 0) {
       hasCaptured = true;
       options.onCapture(result);

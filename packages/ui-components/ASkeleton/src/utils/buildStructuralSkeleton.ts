@@ -2,6 +2,7 @@ import {
   Comment,
   Fragment,
   Text,
+  cloneVNode,
   h,
   type VNode,
   type VNodeArrayChildren,
@@ -9,58 +10,161 @@ import {
 } from 'vue';
 
 /**
- * Atomic HTML tags — rendered as a single skeleton block. Their own class/style
- * is preserved so Tailwind utilities (`size-16`, `rounded-full`, …) carry the
- * dimensions across without us needing to measure.
+ * Atomic tags — rendered as a single shimmer block. Their internal rendering
+ * is opaque to vnode walking (no meaningful child structure for us to mirror).
+ * Their own `class` + `style` are preserved so Tailwind utilities like
+ * `size-16` and `rounded-full` still drive the dimensions.
+ *
+ * Note: `button`, `a`, `label` are deliberately NOT atomic — they're treated
+ * as containers so their real `background-color` / `border` / shadow survive
+ * (we add `.a-skel-block` to atomics, which paints a skeleton gradient that
+ * would override Tailwind's `bg-emerald-600` and friends). Their text content
+ * is recursed and replaced with a shimmer span inside the real button shape.
  */
 const ATOMIC_TAGS = new Set([
   'img',
   'svg',
   'canvas',
   'video',
+  'audio',
   'input',
   'textarea',
   'select',
-  'button',
   'progress',
   'meter',
   'hr',
+  'iframe',
+  'object',
+  'embed',
+  'picture',
 ]);
 
-/** Single-line text containers — produce one bar. */
-const HEADING_TAGS = new Set(['h1', 'h2', 'h3', 'h4', 'h5', 'h6']);
+/**
+ * SVG child tags that should never be walked by the structural skeleton —
+ * SVG interior elements use a different coordinate space (`x`/`y` are
+ * attributes, not CSS), so emitting `.a-skel-block` divs at their tag would
+ * yield non-rendering elements. When we see one of these, the parent `<svg>`
+ * has already been treated as an atomic block — we just return null/skip.
+ */
+const SVG_INTERIOR_TAGS = new Set([
+  'circle',
+  'rect',
+  'path',
+  'line',
+  'polyline',
+  'polygon',
+  'ellipse',
+  'g',
+  'defs',
+  'clippath',
+  'mask',
+  'pattern',
+  'lineargradient',
+  'radialgradient',
+  'stop',
+  'use',
+  'symbol',
+  'foreignobject',
+  'text',
+  'tspan',
+  'textpath',
+  'marker',
+  'filter',
+  'feblend',
+  'fecolormatrix',
+  'fegaussianblur',
+  'feoffset',
+  'fedropshadow',
+  'femerge',
+  'femergenode',
+]);
 
-/** Multi-line text containers — produce N bars with a shortened last line. */
-const PARAGRAPH_TAGS = new Set(['p', 'blockquote']);
+/**
+ * Table-structural tags — preserve them as-is. Their semantics (`display:
+ * table-*`) are critical for layout, and replacing them with `<div>` would
+ * break the grid. Children are recursed normally.
+ */
+const TABLE_TAGS = new Set([
+  'table',
+  'thead',
+  'tbody',
+  'tfoot',
+  'tr',
+  'td',
+  'th',
+  'caption',
+  'colgroup',
+  'col',
+]);
 
-/** Inline text — single bar, but inherits parent font sizing. */
-const INLINE_TEXT_TAGS = new Set([
+/**
+ * List-structural tags — `<ul>`, `<ol>`, `<li>`, `<dl>`, `<dt>`, `<dd>`.
+ * Preserved as containers; `<li>` recurses into its text/children so each
+ * list item gets the right shimmer treatment.
+ */
+const LIST_TAGS = new Set(['ul', 'ol', 'li', 'dl', 'dt', 'dd']);
+
+/**
+ * Tags whose content is conventionally text. When the author writes
+ * `<h3>{{ data?.name }}</h3>` and `data` is null during loading, the
+ * interpolation produces no children — the walker would otherwise emit an
+ * empty `<h3></h3>` and no skeleton bar shows. For these tags we emit a
+ * synthetic placeholder text-content span so the bar renders at the tag's
+ * natural rendered width (Tailwind sizing on the tag still drives height).
+ */
+const TEXT_OWNER_TAGS = new Set([
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'p',
   'span',
   'a',
-  'small',
-  'strong',
   'em',
+  'strong',
+  'small',
   'code',
-  'time',
-  'label',
   'b',
   'i',
   'mark',
+  'label',
+  'caption',
+  'time',
+  'dt',
+  'dd',
+  'li',
+  'th',
+  'td',
+  'figcaption',
+  'blockquote',
+  'cite',
+  'q',
 ]);
 
+/**
+ * Non-breaking-space placeholder for empty text-owners. ~24 chars wide is
+ * enough to read as "a line of text" in most fonts while still being short
+ * enough that the rendered bar doesn't wrap in narrow containers.
+ */
+const TEXT_PLACEHOLDER = ' '.repeat(24);
+
 export interface BuildOptions {
+  /** Animation class applied to every emitted shimmer surface. `null` disables animation. */
   animationClass: string | null;
-  /** Max recursion depth — guards runaway templates. Default 8. */
+  /** Max recursion depth — guards runaway templates. Default 16. */
   maxDepth?: number;
   /**
-   * Hard cap on emitted skeleton nodes. Default 300. A 200-row table doesn't
-   * need 200 distinct skeleton rows on first paint; cap and stop early.
+   * Hard cap on emitted skeleton nodes. Default 600. The walk stops emitting
+   * past this cap; the partial tree is still valid (it just won't include the
+   * leaves beyond the budget).
    */
   maxNodes?: number;
 }
 
-const DEFAULT_MAX_DEPTH = 8;
-const DEFAULT_MAX_NODES = 300;
+const DEFAULT_MAX_DEPTH = 16;
+const DEFAULT_MAX_NODES = 600;
 
 interface WalkState {
   emitted: number;
@@ -68,17 +172,29 @@ interface WalkState {
 }
 
 /**
- * Walk a slot's vnode tree and produce a skeleton that mirrors its rendered
- * structure: same wrapping tags, same `class` strings (so flex/grid/spacing/
- * sizing utilities still apply), but text/atomic leaves replaced with shimmer
- * blocks. The result renders correctly on the FIRST paint without any DOM
- * measurement, as long as the slot's template renders structure even when its
- * data is empty (use `v-if`/`v-else` to swap content, not to gate the wrapper).
+ * Walk a slot's vnode tree and produce a **DOM-mirror skeleton**: every element
+ * is preserved (same tag, same `class`, same inline `style`), and only the
+ * content is replaced. The output is structurally identical to what the real
+ * component would render — Tailwind utilities for layout, spacing, sizing,
+ * backgrounds and shadows all carry through. The CSS does the work of making
+ * it *look* like a skeleton.
  *
- * Performance: `maxNodes` caps the work. When the cap is hit we stop emitting
- * — the caller still gets a valid skeleton, just clipped at the budget. A 1000-
- * row list renders ~300 skeleton rows on first paint and then the measured cache
- * takes over for subsequent loads.
+ * Replacement rules:
+ * - **Raw text** (e.g. interpolations, static strings) is wrapped in
+ *   `<span class="a-skel-text-content">…the real text…</span>`. The text is
+ *   kept as the span's children so the inline layout reserves its real
+ *   rendered width — but the glyphs are painted transparent and a skeleton
+ *   gradient is painted in their place. Multi-line text wraps naturally,
+ *   producing one shimmer rect per visual line at the exact rendered position.
+ * - **Atomic / interactive tags** (`img`, `svg`, `button`, `input`, …) are
+ *   replaced by a `<div class="a-skel-block">` carrying the original element's
+ *   `class` and `style`, so dimensions and shapes (size, border-radius, etc.)
+ *   still drive the layout.
+ * - **Container elements** (`div`, `section`, `h1`, `p`, `a`, `span`, …) are
+ *   preserved as the same tag with the same `class` and `style`; we recurse
+ *   into their children.
+ * - **Component vnodes** can't be introspected at render time, so we emit a
+ *   single `<div class="a-skel-block">` carrying their outer `class` / `style`.
  */
 export function buildStructuralSkeleton(
   vnodes: VNodeChild | VNodeArrayChildren | undefined | null,
@@ -110,9 +226,11 @@ function walk(
     return;
   }
 
+  /* Bare string / number content from interpolations. Wrap in the text-content
+   * span so the real text drives the rendered width. */
   if (typeof input === 'string' || typeof input === 'number') {
-    const str = String(input).trim();
-    if (str) push(out, textBar(opts.animationClass), state);
+    const str = String(input);
+    if (str.trim()) push(out, textContentSpan(str, opts.animationClass), state);
     return;
   }
 
@@ -122,8 +240,8 @@ function walk(
   if (type === Comment) return;
 
   if (type === Text) {
-    const t = typeof v.children === 'string' ? v.children.trim() : '';
-    if (t) push(out, textBar(opts.animationClass), state);
+    const text = typeof v.children === 'string' ? v.children : '';
+    if (text.trim()) push(out, textContentSpan(text, opts.animationClass), state);
     return;
   }
 
@@ -133,18 +251,66 @@ function walk(
   }
 
   if (typeof type === 'string') {
-    push(out, transformElement(v, type.toLowerCase(), opts, depth, max, state), state);
+    const tag = type.toLowerCase();
+
+    /* SVG interior — bail out. The parent <svg> is treated atomically; its
+     * children use a non-CSS coordinate space and shouldn't be transformed. */
+    if (SVG_INTERIOR_TAGS.has(tag)) return;
+
+    /* Author opt-outs — applied BEFORE the tag-based dispatch so they win.
+     * Five attributes supported:
+     *   data-skeleton-ignore  — render verbatim (chrome).
+     *   data-skeleton-stop    — single block, no recursion.
+     *   data-skeleton-text    — force inline text-bar treatment.
+     *   data-skeleton-block   — force atomic shimmer-block treatment.
+     *   data-skeleton-variant — render the named variant primitive. */
+    const props = v.props ?? {};
+    if (props['data-skeleton-ignore'] !== undefined) {
+      push(out, cloneVNode(v), state);
+      return;
+    }
+    if (props['data-skeleton-stop'] !== undefined) {
+      push(
+        out,
+        h('div', {
+          class: ['a-skel-block', v.props?.class, opts.animationClass],
+          style: v.props?.style as Record<string, string>,
+          'aria-hidden': 'true',
+        }),
+        state
+      );
+      return;
+    }
+    if (props['data-skeleton-text'] !== undefined) {
+      /* Force this leaf into text-bar treatment regardless of its tag. */
+      push(out, textContentSpan(' ', opts.animationClass), state);
+      return;
+    }
+    if (props['data-skeleton-block'] !== undefined) {
+      push(
+        out,
+        h('div', {
+          class: ['a-skel-block', v.props?.class, opts.animationClass],
+          style: v.props?.style as Record<string, string>,
+          'aria-hidden': 'true',
+        }),
+        state
+      );
+      return;
+    }
+    push(out, transformElement(v, tag, opts, depth, max, state), state);
     return;
   }
 
   /* Component vnode — we can't introspect its template, so render an opaque
-   * skeleton block carrying any utility classes the user attached to it. */
+   * shimmer block carrying any outer class / style the user attached. */
   if (typeof type === 'object' || typeof type === 'function') {
     push(
       out,
       h('div', {
         class: ['a-skel-block', v.props?.class, opts.animationClass],
         style: v.props?.style as Record<string, string>,
+        'aria-hidden': 'true',
       }),
       state
     );
@@ -157,6 +323,17 @@ function push(out: VNode[], vn: VNode, state: WalkState): void {
   state.emitted++;
 }
 
+/**
+ * Surface-bearing tags — when these are encountered without their own explicit
+ * background, the skeleton paints the default fill so they still read as a
+ * solid element (a button without `bg-*` shouldn't look invisible).
+ *
+ * Pure layout containers (`div`, `section`, `main`, `article`, `header`,
+ * `footer`, `nav`, `aside`) deliberately don't get the fallback — they're
+ * transparent in the real DOM and should stay that way in the skeleton.
+ */
+const SURFACE_TAGS = new Set(['button', 'a', 'label', 'summary', 'fieldset', 'legend']);
+
 function transformElement(
   v: VNode,
   tag: string,
@@ -168,94 +345,214 @@ function transformElement(
   const cls = v.props?.class;
   const styl = v.props?.style as Record<string, string> | string | undefined;
 
+  /* Atomic / interactive — replace with a sized shimmer block. The original
+   * element's class + style carry the dimensions, border-radius, etc., so a
+   * `class="size-16 rounded-full"` <img> becomes a 64×64 round shimmer block.
+   *
+   * For elements sized via HTML attributes (`<svg width="408" height="419">`,
+   * `<img width="…">`, etc.), we copy those attributes into an inline style
+   * so the replacement div takes the same dimensions — without this, a div
+   * doesn't honour those attributes and would render at 0×0. */
   if (ATOMIC_TAGS.has(tag)) {
-    return h('div', { class: ['a-skel-block', cls, opts.animationClass], style: styl });
+    const dimStyle = atomicDimensionStyle(v.props);
+    return h('div', {
+      class: ['a-skel-block', cls, opts.animationClass],
+      style: dimStyle ? mergeStyle(dimStyle, styl) : styl,
+      'aria-hidden': 'true',
+    });
   }
 
-  if (HEADING_TAGS.has(tag)) {
-    return h(tag, { class: cls, style: styl }, [textBar(opts.animationClass)]);
+  /* Table-structural tags — preserve them as-is. Replacing a <td> with a
+   * <div> would break `display: table-*` layout. Children are recursed
+   * normally so each cell gets the right shimmer treatment. */
+  if (TABLE_TAGS.has(tag)) {
+    if (depth >= max) {
+      return h(tag, { class: cls, style: styl });
+    }
+    const recursed: VNode[] = [];
+    walk(v.children as VNodeArrayChildren, opts, depth + 1, max, state, recursed);
+    if (recursed.length === 0 && TEXT_OWNER_TAGS.has(tag)) {
+      return h(tag, { class: cls, style: styl }, [
+        textContentSpan(TEXT_PLACEHOLDER, opts.animationClass),
+      ]);
+    }
+    return h(tag, { class: cls, style: styl }, recursed.length > 0 ? recursed : undefined);
   }
 
-  if (PARAGRAPH_TAGS.has(tag)) {
-    const children = v.children;
-    const recursedChildren: VNode[] = [];
-    walk(children as VNodeArrayChildren, opts, depth + 1, max, state, recursedChildren);
-    if (recursedChildren.length > 0) return h(tag, { class: cls, style: styl }, recursedChildren);
-    const lines = estimateLines(children, 3);
-    return h(tag, { class: cls, style: styl }, multiLineBars(lines, opts.animationClass));
+  /* List-structural tags — preserve `<ul>` / `<ol>` / `<li>` / `<dl>` etc.
+   * `<li>` recurses into its content so each item gets the right shimmer
+   * treatment (text bar for text-only items, mixed content for richer ones). */
+  if (LIST_TAGS.has(tag)) {
+    if (depth >= max) {
+      return h(tag, { class: cls, style: styl });
+    }
+    const recursed: VNode[] = [];
+    walk(v.children as VNodeArrayChildren, opts, depth + 1, max, state, recursed);
+    if (recursed.length === 0 && TEXT_OWNER_TAGS.has(tag)) {
+      return h(tag, { class: cls, style: styl }, [
+        textContentSpan(TEXT_PLACEHOLDER, opts.animationClass),
+      ]);
+    }
+    return h(tag, { class: cls, style: styl }, recursed.length > 0 ? recursed : undefined);
   }
 
-  if (INLINE_TEXT_TAGS.has(tag)) {
-    const children = v.children;
-    const recursedChildren: VNode[] = [];
-    walk(children as VNodeArrayChildren, opts, depth + 1, max, state, recursedChildren);
-    if (recursedChildren.length > 0) return h(tag, { class: cls, style: styl }, recursedChildren);
-    return h(tag, { class: cls, style: styl }, [textBar(opts.animationClass)]);
-  }
-
-  /* Generic container — keep its classes (flex/grid/padding/etc.) and recurse. */
+  /* Depth cap — collapse the subtree into a single shimmer block carrying the
+   * container's outer dimensions / classes. */
   if (depth >= max) {
-    return h('div', { class: ['a-skel-block', cls, opts.animationClass], style: styl });
+    return h('div', {
+      class: ['a-skel-block', cls, opts.animationClass],
+      style: styl,
+      'aria-hidden': 'true',
+    });
   }
+
   const recursed: VNode[] = [];
   walk(v.children as VNodeArrayChildren, opts, depth + 1, max, state, recursed);
+
+  /* Empty text-owner — author wrote `<h3>{{ data?.name }}</h3>` and `data`
+   * is null during loading, so the interpolation produced no children.
+   * Inject a placeholder text-content span so a shimmer bar still renders at
+   * the tag's natural rendered width (tag's `class` drives font / line-height
+   * / size — same path the real text would take). */
+  if (recursed.length === 0 && TEXT_OWNER_TAGS.has(tag)) {
+    return h(tag, { class: cls, style: styl }, [
+      textContentSpan(TEXT_PLACEHOLDER, opts.animationClass),
+    ]);
+  }
+
+  /* Empty container — preserve the element so layout still reserves space.
+   * (Spacer divs, decorative wrappers, etc.) */
   if (recursed.length === 0) {
-    /* Empty container in the source — render as a single block so the layout
-     * still reserves space rather than collapsing to zero height. */
-    return h('div', { class: ['a-skel-block', cls, opts.animationClass], style: styl });
+    return h(tag, { class: cls, style: styl });
   }
-  return h(tag, { class: cls, style: styl }, recursed);
-}
 
-function estimateLines(children: unknown, max: number): number {
-  if (typeof children !== 'string') return 1;
-  const len = children.trim().length;
-  if (len === 0)
-    return 2; /* empty interpolation — assume 2 lines so the bar looks paragraph-shaped */
-  if (len < 40) return 1;
-  if (len < 100) return 2;
-  return Math.min(max, 3);
-}
-
-function multiLineBars(lines: number, animationClass: string | null): VNode[] {
-  const out: VNode[] = [];
-  for (let i = 0; i < lines; i++) {
-    out.push(textBar(animationClass, i === lines - 1 && lines > 1 ? 0.65 : 1));
+  /* Surface-bearing element (button, a, label, …) — if the author didn't supply
+   * a background, fall back to the default skeleton fill so the element stays
+   * visible as a card / button / chip. Explicit `bg-*` classes or inline
+   * `background` keep the real surface. */
+  if (SURFACE_TAGS.has(tag) && !hasExplicitBackground(cls, styl)) {
+    return h(
+      tag,
+      {
+        class: ['a-skel-block', cls, opts.animationClass],
+        style: styl,
+      },
+      recursed
+    );
   }
-  return out;
+
+  return cloneTag(tag, cls, styl, recursed);
 }
 
-/* Style objects for the two common bar shapes are reused across calls so a
- * structural skeleton with 200 text bars doesn't allocate 200 style objects. */
-const BAR_STYLE_FULL = Object.freeze({
-  display: 'inline-block',
-  width: '100%',
-  height: '0.75em',
-  verticalAlign: 'middle',
-  borderRadius: '4px',
-});
-
-const PARTIAL_BAR_CACHE = new Map<number, Readonly<Record<string, string>>>();
-
-function partialBarStyle(widthFraction: number): Readonly<Record<string, string>> {
-  /* Round to one decimal so 0.65, 0.7, 0.85 each get a single cached style. */
-  const key = Math.round(widthFraction * 10) / 10;
-  const hit = PARTIAL_BAR_CACHE.get(key);
-  if (hit) return hit;
-  const made = Object.freeze({
-    display: 'inline-block',
-    width: `${Math.round(key * 100)}%`,
-    height: '0.75em',
-    verticalAlign: 'middle',
-    borderRadius: '4px',
-  });
-  PARTIAL_BAR_CACHE.set(key, made);
-  return made;
+/**
+ * Extract width/height from HTML attributes that affect layout (`<svg
+ * width="408">`, `<img width="…" height="…">`) and project them into inline
+ * style. Without this, replacing an attribute-sized atomic element with a
+ * `<div>` would drop the size — divs don't honour those attributes.
+ */
+function atomicDimensionStyle(
+  props: Record<string, unknown> | null | undefined
+): Record<string, string> | null {
+  if (!props) return null;
+  const out: Record<string, string> = {};
+  const w = props.width;
+  const h = props.height;
+  if (w !== undefined && w !== null && w !== '') {
+    out.width = typeof w === 'number' ? `${w}px` : /^\d+$/.test(String(w)) ? `${w}px` : String(w);
+  }
+  if (h !== undefined && h !== null && h !== '') {
+    out.height = typeof h === 'number' ? `${h}px` : /^\d+$/.test(String(h)) ? `${h}px` : String(h);
+  }
+  return Object.keys(out).length > 0 ? out : null;
 }
 
-function textBar(animationClass: string | null, widthFraction = 1): VNode {
-  return h('span', {
-    class: ['a-skel-block', 'a-skel-block--text', animationClass],
-    style: widthFraction === 1 ? BAR_STYLE_FULL : partialBarStyle(widthFraction),
-  });
+/**
+ * Detect whether the element has an explicit background — either via a
+ * Tailwind / DaisyUI / CSS-modules `bg-*` class or via an inline
+ * `background` / `background-color` / `background-image` style. When false,
+ * surface-bearing elements (button, a, label, …) fall back to the default
+ * skeleton fill so they don't render as a transparent gap during loading.
+ */
+function hasExplicitBackground(cls: unknown, styl: unknown): boolean {
+  if (hasBackgroundInStyle(styl)) return true;
+  if (hasBackgroundInClass(cls)) return true;
+  return false;
 }
+
+const BG_CLASS_RE = /(?:^|\s|:)bg-(?!skel)(?:\[|[a-z])/i;
+
+function hasBackgroundInClass(cls: unknown): boolean {
+  if (cls == null || cls === false) return false;
+  if (typeof cls === 'string') return BG_CLASS_RE.test(cls);
+  if (Array.isArray(cls)) {
+    for (const item of cls) {
+      if (hasBackgroundInClass(item)) return true;
+    }
+    return false;
+  }
+  if (typeof cls === 'object') {
+    for (const k of Object.keys(cls as Record<string, unknown>)) {
+      if ((cls as Record<string, unknown>)[k] && BG_CLASS_RE.test(k)) return true;
+    }
+  }
+  return false;
+}
+
+function hasBackgroundInStyle(styl: unknown): boolean {
+  if (!styl) return false;
+  if (typeof styl === 'string') return /background(?:-color|-image)?\s*:/i.test(styl);
+  if (typeof styl === 'object') {
+    const s = styl as Record<string, unknown>;
+    return (
+      'background' in s ||
+      'backgroundColor' in s ||
+      'backgroundImage' in s ||
+      'background-color' in s ||
+      'background-image' in s
+    );
+  }
+  return false;
+}
+
+function mergeStyle(
+  a: Record<string, string>,
+  b: Record<string, string> | string | undefined | null
+): Record<string, string> | string {
+  if (!b) return a;
+  if (typeof b === 'string') {
+    /* Preserve user's inline style; prepend dim style so user values still win
+     * if they explicitly set the same property. */
+    const dimsStr = Object.entries(a)
+      .map(([k, v]) => `${k}: ${v}`)
+      .join('; ');
+    return `${dimsStr}; ${b}`;
+  }
+  return { ...a, ...(b as Record<string, string>) };
+}
+
+function cloneTag(
+  tag: string,
+  cls: unknown,
+  styl: Record<string, string> | string | undefined,
+  children: VNode[]
+): VNode {
+  /* We deliberately don't forward arbitrary props (`v.props`) — preserving
+   * the tag + class + style is enough for visual fidelity, and dropping the
+   * rest (onClick handlers, href, etc.) keeps the skeleton non-interactive. */
+  return h(tag, { class: cls, style: styl }, children);
+}
+
+function textContentSpan(text: string, animationClass: string | null): VNode {
+  return h(
+    'span',
+    {
+      class: ['a-skel-text-content', animationClass],
+      'aria-hidden': 'true',
+    },
+    text
+  );
+}
+
+/* Re-export for advanced consumers who want to construct skeleton vnodes
+ * themselves (e.g. inside a render function component). */
+export { cloneVNode };

@@ -1,12 +1,16 @@
 /*
  * @alikhalilll/a-skeleton — compiled stylesheet source.
  *
- * Tailwind compiles this into `dist/styles.css` (utilities this component uses +
- * its bundled SFC styles). Theme tokens + animation keyframes live here in global
- * CSS rather than `<style scoped>` so consumers can override the look from anywhere
- * in their cascade.
+ * Design references blended into this stylesheet:
+ *   - shadcn/ui: one minimal primitive (`.a-skel`) + semantic tokens + dark mode
+ *     via the `.dark` class scope. Default animation is `pulse` (opacity).
+ *   - Flowbite: variant components ship as composite skeletons; placeholder
+ *     icons (image, video, file) live in the variant SFCs. A11y baseline
+ *     `role="status"` + `<span class="sr-only">Loading…</span>` per primitive.
+ *   - Vuetify: optional `type=` string composition resolves to the variant
+ *     primitives below — same vocabulary (`actions`, `article`, `avatar`,
+ *     `card-avatar`, `list-item-two-line`, etc.).
  *
- *   import '@alikhalilll/a-ui-base/tokens.css';
  *   import '@alikhalilll/a-skeleton/styles.css';
  */
 @import '@alikhalilll/a-ui-base/tokens.css';
@@ -15,98 +19,158 @@
 @source './src/**/*.{vue,ts}';
 
 /* ─────────────────────────────────────────────────────────────────────────────
- * Theme tokens — override on `:root`, on a wrapper class (multi-tenant), or
- * inline (`style="--ak-skeleton-block: hotpink"`). Defaults inherit from the
- * shared `@alikhalilll/a-ui-base` token set so the skeleton matches whatever
- * theme the rest of the toolkit is using.
+ * Semantic tokens — override on `:root`, on a wrapper class (multi-tenant), or
+ * inline. Defaults are chosen so a skeleton is **clearly readable on a white
+ * surface out of the box** (the most common consumer scenario: a white card,
+ * a `bg-white` button, a marketing landing page). The dark variant kicks in
+ * via the `.dark` class scope OR via `@media (prefers-color-scheme: dark)`.
  *
- *   --ak-skeleton-block          base block colour (top of the vertical gradient)
- *   --ak-skeleton-block-soft     fade colour (bottom of the vertical gradient)
- *   --ak-skeleton-shimmer        moving-highlight colour of the shimmer sweep
- *   --ak-skeleton-radius         default border radius for blocks
- *   --ak-skeleton-duration       animation duration (shimmer + pulse)
- *   --ak-skeleton-pulse-opacity  min opacity at the trough of the pulse cycle
- *   --ak-skeleton-shimmer-angle  shimmer sweep angle (default 110deg = diagonal)
- *   --ak-skeleton-ring           subtle 1px inset border colour
+ *   --ak-skel-base          solid skeleton fill (block + text bar surface)
+ *   --ak-skel-base-soft     subtle gradient endpoint for variant emphasis
+ *   --ak-skel-highlight     bright sweep / shimmer overlay colour
+ *   --ak-skel-radius        default border radius
+ *   --ak-skel-radius-sm     tighter radius (text bars, chips)
+ *   --ak-skel-radius-lg     wider radius (cards, images)
+ *   --ak-skel-duration      animation cycle length
+ *   --ak-skel-pulse-min     opacity at the trough of the pulse cycle
+ *   --ak-skel-ring          subtle 1-px inset ring colour
+ *   --ak-skel-icon          colour of placeholder icons (image / video / file)
+ *
+ * Backwards-compat aliases for the v1 token names are kept below.
  * ───────────────────────────────────────────────────────────────────────────── */
 :root {
-  --ak-skeleton-block: hsl(var(--ak-ui-muted) / 0.55);
-  --ak-skeleton-block-soft: hsl(var(--ak-ui-muted) / 0.32);
-  --ak-skeleton-shimmer: hsl(var(--ak-ui-foreground) / 0.08);
-  --ak-skeleton-radius: 0.375rem;
-  --ak-skeleton-duration: 1.6s;
-  --ak-skeleton-pulse-opacity: 0.48;
+  /* v2 tokens — defined as fallbacks from their v1 aliases so consumer
+   * overrides of EITHER name propagate to the internal styles. If the
+   * consumer sets `--ak-skel-base: red` directly, that wins. If they set
+   * only the v1 `--ak-skeleton-block: red`, the v2 variable reads it as a
+   * fallback. Without this two-way bridge, v1 overrides would be silent. */
+  --ak-skel-base: var(--ak-skeleton-block, hsl(220 13% 84%));
+  --ak-skel-base-soft: var(--ak-skeleton-block-soft, hsl(220 13% 91%));
+  --ak-skel-highlight: var(--ak-skeleton-shimmer, hsl(0 0% 100% / 0.95));
+  --ak-skel-radius: var(--ak-skeleton-radius, 0.5rem);
+  --ak-skel-radius-sm: 0.25rem;
+  --ak-skel-radius-lg: 1rem;
+  --ak-skel-duration: var(--ak-skeleton-duration, 1.4s);
+  --ak-skel-pulse-min: var(--ak-skeleton-pulse-opacity, 0.55);
+  --ak-skel-ring: var(--ak-skeleton-ring, hsl(220 13% 70% / 0.35));
+  --ak-skel-icon: hsl(220 13% 65%);
+
+  /* v1 aliases — kept exposed so power users / 3rd-party themes that read
+   * the old names still find values. They're now backed by the v2 vars so
+   * the cascade stays single-source. */
   --ak-skeleton-shimmer-angle: 110deg;
-  --ak-skeleton-ring: hsl(var(--ak-ui-foreground) / 0.04);
 }
 
-/* In dark mode the foreground token is brighter than the background, so the
- * default shimmer derived from `--ak-ui-foreground` already reads as a lighter
- * sweep over a darker block. In light mode we want the same polarity (lighter
- * sweep over the muted block) — boost the shimmer slightly with a brighter
- * default so it stays visible against the lighter base. */
+/* Dark mode — applies via `.dark` on any ancestor (Tailwind / shadcn / nuxt-
+ * color-mode convention). When the consumer hasn't opted into either, we
+ * still adapt via the system preference media query below. */
+.dark {
+  --ak-skel-base: hsl(220 13% 22%);
+  --ak-skel-base-soft: hsl(220 13% 28%);
+  --ak-skel-highlight: hsl(0 0% 100% / 0.08);
+  --ak-skel-ring: hsl(0 0% 100% / 0.06);
+  --ak-skel-icon: hsl(220 13% 55%);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --ak-skel-base: hsl(220 13% 22%);
+    --ak-skel-base-soft: hsl(220 13% 28%);
+    --ak-skel-highlight: hsl(0 0% 100% / 0.08);
+    --ak-skel-ring: hsl(0 0% 100% / 0.06);
+    --ak-skel-icon: hsl(220 13% 55%);
+  }
+}
+
+/* Explicit `.light` class wins back light tokens (consumer override). */
 .light {
-  --ak-skeleton-shimmer: hsl(0 0% 100% / 0.85);
-  --ak-skeleton-ring: hsl(0 0% 0% / 0.05);
+  --ak-skel-base: hsl(220 13% 84%);
+  --ak-skel-base-soft: hsl(220 13% 91%);
+  --ak-skel-highlight: hsl(0 0% 100% / 0.95);
+  --ak-skel-ring: hsl(220 13% 70% / 0.35);
+  --ak-skel-icon: hsl(220 13% 65%);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
- * Block primitives
+ * `.a-skel` — the one minimal primitive (shadcn-style).
  *
- * `.a-skel-block` is a `background: linear-gradient(...)` layered surface so
- * blocks look like soft cards instead of flat fills. A 1-px inset ring picks up
- * the theme colour and gives blocks definition without a hard border.
- *
- * The shimmer animation is a `transform: translateX(...)` on a pseudo-element
- * — the only property changing each frame is a composited transform, so 500
- * blocks animating in parallel stay GPU-bound. The `inset: 0 -25%` extends the
- * gradient beyond the block's left/right edges so a diagonal sweep never shows
- * its hard start / end inside the clip.
+ * Structural rules (positioning, containment) at NORMAL specificity so they
+ * can't be accidentally lost. Cosmetic defaults wrapped in `:where()` so any
+ * consumer class (Tailwind `bg-emerald-600`, `rounded-xl`, `shadow-lg`, …)
+ * wins the cascade with zero specificity battles.
  * ───────────────────────────────────────────────────────────────────────────── */
-.a-skel-block {
-  background-image: linear-gradient(
-    180deg,
-    var(--ak-skeleton-block) 0%,
-    var(--ak-skeleton-block-soft) 100%
-  );
-  background-color: var(--ak-skeleton-block);
-  border-radius: var(--ak-skeleton-radius);
-  overflow: hidden;
+.a-skel {
+  display: block;
   position: relative;
-  box-shadow: inset 0 0 0 1px var(--ak-skeleton-ring);
-  /* Always-on subtle vertical sheen via a static gradient — gives plain blocks
-   * a hint of dimension even when the shimmer pseudo isn't running. */
+  overflow: hidden;
   isolation: isolate;
 }
 
-.a-skel-block--anim-shimmer::after {
-  content: '';
-  position: absolute;
-  inset: 0 -25%;
-  background-image: linear-gradient(
-    var(--ak-skeleton-shimmer-angle),
-    transparent 30%,
-    var(--ak-skeleton-shimmer) 50%,
-    transparent 70%
-  );
-  transform: translateX(-110%);
-  will-change: transform;
-  animation: a-skel-shimmer var(--ak-skeleton-duration) cubic-bezier(0.42, 0, 0.58, 1) infinite;
-  z-index: 1;
+:where(.a-skel) {
+  background-color: var(--ak-skel-base);
+  border-radius: var(--ak-skel-radius);
+  box-shadow: inset 0 0 0 1px var(--ak-skel-ring);
 }
 
-.a-skel-block--anim-pulse {
-  animation: a-skel-pulse var(--ak-skeleton-duration) cubic-bezier(0.42, 0, 0.58, 1) infinite;
-  will-change: opacity;
+/* `.a-skel-block` — legacy v1 alias. Same semantics as `.a-skel`. */
+.a-skel-block {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
 }
 
-@keyframes a-skel-shimmer {
-  0% {
-    transform: translateX(-110%);
-  }
-  100% {
-    transform: translateX(110%);
-  }
+:where(.a-skel-block) {
+  background-color: var(--ak-skel-base);
+  border-radius: var(--ak-skel-radius);
+  box-shadow: inset 0 0 0 1px var(--ak-skel-ring);
+}
+
+/* `.a-skel-text-host` — wrapper used by `<ASkeletonLayer>` for text leaves
+ * captured by `walkStructural`. The host claims the leaf's box in normal
+ * flow; per-line shimmer bars sit inside as `position: absolute` children
+ * at their captured per-line rects (so wrapped / centered / RTL text all
+ * replay 1:1). Background defaults to transparent — the bars carry the
+ * skeleton fill. */
+.a-skel-text-host {
+  position: relative;
+  display: block;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * Inline text-content replacement bar.
+ *
+ * Wraps the raw text of the slot tree. The text is kept (transparent color)
+ * so inline layout reserves its real rendered width — the solid fill paints
+ * a per-line bar at the exact width of that line via `box-decoration-break:
+ * clone`. Animation is a whole-bar opacity pulse, not a moving gradient, so
+ * nothing can bleed across line boundaries.
+ * ───────────────────────────────────────────────────────────────────────────── */
+.a-skel-text-content {
+  display: inline;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent;
+  background-color: var(--ak-skel-base);
+  background-image: none;
+  border-radius: var(--ak-skel-radius-sm);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  user-select: none;
+  cursor: default;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * Animations — `pulse` (default, shadcn/Flowbite-style) + optional `shimmer`
+ * (gradient sweep) + `wave` (background-position slide).
+ *
+ * `pulse` is the safest: whole-bar opacity oscillation, no gradient that can
+ * bleed across line breaks or beyond element bounds.
+ * ───────────────────────────────────────────────────────────────────────────── */
+.a-skel-anim-pulse,
+.a-skel-block--anim-pulse,
+.a-skel-text-content.a-skel-block--anim-pulse,
+.a-skel-text-content.a-skel-block--anim-shimmer {
+  animation: a-skel-pulse var(--ak-skel-duration) ease-in-out infinite;
 }
 
 @keyframes a-skel-pulse {
@@ -115,64 +179,265 @@
     opacity: 1;
   }
   50% {
-    opacity: var(--ak-skeleton-pulse-opacity);
+    opacity: var(--ak-skel-pulse-min);
+  }
+}
+
+/* `shimmer` — gradient sweep ::after on block primitives. Contained per
+ * element by `.a-skel { overflow: hidden }`. NOT applied to inline text-
+ * content (would bleed across line boxes); inline always pulses. */
+.a-skel-anim-shimmer.a-skel::after,
+.a-skel-block.a-skel-block--anim-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0 -25%;
+  background-image: linear-gradient(
+    110deg,
+    transparent 30%,
+    var(--ak-skel-highlight) 50%,
+    transparent 70%
+  );
+  transform: translateX(-110%);
+  will-change: transform;
+  animation: a-skel-shimmer-sweep var(--ak-skel-duration) cubic-bezier(0.42, 0, 0.58, 1) infinite;
+  z-index: 1;
+}
+
+@keyframes a-skel-shimmer-sweep {
+  0% {
+    transform: translateX(-110%);
+  }
+  100% {
+    transform: translateX(110%);
+  }
+}
+
+/* `wave` — sliding background-position. Use for block primitives only. */
+.a-skel-anim-wave.a-skel,
+.a-skel-block.a-skel-block--anim-wave {
+  background-image: linear-gradient(
+    90deg,
+    var(--ak-skel-base) 0%,
+    var(--ak-skel-base) 25%,
+    var(--ak-skel-highlight) 50%,
+    var(--ak-skel-base) 75%,
+    var(--ak-skel-base) 100%
+  );
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: a-skel-wave-slide var(--ak-skel-duration) linear infinite;
+}
+
+@keyframes a-skel-wave-slide {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -100% 0;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .a-skel-block--anim-shimmer::after,
-  .a-skel-block--anim-pulse {
+  .a-skel-anim-pulse,
+  .a-skel-anim-shimmer,
+  .a-skel-anim-wave,
+  .a-skel-block--anim-pulse,
+  .a-skel-block--anim-shimmer,
+  .a-skel-block--anim-wave,
+  .a-skel-text-content {
+    animation: none !important;
+  }
+  .a-skel-anim-shimmer.a-skel::after,
+  .a-skel-block.a-skel-block--anim-shimmer::after {
     animation: none;
-    will-change: auto;
-  }
-  .a-skel-block--anim-shimmer::after {
-    /* Park the highlight gently in the middle so the block doesn't look like
-     * a flat slab when motion is disabled. */
     transform: translateX(0);
-    opacity: 0.5;
+    opacity: 0.3;
   }
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
- * Layer primitives — shared by `<ASkeleton>`'s cache-hit render and the public
- * `<ASkeletonLayer>` component. Containment isolates per-block animation work
- * so a layer with 500 shimmer blocks doesn't trigger sibling layout/paint.
+ * Wrapper containment — `.a-skeleton[data-loading]`.
+ *
+ * Three layers of containment:
+ *   1. `overflow: clip` — paints clipped to box, but DOES NOT establish a
+ *      containing block for sticky/fixed descendants (unlike `hidden`).
+ *      Sticky children inside the slot keep working.
+ *   2. `overflow: hidden` fallback for Safari < 16 / Chrome < 90 / FF < 81.
+ *   3. `contain: paint` — clips descendant painting (shadows, filters,
+ *      transforms) that `overflow: clip` alone wouldn't catch.
  * ───────────────────────────────────────────────────────────────────────────── */
-.a-skeleton__layer {
+.a-skeleton {
+  display: block;
   position: relative;
-  contain: layout style paint;
-  content-visibility: auto;
 }
 
-.a-skeleton__layer > .a-skel-block {
-  position: absolute;
-  contain: strict;
+.a-skeleton[data-loading] {
+  overflow: hidden;
+  overflow: clip;
+  overflow-clip-margin: 0;
+  contain: paint;
+}
+
+/* The mirror subtree is decorative — block selection + pointer interaction so
+ * the skeleton doesn't feel live. Layout flows through unchanged. */
+.a-skeleton__mirror *,
+.a-skeleton__variants * {
+  user-select: none;
+  pointer-events: none;
+}
+
+.a-skeleton__mirror button,
+.a-skeleton__mirror input,
+.a-skeleton__mirror a,
+.a-skeleton__variants button,
+.a-skeleton__variants input,
+.a-skeleton__variants a {
+  cursor: default;
+}
+
+.a-skeleton__fallback .a-skel-fallback-default {
+  width: 100%;
+  height: 4rem;
+  border-radius: var(--ak-skel-radius);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
- * Variant hooks — type-specific tweaks that the SFC applies via class names.
- * Keep them subtle: the goal is "this is a text bar, not a button" not a
- * complete visual overhaul.
+ * Variant-specific tweaks. Each variant root carries `.a-skel-variant-{name}`
+ * + the shared `.a-skel` base. The tweaks are subtle — they nudge radius /
+ * aspect ratio / inner layout so the silhouette reads as the right thing.
  * ───────────────────────────────────────────────────────────────────────────── */
-.a-skel-block--text {
-  /* Slightly tighter radius for text bars — they read as type, not blocks. */
-  border-radius: calc(var(--ak-skeleton-radius) * 0.6);
+.a-skel-variant-text {
+  display: block;
+  height: 0.85em;
+  background-color: var(--ak-skel-base);
+  border-radius: var(--ak-skel-radius-sm);
 }
 
-.a-skel-block--circle {
-  /* Match the captured radius (≈ 50%) but never let inset-ring round off. */
-  background-image: radial-gradient(
-    circle at 35% 30%,
-    var(--ak-skeleton-block) 0%,
-    var(--ak-skeleton-block-soft) 100%
-  );
+.a-skel-variant-heading {
+  display: block;
+  height: 1.4em;
+  background-color: var(--ak-skel-base);
+  border-radius: var(--ak-skel-radius-sm);
 }
 
-.a-skel-block--image {
-  background-image: linear-gradient(
-    160deg,
-    var(--ak-skeleton-block) 0%,
-    var(--ak-skeleton-block-soft) 60%,
-    var(--ak-skeleton-block) 100%
-  );
+.a-skel-variant-avatar {
+  display: inline-block;
+  background-color: var(--ak-skel-base);
+}
+
+:where(.a-skel-variant-avatar) {
+  border-radius: 9999px;
+}
+
+.a-skel-variant-image,
+.a-skel-variant-video {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--ak-skel-base);
+  color: var(--ak-skel-icon);
+}
+
+:where(.a-skel-variant-image),
+:where(.a-skel-variant-video) {
+  border-radius: var(--ak-skel-radius-lg);
+  aspect-ratio: 16 / 9;
+}
+
+.a-skel-variant-button {
+  background-color: var(--ak-skel-base);
+}
+
+:where(.a-skel-variant-button) {
+  border-radius: var(--ak-skel-radius);
+}
+
+.a-skel-variant-input {
+  background-color: var(--ak-skel-base);
+  position: relative;
+}
+
+:where(.a-skel-variant-input) {
+  border-radius: var(--ak-skel-radius);
+  border: 1px solid var(--ak-skel-ring);
+  background-color: transparent;
+}
+
+.a-skel-variant-input::before {
+  content: '';
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 35%;
+  height: 0.6em;
+  background-color: var(--ak-skel-base);
+  border-radius: var(--ak-skel-radius-sm);
+}
+
+.a-skel-variant-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+:where(.a-skel-variant-card) {
+  border-radius: var(--ak-skel-radius-lg);
+  border: 1px solid var(--ak-skel-ring);
+  padding: 1rem;
+  background-color: transparent;
+  box-shadow: none;
+}
+
+.a-skel-variant-list-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+}
+
+.a-skel-variant-list-item__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.a-skel-variant-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.a-skel-variant-table__row {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.a-skel-variant-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  height: 8rem;
+  width: 100%;
+}
+
+.a-skel-variant-chart__bar {
+  flex: 1;
+  background-color: var(--ak-skel-base);
+  border-radius: var(--ak-skel-radius-sm) var(--ak-skel-radius-sm) 0 0;
+}
+
+/* a11y — visually hide loading announcement, keep AT readable. */
+.a-skel-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }

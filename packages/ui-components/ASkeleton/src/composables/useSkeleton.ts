@@ -1,8 +1,12 @@
 import { shallowRef, type Ref } from 'vue';
-import type { CachedShape } from '../types';
+import type { StructuralShape } from '../types';
 import { useShapeProbe } from './useShapeProbe';
-import { clearCached, getCached, setCached } from './useSkeletonCache';
-import { walkDom } from '../utils/walkDom';
+import {
+  clearCachedStructural,
+  getCachedStructural,
+  setCachedStructural,
+} from './useSkeletonCache';
+import { walkStructural } from '../utils/walkStructural';
 
 export interface UseSkeletonOptions {
   /**
@@ -22,33 +26,37 @@ export interface UseSkeletonOptions {
   target?: () => HTMLElement | null;
   /** Persist to `localStorage` so first-paint after reload skips the cold start. Default false. */
   persist?: boolean;
-  /** Forwarded to `walkDom`. Default 6. */
+  /** Forwarded to `walkStructural`. Default 12. */
   maxDepth?: number;
-  /** Forwarded to `walkDom`. Default 500. */
+  /** Forwarded to `walkStructural`. Default 500. */
   maxNodes?: number;
-  /** Forwarded to `walkDom`. Default 4. */
+  /** Forwarded to `walkStructural`. Default 4. */
   minSize?: number;
   /** Forwarded to `useShapeProbe`. Default 150 ms. */
   resizeDebounceMs?: number;
 }
 
 export interface UseSkeletonReturn {
-  /** Reactive captured shape — `undefined` on cache miss. Replace your skeleton render path. */
-  shape: Readonly<Ref<CachedShape | undefined>>;
+  /** Reactive captured shape — `undefined` on cache miss. Feed it to `<ASkeletonLayer>`. */
+  shape: Readonly<Ref<StructuralShape | undefined>>;
   /**
    * Synchronously measure the current target and write to cache. Returns the
    * captured shape, or `undefined` if the target wasn't available / nothing
    * worth measuring was rendered. Use when you want to force a capture outside
    * the automatic `ResizeObserver` flow (e.g. after an animation settles).
    */
-  captureNow: () => CachedShape | undefined;
+  captureNow: () => StructuralShape | undefined;
   /** Drop the cache entry for this `cacheKey`. The reactive `shape` flips to `undefined`. */
   clear: () => void;
 }
 
+const DEFAULT_MAX_DEPTH = 12;
+
 /**
- * High-level building block for custom skeleton UIs. Wires up the probe + cache
- * + reactivity so the consumer just renders something using the reactive shape:
+ * High-level building block for Recipe 3 — wires the structural capture +
+ * cache + reactivity around a target element. The reactive `shape` is fed to
+ * `<ASkeletonLayer>` which renders it in normal flow inside the consumer's
+ * container.
  *
  * ```ts
  * const containerRef = ref<HTMLElement | null>(null);
@@ -65,46 +73,50 @@ export interface UseSkeletonReturn {
  * </div>
  * ```
  *
- * For more control, drop down to `useShapeProbe` + `getCached`/`setCached` and
- * compose your own.
+ * For more control, drop down to `useShapeProbe` (pass `walkStructural` as the
+ * capture strategy) + `getCachedStructural` / `setCachedStructural` and compose
+ * your own orchestration.
  */
 export function useSkeleton(options: UseSkeletonOptions): UseSkeletonReturn {
   const persist = options.persist ?? false;
-  const maxDepth = options.maxDepth ?? 6;
+  const maxDepth = options.maxDepth ?? DEFAULT_MAX_DEPTH;
 
-  const shape = shallowRef<CachedShape | undefined>(getCached(options.cacheKey, persist));
+  const shape = shallowRef<StructuralShape | undefined>(
+    getCachedStructural(options.cacheKey, persist)
+  );
 
   if (options.target) {
     const getTarget = options.target;
-    useShapeProbe(getTarget, {
+    useShapeProbe<StructuralShape>(getTarget, {
       maxDepth,
       maxNodes: options.maxNodes,
       minSize: options.minSize,
       resizeDebounceMs: options.resizeDebounceMs,
+      capture: walkStructural,
       onCapture: (captured) => {
-        setCached(options.cacheKey, captured, persist);
+        setCachedStructural(options.cacheKey, captured, persist);
         shape.value = captured;
       },
     });
   }
 
-  function captureNow(): CachedShape | undefined {
+  function captureNow(): StructuralShape | undefined {
     const el = options.target?.();
     if (!el || typeof window === 'undefined') return undefined;
-    const captured = walkDom(el, {
+    const captured = walkStructural(el, {
       maxDepth,
       maxNodes: options.maxNodes,
       minSize: options.minSize,
     });
     if (captured.width <= 0 || captured.height <= 0 || captured.nodes.length === 0)
       return undefined;
-    setCached(options.cacheKey, captured, persist);
+    setCachedStructural(options.cacheKey, captured, persist);
     shape.value = captured;
     return captured;
   }
 
   function clear(): void {
-    clearCached(options.cacheKey);
+    clearCachedStructural(options.cacheKey);
     shape.value = undefined;
   }
 

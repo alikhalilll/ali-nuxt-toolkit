@@ -20,6 +20,22 @@ const COMPONENT_TO_ENTRY: Record<string, string> = {
   ASkeleton: '@alikhalilll/a-skeleton',
   ASkeletonLayer: '@alikhalilll/a-skeleton',
   ASkeletonBlock: '@alikhalilll/a-skeleton',
+  /* Variant primitives */
+  ASkeletonText: '@alikhalilll/a-skeleton',
+  ASkeletonHeading: '@alikhalilll/a-skeleton',
+  ASkeletonAvatar: '@alikhalilll/a-skeleton',
+  ASkeletonImage: '@alikhalilll/a-skeleton',
+  ASkeletonVideo: '@alikhalilll/a-skeleton',
+  ASkeletonButton: '@alikhalilll/a-skeleton',
+  ASkeletonInput: '@alikhalilll/a-skeleton',
+  ASkeletonListItem: '@alikhalilll/a-skeleton',
+  ASkeletonCard: '@alikhalilll/a-skeleton',
+  ASkeletonTable: '@alikhalilll/a-skeleton',
+  ASkeletonChart: '@alikhalilll/a-skeleton',
+  ASkeletonForm: '@alikhalilll/a-skeleton',
+  ASkeletonArticle: '@alikhalilll/a-skeleton',
+  ASkeletonDivider: '@alikhalilll/a-skeleton',
+  ASkeletonChip: '@alikhalilll/a-skeleton',
 };
 
 export default function ASkeletonResolver(opts: ResolverOptions = {}): ComponentResolver {
