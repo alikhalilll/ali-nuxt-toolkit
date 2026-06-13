@@ -9,7 +9,7 @@
     "url": "git+https://github.com/alikhalilll/ali-nuxt-toolkit.git",
     "directory": "packages/ui-components/ASkeleton"
   },
-  "homepage": "https://alikhalilll.github.io/ali-nuxt-toolkit/ui",
+  "homepage": "https://alikhalilll.github.io/ali-nuxt-toolkit/ui/skeleton#setup",
   "bugs": {
     "url": "https://github.com/alikhalilll/ali-nuxt-toolkit/issues"
   },
