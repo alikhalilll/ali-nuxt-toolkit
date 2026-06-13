@@ -14,26 +14,26 @@ const themes: Theme[] = [
   {
     label: 'Soft Sand',
     vars: {
-      '--ak-skeleton-block': 'hsl(28 30% 86%)',
-      '--ak-skeleton-shimmer': 'hsl(28 60% 96% / 0.7)',
-      '--ak-skeleton-radius': '0.75rem',
-      '--ak-skeleton-duration': '1.8s',
+      '--ak-skel-base': 'hsl(28 30% 86%)',
+      '--ak-skel-highlight': 'hsl(28 60% 96% / 0.7)',
+      '--ak-skel-radius': '0.75rem',
+      '--ak-skel-duration': '1.8s',
     },
   },
   {
     label: 'Neon Pop',
     vars: {
-      '--ak-skeleton-block': 'hsl(280 40% 22%)',
-      '--ak-skeleton-shimmer': 'hsl(180 100% 60% / 0.45)',
-      '--ak-skeleton-radius': '1rem',
-      '--ak-skeleton-duration': '1.1s',
+      '--ak-skel-base': 'hsl(280 40% 22%)',
+      '--ak-skel-highlight': 'hsl(180 100% 60% / 0.45)',
+      '--ak-skel-radius': '1rem',
+      '--ak-skel-duration': '1.1s',
     },
   },
   {
     label: 'Pulse · Slow',
     vars: {
-      '--ak-skeleton-duration': '2.4s',
-      '--ak-skeleton-pulse-opacity': '0.3',
+      '--ak-skel-duration': '2.4s',
+      '--ak-skel-pulse-min': '0.3',
     },
   },
 ];
@@ -57,10 +57,10 @@ const source = `<template>
     cache-key="themed-card"
     :animation="active === 3 ? 'pulse' : 'shimmer'"
     :style="{
-      '--ak-skeleton-block': 'hsl(280 40% 22%)',
-      '--ak-skeleton-shimmer': 'hsl(180 100% 60% / 0.45)',
-      '--ak-skeleton-radius': '1rem',
-      '--ak-skeleton-duration': '1.1s',
+      '--ak-skel-base': 'hsl(280 40% 22%)',
+      '--ak-skel-highlight': 'hsl(180 100% 60% / 0.45)',
+      '--ak-skel-radius': '1rem',
+      '--ak-skel-duration': '1.1s',
     }"
   >
     <UserCard :data="user" />

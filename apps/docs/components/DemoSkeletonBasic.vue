@@ -17,30 +17,16 @@ async function load() {
 
 load();
 
-const source = `<script setup lang="ts">
-import { computed, ref } from 'vue';
-
-const profile = ref(null);
-const loading = computed(() => profile.value === null);
-
-async function load() {
-  profile.value = null;
-  await new Promise(r => setTimeout(r, 700));
-  profile.value = { /* … */ };
-}
-load();
-\u003c/script>
-
-<template>
+const source = `<template>
   <ASkeleton :loading="loading" cache-key="profile-card">
+    <!-- Keep TAGS unconditional (so the walker sees the same shape in both
+         states); gate per-leaf CONTENT via interpolation. -->
     <div class="flex items-start gap-4 p-4">
       <img
-        v-if="profile?.avatar"
-        :src="profile.avatar"
-        :alt="profile.name"
+        :src="profile?.avatar"
+        :alt="profile?.name ?? ''"
         class="size-16 shrink-0 rounded-full object-cover"
       />
-      <div v-else class="size-16 shrink-0 rounded-full" />
 
       <div class="flex-1">
         <h3 class="text-base font-semibold">{{ profile?.name }}</h3>
@@ -57,7 +43,7 @@ load();
 <template>
   <div class="my-4 rounded-lg border border-border bg-surface p-5">
     <h4 class="mb-3 text-[11px] font-bold uppercase tracking-widest text-text-dim">
-      Live · ASkeleton wrapper
+      Live · ASkeleton wrapper (mirror mode)
     </h4>
 
     <DemoTabs :code="source">
@@ -77,25 +63,28 @@ load();
           </button>
         </div>
 
-        <ASkeleton :loading="loading" cache-key="docs-profile-card">
-          <div class="flex items-start gap-4 p-4">
-            <img
-              v-if="profile?.avatar"
-              :src="profile.avatar"
-              :alt="profile.name"
-              class="size-16 shrink-0 rounded-full object-cover"
-            />
-            <div v-else class="size-16 shrink-0 rounded-full" />
+        <div class="rounded-md border border-border bg-surface-2 p-4">
+          <ASkeleton :loading="loading" cache-key="docs-profile-card">
+            <!-- The `<img>` element is rendered unconditionally; its `src` is
+                 gated. While loading, src is empty → mirror walker treats it
+                 as atomic and emits a sized shimmer block. -->
+            <div class="flex items-start gap-4 p-4">
+              <img
+                :src="profile?.avatar"
+                :alt="profile?.name ?? ''"
+                class="size-16 shrink-0 rounded-full object-cover"
+              />
 
-            <div class="flex-1">
-              <h3 class="text-base font-semibold">{{ profile?.name }}</h3>
-              <p class="mt-0.5 text-xs uppercase tracking-wide text-text-dim">
-                {{ profile?.role }}
-              </p>
-              <p class="mt-2 text-sm leading-relaxed">{{ profile?.bio }}</p>
+              <div class="flex-1">
+                <h3 class="text-base font-semibold">{{ profile?.name }}</h3>
+                <p class="mt-0.5 text-xs uppercase tracking-wide text-text-dim">
+                  {{ profile?.role }}
+                </p>
+                <p class="mt-2 text-sm leading-relaxed">{{ profile?.bio }}</p>
+              </div>
             </div>
-          </div>
-        </ASkeleton>
+          </ASkeleton>
+        </div>
       </div>
     </DemoTabs>
   </div>

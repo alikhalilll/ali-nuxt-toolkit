@@ -190,6 +190,90 @@ function resetAutoProfile() {
 }
 
 loadAutoProfile();
+
+/* ---------- Public-API demo 6: advanced detection (v1.2.0+) ----------
+ * Three richer slot trees that exercise every signal captured in 1.2.0:
+ *   - bg / border / box-shadow / opacity captured per leaf via getComputedStyle()
+ *   - per-line text geometry captured via Range.getClientRects(), so multi-line
+ *     centered headings + RTL last-line positions replay exactly
+ *   - dense leaf grids exercise the cost-bounded walk + per-card surface capture
+ * A single `advancedLoading` ref controls all three so users can flip between
+ * "real" and "skeleton" in one click and compare side-by-side. */
+const advancedLoading = ref(true);
+
+async function toggleAdvanced() {
+  advancedLoading.value = !advancedLoading.value;
+}
+
+/* Demo A — pricing card. Real card has a white fill on a coloured page, a
+ * recommended badge with emerald tint, an outlined secondary button, and a
+ * shadow. The captured skeleton preserves all of those because of the new
+ * `bg` / `border` / `boxShadow` detectors. */
+interface PricingFeature {
+  text: string;
+}
+const pricingFeatures: PricingFeature[] = [
+  { text: 'Unlimited projects + integrations' },
+  { text: 'Priority support, 4-hour SLA' },
+  { text: 'Team workspaces with SSO' },
+  { text: 'Audit log + advanced permissions' },
+];
+
+/* Demo B — Arabic RTL hero, structurally similar to the hero the user was
+ * fixing. Centred multi-line heading + paragraph, RTL last-line positioning.
+ * Per-line Range capture means the short last line lands on the *right* in
+ * RTL, not on the left as the v1.1.0 heuristic produced. */
+const heroBullets = [
+  { icon: 'lucide:rocket', text: 'إطلاق فوري في 1-3 أيام' },
+  { icon: 'lucide:headphones', text: 'دعم فني متواصل' },
+  { icon: 'lucide:layout-dashboard', text: 'لوحة تحكم سهلة ومرنة' },
+];
+
+/* Demo C — dashboard stats grid. Each card has its own background tint, an
+ * icon, a big number, a label, and a small trend chip with opacity < 1. The
+ * skeleton picks up each per-card surface plus the chip's translucency. */
+interface Stat {
+  icon: string;
+  label: string;
+  value: string;
+  trend: string;
+  trendTone: 'up' | 'down';
+  bg: string;
+}
+const stats: Stat[] = [
+  {
+    icon: 'lucide:users',
+    label: 'Active donors',
+    value: '12,480',
+    trend: '+8.2%',
+    trendTone: 'up',
+    bg: 'bg-emerald-50',
+  },
+  {
+    icon: 'lucide:trending-up',
+    label: 'Monthly receipts',
+    value: 'SAR 184k',
+    trend: '+12%',
+    trendTone: 'up',
+    bg: 'bg-sky-50',
+  },
+  {
+    icon: 'lucide:hand-coins',
+    label: 'Avg. donation',
+    value: 'SAR 92',
+    trend: '−2.1%',
+    trendTone: 'down',
+    bg: 'bg-amber-50',
+  },
+  {
+    icon: 'lucide:bell',
+    label: 'Open campaigns',
+    value: '7',
+    trend: '+1',
+    trendTone: 'up',
+    bg: 'bg-violet-50',
+  },
+];
 </script>
 
 <template>
@@ -654,6 +738,156 @@ loadAutoProfile();
             </div>
           </ASkeleton>
         </div>
+      </div>
+    </div>
+
+    <h2 class="mt-10 mb-2 text-xl font-semibold tracking-tight">
+      Advanced detection · v1.2.0 capture engine
+    </h2>
+    <p class="mb-4 text-sm text-text-dim">
+      Three richer slot trees that each show a different signal added in 1.2.0.
+      <strong>Pricing card</strong> proves <code>bg</code> / <code>border</code> /
+      <code>box-shadow</code> capture — the white fill, emerald badge tint, outlined secondary
+      button, and card elevation all carry through. <strong>Arabic hero</strong>
+      proves the Range-API per-line capture — the short last line of the centred RTL heading lands
+      on the right, not on the left as the old heuristic produced.
+      <strong>Stats grid</strong> proves per-card surface capture across a dense leaf layout — each
+      card keeps its own background tint, each trend chip its opacity.
+    </p>
+
+    <div class="mb-4 flex flex-wrap items-center gap-3 text-sm">
+      <button
+        class="cursor-pointer rounded border border-brand bg-brand px-3 py-1.5 font-semibold text-bg hover:brightness-110"
+        @click="toggleAdvanced"
+      >
+        {{ advancedLoading ? 'Show real components' : 'Show skeleton' }}
+      </button>
+    </div>
+
+    <div class="mb-10 grid grid-cols-1 gap-6 xl:grid-cols-2">
+      <!-- Demo A: pricing card -->
+      <div class="rounded-lg border border-brand-border bg-surface p-4">
+        <p class="mb-3 text-[11px] font-bold uppercase tracking-widest text-text-dim">
+          Pricing card · bg + border + box-shadow capture
+        </p>
+        <div class="rounded-2xl bg-zinc-100 p-6">
+          <ASkeleton :loading="advancedLoading">
+            <div
+              class="rounded-2xl bg-white p-6 ring-1 ring-zinc-200"
+              style="box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.18)"
+            >
+              <span
+                class="inline-block rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700"
+              >
+                RECOMMENDED
+              </span>
+              <h3 class="mt-4 text-2xl font-bold text-zinc-900">Pro</h3>
+              <p class="mt-1 text-sm leading-relaxed text-zinc-600">
+                Everything in Starter, plus team workspaces, SSO, audit logs, and 4-hour support
+                SLAs. Cancel anytime.
+              </p>
+              <div class="mt-6 flex items-baseline gap-1">
+                <span class="text-4xl font-bold text-zinc-900">$49</span>
+                <span class="text-sm text-zinc-500">/month</span>
+              </div>
+              <ul class="mt-6 space-y-2 text-sm text-zinc-700">
+                <li v-for="f in pricingFeatures" :key="f.text" class="flex items-start gap-2">
+                  <Icon name="lucide:check" class="mt-0.5 size-4 text-emerald-600" mode="svg" />
+                  <span>{{ f.text }}</span>
+                </li>
+              </ul>
+              <button
+                class="mt-6 w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white"
+                style="box-shadow: 0 8px 18px -8px rgba(5, 150, 105, 0.6)"
+              >
+                Start free trial
+              </button>
+              <button
+                class="mt-2 w-full rounded-xl border border-zinc-300 px-4 py-3 text-sm font-semibold text-zinc-700"
+              >
+                Talk to sales
+              </button>
+            </div>
+          </ASkeleton>
+        </div>
+      </div>
+
+      <!-- Demo B: Arabic RTL hero -->
+      <div class="rounded-lg border border-brand-border bg-surface p-4">
+        <p class="mb-3 text-[11px] font-bold uppercase tracking-widest text-text-dim">
+          Arabic RTL hero · per-line Range capture
+        </p>
+        <ASkeleton :loading="advancedLoading">
+          <div
+            dir="rtl"
+            class="overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-700 to-lime-500 p-8 text-center"
+          >
+            <h1 class="mb-4 text-2xl font-bold leading-tight text-white md:text-3xl">
+              أطلق منصة تبرعات إلكترونية متكاملة لجمعيتك مع
+              <span class="text-yellow-200">عطاء</span>
+            </h1>
+            <p class="mx-auto mb-6 max-w-xl text-sm leading-relaxed text-white/90">
+              عطاء تمنحك نظام تبرعات ذكي وسهل الاستخدام، يساعدك على جذب المتبرعين، تنظيم مشاريعك،
+              وتتبع التبرعات والتقارير في مكان واحد
+            </p>
+            <div class="mb-6 flex flex-wrap items-center justify-center gap-3">
+              <button
+                class="rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-emerald-700"
+              >
+                احجز موعد لعرض تعريفي
+              </button>
+              <button
+                class="rounded-xl border border-white bg-transparent px-5 py-2.5 text-sm font-semibold text-white"
+              >
+                استعرض النسخة التجريبية
+              </button>
+            </div>
+            <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
+              <div
+                v-for="b in heroBullets"
+                :key="b.text"
+                class="flex items-center justify-center gap-2 text-white"
+              >
+                <Icon :name="b.icon" class="size-4" mode="svg" />
+                <span class="text-sm">{{ b.text }}</span>
+              </div>
+            </div>
+          </div>
+        </ASkeleton>
+      </div>
+
+      <!-- Demo C: dashboard stats grid -->
+      <div class="rounded-lg border border-brand-border bg-surface p-4 xl:col-span-2">
+        <p class="mb-3 text-[11px] font-bold uppercase tracking-widest text-text-dim">
+          Stats grid · per-card surface + opacity capture
+        </p>
+        <ASkeleton :loading="advancedLoading">
+          <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
+            <div
+              v-for="s in stats"
+              :key="s.label"
+              :class="['rounded-xl p-4 ring-1 ring-zinc-200', s.bg]"
+              style="box-shadow: 0 4px 12px -6px rgba(0, 0, 0, 0.08)"
+            >
+              <div class="flex items-center justify-between">
+                <Icon :name="s.icon" class="size-5 text-zinc-700" mode="svg" />
+                <span
+                  :class="[
+                    'rounded-full px-2 py-0.5 text-[10px] font-semibold',
+                    s.trendTone === 'up'
+                      ? 'bg-emerald-200 text-emerald-800'
+                      : 'bg-rose-200 text-rose-800',
+                  ]"
+                  style="opacity: 0.85"
+                >
+                  {{ s.trend }}
+                </span>
+              </div>
+              <div class="mt-4 text-2xl font-bold text-zinc-900">{{ s.value }}</div>
+              <div class="text-xs text-zinc-600">{{ s.label }}</div>
+            </div>
+          </div>
+        </ASkeleton>
       </div>
     </div>
 
