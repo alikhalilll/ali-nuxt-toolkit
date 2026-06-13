@@ -61,42 +61,18 @@ export default { plugins: [Components({ resolvers: [ASkeletonResolver()] })] };
 
 ## Quick start
 
-::DemoSkeletonBasic
+::DemoSkeletonClone
 ::
 
 ```vue
-<script setup lang="ts">
-import { ref, computed } from 'vue';
-
-const user = ref(null);
-const loading = computed(() => user.value === null);
-
-async function load() {
-  user.value = await fetch('/api/me').then((r) => r.json());
-}
-load();
-</script>
-
-<template>
-  <ASkeleton :loading="loading">
-    <!-- Keep TAGS unconditional (the walker sees the same shape in both
-         states); gate per-leaf CONTENT via interpolation. -->
-    <div class="flex items-start gap-4 p-4">
-      <img
-        :src="user?.avatar"
-        :alt="user?.name ?? ''"
-        class="size-16 shrink-0 rounded-full object-cover"
-      />
-      <div class="flex-1">
-        <h3 class="text-base font-semibold">{{ user?.name }}</h3>
-        <p class="text-sm leading-relaxed">{{ user?.bio }}</p>
-      </div>
-    </div>
-  </ASkeleton>
-</template>
+<ASkeleton :loading="loading">
+  <SomePricingCard />
+</ASkeleton>
 ```
 
-That's the whole API for most cases. Every layer underneath is also a public export — see the [API reference](#api-reference).
+That's the whole API for most cases. The wrapper picks `mode="clone"` by default — mounts the slot off-screen, snapshots every leaf's `getComputedStyle()` (per-edge borders, per-corner radii, background, shadow, opacity, filter, transform, typography), and replays the snapshot as positioned divs each carrying its captured inline style. Pixel-identical, client-side only.
+
+Every layer underneath is also a public export — see the [API reference](#api-reference).
 
 ## Three rendering strategies
 
@@ -112,10 +88,9 @@ All three share one cache module, one theming surface, and the same a11y baselin
 
 ### Clone — the default
 
-::DemoSkeletonClone
-::
-
 The slot mounts off-screen inside a `visibility: hidden` capture host. After mount, `captureSnapshot()` reads `getComputedStyle()` for every element — capturing the **final** background, per-edge border, per-corner radius, box-shadow, padding, opacity, filter, transform, typography — plus per-line text rects via `Range.getClientRects()`. `<ASkeletonClone>` then replays the snapshot as a tree of positioned divs each carrying its captured inline style.
+
+> **Authoring tip.** Clone mode snapshots the slot _as rendered during loading_. If the slot uses interpolations (`<h3>{{ data?.name }}</h3>`) and your data isn't there yet, the snapshot captures empty text rects — the heading shimmers at its natural single line height, but a multi-line paragraph collapses to one bar. Either ensure data is present before the capture runs (start with `loading: false`, let the snapshot land, then toggle), use `mode="mirror"` (which doesn't measure — see [below](#mirror-ssr-safe-vnode-walker)), or hand-craft the placeholder with [variant primitives](#variant-primitives) and `<ASkeletonBlock>`.
 
 ```vue
 <ASkeleton :loading="loading">

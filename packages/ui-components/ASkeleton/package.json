@@ -1,6 +1,6 @@
 {
   "name": "@alikhalilll/a-skeleton",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Self-generating Vue 3 / Nuxt 3+ skeleton loader. First paint mirrors the slot's HTML structure; second load replays a pixel-aligned shape captured from the real DOM. Themeable via CSS vars. Part of the @alikhalilll/a-* toolkit.",
   "license": "MIT",
   "author": "alikhalilll",
