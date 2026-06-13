@@ -14,7 +14,11 @@
  */
 import { ref } from 'vue';
 
-const loading = ref(false); /* Start with real visible so the capture lands first. */
+/* Start in the skeleton state so the docs lead with the loader, not the real
+ * card. The clone engine still mounts the slot off-screen (visibility: hidden)
+ * to capture geometry on first paint — the double-rAF in `<ASkeleton>` covers
+ * the loading=true-on-mount case. */
+const loading = ref(true);
 const features = [
   'Unlimited projects + integrations',
   'Priority support, 4-hour SLA',
