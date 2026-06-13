@@ -18,6 +18,9 @@ A strongly-typed `fetch` client for Nuxt 3 / 4 with interceptors, retry/backoff,
 - **`ApiError` class** — structured errors with `.status`, `.details`, `.payload`, `.response`, plus an `isApiError(e)` / `ApiError.is(e)` guard that works across bundles and realms.
 - **Framework-agnostic core** — `import { createApiClient } from '@alikhalilll/nuxt-api-provider/core'` to use outside Nuxt.
 
+::DemoApiBasic
+::
+
 ## Install
 
 ::doc-install{pkg="@alikhalilll/nuxt-api-provider"}
@@ -62,9 +65,6 @@ interface Post {
 const post = await useApi()<Post>('/posts/1');
 </script>
 ```
-
-::DemoApiBasic
-::
 
 ## SSR (server-side rendering)
 

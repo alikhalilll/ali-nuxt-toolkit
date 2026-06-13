@@ -11,6 +11,9 @@ order: 2
 > Three rendering strategies (clone, mirror, structural) · pixel-identical computed-style snapshot ·
 > per-line text geometry via `Range` API · 15 named variants · themeable via CSS variables · SSR-safe mirror mode.
 
+::DemoSkeletonClone
+::
+
 ## Setup
 
 ::doc-install{pkg="@alikhalilll/a-skeleton"}
@@ -47,16 +50,13 @@ export default { plugins: [Components({ resolvers: [ASkeletonResolver()] })] };
 
 ## Quick start
 
-::DemoSkeletonClone
-::
-
 ```vue
 <ASkeleton :loading="loading">
   <SomePricingCard />
 </ASkeleton>
 ```
 
-That's the whole API for most cases. The wrapper picks `mode="clone"` by default — mounts the slot off-screen, snapshots every leaf's `getComputedStyle()` (per-edge borders, per-corner radii, background, shadow, opacity, filter, transform, typography), and replays the snapshot as positioned divs each carrying its captured inline style. Pixel-identical, client-side only.
+That's the whole API for most cases — the demo at the top of this page is exactly that wrapper around a pricing card. `mode="clone"` is the default: the wrapper mounts the slot off-screen, snapshots every leaf's `getComputedStyle()` (per-edge borders, per-corner radii, background, shadow, opacity, filter, transform, typography), and replays the snapshot as positioned divs each carrying its captured inline style. Pixel-identical, client-side only.
 
 Every layer underneath is also a public export — see the [API reference](#api-reference).
 

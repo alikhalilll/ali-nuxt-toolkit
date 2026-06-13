@@ -16,6 +16,9 @@ Symmetric encryption for Nuxt 3 / 4 built on the native **Web Crypto API**. Defa
 - **Server-only mode** — opt into registering the plugin only on the server so the passphrase never ships to the browser bundle.
 - **Device fingerprint** _(new)_ — optional HttpOnly-cookie-based binding so ciphertext becomes undecryptable outside the browser that created it, while still surviving IP changes.
 
+::DemoCrypto
+::
+
 ## Install
 
 ::doc-install{pkg="@alikhalilll/nuxt-crypto"}
@@ -57,9 +60,6 @@ const plain = await $crypto.decrypt(payload);
 ```
 
 `$crypto` is typed as `CryptoService` via auto-generated module augmentation.
-
-::DemoCrypto
-::
 
 ## Encrypt a JSON object
 

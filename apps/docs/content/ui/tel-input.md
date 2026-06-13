@@ -9,6 +9,9 @@ order: 1
 
 **An international telephone input that gets out of the way.** The field starts as a single clean input — no picker, no clutter — and reveals the country flag the moment your number's dial code is recognised. Numbers validate in real time against `libphonenumber-js`, the picker is a popover on desktop and a bottom-sheet on mobile, and the whole thing plugs straight into VeeValidate + Zod with built-in support for async server-side checks.
 
+::DemoTelInputBasic
+::
+
 ## Install & Setup
 
 The shipped CSS is self-contained — design tokens + utility classes are pre-compiled. Install the package, register the module (Nuxt) or import the stylesheet (Vue + Vite), and the field renders themed out of the box. No Tailwind config, no `@theme` block.
@@ -73,9 +76,6 @@ const country = ref<number | null>(null);
   <ATelInput v-model:phone="phone" v-model:country="country" show-validation />
 </template>
 ```
-
-::DemoTelInputBasic
-::
 
 Type `+447911123456`, `01066105963`, or paste any well-formed international number — the flag trigger reveals at the end of the field with the detected country, the dial code appears as a prefix inside the input, and `phone` normalises to the national significant number (`7911123456`, `1066105963`).
 

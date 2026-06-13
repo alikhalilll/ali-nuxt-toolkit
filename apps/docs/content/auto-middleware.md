@@ -16,6 +16,9 @@ Declarative, layout-based route middleware for Nuxt 3 / 4. Map layouts to middle
 - **Early termination** — a middleware returning `false` stops the chain; any other value is treated as a navigation result.
 - **Zero runtime deps** — just Nuxt.
 
+::DemoAutoMiddleware
+::
+
 ## Install
 
 ::doc-install{pkg="@alikhalilll/nuxt-auto-middleware"}
@@ -43,9 +46,6 @@ export default defineNuxtConfig({
 ```
 
 Middleware files live in the standard Nuxt location: `~/middleware/auth.ts`, `~/middleware/verify-role.ts`, etc.
-
-::DemoAutoMiddleware
-::
 
 ## Basic mapping
 
