@@ -45,20 +45,6 @@ import ASkeletonResolver from '@alikhalilll/a-skeleton/resolver';
 export default { plugins: [Components({ resolvers: [ASkeletonResolver()] })] };
 ```
 
-## Why this component
-
-- **Self-generating** — wrap your real component and the engine derives the placeholder from the slot you're already rendering. No hand-drawn shimmer markup, no parallel "loading state" templates to maintain.
-- **Three rendering strategies, one wrapper** — `mode="clone"` (default) snapshots `getComputedStyle()` for pixel-identical replay regardless of styling pipeline; `mode="mirror"` walks the vnode tree for SSR-safe placeholders; `useSkeleton()` + `<ASkeletonLayer>` for structural / normal-flow skeletons that reflow with their parent.
-- **Comprehensive surface capture** — per-edge borders, per-corner radii, background colour + image, box-shadow, opacity, filter, transform, mix-blend-mode, typography — every visible CSS property carries through so the skeleton reads as the real element, not a generic shimmer.
-- **Per-line text geometry** — `Range.getClientRects()` captures the exact rendered text rect of every line. Wrapped paragraphs, centred multi-line headings, and RTL last-line positions replay 1:1 — no heuristics.
-- **15 named variants** — for the rare cases where auto-detect isn't the right fit (loading states without real content to wrap, very dense layouts, screens you'd rather author once).
-- **Bounded cost** — every walker enforces `maxDepth` / `maxNodes` / `minSize`. A 5 000-row table will not lock up the main thread.
-- **Themeable via CSS variables** — override `--ak-skel-*` on `:root`, a wrapper class, or inline.
-- **Empty-interpolation aware** — `<h3>{{ data?.name }}</h3>` with null data still shimmers at the heading's natural rendered height.
-- **`prefers-reduced-motion`** disables animation automatically.
-- **SSR-safe (mirror)** — no `window` access during the structural pass; hydration is clean.
-- **TypeScript-first** — every prop, slot, type, and composable fully typed.
-
 ## Quick start
 
 ::DemoSkeletonClone
@@ -73,6 +59,20 @@ export default { plugins: [Components({ resolvers: [ASkeletonResolver()] })] };
 That's the whole API for most cases. The wrapper picks `mode="clone"` by default — mounts the slot off-screen, snapshots every leaf's `getComputedStyle()` (per-edge borders, per-corner radii, background, shadow, opacity, filter, transform, typography), and replays the snapshot as positioned divs each carrying its captured inline style. Pixel-identical, client-side only.
 
 Every layer underneath is also a public export — see the [API reference](#api-reference).
+
+## Why this component
+
+- **Self-generating** — wrap your real component and the engine derives the placeholder from the slot you're already rendering. No hand-drawn shimmer markup, no parallel "loading state" templates to maintain.
+- **Three rendering strategies, one wrapper** — `mode="clone"` (default) snapshots `getComputedStyle()` for pixel-identical replay regardless of styling pipeline; `mode="mirror"` walks the vnode tree for SSR-safe placeholders; `useSkeleton()` + `<ASkeletonLayer>` for structural / normal-flow skeletons that reflow with their parent.
+- **Comprehensive surface capture** — per-edge borders, per-corner radii, background colour + image, box-shadow, opacity, filter, transform, mix-blend-mode, typography — every visible CSS property carries through so the skeleton reads as the real element, not a generic shimmer.
+- **Per-line text geometry** — `Range.getClientRects()` captures the exact rendered text rect of every line. Wrapped paragraphs, centred multi-line headings, and RTL last-line positions replay 1:1 — no heuristics.
+- **15 named variants** — for the rare cases where auto-detect isn't the right fit (loading states without real content to wrap, very dense layouts, screens you'd rather author once).
+- **Bounded cost** — every walker enforces `maxDepth` / `maxNodes` / `minSize`. A 5 000-row table will not lock up the main thread.
+- **Themeable via CSS variables** — override `--ak-skel-*` on `:root`, a wrapper class, or inline.
+- **Empty-interpolation aware** — `<h3>{{ data?.name }}</h3>` with null data still shimmers at the heading's natural rendered height.
+- **`prefers-reduced-motion`** disables animation automatically.
+- **SSR-safe (mirror)** — no `window` access during the structural pass; hydration is clean.
+- **TypeScript-first** — every prop, slot, type, and composable fully typed.
 
 ## Three rendering strategies
 
@@ -211,12 +211,33 @@ The structural cache uses its own `localStorage` namespace (`a-skeleton:s:` pref
 
 ## Authoring rule
 
+::DemoSkeletonBasic
+::
+
 Keep **tags** unconditional; gate per-leaf **content** via interpolation. Two safe patterns:
 
 1. **Always render the same tag**, gate its content. `<img :src="user?.avatar">` renders an `<img>` in both states (walker treats it as atomic → sized shimmer block). `<h3>{{ user?.name }}</h3>` renders an empty `<h3>` during loading and the walker auto-injects a placeholder shimmer bar at the heading's natural width.
 2. **Use explicit primitives** with `v-if` / `v-else` (see [`<ASkeletonBlock>`](#askeletonblock) and the [variant primitives](#variant-primitives)) when the loading and loaded states genuinely have different markup.
 
 The pattern to **avoid** is swapping whole branches (`<img v-if><div v-else>`). The walker sees one shape now and a different shape later — the skeleton can't predict the placeholder geometry.
+
+```vue
+<ASkeleton :loading="loading">
+  <div class="flex items-start gap-4 p-4">
+    <img
+      :src="user?.avatar"
+      :alt="user?.name ?? ''"
+      class="size-16 shrink-0 rounded-full object-cover"
+    />
+    <div class="flex-1">
+      <h3 class="text-base font-semibold">{{ user?.name }}</h3>
+      <p class="text-sm leading-relaxed">{{ user?.bio }}</p>
+    </div>
+  </div>
+</ASkeleton>
+```
+
+> **Sequencing matters in clone mode.** The first snapshot is taken when the slot mounts. If `loading` is `true` at that point and your slot uses `{{ user?.bio }}` style interpolations, the captured geometry reflects the **empty** strings — a multi-line bio shows up as a single bar because that's literally all there is to measure. The demo above starts with the real profile already loaded so the snapshot captures the multi-line paragraph; toggling "Show skeleton" then replays that captured layout. For production code, either preload your data, render with a placeholder that hides under the real value, or use `mode="mirror"` (where the vnode walker emits per-tag placeholders without needing a measurement).
 
 ## API reference
 

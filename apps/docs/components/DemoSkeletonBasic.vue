@@ -1,21 +1,37 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+/**
+ * The demo starts with the profile **already populated** so the clone-mode
+ * snapshot is taken with real text in the DOM — a multi-line bio captures
+ * as multi-line bars, not a single empty rect. The "Show skeleton" button
+ * just flips `loading` and replays the already-captured snapshot.
+ * "Reload" briefly clears the data to demonstrate the fetch flow without
+ * re-capturing during the empty interval.
+ */
+import { ref } from 'vue';
 
-const profile = ref<{ name: string; role: string; bio: string; avatar: string } | null>(null);
-const loading = computed(() => profile.value === null);
-
-async function load() {
-  profile.value = null;
-  await new Promise((r) => setTimeout(r, 700));
-  profile.value = {
-    name: 'Maya Hartman',
-    role: 'Senior Platform Engineer',
-    bio: 'Builds developer tools and component libraries. Currently exploring runtime DOM introspection for self-generating skeleton loaders.',
-    avatar: 'https://i.pravatar.cc/96?img=47',
-  };
+interface Profile {
+  name: string;
+  role: string;
+  bio: string;
+  avatar: string;
 }
 
-load();
+const SEED: Profile = {
+  name: 'Maya Hartman',
+  role: 'Senior Platform Engineer',
+  bio: 'Builds developer tools and component libraries. Currently exploring runtime DOM introspection for self-generating skeleton loaders.',
+  avatar: 'https://i.pravatar.cc/96?img=47',
+};
+
+const profile = ref<Profile | null>(SEED);
+const loading = ref(false);
+
+async function load() {
+  loading.value = true;
+  await new Promise((r) => setTimeout(r, 700));
+  profile.value = SEED;
+  loading.value = false;
+}
 
 const source = `<template>
   <ASkeleton :loading="loading" cache-key="profile-card">
@@ -57,9 +73,9 @@ const source = `<template>
           </button>
           <button
             class="cursor-pointer rounded border border-border bg-surface-2 px-3 py-1.5 hover:bg-surface"
-            @click="profile = null"
+            @click="loading = !loading"
           >
-            Show skeleton
+            {{ loading ? 'Show real card' : 'Show skeleton' }}
           </button>
         </div>
 
