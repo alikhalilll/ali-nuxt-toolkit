@@ -26,4 +26,9 @@ packages/**/web-types.json
 WALKTHROUGH.md
 .idea
 social-media/*
+
+# Claude Code workspace files — not committed
 .claude
+.claude/
+CLAUDE.md
+**/CLAUDE.md
