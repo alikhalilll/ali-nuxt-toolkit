@@ -1,9 +1,14 @@
 export { default as BadgeAlertIcon } from './BadgeAlertIcon.vue';
 export { default as BadgeCheckIcon } from './BadgeCheckIcon.vue';
+export { default as ChatGPTIcon } from './ChatGPTIcon.vue';
 export { default as CheckIcon } from './CheckIcon.vue';
 export { default as ChevronDownIcon } from './ChevronDownIcon.vue';
+export { default as ClaudeIcon } from './ClaudeIcon.vue';
 export { default as CopyIcon } from './CopyIcon.vue';
+export { default as ExternalLinkIcon } from './ExternalLinkIcon.vue';
 export { default as FrownIcon } from './FrownIcon.vue';
+export { default as LinkIcon } from './LinkIcon.vue';
+export { default as MarkdownIcon } from './MarkdownIcon.vue';
 export { default as PartyPopperIcon } from './PartyPopperIcon.vue';
 export { default as PhoneIcon } from './PhoneIcon.vue';
 export { default as SearchIcon } from './SearchIcon.vue';

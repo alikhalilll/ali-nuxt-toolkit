@@ -111,29 +111,39 @@ const accentClass = computed(() => {
     <main :class="[accentClass, 'min-w-0']">
       <MobileTocBar />
 
-      <!-- Breadcrumb -->
-      <nav class="mb-4 flex items-center gap-1.5 text-[13px] text-text-dim" aria-label="Breadcrumb">
-        <NuxtLink to="/" class="transition-colors hover:text-text hover:no-underline"
-          >Docs</NuxtLink
+      <!-- Breadcrumb + page actions: nav on the left, the "Copy page ▾"
+           split-button on the right. The two share one flex row so the
+           actions stay aligned with the breadcrumb baseline as the breadcrumb
+           length changes. -->
+      <div class="mb-4 flex items-start justify-between gap-4">
+        <nav
+          class="flex min-w-0 flex-wrap items-center gap-1.5 text-[13px] text-text-dim"
+          aria-label="Breadcrumb"
         >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="12"
-          height="12"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          aria-hidden="true"
-          class="text-text-muted"
-        >
-          <polyline points="9 18 15 12 9 6" />
-        </svg>
-        <span v-if="accentClass" class="pkg-dot" aria-hidden="true" />
-        <span class="text-text">{{ pageTitle }}</span>
-      </nav>
+          <NuxtLink to="/" class="transition-colors hover:text-text hover:no-underline"
+            >Docs</NuxtLink
+          >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+            class="text-text-muted"
+          >
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+          <span v-if="accentClass" class="pkg-dot" aria-hidden="true" />
+          <span class="text-text">{{ pageTitle }}</span>
+        </nav>
+
+        <DocPageActions :page-path="path" />
+      </div>
 
       <!-- Meta row: npm + source -->
       <div v-if="packageName" class="doc-meta mb-6 flex flex-wrap items-center gap-2 text-xs">

@@ -3,6 +3,10 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "mirror-content": "node ./scripts/mirror-content.mjs",
+    "predev": "pnpm run mirror-content",
+    "prebuild": "pnpm run mirror-content",
+    "pregenerate": "pnpm run mirror-content",
     "dev": "nuxt dev",
     "build": "nuxt build",
     "generate": "nuxt generate",
