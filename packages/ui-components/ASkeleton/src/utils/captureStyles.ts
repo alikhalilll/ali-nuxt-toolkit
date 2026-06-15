@@ -354,9 +354,14 @@ function capture(
       if (childNode) children.push(childNode);
     }
     if (children.length === 0) {
-      /* All children filtered — degrade to block so the surface still renders. */
+      /* All children filtered (sub-`minSize`, hidden, etc.) — degrade to a
+       * single shimmer block at the parent's own rect. Even a "plain layout
+       * div" with no captured visual style occupies real space in the
+       * surrounding flow; leaving it as a container with no children would
+       * render an invisible positioned wrapper, swallowing the shape of e.g.
+       * `<UiSwitch>` whose inner thumb/track spans fall below `minSize`. */
       children = undefined;
-      kind = style && Object.keys(style).length > 0 ? 'block' : 'container';
+      kind = 'block';
     }
   } else if ((kind === 'container' && depth >= ctx.maxDepth) || (isAtomic && ctx.walkAtomic)) {
     kind = 'block';

@@ -176,6 +176,16 @@ export interface ASkeletonProps {
   minNodeSize?: number;
   /** Persist captured shapes to `localStorage` so first-visit skeletons survive reloads. Default false. */
   persist?: boolean;
+  /**
+   * Number of prototype copies to render while loading. Default 1.
+   *
+   * Pair with a grid / flex class on `<ASkeleton>` to fill the layout: e.g.
+   * `<ASkeleton :repeat="6" class="grid grid-cols-3 gap-4">` renders six
+   * skeleton cards laid out as a 2×3 grid. Keeps the loading state visually
+   * the same size as the eventual loaded state, so the page doesn't shift
+   * when data arrives.
+   */
+  repeat?: number;
   /** Animation variant applied to skeleton blocks. Default `'shimmer'`. */
   animation?: SkeletonAnimation;
   /** What to render when no cached shape is available yet. Default `'shimmer'`. */
@@ -187,6 +197,14 @@ export interface ASkeletonProps {
 export interface ASkeletonSlots {
   /** The real content. Rendered when `loading` is false; measured to build the skeleton. */
   default?: () => unknown;
+  /**
+   * Optional single-instance template used as the skeleton's shape source while
+   * `loading=true`. When the default slot iterates with `v-for`, the skeleton
+   * has no shape to copy if the source array is empty — providing a `#prototype`
+   * gives it one explicitly. Takes precedence over the default slot during
+   * capture; the default slot is rendered when `loading=false`.
+   */
+  prototype?: () => unknown;
   /** Custom UI to render on a cache miss. Defaults to a single shimmer block. */
   fallback?: () => unknown;
 }

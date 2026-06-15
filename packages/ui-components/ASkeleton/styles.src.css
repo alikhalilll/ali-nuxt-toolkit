@@ -266,8 +266,13 @@
  *   3. `contain: paint` — clips descendant painting (shadows, filters,
  *      transforms) that `overflow: clip` alone wouldn't catch.
  * ───────────────────────────────────────────────────────────────────────────── */
+/* Position context for the absolute-positioned replay / mirror overlays.
+ * `display` is deliberately NOT set: the consumer's `class` (`grid grid-cols-3`,
+ * `flex flex-wrap`, …) needs to drive layout so loading and loaded states
+ * share the same container shape. A `<div>` defaults to `display: block`, so
+ * omitting the rule preserves the default while leaving Tailwind utilities
+ * free to take over. */
 .a-skeleton {
-  display: block;
   position: relative;
 }
 

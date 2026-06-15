@@ -302,9 +302,40 @@ function walk(
     return;
   }
 
-  /* Component vnode — we can't introspect its template, so render an opaque
-   * shimmer block carrying any outer class / style the user attached. */
+  /* Component vnode — we can't introspect its internal template (it hasn't
+   * mounted), but we CAN walk whatever the consumer passed into its slots.
+   * `<UiButton>View Users</UiButton>` keeps the text bar; `<UiCard><h3>…</h3>
+   * <p>…</p></UiCard>` keeps the heading + paragraph. A truly leaf component
+   * with no slot content (e.g. `<UiSwitch />`) falls back to a single shimmer
+   * block carrying the outer class/style — same as before.
+   *
+   * Why the wrapper div instead of cloning the component's tag: components
+   * can't be rendered cheaply here (they'd run their full setup + lifecycle),
+   * and we don't want side effects from a skeleton pass. A neutral div with
+   * the component's outer class/style preserves Tailwind-driven sizing /
+   * spacing on the wrapper while keeping the walker pure. */
   if (typeof type === 'object' || typeof type === 'function') {
+    const slotChildren = resolveComponentChildren(v);
+    if (slotChildren && slotChildren.length > 0) {
+      const recursed: VNode[] = [];
+      walk(slotChildren, opts, depth + 1, max, state, recursed);
+      if (recursed.length > 0) {
+        push(
+          out,
+          h(
+            'div',
+            {
+              class: ['a-skel-component', v.props?.class, opts.animationClass],
+              style: v.props?.style as Record<string, string>,
+              'aria-hidden': 'true',
+            },
+            recursed
+          ),
+          state
+        );
+        return;
+      }
+    }
     push(
       out,
       h('div', {
@@ -315,6 +346,79 @@ function walk(
       state
     );
   }
+}
+
+/**
+ * Extract the walkable child VNodes a component received from the consumer.
+ * Covers the three shapes Vue uses:
+ *   - `v.children` is a VNode array  (direct children passed verbatim)
+ *   - `v.children` is a slot map     (`{ default: () => […], suffix: () => […], … }`)
+ *   - `v.children` is a string/number (text-only slot content)
+ *
+ * Returns null when the component has no walkable content (a true leaf
+ * component like `<UiSwitch />`).
+ */
+function resolveComponentChildren(v: VNode): VNodeArrayChildren | null {
+  const c = v.children;
+  if (c == null) return null;
+  if (Array.isArray(c)) return c.length > 0 ? (c as VNodeArrayChildren) : null;
+  if (typeof c === 'string' || typeof c === 'number') {
+    /* String/number children — wrap so the existing walker's text path catches them. */
+    return [c as unknown as VNodeChild];
+  }
+  if (typeof c === 'object') {
+    /* Slot map — collect every named slot's output. Default first so the bulk
+     * of the visible content renders before suffix/prefix bars. */
+    const slots = c as Record<string, unknown>;
+    const collected: VNodeArrayChildren = [];
+    const order = ['default', ...Object.keys(slots).filter((k) => k !== 'default')];
+    for (const key of order) {
+      const fn = slots[key];
+      if (typeof fn !== 'function') continue;
+      try {
+        const result = (fn as () => unknown)();
+        if (Array.isArray(result)) collected.push(...(result as VNodeArrayChildren));
+        else if (result != null) collected.push(result as VNodeChild);
+      } catch {
+        /* Slot threw — skip silently. The walker is best-effort; a broken slot
+         * shouldn't crash the whole skeleton. */
+      }
+    }
+    return collected.length > 0 ? collected : null;
+  }
+  return null;
+}
+
+/**
+ * Resolve the prototype VNode array used to drive skeleton capture.
+ *
+ * Precedence:
+ *   1. If a `#prototype` slot is provided, use it verbatim. The author has
+ *      taken control — no detection, no surprises.
+ *   2. Otherwise return the default slot verbatim.
+ *
+ * The walker does NOT try to auto-detect `v-for` and trim repeated siblings.
+ * Heuristics over slot vnodes (matching `type` + defined `key`) misfire on
+ * legitimate-but-similar markup, and the consumer is the only one who can
+ * say authoritatively which element is the prototype. When the default slot
+ * iterates over data, the recommended pattern is to provide an explicit
+ * `#prototype` — the README documents this exact pattern.
+ *
+ * Pure function: no DOM, no reactivity. Trivial to unit-test.
+ */
+export function resolvePrototypeVNodes(
+  defaultSlot: VNodeChild | VNodeArrayChildren | undefined | null,
+  prototypeSlot?: VNodeChild | VNodeArrayChildren | null
+): VNodeArrayChildren {
+  if (prototypeSlot != null) {
+    return Array.isArray(prototypeSlot)
+      ? (prototypeSlot as VNodeArrayChildren)
+      : [prototypeSlot as VNodeChild];
+  }
+  if (defaultSlot == null) return [];
+  return Array.isArray(defaultSlot)
+    ? (defaultSlot as VNodeArrayChildren)
+    : [defaultSlot as VNodeChild];
 }
 
 function push(out: VNode[], vn: VNode, state: WalkState): void {
