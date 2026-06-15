@@ -532,7 +532,6 @@ defineExpose({
               :suggested-label="messages.suggestedLabel"
               :all-countries-label="messages.allCountriesLabel"
               :country-label="messages.countryLabel"
-              @update:selected="onPickerPick"
               :select-country-label="messages.selectCountryLabel"
               :flag-url="props.flagUrl"
               :searcher="props.searcher"
@@ -541,6 +540,7 @@ defineExpose({
               :popover-class="props.popoverClass"
               :drawer-class="props.drawerClass"
               :scroll-lock="props.scrollLock"
+              @update:selected="onPickerPick"
             >
               <template v-if="$slots.trigger" #trigger="slotProps">
                 <slot name="trigger" v-bind="slotProps" />
