@@ -117,6 +117,98 @@ describe('<ASkeleton>', () => {
     expect(div.attributes('style')).toMatch(/height:\s*419px/);
   });
 
+  it('strips skeleton classes / attributes when loading=false and no class is provided', () => {
+    /* Bug fix: previously the `a-skeleton` + `a-skeleton__capture` divs
+     * persisted with full skeleton classes after loading completed. The
+     * component now collapses to a single `<div class="a-skeleton--unmounted">`
+     * wrapper styled `display: contents` — invisible to flex/grid layout, no
+     * skeleton classes, no skeleton attributes, no inner `__capture`. */
+    const wrapper = mount(ASkeleton, {
+      props: { loading: false },
+      slots: { default: () => h('article', { class: 'real' }, 'content') },
+    });
+    expect(wrapper.find('.a-skeleton').exists()).toBe(false);
+    expect(wrapper.find('.a-skeleton__capture').exists()).toBe(false);
+    expect(wrapper.find('.a-skeleton__mirror').exists()).toBe(false);
+    expect(wrapper.attributes('aria-busy')).toBeUndefined();
+    expect(wrapper.attributes('data-loading')).toBeUndefined();
+    expect(wrapper.attributes('role')).toBeUndefined();
+    /* The unmounted-state class signals display:contents — wrapper is
+     * transparent to the parent's layout. */
+    expect((wrapper.element as HTMLElement).classList.contains('a-skeleton--unmounted')).toBe(true);
+    expect(wrapper.find('article.real').exists()).toBe(true);
+  });
+
+  it('preserves the consumer class on a single wrapper when loading=false', () => {
+    /* The consumer's layout class (e.g. `grid grid-cols-3`) must persist
+     * across the loading → loaded transition so the layout doesn't shift.
+     * When loading=false and a class is provided, render one wrapper
+     * carrying just that class — no skeleton classes. */
+    const wrapper = mount(ASkeleton, {
+      props: { loading: false, class: 'grid grid-cols-3 gap-4' },
+      slots: { default: () => h('article', { class: 'real' }, 'content') },
+    });
+    const root = wrapper.element as HTMLElement;
+    expect(root.tagName.toLowerCase()).toBe('div');
+    expect(root.className).toBe('grid grid-cols-3 gap-4');
+    /* No skeleton classes leak in. */
+    expect(root.className).not.toContain('a-skeleton');
+    expect(wrapper.find('article.real').exists()).toBe(true);
+  });
+
+  it('applies the consumer class to the wrapper during loading too (no layout shift)', () => {
+    const wrapper = mount(ASkeleton, {
+      props: { loading: true, class: 'grid grid-cols-3 gap-4', mode: 'mirror' },
+      slots: { default: () => h('article', { class: 'card' }, 'x') },
+    });
+    const root = wrapper.element as HTMLElement;
+    expect(root.classList.contains('a-skeleton')).toBe(true);
+    expect(root.classList.contains('grid')).toBe(true);
+    expect(root.classList.contains('grid-cols-3')).toBe(true);
+  });
+
+  it('renders `repeat` copies of the prototype during loading (mirror mode)', () => {
+    /* `:repeat="3"` produces 3 structural skeletons as direct children of the
+     * wrapper, so a `grid grid-cols-3` layout fills the row 1:1. */
+    const wrapper = mount(ASkeleton, {
+      props: { loading: true, mode: 'mirror', repeat: 3 },
+      slots: { default: () => h('article', { class: 'card' }, 'x') },
+    });
+    /* The structural walker emits one <article> per copy. */
+    expect(wrapper.findAll('article.card')).toHaveLength(3);
+  });
+
+  it('uses the `#prototype` slot as the shape source, not the default slot', () => {
+    /* When the consumer's v-for is empty but they've provided a prototype,
+     * the skeleton uses the prototype's structure. */
+    const wrapper = mount(ASkeleton, {
+      props: { loading: true, mode: 'mirror' },
+      slots: {
+        default: () => [] /* v-for over an empty list */,
+        prototype: () => h('article', { class: 'shape' }, 'x'),
+      },
+    });
+    expect(wrapper.find('article.shape').exists()).toBe(true);
+  });
+
+  it('uses the default slot verbatim (no auto-trim) when no #prototype is given', () => {
+    /* The component does NOT auto-detect v-for and pick the first sibling.
+     * Heuristics misfire on similar-but-distinct markup. Consumers iterating
+     * with v-for should supply a #prototype slot explicitly; otherwise the
+     * default slot is used as the shape source verbatim. */
+    const wrapper = mount(ASkeleton, {
+      props: { loading: true, mode: 'mirror' },
+      slots: {
+        default: () => [
+          h('article', { key: 'a', class: 'card' }, 'A'),
+          h('article', { key: 'b', class: 'card' }, 'B'),
+          h('article', { key: 'c', class: 'card' }, 'C'),
+        ],
+      },
+    });
+    expect(wrapper.findAll('article.card')).toHaveLength(3);
+  });
+
   it('flips between loading and not-loading states reactively', async () => {
     const Host = defineComponent({
       props: { loading: { type: Boolean, default: true } },

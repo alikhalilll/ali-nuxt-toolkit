@@ -15,7 +15,10 @@
  */
 import { describe, expect, it } from 'vitest';
 import { Comment, Fragment, Text, type VNode, defineComponent, h } from 'vue';
-import { buildStructuralSkeleton } from '../src/utils/buildStructuralSkeleton';
+import {
+  buildStructuralSkeleton,
+  resolvePrototypeVNodes,
+} from '../src/utils/buildStructuralSkeleton';
 
 const ANIM = 'a-skel-block--anim-shimmer';
 const baseOpts = { animationClass: ANIM };
@@ -276,13 +279,74 @@ describe('buildStructuralSkeleton — surface-tag bg fallback', () => {
 });
 
 describe('buildStructuralSkeleton — component vnodes', () => {
-  it('renders a component vnode as an opaque shimmer block carrying its class', () => {
+  it('renders a LEAF component vnode (no children) as an opaque shimmer block', () => {
     const MyComp = defineComponent({ name: 'MyComp', template: '<div>x</div>' });
     const tree = h(MyComp, { class: 'w-32 h-32' });
     const out = buildStructuralSkeleton([tree], baseOpts);
     expect(out[0].type).toBe('div');
     expect(classList(out[0])).toContain('a-skel-block');
     expect(classList(out[0])).toContain('w-32');
+  });
+
+  it('recurses into a component vnode that received array children verbatim', () => {
+    /* `<UiButton>{{ t('view_users') }}</UiButton>` → the text content survives
+     * as a `.a-skel-text-content` span inside an `.a-skel-component` wrapper
+     * carrying the component's outer class. Without this fix, the entire
+     * button collapsed to a single rectangle and the text never rendered. */
+    const UiButton = defineComponent({ name: 'UiButton', template: '<button><slot/></button>' });
+    const tree = h(UiButton, { class: 'btn-outline px-4' }, ['View users']);
+    const out = buildStructuralSkeleton([tree], baseOpts);
+    expect(out[0].type).toBe('div');
+    expect(classList(out[0])).toContain('a-skel-component');
+    expect(classList(out[0])).toContain('btn-outline');
+    const children = out[0].children as VNode[];
+    expect(children).toHaveLength(1);
+    expect(children[0].type).toBe('span');
+    expect(classList(children[0])).toContain('a-skel-text-content');
+    expect(children[0].children).toBe('View users');
+  });
+
+  it('recurses into a component vnode that received a default-slot function', () => {
+    /* Vue compiles `<UiCard><h3>Title</h3><p>Body</p></UiCard>` to a slot map
+     * (`{ default: () => […] }`), not an array. The walker must call the slot
+     * function to reach the children. */
+    const UiCard = defineComponent({ name: 'UiCard', template: '<div><slot/></div>' });
+    const tree = h(
+      UiCard,
+      { class: 'card' },
+      {
+        default: () => [h('h3', null, 'Title'), h('p', null, 'Body')],
+      }
+    );
+    const out = buildStructuralSkeleton([tree], baseOpts);
+    expect(out[0].type).toBe('div');
+    expect(classList(out[0])).toContain('a-skel-component');
+    const children = out[0].children as VNode[];
+    expect(children).toHaveLength(2);
+    expect(children[0].type).toBe('h3');
+    expect(children[1].type).toBe('p');
+  });
+
+  it('aggregates named slots in render order (default first, then the rest)', () => {
+    const UiButton = defineComponent({
+      name: 'UiButton',
+      template: '<button><slot name="prefix"/><slot/><slot name="suffix"/></button>',
+    });
+    const tree = h(
+      UiButton,
+      { class: 'btn' },
+      {
+        default: () => ['Edit role'],
+        suffix: () => [h('span', { class: 'icon' })],
+      }
+    );
+    const out = buildStructuralSkeleton([tree], baseOpts);
+    const children = out[0].children as VNode[];
+    /* default goes first (text-content span), suffix follows (empty span
+     * preserved as container — no a-skel-block since `span` is a text-owner
+     * and an empty text-owner gets a placeholder bar). */
+    expect(children.length).toBeGreaterThanOrEqual(2);
+    expect(classList(children[0])).toContain('a-skel-text-content');
   });
 });
 
@@ -481,5 +545,57 @@ describe('buildStructuralSkeleton — null / boolean / empty inputs', () => {
 
   it('returns an empty array for an empty array', () => {
     expect(buildStructuralSkeleton([], baseOpts)).toEqual([]);
+  });
+});
+
+describe('resolvePrototypeVNodes — explicit `#prototype` precedence, no auto-detect', () => {
+  it('returns the prototype slot verbatim when provided, ignoring the default slot', () => {
+    const proto = [h('article', { class: 'proto' }, 'P')];
+    const def = [h('article', { key: 1 }, 'A'), h('article', { key: 2 }, 'B')];
+    const out = resolvePrototypeVNodes(def, proto);
+    expect(out).toHaveLength(1);
+    expect((out[0] as VNode).props?.class).toBe('proto');
+  });
+
+  it('returns the default slot verbatim (no v-for auto-trim) when no #prototype', () => {
+    /* Auto-detection was removed: heuristics over keyed siblings misfire on
+     * legitimate-but-similar markup, and the consumer is the only one who
+     * can say authoritatively which element is the prototype. Pass each
+     * sibling through unchanged — the consumer should provide #prototype
+     * explicitly when iterating with v-for. */
+    const siblings = [
+      h('article', { key: 'a' }, 'A'),
+      h('article', { key: 'b' }, 'B'),
+      h('article', { key: 'c' }, 'C'),
+    ];
+    const out = resolvePrototypeVNodes(siblings);
+    expect(out).toHaveLength(3);
+    expect((out[0] as VNode).key).toBe('a');
+    expect((out[2] as VNode).key).toBe('c');
+  });
+
+  it('leaves non-repeating siblings alone', () => {
+    const siblings = [h('h2', null, 'Heading'), h('p', null, 'Paragraph')];
+    const out = resolvePrototypeVNodes(siblings);
+    expect(out).toHaveLength(2);
+  });
+
+  it('handles an empty default slot (v-for over [])', () => {
+    expect(resolvePrototypeVNodes([])).toEqual([]);
+    expect(resolvePrototypeVNodes(null)).toEqual([]);
+    expect(resolvePrototypeVNodes(undefined)).toEqual([]);
+  });
+
+  it('returns the prototype even when the default slot is empty', () => {
+    const proto = [h('article', null, 'placeholder')];
+    expect(resolvePrototypeVNodes([], proto)).toEqual(proto);
+  });
+
+  it('wraps a single vnode prototype or default into an array', () => {
+    const proto = h('article', null, 'one');
+    expect(resolvePrototypeVNodes(undefined, proto)).toHaveLength(1);
+
+    const def = h('section', null, 'x');
+    expect(resolvePrototypeVNodes(def)).toHaveLength(1);
   });
 });
