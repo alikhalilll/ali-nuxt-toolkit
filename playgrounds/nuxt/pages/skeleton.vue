@@ -71,6 +71,49 @@ const articleStructure = computed(() =>
 loadProfile();
 loadArticles();
 
+/* ---------- v-for + grid + prototype + repeat demo ----------
+ * Reproduces the user-reported failing case: a responsive grid of cards each
+ * containing a switch, a counter, a heading, and two buttons. The skeleton
+ * uses a `#prototype` slot for the shape source so the grid populates even
+ * when `roles=[]` during the initial load, and `:repeat="6"` fills the grid
+ * cells 1:1 with the eventual loaded state. */
+interface RoleCard {
+  id: number;
+  name: string;
+  users_count: number;
+  is_active: boolean;
+}
+
+const roles = ref<RoleCard[]>([]);
+const rolesLoading = ref(true);
+const rolesRepeat = ref(6);
+
+async function loadRoles() {
+  rolesLoading.value = true;
+  roles.value = [];
+  await new Promise((r) => setTimeout(r, 900));
+  roles.value = [
+    { id: 1, name: 'Test role', users_count: 12, is_active: true },
+    { id: 2, name: 'Operations manager', users_count: 4, is_active: true },
+    { id: 3, name: 'Content editor', users_count: 8, is_active: false },
+    { id: 4, name: 'Finance auditor', users_count: 2, is_active: true },
+    { id: 5, name: 'Read-only analyst', users_count: 17, is_active: true },
+    { id: 6, name: 'Onboarding helper', users_count: 1, is_active: false },
+  ];
+  rolesLoading.value = false;
+}
+
+function toggleRoles() {
+  if (rolesLoading.value) {
+    loadRoles();
+  } else {
+    rolesLoading.value = true;
+    roles.value = [];
+  }
+}
+
+loadRoles();
+
 /* ---------- Public-API demo 1: hand-crafted skeleton with <ASkeletonBlock> ---------- */
 const handCraftedLoading = ref(true);
 function toggleHandCrafted() {
@@ -418,6 +461,95 @@ const stats: Stat[] = [
           </button>
         </div>
       </div>
+    </div>
+
+    <!-- ============================================================
+         v-for + grid + #prototype + :repeat
+         The failing case from the bug report, now solved end-to-end.
+         ============================================================ -->
+    <h2 class="mt-12 mb-2 text-xl font-semibold tracking-tight">
+      Lists & grids · <code>v-for</code> with <code>#prototype</code> and <code>:repeat</code>
+    </h2>
+    <p class="mb-4 text-sm text-text-dim">
+      A responsive grid of cards, each with a switch, a counter, a heading, and two buttons. The
+      <code>class</code> with grid utilities lives on <code>&lt;ASkeleton&gt;</code> itself, so the
+      grid container is the same DOM element in both states — no layout shift when data arrives. The
+      <code>#prototype</code> slot supplies the shape source while <code>roles=[]</code>;
+      <code>:repeat="6"</code> fills six skeleton cards 1:1 against the eventual loaded set.
+    </p>
+
+    <div class="mb-12 rounded-xl border border-brand-border bg-surface p-5">
+      <div class="mb-4 flex flex-wrap items-center gap-2 text-xs">
+        <button
+          class="cursor-pointer rounded border border-brand-border bg-surface-2 px-3 py-1.5 text-sm text-text-dim hover:bg-surface"
+          @click="toggleRoles"
+        >
+          {{ rolesLoading ? 'Resolve' : 'Reset to loading' }}
+        </button>
+        <label class="ml-3 flex items-center gap-2 text-text-dim">
+          <span>repeat:</span>
+          <input
+            v-model.number="rolesRepeat"
+            type="range"
+            min="1"
+            max="12"
+            step="1"
+            class="cursor-pointer"
+          />
+          <span class="w-6 text-right tabular-nums">{{ rolesRepeat }}</span>
+        </label>
+        <span class="ml-3 text-text-dim">
+          loading = <code>{{ rolesLoading }}</code> · roles.length =
+          <code>{{ roles.length }}</code>
+        </span>
+      </div>
+
+      <ASkeleton
+        :loading="rolesLoading"
+        :repeat="rolesRepeat"
+        :max-nodes="10000"
+        class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
+      >
+        <!-- Prototype: one card. Used as the skeleton shape source while loading,
+             regardless of whether `roles` is populated. Never rendered when
+             loading=false. -->
+        <template #prototype>
+          <article
+            class="flex flex-col gap-3 rounded-lg bg-white p-5 ring-1 ring-gray-200 text-gray-900"
+          >
+            <div class="flex items-center justify-between">
+              <p class="text-sm text-gray-500">0 users</p>
+              <div class="h-5 w-9 rounded-full bg-gray-200" role="presentation" />
+            </div>
+            <h3 class="text-lg font-bold">Role placeholder</h3>
+            <div class="flex items-center justify-end gap-2 pt-2">
+              <button class="rounded border border-gray-300 px-3 py-1.5 text-sm">View users</button>
+              <button class="rounded px-3 py-1.5 text-sm text-gray-600">Edit</button>
+            </div>
+          </article>
+        </template>
+
+        <!-- Real content. v-for over the loaded data. -->
+        <article
+          v-for="role in roles"
+          :key="role.id"
+          class="flex flex-col gap-3 rounded-lg bg-white p-5 ring-1 ring-gray-200 text-gray-900"
+        >
+          <div class="flex items-center justify-between">
+            <p class="text-sm text-gray-500">{{ role.users_count }} users</p>
+            <span
+              class="inline-block h-5 w-9 rounded-full"
+              :class="role.is_active ? 'bg-emerald-500' : 'bg-gray-200'"
+              :aria-label="role.is_active ? 'Active' : 'Inactive'"
+            />
+          </div>
+          <h3 class="text-lg font-bold">{{ role.name }}</h3>
+          <div class="flex items-center justify-end gap-2 pt-2">
+            <button class="rounded border border-gray-300 px-3 py-1.5 text-sm">View users</button>
+            <button class="rounded px-3 py-1.5 text-sm text-gray-600">Edit</button>
+          </div>
+        </article>
+      </ASkeleton>
     </div>
 
     <!-- ============================================================
