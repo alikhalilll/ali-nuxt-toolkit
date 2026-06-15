@@ -84,6 +84,7 @@ export default { plugins: [Components({ resolvers: [ASkeletonResolver()] })] };
 
 - [Setup](#setup)
 - [Quick start](#quick-start)
+- [Lists & grids — `v-for`, `#prototype`, `repeat`](#lists--grids--v-for-prototype-repeat)
 - [Three rendering strategies](#three-rendering-strategies)
   - [Clone (default)](#clone-default)
   - [Mirror](#mirror)
@@ -148,6 +149,65 @@ load();
 ```
 
 That's the whole API for most cases. Every layer underneath is also a public export — see the recipes below.
+
+---
+
+## Lists & grids — `v-for`, `#prototype`, `repeat`
+
+The most common loading state is a list of cards. Two details make it work cleanly:
+
+1. **Always supply a `#prototype` when the default slot iterates.** The component does **not** auto-detect `v-for` and pick the first sibling — heuristics over keyed siblings misfire on legitimate-but-similar markup, and you're the only one who can say authoritatively which element is the prototype. The `#prototype` slot is the explicit single-instance template; it takes precedence over the default slot during loading and is never rendered when `loading=false`. Without `#prototype`, the default slot is used as the shape source verbatim — so an empty `v-for` during the initial load produces a blank skeleton.
+2. **`:repeat="N"` × the prototype fills the layout.** The wrapper carries your layout class (`grid grid-cols-3 gap-4`, `flex flex-wrap`, …), and the prototype copies become direct children. Set `:repeat` to the expected item count so the loading state occupies the same visual area as the loaded state — no shift when data arrives.
+
+The exact failing case from issue reports — a responsive grid of cards with a switch, a counter, a heading, and two buttons:
+
+```vue
+<ASkeleton
+  :loading="loading"
+  :repeat="6"
+  class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+>
+  <template #prototype>
+    <article class="p-5 rounded-lg bg-white flex flex-col gap-3 ring-1 ring-gray-200">
+      <div class="flex items-center justify-between">
+        <p class="text-sm text-gray-500">{{ t('users_count', { n: 0 }) }}</p>
+        <UiSwitch :model-value="false" />
+      </div>
+      <h3 class="text-lg text-gray-900 font-bold">{{ t('placeholder') }}</h3>
+      <div class="pt-2 flex gap-2 items-center justify-end">
+        <UiButton type="button" variant="outline">{{ t('view') }}</UiButton>
+        <UiButton type="button" variant="ghost">{{ t('edit') }}</UiButton>
+      </div>
+    </article>
+  </template>
+
+  <article
+    v-for="role in roles"
+    :key="role?.id"
+    class="p-5 rounded-lg bg-white flex flex-col gap-3 ring-1 ring-gray-200"
+  >
+    <!-- …real card content… -->
+  </article>
+</ASkeleton>
+```
+
+What you get:
+
+- **Grid container shared across states.** The `grid grid-cols-…` lives on `<ASkeleton>` itself, so the grid is the same DOM element loading or loaded. The breakpoints kick in identically in both.
+- **Six skeleton cards** during loading, each shaped like one real card. When data lands, the same grid populates with the `v-for` items — no layout shift.
+- **Components walked correctly.** `<UiSwitch>`, `<UiButton>`, `<Icon>` are recursed into via their slot children — button text shimmers inside a button shape; the switch becomes a switch-shaped block; the icon becomes an icon-sized block. Components whose rendered children all fall below `minNodeSize` fall back to a single shimmer block at the component's own rect (so they never disappear).
+- **No skeleton classes leak when not loading.** With `loading=false` the wrapper carries only the grid class — no `a-skeleton`, no `__capture`, no `aria-busy`.
+- **`display: contents` opt-out.** If you don't pass a `class`, the wrapper is `display: contents` when not loading — invisible to `parent > child` selectors, so flex/grid parents still target your real items as direct children.
+
+The shorter spelling — when the default slot has a single, static, representative element (no `v-for`) — drops the `#prototype` and uses the default slot as the shape directly:
+
+```vue
+<ASkeleton :loading="loading" :repeat="3" class="grid grid-cols-3 gap-4">
+  <article class="…">…one static card…</article>
+</ASkeleton>
+```
+
+Anything iterated (`v-for`, async-loaded lists, conditional groups) should go through `#prototype` so the shape stays predictable.
 
 ---
 
@@ -281,25 +341,27 @@ The pattern to **avoid** is swapping whole branches (`<img v-if><div v-else>`). 
 
 ### `<ASkeleton>` props
 
-| Prop          | Type                             | Default            | Description                                                                                                                                                                                                                                      |
-| ------------- | -------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `loading`     | `boolean`                        | —                  | When `true`, show the skeleton.                                                                                                                                                                                                                  |
-| `mode`        | `'clone' \| 'mirror'`            | `'clone'`          | Rendering strategy. `clone` snapshots `getComputedStyle()`; `mirror` walks the vnode tree (SSR-safe).                                                                                                                                            |
-| `cacheKey`    | `string`                         | auto, per-instance | Auto-generated as `<slot-fingerprint>:<useId()>` so each instance has its own slot. Pass explicitly to share a captured shape across instances (e.g. a list of identical cards) or to differentiate prop-variant shapes from the same component. |
-| `maxDepth`    | `number`                         | `16`               | Max recursion depth when capturing.                                                                                                                                                                                                              |
-| `maxNodes`    | `number`                         | `600`              | Hard cap on captured / structural nodes. Walks bail beyond this with `truncated: true` and a one-time `console.warn` per `cacheKey`.                                                                                                             |
-| `minNodeSize` | `number`                         | `4`                | Skip elements smaller than this many CSS pixels (either axis). Drops hairlines / spacer dots.                                                                                                                                                    |
-| `persist`     | `boolean`                        | `false`            | Mirror captured shape to `localStorage`. Schema-versioned; entries from older releases auto-purge on read.                                                                                                                                       |
-| `animation`   | `'shimmer' \| 'pulse' \| 'none'` | `'shimmer'`        | Animation variant. `prefers-reduced-motion` disables animation automatically.                                                                                                                                                                    |
-| `fallback`    | `'shimmer' \| 'block'`           | `'shimmer'`        | Default cache-miss UI when no `#fallback` slot is provided (mirror mode only).                                                                                                                                                                   |
-| `class`       | `HTMLAttributes['class']`        | —                  | Class on the outer wrapper.                                                                                                                                                                                                                      |
+| Prop          | Type                             | Default            | Description                                                                                                                                                                                                                                                         |
+| ------------- | -------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `loading`     | `boolean`                        | —                  | When `true`, show the skeleton.                                                                                                                                                                                                                                     |
+| `mode`        | `'clone' \| 'mirror'`            | `'clone'`          | Rendering strategy. `clone` snapshots `getComputedStyle()`; `mirror` walks the vnode tree (SSR-safe).                                                                                                                                                               |
+| `cacheKey`    | `string`                         | auto, per-instance | Auto-generated as `<slot-fingerprint>:<useId()>` so each instance has its own slot. Pass explicitly to share a captured shape across instances (e.g. a list of identical cards) or to differentiate prop-variant shapes from the same component.                    |
+| `maxDepth`    | `number`                         | `16`               | Max recursion depth when capturing.                                                                                                                                                                                                                                 |
+| `maxNodes`    | `number`                         | `600`              | Hard cap on captured / structural nodes. Walks bail beyond this with `truncated: true` and a one-time `console.warn` per `cacheKey`.                                                                                                                                |
+| `minNodeSize` | `number`                         | `4`                | Skip elements smaller than this many CSS pixels (either axis). Drops hairlines / spacer dots.                                                                                                                                                                       |
+| `persist`     | `boolean`                        | `false`            | Mirror captured shape to `localStorage`. Schema-versioned; entries from older releases auto-purge on read.                                                                                                                                                          |
+| `animation`   | `'shimmer' \| 'pulse' \| 'none'` | `'shimmer'`        | Animation variant. `prefers-reduced-motion` disables animation automatically.                                                                                                                                                                                       |
+| `fallback`    | `'shimmer' \| 'block'`           | `'shimmer'`        | Default cache-miss UI when no `#fallback` slot is provided (mirror mode only).                                                                                                                                                                                      |
+| `repeat`      | `number`                         | `1`                | Number of prototype copies to render while loading. Pair with a `grid` / `flex` class on `<ASkeleton>` to fill a layout 1:1 with the eventual loaded content — no shift when data arrives.                                                                          |
+| `class`       | `HTMLAttributes['class']`        | —                  | Class on the wrapper. Persists across `loading=true` ↔ `false` so layout classes (`grid grid-cols-3 gap-4`, …) keep working in both states. When omitted and `loading=false`, the wrapper falls back to `display: contents` and is invisible to surrounding layout. |
 
 ### Slots
 
-| Slot       | Description                                                                                    |
-| ---------- | ---------------------------------------------------------------------------------------------- |
-| `default`  | The real content. Rendered when `loading` is false; measured / mirrored to build the skeleton. |
-| `fallback` | Custom UI for cache misses (mirror mode). Defaults to a single full-width shimmer block.       |
+| Slot        | Description                                                                                                                                                                            |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `default`   | The real content. Rendered when `loading` is false; the slot's first iteration is also used as the skeleton's shape source when no `#prototype` is provided.                           |
+| `prototype` | Optional single-instance template used as the shape source while loading. Takes precedence over the default slot. Pair with `:repeat="N"` when the default slot iterates with `v-for`. |
+| `fallback`  | Custom UI for cache misses (mirror mode). Defaults to a single full-width shimmer block.                                                                                               |
 
 ### DOM escape hatches
 
