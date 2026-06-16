@@ -263,16 +263,16 @@ const source = `<template>
             :loading="loading"
             :repeat="repeat"
             :max-nodes="10000"
-            class="grid grid-cols-1 gap-2 md:grid-cols-2 p-1"
+            class="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3"
           >
             <!-- Prototype: neutral-toned shape. The structural walker preserves
                  every tag + class, so the skeleton inherits the prototype's
-                 geometry exactly. Neutral zinc colours keep no accent leaking
-                 into the loading state. -->
+                 geometry exactly. Neutral zinc surface reads as a "loading"
+                 state in both light (zinc-200, soft gray) and dark (zinc-800,
+                 a hair lighter than the page surface so the card edge is
+                 visible against bg-surface-2). -->
             <template #prototype>
-              <article
-                class="flex flex-col gap-4 rounded-3xl ring ring-gray-400 p-6 light:bg-gray-400 dark:bg-white"
-              >
+              <article class="flex flex-col gap-4 rounded-3xl bg-zinc-200 p-6 dark:bg-zinc-800">
                 <span
                   class="text-[10px] font-semibold uppercase tracking-[0.15em] text-zinc-500 dark:text-zinc-400"
                 >
