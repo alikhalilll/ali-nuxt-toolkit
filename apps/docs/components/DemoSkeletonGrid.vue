@@ -224,7 +224,11 @@ const source = `<template>
 </script>
 
 <template>
-  <div class="my-4 rounded-lg border border-border bg-surface p-5">
+  <!-- `not-prose` opts out of the docs' `.prose h3` typography overrides so
+       the card titles render in their own utility colours (e.g. text-zinc-50
+       on the dark accent's black surface) instead of the prose text colour
+       — which on the dark card was producing dark text on a black bg. -->
+  <div class="not-prose my-4 rounded-lg border border-border bg-surface p-5">
     <h4 class="mb-3 text-[11px] font-bold uppercase tracking-widest text-text-dim">
       Live · v-for + #prototype + :repeat
     </h4>

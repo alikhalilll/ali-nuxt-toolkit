@@ -377,6 +377,31 @@ a {
 .prose {
   max-width: 760px;
 }
+
+/*
+ * `.not-prose` opt-out — Tailwind Typography convention.
+ *
+ * Embedded Vue demos sit INSIDE the `.prose` markdown wrapper, so any
+ * `<h3>` / `<h2>` / `<p>` inside a demo inherits the prose typography
+ * (and its dark `color: var(--color-text)` for headings). On the demo's
+ * dark-accent card that meant the h3 rendered in the page's foreground
+ * colour against a black surface — invisible in light mode.
+ *
+ * Adding `not-prose` to a demo's root element neutralises the prose
+ * rules for that subtree. Specificity here is `(0,2,0)` (two classes
+ * via `:is()`), which beats `.prose h3` at `(0,1,1)` so the resets win.
+ * Tailwind utility classes (`text-zinc-50`, `text-2xl`, …) keep working
+ * on top of these resets, so the demo's own typography drives the look.
+ */
+.prose :is(.not-prose, .not-prose *) {
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
+  margin: 0;
+  scroll-margin-top: 0;
+}
 .prose h1 {
   font-size: 1.875rem;
   letter-spacing: -0.025em;
