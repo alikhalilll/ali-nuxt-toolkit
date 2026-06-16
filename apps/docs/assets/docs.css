@@ -32,6 +32,15 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
+ * Companion `light:` variant — symmetric to the override above. Tailwind v4
+ * doesn't ship `light:` out of the box; defining it explicitly here lets
+ * authors target the docs' light theme with `light:bg-foo` exactly the same
+ * way they'd target dark with `dark:bg-foo`. Matches when an ancestor (or
+ * self) carries the `.light` class that Nuxt color-mode sets on <html>.
+ */
+@custom-variant light (&:where(.light, .light *));
+
+/*
  * Belt-and-braces against any future cascade fragility (the lib's `.hidden` getting
  * double-bundled into the head, or Vite's dev-mode style injection reordering rules
  * at HMR time): force the docs-site responsive display utilities to win at every
