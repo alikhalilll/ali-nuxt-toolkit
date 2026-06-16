@@ -273,17 +273,17 @@ const source = `<template>
                  themes. -->
             <template #prototype>
               <article
-                class="flex flex-col gap-4 rounded-3xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900"
+                class="flex flex-col gap-4 rounded-3xl border light:border-zinc-200 light:bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900"
               >
                 <span
                   class="text-[10px] font-semibold uppercase tracking-[0.15em] text-zinc-500 dark:text-zinc-400"
                 >
                   Category
                 </span>
-                <h3 class="text-2xl font-bold leading-tight text-zinc-900 dark:text-zinc-50">
+                <h3 class="text-2xl font-bold leading-tight light:text-zinc-900 dark:text-zinc-50">
                   Role name placeholder
                 </h3>
-                <p class="text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">
+                <p class="text-sm leading-relaxed light:text-zinc-600 dark:text-zinc-300">
                   Description placeholder line that wraps to two lines so the skeleton captures both
                   rows.
                 </p>
@@ -293,9 +293,9 @@ const source = `<template>
                     <p class="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
                       members
                     </p>
-                    <p class="text-3xl font-bold text-zinc-900 dark:text-zinc-50">00</p>
+                    <p class="text-3xl font-bold light:text-zinc-900 dark:text-zinc-50">00</p>
                   </div>
-                  <div class="size-12 rounded-2xl bg-zinc-900 dark:bg-zinc-50" />
+                  <div class="size-12 rounded-2xl light:bg-zinc-900 dark:bg-zinc-50" />
                 </div>
               </article>
             </template>
