@@ -79,85 +79,82 @@ const allRoles: RoleCard[] = [
   },
 ];
 
-/* Five pastel accents + one dark accent — matches the reference "Featured
- * Plans" tile rhythm (saturated pastel surfaces, one near-black tile for
- * contrast). Each card is a SELF-CONTAINED surface: a fixed background and
- * a near-black button regardless of page theme. The page can switch between
- * light and dark — the cards look identical in both modes.
+/* Five pastel accents + one always-dark accent. Every card carries an
+ * explicit background AND text colour for BOTH light and dark mode, plus a
+ * hairline border that matches the surface in each theme.
  *
- * WCAG contrast (sRGB luminance, rounded):
- *   - title `text-{accent}-950` on `bg-{accent}-300`   → 9–11:1 (AAA, any size)
- *   - body  `text-{accent}-950/80` on `bg-{accent}-300` → 6–8:1 (AA / AAA large)
- *   - label `text-{accent}-900` on `bg-{accent}-300`   → 5–7:1 (AA normal)
- *   - button `bg-zinc-900` on pastel bg                → strong figure/ground
- *   - icon  `text-zinc-50` on `bg-zinc-900`            → 18:1 (AAA)
+ * Light mode: saturated mid-tone pastel (`{accent}-300`) with deep
+ *   accent-coloured text (`{accent}-950`) and a near-black button.
+ * Dark mode:  deep accent surface (`{accent}-900`) with light accent text
+ *   (`{accent}-50`) and a white button. The accent identity is preserved in
+ *   both modes — the same colour, just dialled up or down for the theme.
  *
- * The `dark` accent stays `bg-zinc-950` in both modes. In light mode the
- * page surface is light (zinc-200-ish) so the deep black tile stands out
- * naturally. In dark mode the page surface drops to ~zinc-800 — to keep
- * the card edge visible we add a 1px inset `zinc-50/10` ring in dark mode
- * only. The dark card's button flips to white (`bg-zinc-50`) with a dark
- * icon so it stays contrasty inside its own surface. */
+ * WCAG sRGB contrast (rounded), light → dark:
+ *   - title `{accent}-950` on `{accent}-300`  →  9-11:1   (AAA)
+ *   - title `{accent}-50`  on `{accent}-900`  → 11-13:1   (AAA)
+ *   - body  `{accent}-950/80` / `{accent}-100` on their surfaces → 6-9:1
+ *   - label `{accent}-900` / `{accent}-200`  on their surfaces → 5-8:1
+ *   - button: pure black/white pair on the accent surface → strong contrast
+ *
+ * The `dark` accent is the rhythm-breaker. Surface stays `bg-zinc-950` in
+ * both modes (that's its identity). The border switches from `zinc-300` in
+ * light (so the card edge picks up the same hairline as the pastels) to
+ * `zinc-700` in dark (lifted just enough to read against `bg-surface-2`).
+ * Text and button are always light because the surface is always black. */
 const ACCENTS: Record<RoleCard['accent'], AccentTheme> = {
   emerald: {
-    card: 'bg-emerald-300',
-    label: 'text-emerald-900',
-    title: 'text-emerald-950',
-    body: 'text-emerald-950/80',
-    divider: 'bg-emerald-950/15',
-    button: 'bg-zinc-900',
-    buttonIcon: 'text-zinc-50',
+    card: 'border border-emerald-400 bg-emerald-300 dark:border-emerald-700 dark:bg-emerald-900',
+    label: 'text-emerald-900 dark:text-emerald-200',
+    title: 'text-emerald-950 dark:text-emerald-50',
+    body: 'text-emerald-950/80 dark:text-emerald-100',
+    divider: 'bg-emerald-950/15 dark:bg-emerald-50/15',
+    button: 'bg-zinc-900 dark:bg-zinc-50',
+    buttonIcon: 'text-zinc-50 dark:text-zinc-950',
   },
   violet: {
-    card: 'bg-violet-300',
-    label: 'text-violet-900',
-    title: 'text-violet-950',
-    body: 'text-violet-950/80',
-    divider: 'bg-violet-950/15',
-    button: 'bg-zinc-900',
-    buttonIcon: 'text-zinc-50',
+    card: 'border border-violet-400 bg-violet-300 dark:border-violet-700 dark:bg-violet-900',
+    label: 'text-violet-900 dark:text-violet-200',
+    title: 'text-violet-950 dark:text-violet-50',
+    body: 'text-violet-950/80 dark:text-violet-100',
+    divider: 'bg-violet-950/15 dark:bg-violet-50/15',
+    button: 'bg-zinc-900 dark:bg-zinc-50',
+    buttonIcon: 'text-zinc-50 dark:text-zinc-950',
   },
   amber: {
-    card: 'bg-amber-300',
-    label: 'text-amber-900',
-    title: 'text-amber-950',
-    body: 'text-amber-950/80',
-    divider: 'bg-amber-950/15',
-    button: 'bg-zinc-900',
-    buttonIcon: 'text-zinc-50',
+    card: 'border border-amber-400 bg-amber-300 dark:border-amber-700 dark:bg-amber-900',
+    label: 'text-amber-900 dark:text-amber-200',
+    title: 'text-amber-950 dark:text-amber-50',
+    body: 'text-amber-950/80 dark:text-amber-100',
+    divider: 'bg-amber-950/15 dark:bg-amber-50/15',
+    button: 'bg-zinc-900 dark:bg-zinc-50',
+    buttonIcon: 'text-zinc-50 dark:text-zinc-950',
   },
   rose: {
-    card: 'bg-rose-300',
-    label: 'text-rose-900',
-    title: 'text-rose-950',
-    body: 'text-rose-950/80',
-    divider: 'bg-rose-950/15',
-    button: 'bg-zinc-900',
-    buttonIcon: 'text-zinc-50',
+    card: 'border border-rose-400 bg-rose-300 dark:border-rose-700 dark:bg-rose-900',
+    label: 'text-rose-900 dark:text-rose-200',
+    title: 'text-rose-950 dark:text-rose-50',
+    body: 'text-rose-950/80 dark:text-rose-100',
+    divider: 'bg-rose-950/15 dark:bg-rose-50/15',
+    button: 'bg-zinc-900 dark:bg-zinc-50',
+    buttonIcon: 'text-zinc-50 dark:text-zinc-950',
   },
   sky: {
-    card: 'bg-sky-300',
-    label: 'text-sky-900',
-    title: 'text-sky-950',
-    body: 'text-sky-950/80',
-    divider: 'bg-sky-950/15',
-    button: 'bg-zinc-900',
-    buttonIcon: 'text-zinc-50',
+    card: 'border border-sky-400 bg-sky-300 dark:border-sky-700 dark:bg-sky-900',
+    label: 'text-sky-900 dark:text-sky-200',
+    title: 'text-sky-950 dark:text-sky-50',
+    body: 'text-sky-950/80 dark:text-sky-100',
+    divider: 'bg-sky-950/15 dark:bg-sky-50/15',
+    button: 'bg-zinc-900 dark:bg-zinc-50',
+    buttonIcon: 'text-zinc-50 dark:text-zinc-950',
   },
   dark: {
-    /* `bg-zinc-950` in BOTH modes — the dark card is its own surface, not a
-     * theme-dependent tile. Because the surface is always dark, the text
-     * colours must also be unconditionally light: no `dark:` / `light:`
-     * variants, just solid zinc-50 / zinc-300 that work in every theme.
-     *
-     * The previous `light:text-[#fff]` attempt only fired the colour in
-     * light mode, so dark-mode visitors got default (dark) inherited text
-     * on a black surface — invisible. Solid colours fix both.
-     *
-     * A 1px inset ring is added in dark mode only because the docs page
-     * surface drops to ~zinc-800 in dark theme; the ring keeps the card
-     * edge visible against the similarly-dark background. */
-    card: 'bg-zinc-950 dark:ring-1 dark:ring-inset dark:ring-zinc-50/10',
+    /* The lone "always-dark" tile. `bg-zinc-950` carries in both themes —
+     * dark is its identity, not a mode swap. Border picks up the same
+     * light-zinc hairline the other cards use in light mode, and a
+     * slightly lifted zinc-700 edge in dark so the card sits visibly
+     * against `bg-surface-2`. Text + button stay unconditionally light
+     * (the surface is always black, so no `dark:` flips needed). */
+    card: 'border border-zinc-300 bg-zinc-950 dark:border-zinc-700',
     label: 'text-zinc-300',
     title: 'text-zinc-50',
     body: 'text-zinc-300',
@@ -185,14 +182,14 @@ resolve();
 const buttonLabel = computed(() => (loading.value ? 'Resolve data' : 'Reset to loading'));
 
 const source = `<template>
-  <ASkeleton
-    :loading="loading"
-    :repeat="6"
-    class="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3"
-  >
+  <ASkeleton :loading="loading" :repeat="4" class="grid grid-cols-2 gap-2">
+    <!-- Prototype: same padding + border + structure as the real card so
+         the captured shape matches the eventual loaded layout 1:1. -->
     <template #prototype>
-      <article class="flex flex-col gap-4 rounded-3xl bg-zinc-200 p-6 dark:bg-zinc-800">
-        <span class="text-[10px] font-semibold uppercase tracking-[0.15em] text-zinc-500">
+      <article
+        class="flex flex-col gap-4 rounded-3xl border border-zinc-300 bg-zinc-200 p-6 dark:border-zinc-700 dark:bg-zinc-800"
+      >
+        <span class="text-[10px] font-semibold uppercase tracking-[0.15em] text-zinc-500 dark:text-zinc-400">
           Category
         </span>
         <h3 class="text-2xl font-bold leading-tight text-zinc-900 dark:text-zinc-50">
@@ -204,7 +201,7 @@ const source = `<template>
         <div class="my-2 h-px w-full bg-zinc-900/15 dark:bg-zinc-50/15" />
         <div class="flex items-end justify-between">
           <div>
-            <p class="text-xs uppercase tracking-wide text-zinc-500">members</p>
+            <p class="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">members</p>
             <p class="text-3xl font-bold text-zinc-900 dark:text-zinc-50">00</p>
           </div>
           <div class="size-12 rounded-2xl bg-zinc-900 dark:bg-zinc-50" />
@@ -212,12 +209,14 @@ const source = `<template>
       </article>
     </template>
 
+    <!-- Real cards: per-role accent palette with explicit light + dark bg. -->
     <article
       v-for="role in roles"
       :key="role.id"
-      :class="['... per-accent classes ...']"
+      class="flex flex-col gap-4 rounded-3xl p-6"
+      :class="ACCENTS[role.accent].card"
     >
-      <!-- real card content -->
+      <!-- …content driven by ACCENTS[role.accent] … -->
     </article>
   </ASkeleton>
 </template>`;
@@ -256,23 +255,25 @@ const source = `<template>
         </div>
 
         <div class="rounded-2xl bg-surface-2 p-6">
-          <!-- gap-2 between grid cells — small breathing room between
-               skeleton copies during loading AND between real cards once
-               data resolves. Internal article spacing stays gap-4. -->
+          <!-- Fixed 2-column grid with gap-2 — four cards lay out as 2×2
+               in both skeleton and loaded states. Internal article spacing
+               stays gap-4 so cards still breathe. -->
           <ASkeleton
             :loading="loading"
             :repeat="repeat"
             :max-nodes="10000"
-            class="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3"
+            class="grid grid-cols-2 gap-2"
           >
-            <!-- Prototype: neutral-toned shape. The structural walker preserves
-                 every tag + class, so the skeleton inherits the prototype's
-                 geometry exactly. Neutral zinc surface reads as a "loading"
-                 state in both light (zinc-200, soft gray) and dark (zinc-800,
-                 a hair lighter than the page surface so the card edge is
-                 visible against bg-surface-2). -->
+            <!-- Prototype: neutral-toned shape with the SAME `p-6` padding
+                 and `border border-zinc-300` hairline as the real cards
+                 below, so the skeleton's captured geometry matches the
+                 eventual loaded layout 1:1 (no layout shift when data
+                 arrives). Surface is zinc neutrals so the prototype reads
+                 as a "loading" state in both themes. -->
             <template #prototype>
-              <article class="flex flex-col gap-4 rounded-3xl bg-zinc-200 p-6 dark:bg-zinc-800">
+              <article
+                class="flex flex-col gap-4 rounded-3xl border border-zinc-300 bg-zinc-200 p-6 dark:border-zinc-700 dark:bg-zinc-800"
+              >
                 <span
                   class="text-[10px] font-semibold uppercase tracking-[0.15em] text-zinc-500 dark:text-zinc-400"
                 >
