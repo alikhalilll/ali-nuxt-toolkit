@@ -11,6 +11,27 @@
 @import 'tailwindcss';
 
 /*
+ * Dark-mode variant strategy.
+ *
+ * Tailwind v4 defaults the `dark:` variant to `@media (prefers-color-scheme: dark)`,
+ * which means utilities like `dark:bg-zinc-800` only fire when the user's OS is in
+ * dark mode. The docs site uses Nuxt color-mode, which lets users explicitly pick
+ * Light / Dark / System from the header switcher by flipping a `.dark` class on
+ * <html>. The theme TOKENS already swap correctly because they're defined under
+ * `:root` / `html.dark` (see further down), but Tailwind's `dark:` utilities were
+ * still gated on the media query — so a user who picked "Dark" on a light-OS
+ * machine got correct token swaps but stale `dark:` utilities (white surfaces
+ * with light text on a dark page, etc.).
+ *
+ * The override below makes `dark:` resolve to "any element under an ancestor
+ * carrying `.dark` (or the .dark element itself)". This aligns the utility
+ * variant with the token strategy, so explicit-pick dark mode works end-to-end.
+ * Users on "System" preference still get correct behaviour because Nuxt
+ * color-mode applies the `.dark` class automatically when the OS reports dark.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
  * Belt-and-braces against any future cascade fragility (the lib's `.hidden` getting
  * double-bundled into the head, or Vite's dev-mode style injection reordering rules
  * at HMR time): force the docs-site responsive display utilities to win at every

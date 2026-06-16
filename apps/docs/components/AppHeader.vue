@@ -120,6 +120,19 @@ onMounted(() => {
   window.addEventListener('scroll', onScroll, { passive: true });
 });
 onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
+
+// Gate theme-dependent UI on a post-mount flag. `pref` from `useColorMode()`
+// resolves to the user's saved preference (light / dark / system), but the
+// SSR pass doesn't have access to their `localStorage`, so server-rendered
+// markup defaults to "system" while the client's first render shows their
+// real preference — producing a hydration mismatch on the theme-switcher
+// icon. Holding `themeReady` false through the initial render forces both
+// sides to render the neutral "system" placeholder; once `onMounted` flips
+// it true, normal reactivity swaps in the real icon. No SSR/CSR divergence.
+const themeReady = ref(false);
+onMounted(() => {
+  themeReady.value = true;
+});
 </script>
 
 <template>
@@ -329,9 +342,13 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
             aria-haspopup="menu"
             @click="themePopoverOpen = !themePopoverOpen"
           >
-            <!-- Sun -->
+            <!-- Sun — gated on `themeReady` so SSR + the first client paint
+                 always render the neutral Monitor placeholder below; the real
+                 preference only takes over after onMounted runs. Avoids the
+                 hydration mismatch caused by `pref` differing between server
+                 (cookie-less default) and client (localStorage). -->
             <svg
-              v-if="pref === 'light'"
+              v-if="themeReady && pref === 'light'"
               xmlns="http://www.w3.org/2000/svg"
               width="16"
               height="16"
@@ -355,7 +372,7 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
             </svg>
             <!-- Moon -->
             <svg
-              v-else-if="pref === 'dark'"
+              v-else-if="themeReady && pref === 'dark'"
               xmlns="http://www.w3.org/2000/svg"
               width="16"
               height="16"
@@ -369,7 +386,7 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
             >
               <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
             </svg>
-            <!-- Monitor (system) -->
+            <!-- Monitor (system) — also serves as the SSR / pre-mount fallback. -->
             <svg
               v-else
               xmlns="http://www.w3.org/2000/svg"
