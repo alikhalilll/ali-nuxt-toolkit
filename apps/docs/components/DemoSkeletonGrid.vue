@@ -187,7 +187,7 @@ const source = `<template>
          the captured shape matches the eventual loaded layout 1:1. -->
     <template #prototype>
       <article
-        class="flex flex-col gap-4 rounded-3xl border border-zinc-300 bg-zinc-200 p-6 dark:border-zinc-700 dark:bg-zinc-800"
+        class="flex flex-col gap-4 rounded-3xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900"
       >
         <span class="text-[10px] font-semibold uppercase tracking-[0.15em] text-zinc-500 dark:text-zinc-400">
           Category
@@ -262,17 +262,18 @@ const source = `<template>
             :loading="loading"
             :repeat="repeat"
             :max-nodes="10000"
-            class="grid grid-cols-2 gap-2"
+            class="grid grid-cols-2 gap-2 p-1"
           >
-            <!-- Prototype: neutral-toned shape with the SAME `p-6` padding
-                 and `border border-zinc-300` hairline as the real cards
-                 below, so the skeleton's captured geometry matches the
-                 eventual loaded layout 1:1 (no layout shift when data
-                 arrives). Surface is zinc neutrals so the prototype reads
-                 as a "loading" state in both themes. -->
+            <!-- Prototype: same padding + border + structure as the real
+                 cards (so the captured shape matches the loaded layout
+                 1:1, no shift when data arrives). Surface is pure white in
+                 light mode and a soft `zinc-900` (a "light black", between
+                 the page's `bg-surface-2` and the dark accent's `zinc-950`)
+                 in dark mode so the skeleton tiles read clearly in both
+                 themes. -->
             <template #prototype>
               <article
-                class="flex flex-col gap-4 rounded-3xl border border-zinc-300 bg-zinc-200 p-6 dark:border-zinc-700 dark:bg-zinc-800"
+                class="flex flex-col gap-4 rounded-3xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900"
               >
                 <span
                   class="text-[10px] font-semibold uppercase tracking-[0.15em] text-zinc-500 dark:text-zinc-400"
