@@ -117,8 +117,16 @@ const repeatIndices = computed(() => Array.from({ length: repeatCount.value }, (
  * `v-for`, `resolvePrototypeVNodes` keeps only the first repeated sibling so
  * the skeleton represents *one* item instead of N (or zero, when the source
  * array is empty before data arrives). Authors who want full control over the
- * shape provide a `#prototype` slot explicitly. */
-const shapeVNodes = computed<VNode[]>(() => {
+ * shape provide a `#prototype` slot explicitly.
+ *
+ * IMPORTANT: this is a **function**, not a `computed`, and the v-for templates
+ * below call it once per iteration. Each call invokes the underlying slot
+ * function fresh, producing brand-new VNode instances per copy. Sharing the
+ * same VNode objects across N rendered copies caused an SSR hydration crash
+ * — Vue's renderer mutates `vnode.el` per copy as it walks the DOM; with
+ * shared references, copy #2's hydration finds copy #1's `.el` already wired
+ * elsewhere and `nextSibling` returns null. */
+function resolveShapeVNodes(): VNode[] {
   if (!props.loading) return [];
   const proto = slots.prototype?.();
   const def = slots.default?.();
@@ -126,25 +134,29 @@ const shapeVNodes = computed<VNode[]>(() => {
     def as unknown as VNode[] | undefined,
     proto as unknown as VNode[] | undefined
   ) as VNode[];
-});
-const hasShape = computed(() => shapeVNodes.value.length > 0);
+}
+
+/* Reactive existence check for `v-if="hasShape"`. Calling `resolveShapeVNodes`
+ * inside a computed re-runs whenever the slots' reactive dependencies change
+ * (i.e. when the consumer's loading flag flips or when v-for source data
+ * mutates), keeping this in sync without retaining the VNode array. */
+const hasShape = computed(() => resolveShapeVNodes().length > 0);
 
 /* Render-only host for projecting the prototype vnodes into the wrapper's
  * grid/flex flow. Renders as a normal block element (NOT `display: contents`
  * — browsers don't reliably treat the children of a `display: contents` host
  * as grid items, which broke `grid-cols-N` layouts: the prototype articles
  * stretched to fill the full row instead of one column each). The host div
- * itself is the grid/flex item, sized to fit its single child. */
+ * itself is the grid/flex item, sized to fit its single child.
+ *
+ * Accepts a `render` function (not a pre-resolved array) so each host copy
+ * invokes the slot fresh and gets its own VNode instances — required for
+ * hydration safety, see `resolveShapeVNodes` above. */
 const ShapeHost = defineComponent({
   name: 'ASkeletonShapeHost',
-  props: { vnodes: { type: Array as PropType<VNode[]>, required: true } },
+  props: { render: { type: Function as PropType<() => VNode[]>, required: true } },
   setup(p) {
-    return () =>
-      h(
-        'div',
-        { class: 'a-skeleton__shape-host', 'aria-hidden': 'true' },
-        p.vnodes as unknown as VNode[]
-      );
+    return () => h('div', { class: 'a-skeleton__shape-host', 'aria-hidden': 'true' }, p.render());
   },
 });
 
@@ -235,7 +247,7 @@ watch(
  * this the first empty snapshot would be the only snapshot for the entire
  * loading window. */
 watch(
-  () => shapeVNodes.value.length,
+  () => resolveShapeVNodes().length,
   () => {
     if (props.mode !== 'clone') return;
     if (props.loading && captureRef.value) takeSnapshot();
@@ -285,7 +297,7 @@ onBeforeUnmount(() => {
              guard, every snapshot iteration multiplies the captured node
              count by the previous output, growing the replay to hundreds of
              stray rectangles that paint outside the real card boundaries. -->
-        <ShapeHost v-for="i in repeatIndices" :key="`shape-${i}`" :vnodes="shapeVNodes" />
+        <ShapeHost v-for="i in repeatIndices" :key="`shape-${i}`" :render="resolveShapeVNodes" />
 
         <!-- Mirror fallback — backdrop while loading whenever there's a
              usable shape. The replay layer (higher z-index) sits on top. If
@@ -300,7 +312,7 @@ onBeforeUnmount(() => {
           <StructuralSkeleton
             v-for="i in repeatIndices"
             :key="`mirror-${i}`"
-            :vnodes="shapeVNodes"
+            :vnodes="resolveShapeVNodes()"
             :animation="animationClass"
             :max-depth="maxDepth"
             :max-nodes="maxNodes"
@@ -323,7 +335,7 @@ onBeforeUnmount(() => {
           <StructuralSkeleton
             v-for="i in repeatIndices"
             :key="`mirror-${i}`"
-            :vnodes="shapeVNodes"
+            :vnodes="resolveShapeVNodes()"
             :animation="animationClass"
             :max-depth="maxDepth"
             :max-nodes="maxNodes"
