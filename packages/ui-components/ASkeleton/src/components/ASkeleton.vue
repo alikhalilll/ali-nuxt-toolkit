@@ -100,16 +100,43 @@ const hasUserClass = computed(() => {
  *   - Not loading + no class: a sentinel `a-skeleton--unmounted` class that
  *     CSS uses to apply `display: contents`, making the wrapper invisible
  *     to layout queries (grid/flex parents target the slot's elements). */
+const repeatCount = computed(() => Math.max(1, Math.floor(props.repeat ?? 1)));
+const repeatIndices = computed(() => Array.from({ length: repeatCount.value }, (_, i) => i));
+
+/* ─── Effective rendering mode ────────────────────────────────────────────── */
+/* Clone mode mounts the prototype as REAL DOM so `captureSnapshot()` can read
+ * `getComputedStyle()` from every leaf. With `repeat > 1` it would need to
+ * mount N copies of the same prototype — but Vue's SFC compiler hoists
+ * static slot templates as MODULE-LEVEL constants. Every call to a hoisted
+ * slot returns the SAME VNode references, regardless of how often we call
+ * the slot function. During SSR-to-CSR hydration, Vue's renderer mutates
+ * `vnode.el` per copy as it walks the DOM tree; with shared references,
+ * copy #2's hydration finds copy #1's `.el` already wired to a different
+ * neighbourhood and `element.nextSibling` returns null — crashing the
+ * hydration walker with `Cannot read properties of null (reading
+ * 'nextSibling')`.
+ *
+ * Mirror mode is immune: its render path walks the input vnodes and emits
+ * FRESH output vnodes via `h(...)` per copy, so no references are shared
+ * across the rendered grid cells.
+ *
+ * Fix: when `repeat > 1`, transparently downshift to mirror mode for the
+ * visible cells. Visually it's the same shape (the prototype's tags +
+ * classes preserved as shimmer placeholders), and the consumer's grid
+ * layout fills correctly without the hydration crash. Single-copy clone
+ * mode (`repeat === 1`, the default) keeps the pixel-identical replay. */
+const effectiveMode = computed<'clone' | 'mirror'>(() => {
+  if (props.mode === 'clone' && repeatCount.value > 1) return 'mirror';
+  return props.mode;
+});
+
 const rootClass = computed(() => {
   if (props.loading) {
-    return cn('a-skeleton', `a-skeleton--mode-${props.mode}`, props.class);
+    return cn('a-skeleton', `a-skeleton--mode-${effectiveMode.value}`, props.class);
   }
   if (hasUserClass.value) return props.class;
   return 'a-skeleton--unmounted';
 });
-
-const repeatCount = computed(() => Math.max(1, Math.floor(props.repeat ?? 1)));
-const repeatIndices = computed(() => Array.from({ length: repeatCount.value }, (_, i) => i));
 
 /* ─── Shape source ────────────────────────────────────────────────────────── */
 /* The skeleton's shape is taken from the `#prototype` slot when provided;
@@ -222,7 +249,7 @@ function scheduleCapture(): void {
 watch(
   captureRef,
   (el) => {
-    if (props.mode !== 'clone') return;
+    if (effectiveMode.value !== 'clone') return;
     if (el && props.loading) takeSnapshot();
   },
   /* `flush: 'post'` so the watcher fires *after* Vue has committed the DOM
@@ -236,7 +263,7 @@ watch(
 watch(
   () => props.loading,
   (next, prev) => {
-    if (props.mode !== 'clone') return;
+    if (effectiveMode.value !== 'clone') return;
     if (next && !prev && captureRef.value) takeSnapshot();
   },
   { flush: 'post' }
@@ -249,7 +276,7 @@ watch(
 watch(
   () => resolveShapeVNodes().length,
   () => {
-    if (props.mode !== 'clone') return;
+    if (effectiveMode.value !== 'clone') return;
     if (props.loading && captureRef.value) takeSnapshot();
   },
   { flush: 'post' }
@@ -261,7 +288,7 @@ watch(
 watch(
   () => repeatCount.value,
   () => {
-    if (props.mode !== 'clone') return;
+    if (effectiveMode.value !== 'clone') return;
     if (props.loading && captureRef.value) takeSnapshot();
   },
   { flush: 'post' }
@@ -285,7 +312,7 @@ onBeforeUnmount(() => {
       <slot />
     </template>
     <template v-else>
-      <template v-if="props.mode === 'clone'">
+      <template v-if="effectiveMode === 'clone'">
         <!-- Prototype copies — direct grid items, used by the snapshot
              walker to read accurate per-leaf rects at real layout positions.
              The mirror-fallback and replay overlays (below) paint on top

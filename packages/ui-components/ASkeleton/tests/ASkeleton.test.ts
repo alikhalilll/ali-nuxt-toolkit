@@ -178,6 +178,42 @@ describe('<ASkeleton>', () => {
     expect(wrapper.findAll('article.card')).toHaveLength(3);
   });
 
+  it('downshifts clone mode to mirror when repeat > 1 (hydration safety)', () => {
+    /* Clone mode mounts the prototype as real DOM for getComputedStyle() — but
+     * Vue's SFC compiler hoists static slot templates as module-level constants,
+     * so all N copies of a clone-mode prototype would share the same VNode
+     * references. During SSR-to-CSR hydration, Vue's renderer mutates `vnode.el`
+     * per copy and copy #2's hydration finds copy #1's `.el` already wired to a
+     * different DOM neighbourhood — `element.nextSibling` returns null and the
+     * hydration walker crashes.
+     *
+     * Workaround: when repeat > 1, transparently fall back to mirror mode for
+     * the visible cells (mirror's walker produces fresh output vnodes per copy
+     * via `h()`, no sharing). The root wrapper carries `a-skeleton--mode-mirror`
+     * to make the downshift observable. */
+    const wrapper = mount(ASkeleton, {
+      props: { loading: true, mode: 'clone', repeat: 3 },
+      slots: { default: () => h('article', { class: 'card' }, 'x') },
+    });
+    const root = wrapper.element as HTMLElement;
+    expect(root.classList.contains('a-skeleton--mode-mirror')).toBe(true);
+    expect(root.classList.contains('a-skeleton--mode-clone')).toBe(false);
+    /* And the visible cells are real mirror StructuralSkeletons, one per copy. */
+    expect(wrapper.findAll('article.card')).toHaveLength(3);
+  });
+
+  it('keeps clone mode for single-copy renders (repeat === 1)', () => {
+    /* Single-copy clone mode has no VNode sharing — there's only one ShapeHost,
+     * referenced once. Vue's hoist optimisation is safe in this case. */
+    const wrapper = mount(ASkeleton, {
+      props: { loading: true, mode: 'clone', repeat: 1 },
+      slots: { default: () => h('article', { class: 'card' }, 'x') },
+    });
+    const root = wrapper.element as HTMLElement;
+    expect(root.classList.contains('a-skeleton--mode-clone')).toBe(true);
+    expect(root.classList.contains('a-skeleton--mode-mirror')).toBe(false);
+  });
+
   it('uses the `#prototype` slot as the shape source, not the default slot', () => {
     /* When the consumer's v-for is empty but they've provided a prototype,
      * the skeleton uses the prototype's structure. */
