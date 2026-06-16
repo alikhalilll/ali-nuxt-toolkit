@@ -37,7 +37,7 @@ interface AccentTheme {
 }
 
 const loading = ref(true);
-const repeat = ref(6);
+const repeat = ref(4);
 const roles = ref<RoleCard[]>([]);
 
 const allRoles: RoleCard[] = [
@@ -76,24 +76,6 @@ const allRoles: RoleCard[] = [
     users_count: 2,
     metric_label: 'members',
     accent: 'amber',
-  },
-  {
-    id: 5,
-    category: 'Insights',
-    name: 'Analyst',
-    description: 'Read-only access to dashboards and product metrics.',
-    users_count: 17,
-    metric_label: 'members',
-    accent: 'rose',
-  },
-  {
-    id: 6,
-    category: 'Onboarding',
-    name: 'Guide',
-    description: 'Shepherds new accounts through their first week.',
-    users_count: 1,
-    metric_label: 'member',
-    accent: 'sky',
   },
 ];
 
@@ -163,12 +145,18 @@ const ACCENTS: Record<RoleCard['accent'], AccentTheme> = {
     buttonIcon: 'text-zinc-50',
   },
   dark: {
-    /* bg-zinc-950 in both modes — deeper than the demo wrapper's
-     * `bg-surface-2` token (zinc-200 light / zinc-800 dark), so the card
-     * stays distinct against the page surface in both schemes. A subtle
-     * inset ring in dark mode sharpens the edge against the dark page.
-     * Label uses zinc-300 (not zinc-400) on zinc-950 to stay comfortably
-     * above WCAG AA (≈ 11:1 vs ≈ 6.5:1). */
+    /* `bg-zinc-950` in BOTH modes — the dark card is its own surface, not a
+     * theme-dependent tile. Because the surface is always dark, the text
+     * colours must also be unconditionally light: no `dark:` / `light:`
+     * variants, just solid zinc-50 / zinc-300 that work in every theme.
+     *
+     * The previous `light:text-[#fff]` attempt only fired the colour in
+     * light mode, so dark-mode visitors got default (dark) inherited text
+     * on a black surface — invisible. Solid colours fix both.
+     *
+     * A 1px inset ring is added in dark mode only because the docs page
+     * surface drops to ~zinc-800 in dark theme; the ring keeps the card
+     * edge visible against the similarly-dark background. */
     card: 'bg-zinc-950 dark:ring-1 dark:ring-inset dark:ring-zinc-50/10',
     label: 'text-zinc-300',
     title: 'text-zinc-50',
@@ -275,14 +263,16 @@ const source = `<template>
             :loading="loading"
             :repeat="repeat"
             :max-nodes="10000"
-            class="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3"
+            class="grid grid-cols-1 gap-2 md:grid-cols-2 p-1"
           >
             <!-- Prototype: neutral-toned shape. The structural walker preserves
                  every tag + class, so the skeleton inherits the prototype's
                  geometry exactly. Neutral zinc colours keep no accent leaking
                  into the loading state. -->
             <template #prototype>
-              <article class="flex flex-col gap-4 rounded-3xl bg-zinc-200 p-6 dark:bg-zinc-800">
+              <article
+                class="flex flex-col gap-4 rounded-3xl ring ring-gray-400 p-6 light:bg-gray-400 dark:bg-white"
+              >
                 <span
                   class="text-[10px] font-semibold uppercase tracking-[0.15em] text-zinc-500 dark:text-zinc-400"
                 >
