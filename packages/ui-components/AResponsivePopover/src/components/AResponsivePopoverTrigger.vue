@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { useMediaQuery } from '@vueuse/core';
 import { APopoverTrigger } from '@alikhalilll/a-popover';
 import { ADrawerTrigger } from '@alikhalilll/a-drawer';
+import { useResponsivePopoverContext } from '../composables/useResponsivePopoverContext';
 
 const props = withDefaults(
   defineProps<{
@@ -12,7 +13,15 @@ const props = withDefaults(
   { breakpoint: '(min-width: 768px)' }
 );
 
-const isDesktop = useMediaQuery(() => props.breakpoint);
+const ctx = useResponsivePopoverContext();
+
+// Prefer the root's resolved mode so the trigger always agrees with the content
+// (and respects `forceBottomSheet` / future render-mode overrides on the root).
+// Fall back to a local media query only when this component is used outside
+// `AResponsivePopover` (unusual but supported).
+const fallbackIsDesktop = useMediaQuery(() => props.breakpoint);
+const isDesktop = computed(() => ctx?.isDesktop.value ?? fallbackIsDesktop.value);
+
 const Trigger = computed(() => (isDesktop.value ? APopoverTrigger : ADrawerTrigger));
 </script>
 
