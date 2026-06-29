@@ -62,6 +62,31 @@ import { ATelInputResolver } from '@alikhalilll/a-tel-input/resolver';
 export default { plugins: [Components({ resolvers: [ATelInputResolver()] })] };
 ```
 
+### REST Countries v5 (optional)
+
+The component renders with a synchronous, offline country list built from `libphonenumber-js` + `Intl.DisplayNames` — no network, no auth. Pass `restCountriesApiKey` to opt into the v5 fetch (one request per browser, cached in `localStorage` for 30 days):
+
+```ts
+// nuxt.config.ts — applies app-wide
+export default defineNuxtConfig({
+  modules: ['@alikhalilll/a-tel-input/nuxt'],
+  aTelInput: { apiKey: 'rc_live_...' },
+});
+```
+
+```vue
+<!-- Per-component override -->
+<ATelInput :rest-countries-api-key="myKey" v-model="phone" />
+```
+
+```ts
+// Vue + Vite — install once at bootstrap
+import { installTelInputDefaults } from '@alikhalilll/a-tel-input';
+installTelInputDefaults(app, { apiKey: 'rc_live_...' });
+```
+
+Per-component props win over the injected default. Any failure (CORS, network, non-2xx) silently falls back to the offline baseline — never an empty dropdown. CORS requires you to allowlist your origin's hostnames on the REST Countries dashboard.
+
 ---
 
 ## Why this component
@@ -84,10 +109,17 @@ export default { plugins: [Components({ resolvers: [ATelInputResolver()] })] };
 - **i18n + RTL out of the box** — country names localised via `Intl.DisplayNames`,
   alternative numerals (Arabic-Indic, Persian, Devanagari, Bengali) folded to ASCII on
   input, RTL inherited from the page or forced via `dir`.
-- **Efficient by default** — REST Countries fetch + IP geolocation request deduped to
-  one network call per page across every `<ATelInput>` / `<ACountrySelect>` /
-  `useTelField()` / `zPhone()` instance. LRU-cached matcher. `FALLBACK_COUNTRIES`
-  pre-seeded into the lookup indexes so detection works synchronously from first paint.
+- **Efficient by default** — country list built synchronously from
+  `libphonenumber-js` metadata + `Intl.DisplayNames` — **zero network requests**.
+  Lookup indexes are populated at first call, so country detection (`+20`, `+44`,
+  ambiguous `+1` NANP, etc.) works from first paint. IP geolocation request still
+  deduped to one call per page across every `<ATelInput>` / `<ACountrySelect>` /
+  `useTelField()` / `zPhone()` instance. LRU-cached matcher.
+- **Optional REST Countries v5 upgrade** — pass `restCountriesApiKey` (or
+  configure it via the Nuxt module / `installTelInputDefaults`) to fire one
+  `api.restcountries.com/countries/v5` request per browser; the result is cached
+  in `localStorage` for 30 days. Without a key the picker stays on the offline
+  baseline — no behaviour change required.
 - **SSR-safe** — country detection runs only after mount, hydration is clean.
 - **TypeScript-first** — every prop, slot, and event fully typed; web-types ship for
   JetBrains IDEs.
@@ -371,7 +403,8 @@ in your submit handler if you want the international form.
 | `disabled` / `loading` | `boolean`                              | `false`    | Field state.                                                                                                                                        |
 | `placeholder`          | `string`                               | derived    | Falls back to the country's `format_hint` when empty.                                                                                               |
 | `flagUrl`              | `(iso2, w) => string`                  | flagcdn    | Override the flag image source.                                                                                                                     |
-| `countries`            | `CountryOption[]`                      | REST API   | Provide your own country list (bypasses the REST Countries fetch).                                                                                  |
+| `countries`            | `CountryOption[]`                      | derived    | Provide your own country list (bypasses the internal libphonenumber-derived list).                                                                  |
+| `restCountriesApiKey`  | `string`                               | —          | Opt-in REST Countries v5 API key. One fetch per browser, cached for 30 days. Falls back to the sync baseline on any failure.                        |
 | `searcher`             | `(q, c) => boolean`                    | substring  | Custom search predicate.                                                                                                                            |
 | `detector`             | `async (opts) => string \| null`       | built-in   | Fully custom country detection.                                                                                                                     |
 | `ipEndpoint`           | `string`                               | `ipapi.co` | Override the IP geolocation endpoint.                                                                                                               |
@@ -468,6 +501,8 @@ component uses.
 | `zPhone` / `zPhoneObject` | `@alikhalilll/a-tel-input/zod`          | Zod schema factories — see [Form integration](#form-integration).                                                                                                           |
 | `normalizeDigits`         | `@alikhalilll/a-tel-input`              | Fold Arabic-Indic / Persian / Devanagari / Bengali numerals → ASCII.                                                                                                        |
 | `defaultFlagUrl`          | `@alikhalilll/a-tel-input`              | Default flagcdn URL builder.                                                                                                                                                |
+| `provideTelInputDefaults` | `@alikhalilll/a-tel-input`              | Vue `provide` helper — set `apiKey` / `restCountriesBaseUrl` once for an ancestor subtree.                                                                                  |
+| `installTelInputDefaults` | `@alikhalilll/a-tel-input`              | Same as above but bound to a Vue `App` (called by the Nuxt module's auto-installed plugin).                                                                                 |
 
 ---
 

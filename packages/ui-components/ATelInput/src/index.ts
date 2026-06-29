@@ -36,3 +36,4 @@ export * from './composables/useTypingPhase';
 export * from './composables/useTelInputValidation';
 export * from './composables/useCountrySelection';
 export * from './composables/useSyncedModel';
+export * from './composables/useTelInputDefaults';

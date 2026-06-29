@@ -51,6 +51,39 @@ import UiResolver from '@alikhalilll/a-tel-input/resolver';
 export default { plugins: [Components({ resolvers: [UiResolver()] })] };
 ```
 
+### REST Countries v5 (optional)
+
+The component ships with a synchronous country list built from `libphonenumber-js` + `Intl.DisplayNames` — no network, no auth. Pass `restCountriesApiKey` to opt into the v5 fetch (one request per browser, cached in `localStorage` for 30 days):
+
+```ts
+// nuxt.config.ts — applies app-wide
+export default defineNuxtConfig({
+  modules: ['@alikhalilll/a-tel-input/nuxt'],
+  aTelInput: { apiKey: 'rc_live_...' },
+});
+```
+
+Or per-component:
+
+```vue
+<ATelInput :rest-countries-api-key="myKey" v-model="phone" />
+```
+
+Or for a Vue (non-Nuxt) app, install the defaults once at bootstrap:
+
+```ts
+// main.ts
+import { createApp } from 'vue';
+import { installTelInputDefaults } from '@alikhalilll/a-tel-input';
+import App from './App.vue';
+
+const app = createApp(App);
+installTelInputDefaults(app, { apiKey: 'rc_live_...' });
+app.mount('#app');
+```
+
+Per-component props always win over the injected default. Any failure (CORS, network, non-2xx) silently falls back to the offline baseline — never an empty dropdown. CORS requires you to allowlist your origin's hostnames on the REST Countries dashboard.
+
 ### Dark mode
 
 Toggle `class="dark"` (or `"light"`) on `<html>` — every component inherits via CSS variables.
@@ -90,7 +123,7 @@ Type `+447911123456`, `01066105963`, or paste any well-formed international numb
 - **Two binding contracts** — single `v-model` (E.164 string, drops into VeeValidate's `<Field v-slot="{ field }">` via `v-bind="field"`) or split `v-model:phone` + `v-model:country`. Both stay in sync.
 - **i18n + RTL** — country names via `Intl.DisplayNames`, numerals localised in the format hint, RTL inherited from the page, alternative numerals (Arabic-Indic, Persian, Devanagari, Bengali) folded to ASCII on input.
 - **Headless slots** for every visual region — trigger, chevron, flag, item, search, hint, error, the lot.
-- **Efficient by default** — REST Countries fetch + IP geolocation request deduped to one network call per page across every `<ATelInput>` / `<ACountrySelect>` / `useTelField()` / `zPhone()` instance. LRU-cached matcher.
+- **Efficient by default** — country list built synchronously from `libphonenumber-js` metadata + `Intl.DisplayNames` — **zero network requests**. Optional one-shot REST Countries v5 upgrade when an `apiKey` is configured, cached in `localStorage` for 30 days. IP geolocation request still deduped to one call per page across every `<ATelInput>` / `<ACountrySelect>` / `useTelField()` / `zPhone()` instance. LRU-cached matcher.
 - **SSR-safe** — country detection runs after mount, hydration is clean.
 - **TypeScript-first** — every prop, slot, and event typed; web-types ship for JetBrains IDEs.
 
@@ -586,14 +619,15 @@ of the dedicated slots is provided).
 
 ### Data props
 
-| Prop                   | Type                                             | Replaces                                                      |
-| ---------------------- | ------------------------------------------------ | ------------------------------------------------------------- |
-| `flagUrl`              | `(iso2, width) => string`                        | Default `flagcdn.com` URL builder.                            |
-| `countries`            | `CountryOption[]`                                | Internal REST Countries fetch (curated or offline lists).     |
-| `searcher`             | `(query, country) => boolean`                    | Default substring match. Implement fuzzy / starts-with / etc. |
-| `detector`             | `(opts) => Promise<string \| null>`              | The environment chain. Return `null` to fall through.         |
-| `errorMessages`        | `Partial<Record<PhoneValidationReason, string>>` | Error labels (for i18n).                                      |
-| `kbdOpen` / `kbdClose` | `string \| null`                                 | The `⌘K` / `Esc` keyboard hints. `null` to hide.              |
+| Prop                   | Type                                             | Replaces                                                         |
+| ---------------------- | ------------------------------------------------ | ---------------------------------------------------------------- |
+| `flagUrl`              | `(iso2, width) => string`                        | Default `flagcdn.com` URL builder.                               |
+| `countries`            | `CountryOption[]`                                | Internal libphonenumber-derived list (curated or offline lists). |
+| `restCountriesApiKey`  | `string`                                         | Opt-in REST Countries v5 fetch (one request, cached 30 days).    |
+| `searcher`             | `(query, country) => boolean`                    | Default substring match. Implement fuzzy / starts-with / etc.    |
+| `detector`             | `(opts) => Promise<string \| null>`              | The environment chain. Return `null` to fall through.            |
+| `errorMessages`        | `Partial<Record<PhoneValidationReason, string>>` | Error labels (for i18n).                                         |
+| `kbdOpen` / `kbdClose` | `string \| null`                                 | The `⌘K` / `Esc` keyboard hints. `null` to hide.                 |
 
 ### Class props
 

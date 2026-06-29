@@ -11,6 +11,7 @@ import {
   localizeCountries,
   type CountryOption,
 } from '../composables/usePhoneValidation';
+import { injectTelInputDefaults } from '../composables/useTelInputDefaults';
 import { DEFAULT_SIZE } from '@alikhalilll/a-ui-base';
 import type { ACountrySelectProps, ACountrySelectSlots } from '../types';
 import ACountryFlag from './ACountryFlag.vue';
@@ -35,13 +36,17 @@ defineSlots<ACountrySelectSlots>();
 
 const selected = defineModel<string>('selected', { default: '' });
 
+const telDefaults = injectTelInputDefaults();
 const {
   countries: internalCountries,
   isCountriesLoading,
   getCountries,
   searchCountries: defaultSearch,
   getCountryByValue: lookupInternal,
-} = usePhoneValidation();
+} = usePhoneValidation({
+  apiKey: props.restCountriesApiKey ?? telDefaults.apiKey,
+  restCountriesBaseUrl: telDefaults.restCountriesBaseUrl,
+});
 
 const open = ref(false);
 const search = ref('');

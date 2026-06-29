@@ -1,17 +1,25 @@
 /**
  * Country list + phone validation, framework-agnostic.
  *
- * Ported from the reference @pkgs/ui ATelInput composable with these cleanups:
- *  - Drop Nuxt-only `process.client` checks → use plain `typeof window !== 'undefined'`.
- *  - Drop Arabic default placeholder; let consumers pass their own.
- *  - Expand the offline fallback list from 2 → ~20 of the most-populated countries.
- *  - Keep REST Countries fetch + localStorage cache + libphonenumber-js examples + fast `search_key`.
+ * Country data sources (in order):
+ *  1. **Sync baseline (always on)** — built at first call from
+ *     `libphonenumber-js.getCountries()` + `getCountryCallingCode()` for the
+ *     ISO2 + dial-digits map, `Intl.DisplayNames` for localized names, and
+ *     `flagcdn.com` for the flag URLs. No network, no auth, SSR-safe, ~250 entries.
+ *  2. **Optional REST Countries v5 upgrade (opt-in)** — when an `apiKey` is
+ *     configured, one `fetch()` per page to `api.restcountries.com/countries/v5`,
+ *     cached to `localStorage` for 30 days, then reactively swapped in over the
+ *     sync baseline. CORS requires the consumer to allowlist their origin on the
+ *     REST Countries dashboard. Cache + in-flight Promise are deduped across every
+ *     `<ATelInput>` / `<ACountrySelect>` / `useTelField()` / `zPhone()` instance.
  */
 
 import { ref, type Ref } from 'vue';
 import {
   type CountryCode,
   type Examples,
+  getCountries as getLibphonenumberCountries,
+  getCountryCallingCode,
   getExampleNumber,
   isValidPhoneNumber,
   parsePhoneNumberFromString,
@@ -22,14 +30,7 @@ import { normalizeDigits } from '../utils/digits';
 /* -----------------------------------------------------------------------------
  * Public types
  * -------------------------------------------------------------------------- */
-export interface RestCountry {
-  name?: { common?: string };
-  cca2?: string;
-  idd?: { root?: string; suffixes?: string[] };
-  flags?: { png?: string; svg?: string };
-}
-
-export interface CountryOption<T = RestCountry> {
+export interface CountryOption<T = unknown> {
   /** Display label, e.g. "Egypt (+20)". */
   label: string;
   /** Stable unique ID — the ISO 3166-1 alpha-2 code, e.g. "EG". */
@@ -42,7 +43,7 @@ export interface CountryOption<T = RestCountry> {
     dial_digits: string;
     name: string;
     flag: string | null;
-    source: 'restcountries' | 'fallback';
+    source: 'libphonenumber' | 'restcountries-v5' | 'fallback';
     original: T;
   };
 }
@@ -91,31 +92,48 @@ export type ValidateArgs =
       locale?: string;
     };
 
-const STORAGE_KEY = 'ali_ui_phone_countries_v1';
-const REST_COUNTRIES_URL = 'https://restcountries.com/v3.1/all?fields=name,cca2,idd,flags';
+export interface UsePhoneValidationOptions {
+  /**
+   * Optional REST Countries v5 API key. When set, the composable fires one fetch
+   * per browser to `https://api.restcountries.com/countries/v5` and caches the
+   * normalized list to `localStorage` for 30 days. Without a key the list is
+   * built synchronously from `libphonenumber-js` + `Intl.DisplayNames` — zero
+   * network, zero auth.
+   */
+  apiKey?: string;
+  /** Override the v5 base URL (rarely useful; defaults to the official endpoint). */
+  restCountriesBaseUrl?: string;
+}
+
+const DEFAULT_V5_BASE_URL = 'https://api.restcountries.com/countries/v5';
+const CACHE_KEY_V2 = 'ali_ui_phone_countries_v2';
+const CACHE_TTL_MS = 1000 * 60 * 60 * 24 * 30; // 30 days
 
 /* -----------------------------------------------------------------------------
- * Module-level singleton state for country data.
- *
- * `usePhoneValidation()` is called once per `<ATelInput>`, once per `<ACountrySelect>`,
- * once per `useTelField()`, once per `zPhone()` — so a single page can spin up four
- * or more instances. Without deduplication, each instance would independently:
- *   - JSON.parse the localStorage cache,
- *   - fire the REST Countries fetch (~80KB),
- *   - parse + normalise the response.
- *
- * Sharing the result via these module-level slots collapses every concurrent call
- * to **one** network request and **one** cache parse for the lifetime of the page.
- * Each `usePhoneValidation()` instance still gets its own reactive `countries` ref,
- * so consumers can mutate their local view (e.g., `props.countries` override) without
- * affecting siblings — the singleton is only consulted as a data source.
+ * One-shot cleanup of the v3.1 REST Countries cache shipped by 1.x. The shape
+ * (entries with `source: 'restcountries'` and the old field set) no longer
+ * matches the current type union; nothing reads the key anymore. Removing it
+ * reclaims ~80 KB and prevents stale reads if a future cache-key collision
+ * happens. Idempotent — runs once per page load.
  * -------------------------------------------------------------------------- */
-let sharedCountries: CountryOption[] | null = null;
-let inflightFetch: Promise<CountryOption[]> | null = null;
+if (typeof window !== 'undefined') {
+  try {
+    window.localStorage.removeItem('ali_ui_phone_countries_v1');
+  } catch {
+    /* private mode / quota — best effort */
+  }
+}
+
+/* -----------------------------------------------------------------------------
+ * Module-level singletons for the v5 upgrade. With one composable instance per
+ * `<ATelInput>` / `<ACountrySelect>` / `useTelField()` / `zPhone()`, a single
+ * page can spin up four or more simultaneous callers. These slots collapse the
+ * fetch + normalize work to **one** network request per page lifetime.
+ * -------------------------------------------------------------------------- */
+let sharedV5: readonly CountryOption[] | null = null;
+let inflightV5: Promise<readonly CountryOption[] | null> | null = null;
 
 const EX = examples as unknown as Examples;
-
-const isBrowser = () => typeof window !== 'undefined';
 
 function toDigits(v: unknown) {
   // Fold alternative numeral systems (Arabic-Indic, Persian, Devanagari, Bengali) down to
@@ -165,14 +183,6 @@ function inferLengthFromExample(national: string) {
   return { min: Math.max(4, n - 2), max: n + 2 };
 }
 
-function buildDialCode(idd?: RestCountry['idd']): string | null {
-  const root = idd?.root?.trim();
-  if (!root || !root.startsWith('+')) return null;
-  const suffix = idd?.suffixes?.[0]?.trim() ?? '';
-  const out = `${root}${suffix}`;
-  return out.startsWith('+') ? out : null;
-}
-
 function normalizeSearchKey(input: string) {
   return (
     String(input ?? '')
@@ -185,25 +195,119 @@ function normalizeSearchKey(input: string) {
   );
 }
 
+/* -----------------------------------------------------------------------------
+ * Sync baseline — built from libphonenumber-js + Intl.DisplayNames + flagcdn.
+ * Per-locale memoized at module scope so the ~250-entry build runs at most once
+ * per locale per page.
+ * -------------------------------------------------------------------------- */
+const localeCache = new Map<string, readonly CountryOption[]>();
+
+function safeDisplayNames(locale: string): Intl.DisplayNames | null {
+  try {
+    return new Intl.DisplayNames([locale], { type: 'region' });
+  } catch {
+    return null;
+  }
+}
+
+function resolveLocalName(
+  iso2: string,
+  primary: Intl.DisplayNames | null,
+  englishFallback: Intl.DisplayNames | null
+): string {
+  if (primary) {
+    try {
+      const v = primary.of(iso2);
+      if (v && v.trim() && v !== iso2) return v.trim();
+    } catch {
+      /* unknown region — fall through */
+    }
+  }
+  if (englishFallback) {
+    try {
+      const v = englishFallback.of(iso2);
+      if (v && v.trim() && v !== iso2) return v.trim();
+    } catch {
+      /* unknown region — fall through */
+    }
+  }
+  return iso2;
+}
+
+function buildLocalCountryList(locale?: string): readonly CountryOption[] {
+  const primary = safeDisplayNames(locale ?? 'en');
+  const englishFallback = locale && locale !== 'en' ? safeDisplayNames('en') : primary;
+  const collator = (() => {
+    try {
+      return new Intl.Collator(locale ?? 'en');
+    } catch {
+      return new Intl.Collator('en');
+    }
+  })();
+
+  const iso2s = getLibphonenumberCountries();
+  const out: CountryOption[] = [];
+  for (const iso2 of iso2s) {
+    let digits: string;
+    try {
+      digits = getCountryCallingCode(iso2);
+    } catch {
+      continue;
+    }
+    if (!digits) continue;
+    const name = resolveLocalName(iso2, primary, englishFallback);
+    const dial = `+${digits}`;
+    out.push({
+      label: `${name} (${dial})`,
+      value: iso2,
+      search_key: normalizeSearchKey(`${name} ${dial} ${iso2} ${digits}`),
+      raw_data: {
+        iso2,
+        dial_code: dial,
+        dial_digits: digits,
+        name,
+        flag: `https://flagcdn.com/w40/${iso2.toLowerCase()}.png`,
+        source: 'libphonenumber',
+        original: null,
+      },
+    });
+  }
+
+  out.sort((a, b) => collator.compare(a.raw_data.name, b.raw_data.name));
+  return Object.freeze(out);
+}
+
+function getLocalCountryListFor(locale?: string): readonly CountryOption[] {
+  const key = locale ?? '__none__';
+  let cached = localeCache.get(key);
+  if (!cached) {
+    cached = buildLocalCountryList(locale);
+    localeCache.set(key, cached);
+  }
+  return cached;
+}
+
 /**
  * Return a copy of the country list with display names localized to `locale` via
- * `Intl.DisplayNames`. `search_key` is rebuilt (keeping the English name too) so search
- * still matches either spelling. Unknown locales / regions fall back to the English name.
+ * `Intl.DisplayNames`. `search_key` is rebuilt (keeping the source name too) so
+ * search still matches either spelling. Fast path: when the input list matches
+ * the per-locale memo's unlocalized entry, return the cached localized array
+ * verbatim — no per-item mapping.
  */
 export function localizeCountries(list: CountryOption[], locale?: string): CountryOption[] {
   if (!locale) return list;
-  let display: Intl.DisplayNames;
-  try {
-    display = new Intl.DisplayNames([locale], { type: 'region' });
-  } catch {
-    return list;
+  const cachedUnlocalized = localeCache.get('__none__');
+  if (cachedUnlocalized && list === cachedUnlocalized) {
+    return [...getLocalCountryListFor(locale)];
   }
+  const display = safeDisplayNames(locale);
+  if (!display) return list;
   return list.map((c) => {
     let localized = c.raw_data.name;
     try {
       localized = display.of(c.raw_data.iso2) || c.raw_data.name;
     } catch {
-      /* region not in CLDR data — keep English name */
+      /* region not in CLDR data — keep source name */
     }
     if (localized === c.raw_data.name) return c;
     const dial = c.raw_data.dial_code;
@@ -219,51 +323,118 @@ export function localizeCountries(list: CountryOption[], locale?: string): Count
 }
 
 /* -----------------------------------------------------------------------------
- * Offline fallback — used when the REST Countries fetch fails. ~20 most-populated
- * countries so the picker is still useful when offline.
+ * Optional REST Countries v5 fetch path. Activated only when `apiKey` is set.
+ * Returns null (caller stays on the sync baseline) on any failure path — never
+ * throws.
+ *
+ * v5 response shape (per /docs): `{ data: V5Country[] }`. Field allowlist:
+ *   names.common, codes.alpha_2, calling_codes (array of bare-digit strings),
+ *   flag.url_png, flag.url_svg.
  * -------------------------------------------------------------------------- */
-function makeFallback(iso2: string, name: string, dial: string): CountryOption {
-  const dialDigits = toDigits(dial);
-  return {
-    label: `${name} (+${dialDigits})`,
-    value: iso2,
-    search_key: normalizeSearchKey(`${name} +${dialDigits} ${iso2}`),
-    raw_data: {
-      iso2,
-      dial_code: `+${dialDigits}`,
-      dial_digits: dialDigits,
-      name,
-      flag: `https://flagcdn.com/w40/${iso2.toLowerCase()}.png`,
-      source: 'fallback',
-      original: {},
-    },
-  };
+interface V5Country {
+  names?: { common?: string };
+  codes?: { alpha_2?: string };
+  calling_codes?: string[];
+  flag?: { url_png?: string; url_svg?: string };
 }
 
-const FALLBACK_COUNTRIES: CountryOption[] = [
-  makeFallback('SA', 'Saudi Arabia', '+966'),
-  makeFallback('EG', 'Egypt', '+20'),
-  makeFallback('AE', 'United Arab Emirates', '+971'),
-  makeFallback('US', 'United States', '+1'),
-  makeFallback('GB', 'United Kingdom', '+44'),
-  makeFallback('DE', 'Germany', '+49'),
-  makeFallback('FR', 'France', '+33'),
-  makeFallback('ES', 'Spain', '+34'),
-  makeFallback('IT', 'Italy', '+39'),
-  makeFallback('TR', 'Turkey', '+90'),
-  makeFallback('RU', 'Russia', '+7'),
-  makeFallback('CN', 'China', '+86'),
-  makeFallback('IN', 'India', '+91'),
-  makeFallback('JP', 'Japan', '+81'),
-  makeFallback('KR', 'South Korea', '+82'),
-  makeFallback('BR', 'Brazil', '+55'),
-  makeFallback('MX', 'Mexico', '+52'),
-  makeFallback('CA', 'Canada', '+1'),
-  makeFallback('AU', 'Australia', '+61'),
-  makeFallback('NG', 'Nigeria', '+234'),
-  makeFallback('PK', 'Pakistan', '+92'),
-  makeFallback('ID', 'Indonesia', '+62'),
-];
+interface V5CachePayload {
+  cachedAt: number;
+  list: CountryOption[];
+}
+
+function readV5Cache(): readonly CountryOption[] | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(CACHE_KEY_V2);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as V5CachePayload;
+    if (!parsed || !Array.isArray(parsed.list) || !parsed.list.length) return null;
+    if (typeof parsed.cachedAt !== 'number') return null;
+    if (Date.now() - parsed.cachedAt > CACHE_TTL_MS) return null;
+    return Object.freeze(parsed.list);
+  } catch {
+    return null;
+  }
+}
+
+function writeV5Cache(list: readonly CountryOption[]) {
+  if (typeof window === 'undefined') return;
+  try {
+    const payload: V5CachePayload = { cachedAt: Date.now(), list: [...list] };
+    window.localStorage.setItem(CACHE_KEY_V2, JSON.stringify(payload));
+  } catch {
+    /* quota or storage disabled — fine, in-memory copy is still served */
+  }
+}
+
+function normalizeV5(list: V5Country[]): readonly CountryOption[] {
+  const out: CountryOption[] = [];
+  for (const c of list) {
+    const iso2 = normalizeIso2(c?.codes?.alpha_2);
+    if (!iso2) continue;
+    const digits = toDigits(c?.calling_codes?.[0]);
+    if (!digits) continue;
+    const dial = `+${digits}`;
+    const sourceName = c?.names?.common?.trim() || iso2;
+    const flag =
+      c?.flag?.url_png?.trim() ||
+      c?.flag?.url_svg?.trim() ||
+      `https://flagcdn.com/w40/${iso2.toLowerCase()}.png`;
+    out.push({
+      label: `${sourceName} (${dial})`,
+      value: iso2,
+      search_key: normalizeSearchKey(`${sourceName} ${dial} ${iso2} ${digits}`),
+      raw_data: {
+        iso2,
+        dial_code: dial,
+        dial_digits: digits,
+        name: sourceName,
+        flag,
+        source: 'restcountries-v5',
+        original: c,
+      },
+    });
+  }
+
+  // Deduplicate on ISO2 — v5 should never emit duplicates, but be defensive.
+  const dedup = new Map<string, CountryOption>();
+  for (const item of out) {
+    const prev = dedup.get(item.value);
+    if (!prev) {
+      dedup.set(item.value, item);
+      continue;
+    }
+    const score = (x: CountryOption) => (x.raw_data.flag ? 1 : 0) + (x.raw_data.dial_code ? 1 : 0);
+    if (score(item) > score(prev)) dedup.set(item.value, item);
+  }
+  return Object.freeze(
+    Array.from(dedup.values()).sort((a, b) => a.raw_data.name.localeCompare(b.raw_data.name))
+  );
+}
+
+async function fetchRestCountriesV5(
+  apiKey: string,
+  baseUrl: string
+): Promise<readonly CountryOption[] | null> {
+  const cached = readV5Cache();
+  if (cached) return cached;
+
+  const url = `${baseUrl}?response_fields=names.common,codes.alpha_2,calling_codes,flag.url_png,flag.url_svg&limit=500`;
+  try {
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${apiKey}` } });
+    if (!res.ok) return null;
+    const body = (await res.json()) as { data?: V5Country[] };
+    const data = Array.isArray(body?.data) ? body.data : [];
+    if (!data.length) return null;
+    const normalized = normalizeV5(data);
+    if (!normalized.length) return null;
+    writeV5Cache(normalized);
+    return normalized;
+  } catch {
+    return null;
+  }
+}
 
 /* -----------------------------------------------------------------------------
  * Composable
@@ -282,20 +453,19 @@ export interface UsePhoneValidationReturn {
   validate(input: ValidateArgs): PhoneValidationResult;
 }
 
-export function usePhoneValidation(): UsePhoneValidationReturn {
-  const countries = ref<CountryOption[]>([]);
+export function usePhoneValidation(
+  options: UsePhoneValidationOptions = {}
+): UsePhoneValidationReturn {
+  const apiKey = options.apiKey?.trim() || '';
+  const baseUrl = options.restCountriesBaseUrl?.trim() || DEFAULT_V5_BASE_URL;
+
+  // Sync baseline seeds the reactive state at setup — instant first paint, ~250
+  // entries. The v5 upgrade (when enabled) replaces this list once it resolves.
+  const seedList = getLocalCountryListFor(undefined);
+  const countries = ref<CountryOption[]>([...seedList]);
   const isCountriesLoading = ref(false);
 
-  // Pre-seed the lookup indexes with the bundled fallback (~22 most-populated countries).
-  // This makes country *detection* (matchLeadingDialCode, getCountryByValue) work
-  // synchronously from first paint — without it, typing a +20/+1/+44 etc. number while
-  // the REST Countries fetch is in flight would silently fail every matcher tier because
-  // `parsePhoneNumberFromString('+201066105963').country = 'EG'` can't resolve to a
-  // `CountryOption` (empty index → null) and tier 3's `getCountriesByDial('20')` also
-  // returns []. `countries.value` stays `[]` so `getCountries()` still runs its
-  // localStorage → network upgrade path; once that resolves the indexes are rebuilt
-  // wholesale with the full ~250-entry list.
-  function buildIndexes(list: CountryOption[]) {
+  function buildIndexes(list: readonly CountryOption[]) {
     const valueMap = new Map<string, CountryOption>();
     const dialMap = new Map<string, CountryOption[]>();
     for (const item of list) {
@@ -310,130 +480,61 @@ export function usePhoneValidation(): UsePhoneValidationReturn {
     return { valueMap, dialMap };
   }
 
-  const _seed = buildIndexes(FALLBACK_COUNTRIES);
+  const _seed = buildIndexes(seedList);
   const byValue = ref<Map<string, CountryOption>>(_seed.valueMap);
   const byDialDigits = ref<Map<string, CountryOption[]>>(_seed.dialMap);
 
-  function rebuildIndexes(list: CountryOption[]) {
+  function rebuildIndexes(list: readonly CountryOption[]) {
     const { valueMap, dialMap } = buildIndexes(list);
     byValue.value = valueMap;
     byDialDigits.value = dialMap;
   }
 
-  function upsertCountries(list: CountryOption[]) {
-    countries.value = list;
+  function upsertCountries(list: readonly CountryOption[]) {
+    countries.value = [...list];
     rebuildIndexes(list);
-  }
-
-  function normalizeRestCountries(list: RestCountry[]): CountryOption[] {
-    const out: CountryOption[] = [];
-    for (const c of list) {
-      const name = c?.name?.common?.trim();
-      const iso2 = normalizeIso2(c?.cca2);
-      const dial = buildDialCode(c?.idd);
-      const flag = c?.flags?.png?.trim() || c?.flags?.svg?.trim() || null;
-      if (!name || !iso2 || !dial) continue;
-      const dialDigits = toDigits(dial);
-      const search_key = normalizeSearchKey(`${name} ${dial} ${iso2} ${dialDigits}`);
-      out.push({
-        label: `${name} (${dial})`,
-        value: iso2,
-        search_key,
-        raw_data: {
-          iso2,
-          dial_code: dial,
-          dial_digits: dialDigits,
-          name,
-          flag,
-          source: 'restcountries',
-          original: c,
-        },
-      });
-    }
-
-    const map = new Map<string, CountryOption>();
-    for (const item of out) {
-      const prev = map.get(item.value);
-      if (!prev) {
-        map.set(item.value, item);
-        continue;
-      }
-      const prevScore = (prev.raw_data.flag ? 1 : 0) + (prev.raw_data.dial_code ? 1 : 0);
-      const nextScore = (item.raw_data.flag ? 1 : 0) + (item.raw_data.dial_code ? 1 : 0);
-      if (nextScore > prevScore) map.set(item.value, item);
-    }
-    return Array.from(map.values()).sort((a, b) => a.raw_data.name.localeCompare(b.raw_data.name));
   }
 
   async function getCountries(options?: { force?: boolean }) {
     const force = Boolean(options?.force);
-    if (!force && countries.value.length) return countries.value;
 
-    // Shared module-level cache — if any sibling instance already loaded the list,
-    // adopt it without re-parsing localStorage or hitting the network.
-    if (!force && sharedCountries) {
-      upsertCountries(sharedCountries);
+    // Sync baseline — instant, no I/O. Always served. The `force` flag rebuilds
+    // the per-locale memo to honor an explicit refresh request.
+    if (force) localeCache.clear();
+    upsertCountries(getLocalCountryListFor(undefined));
+
+    if (!apiKey) return countries.value;
+
+    // v5 upgrade path. Already resolved on this page → adopt it directly.
+    if (!force && sharedV5) {
+      upsertCountries(sharedV5);
       return countries.value;
     }
 
-    // Shared in-flight promise — if another instance fired the fetch first, await
-    // its result instead of starting a duplicate request.
-    if (!force && inflightFetch) {
-      isCountriesLoading.value = true;
+    if (force && typeof window !== 'undefined') {
       try {
-        const list = await inflightFetch;
-        upsertCountries(list);
-        return countries.value;
-      } finally {
-        isCountriesLoading.value = false;
+        window.localStorage.removeItem(CACHE_KEY_V2);
+      } catch {
+        /* quota / private mode */
       }
+      sharedV5 = null;
+      inflightV5 = null;
     }
 
-    if (!force && isBrowser()) {
-      try {
-        const cached = localStorage.getItem(STORAGE_KEY);
-        if (cached) {
-          const parsed = JSON.parse(cached) as CountryOption[];
-          if (Array.isArray(parsed) && parsed.length) {
-            sharedCountries = parsed;
-            upsertCountries(parsed);
-            return countries.value;
-          }
-        }
-      } catch {
-        /* ignore parse errors */
-      }
-    }
+    // Share one in-flight request across every sibling composable instance.
+    if (!inflightV5) inflightV5 = fetchRestCountriesV5(apiKey, baseUrl);
 
     isCountriesLoading.value = true;
-    inflightFetch = (async (): Promise<CountryOption[]> => {
-      try {
-        const res = await fetch(REST_COUNTRIES_URL);
-        if (!res.ok) throw new Error(`Failed to fetch countries: ${res.status}`);
-        const data = (await res.json()) as RestCountry[];
-        const normalized = normalizeRestCountries(data);
-        const list = normalized.length ? normalized : FALLBACK_COUNTRIES;
-        if (isBrowser()) {
-          try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-          } catch {
-            /* storage full or disabled */
-          }
-        }
-        return list;
-      } catch {
-        return FALLBACK_COUNTRIES;
-      }
-    })();
-
     try {
-      const list = await inflightFetch;
-      sharedCountries = list;
-      upsertCountries(list);
-      return countries.value;
+      const v5 = await inflightV5;
+      if (v5 && v5.length) {
+        sharedV5 = v5;
+        upsertCountries(v5);
+      }
     } finally {
       isCountriesLoading.value = false;
     }
+    return countries.value;
   }
 
   function searchCountries(keyword: string, limit = 50) {

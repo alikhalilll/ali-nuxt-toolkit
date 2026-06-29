@@ -179,6 +179,16 @@ export interface ATelInputProps {
   /** Provide your own country list, forwarded to ACountrySelect. */
   countries?: CountryOption[];
   /**
+   * REST Countries v5 API key. When set, the composable fires one fetch per browser
+   * and caches the result for 30 days; the picker renders the sync libphonenumber
+   * baseline until v5 resolves, then upgrades reactively. Without a key the picker
+   * stays on the offline-built baseline (zero network). Forwarded to ACountrySelect.
+   *
+   * Can also be set globally via `installTelInputDefaults`, or via the Nuxt module's
+   * `aTelInput.apiKey` runtime config. Per-component prop wins.
+   */
+  restCountriesApiKey?: string;
+  /**
    * Fully custom country detection. When provided, this function runs in place of the
    * built-in chain — `detectCountry`-style options are still honored but the function
    * receives them and is free to ignore them.
@@ -407,8 +417,15 @@ export interface ACountrySelectProps {
   flagUrl?: (iso2: string, width: number) => string;
   /** Custom search predicate. Default: substring match on the precomputed `search_key`. */
   searcher?: (query: string, country: CountryOption) => boolean;
-  /** Provide your own country list (bypasses the REST Countries fetch). */
+  /** Provide your own country list (bypasses the internal libphonenumber-derived list). */
   countries?: CountryOption[];
+  /**
+   * REST Countries v5 API key. When set, fires one fetch per browser and caches the
+   * result for 30 days; without it, the picker uses the synchronous libphonenumber
+   * baseline (~250 countries, zero network). Can also be configured globally via
+   * `installTelInputDefaults` or the Nuxt module — per-component prop wins.
+   */
+  restCountriesApiKey?: string;
   /** Override the right-side kbd hints. Pass `null` to hide. */
   kbdOpen?: string | null;
   kbdClose?: string | null;

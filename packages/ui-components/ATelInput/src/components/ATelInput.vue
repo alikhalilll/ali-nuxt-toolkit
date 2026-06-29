@@ -3,6 +3,7 @@ import { computed, onMounted, ref, useId, watch } from 'vue';
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import { cn } from '@alikhalilll/a-ui-base';
 import { usePhoneValidation } from '../composables/usePhoneValidation';
+import { injectTelInputDefaults } from '../composables/useTelInputDefaults';
 import { detectCountry, type DetectCountryOptions } from '../composables/useCountryDetection';
 import { useCountryMatching } from '../composables/useCountryMatching';
 import { useTypingPhase } from '../composables/useTypingPhase';
@@ -71,8 +72,12 @@ const modelValue = defineModel<string>({ default: '' });
 const selection = useCountrySelection();
 const selectedIso2 = selection.iso2;
 
+const telDefaults = injectTelInputDefaults();
 const { getCountries, validate, getRequiredInfo, getCountryByValue, getCountriesByDial } =
-  usePhoneValidation();
+  usePhoneValidation({
+    apiKey: props.restCountriesApiKey ?? telDefaults.apiKey,
+    restCountriesBaseUrl: telDefaults.restCountriesBaseUrl,
+  });
 // Pass the loaded lookups in — useCountryMatching can't call usePhoneValidation() itself
 // because each invocation creates a fresh, empty country index.
 const { resolveCountryIdentifier, dialNumberFor, matchLeadingDialCode } = useCountryMatching({
@@ -536,6 +541,7 @@ defineExpose({
               :flag-url="props.flagUrl"
               :searcher="props.searcher"
               :countries="props.countries"
+              :rest-countries-api-key="props.restCountriesApiKey"
               :content-class="props.contentClass"
               :popover-class="props.popoverClass"
               :drawer-class="props.drawerClass"
