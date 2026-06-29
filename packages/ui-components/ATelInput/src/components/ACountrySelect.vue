@@ -287,7 +287,11 @@ defineExpose({
 </script>
 
 <template>
-  <AResponsivePopover v-model:open="open" :scroll-lock="props.scrollLock">
+  <AResponsivePopover
+    v-model:open="open"
+    :scroll-lock="props.scrollLock"
+    :force-bottom-sheet="props.forceBottomSheet"
+  >
     <AResponsivePopoverTrigger as-child>
       <slot
         name="trigger"

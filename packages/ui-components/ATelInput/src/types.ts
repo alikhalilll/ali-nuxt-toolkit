@@ -217,6 +217,13 @@ export interface ATelInputProps {
    * implementation. Pass `'none'` to leave page scrolling alone.
    */
   scrollLock?: 'events' | 'body' | 'none';
+  /**
+   * Force the country picker to render as a bottom-sheet drawer regardless of viewport
+   * width — bypasses the responsive breakpoint so desktops also get the vaul drawer.
+   * Useful for primarily-mobile flows where a modal bottom-sheet is the desired UX on
+   * every form factor. Forwarded to `ACountrySelect` → `AResponsivePopover`.
+   */
+  forceBottomSheet?: boolean;
 }
 
 /**
@@ -441,6 +448,11 @@ export interface ACountrySelectProps {
    * See {@link ATelInputProps.scrollLock} for the full rationale.
    */
   scrollLock?: 'events' | 'body' | 'none';
+  /**
+   * Force the picker to render as a bottom-sheet drawer regardless of viewport width.
+   * See {@link ATelInputProps.forceBottomSheet} for the full rationale.
+   */
+  forceBottomSheet?: boolean;
 }
 
 /**

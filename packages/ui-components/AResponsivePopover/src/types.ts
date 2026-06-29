@@ -26,6 +26,13 @@ export interface AResponsivePopoverProps {
    * The same mode applies to both the desktop popover and the mobile drawer.
    */
   scrollLock?: ScrollLockMode;
+  /**
+   * Force the drawer ("bottom sheet") branch regardless of viewport width. Bypasses
+   * the `breakpoint` media query so desktops also render the vaul drawer — useful for
+   * pickers that should always feel modal on touch + desktop alike (e.g. country
+   * pickers inside a primarily-mobile flow). Default `false`.
+   */
+  forceBottomSheet?: boolean;
 }
 
 /**

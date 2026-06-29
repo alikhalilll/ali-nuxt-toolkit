@@ -546,6 +546,7 @@ defineExpose({
               :popover-class="props.popoverClass"
               :drawer-class="props.drawerClass"
               :scroll-lock="props.scrollLock"
+              :force-bottom-sheet="props.forceBottomSheet"
               @update:selected="onPickerPick"
             >
               <template v-if="$slots.trigger" #trigger="slotProps">

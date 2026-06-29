@@ -10,13 +10,22 @@ const props = withDefaults(defineProps<AResponsivePopoverProps>(), {
   breakpoint: '(min-width: 768px)',
   modal: true,
   scrollLock: 'events',
+  forceBottomSheet: false,
 });
 
 defineSlots<AResponsivePopoverSlots>();
 
 const open = defineModel<boolean>('open');
 
-const isDesktop = useMediaQuery(() => props.breakpoint);
+// Render-mode resolution. Today only `forceBottomSheet` short-circuits ahead of
+// the media-query default; a future `forcePopover` would slot in as another
+// branch before the fallback (dispatch-style — new render variants land as new
+// entries, not as new conditions tangled into the consumer).
+const isDesktopByMedia = useMediaQuery(() => props.breakpoint);
+const isDesktop = computed(() => {
+  if (props.forceBottomSheet) return false;
+  return isDesktopByMedia.value;
+});
 
 /**
  * Per-branch `modal` resolution — the two roots interpret the prop differently:
