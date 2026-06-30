@@ -2,6 +2,9 @@
  * Core, framework-agnostic types for @alikhalilll/nuxt-api-provider.
  */
 
+import type { ApiCache } from './cache';
+import type { CacheConfig, CacheOptions } from './cache.types';
+
 /** Plain record helper. */
 export type UnknownRecord = Record<string, unknown>;
 
@@ -19,8 +22,17 @@ export type RequestBody =
   | null
   | undefined;
 
-/** Per-call request options. Superset of the browser `RequestInit`. */
-export interface RequestOptions extends Omit<RequestInit, 'body'> {
+/**
+ * Per-call request options. Superset of the browser `RequestInit`, minus two
+ * fields we override:
+ *   - `body` — we accept richer shapes (objects, FormData, etc.) and encode them.
+ *   - `cache` — `RequestInit.cache` controls the *browser HTTP cache* and takes
+ *     a tight union (`'default' | 'no-cache' | ...`). We repurpose this name
+ *     for our application-level request cache, which accepts `false` to
+ *     disable, or a `CacheOptions` object for per-call overrides. If you need
+ *     to control the HTTP cache directive, set the `Cache-Control` header.
+ */
+export interface RequestOptions extends Omit<RequestInit, 'body' | 'cache'> {
   /** Request body. Objects and arrays are JSON-encoded automatically. */
   body?: RequestBody;
   /** Abort the request after this many milliseconds. Defaults to the client-level timeout. */
@@ -37,6 +49,13 @@ export interface RequestOptions extends Omit<RequestInit, 'body'> {
    * upload progress). Retries and interceptors still apply.
    */
   onRequestProgress?: (progress: RequestProgress) => void;
+  /**
+   * Per-call cache override. `false` disables caching for this call; an
+   * object overrides specific cache fields (key, staleTime, refetch, etc.).
+   * When omitted, the client-level cache config applies — and only GET/HEAD
+   * are cached by default.
+   */
+  cache?: CacheOptions | false;
 }
 
 /** Phase emitted by the progress hook. */
@@ -126,6 +145,12 @@ export interface ApiClientConfig {
     response?: ResponseInterceptor[];
     error?: ErrorInterceptor[];
   };
+  /**
+   * Cache configuration. Caching is enabled by default with TanStack-Query-
+   * style semantics: `staleTime` 30s, `gcTime` 5min, SWR on, and only GET/HEAD
+   * are cached. Set `{ enabled: false }` to turn the cache off entirely.
+   */
+  cache?: CacheConfig;
 }
 
 /**
@@ -155,4 +180,10 @@ export interface ApiProviderClient {
   readonly config: Readonly<
     Required<Pick<ApiClientConfig, 'baseURL' | 'timeoutMs'>> & ApiClientConfig
   >;
+  /**
+   * The request cache. Use `cache.invalidate(predicate)` to drop entries
+   * after mutations, `cache.clear()` to wipe, `cache.serialize()` /
+   * `cache.hydrate(snapshot)` to ship state across boundaries.
+   */
+  readonly cache: ApiCache;
 }

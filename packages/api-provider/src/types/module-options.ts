@@ -1,4 +1,18 @@
+import type { CacheConfig } from '../core/cache.types';
 import type { RetryOptions } from '../core/types';
+
+/**
+ * Cache configuration as accepted by the Nuxt module. Extends the
+ * framework-agnostic `CacheConfig` with the Nuxt-only `hydrate` flag.
+ */
+export interface ApiProviderModuleCacheOptions extends CacheConfig {
+  /**
+   * When `true`, the cache produced during SSR is serialised into the Nuxt
+   * payload and restored on the client, so the first paint hits the cache
+   * instead of refetching. Default: `false`.
+   */
+  hydrate?: boolean;
+}
 
 export interface ApiProviderModuleOptions {
   /** Absolute base URL prepended to every relative endpoint. */
@@ -19,6 +33,13 @@ export interface ApiProviderModuleOptions {
   server?: boolean;
   /** Default retry policy. Can be overridden per call. */
   retry?: Partial<RetryOptions>;
+  /**
+   * Cache configuration. Caching is enabled by default with TanStack-Query-
+   * style semantics: `staleTime` 30s, `gcTime` 5min, SWR on, only GET/HEAD
+   * cached. Set `{ enabled: false }` to disable entirely, or `{ hydrate: true }`
+   * to forward the SSR cache to the client via the Nuxt payload.
+   */
+  cache?: ApiProviderModuleCacheOptions;
   /** Absolute or relative path to a module with a default-exported request interceptor. */
   onRequestPath?: string;
   /** Absolute or relative path to a module with a default-exported response interceptor. */

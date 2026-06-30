@@ -7,15 +7,19 @@
 declare module '#app' {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   export function defineNuxtPlugin(plugin: any): any;
+  export function useState<T>(key?: string, init?: () => T): { value: T };
 }
 
 declare module '#build/api-provider-config.mjs' {
+  import type { CacheConfig } from './core/cache.types';
   import type { RetryOptions } from './core/types';
   const config: {
     baseURL: string;
     defaultTimeoutMs: number;
     provideName: string;
     retry?: Partial<RetryOptions>;
+    cache?: CacheConfig;
+    hydrate?: boolean;
   };
   export default config;
 }

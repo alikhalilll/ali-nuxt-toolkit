@@ -1,5 +1,8 @@
 import { combineSignals } from './abort';
 import { encodeBody, shouldOmitBody } from './body';
+import { ApiCache, isExpired, isFresh } from './cache';
+import { buildCacheKey } from './cache-key';
+import { resolveCacheConfig, type CacheOptions } from './cache.types';
 import { ApiError, normalizeErrorPayload } from './error';
 import { normalizeHeaders } from './headers';
 import { safeParseJson } from './json';
@@ -23,13 +26,15 @@ import { createXhrFetch } from './xhr-fetch';
  *
  * The returned object is directly callable — `await client('/users')` — and
  * exposes `.useRequest`, `.useResponse`, `.useError` for interceptor
- * registration.
+ * registration, plus `.cache` for cache control.
  */
 export function createApiClient(config: ApiClientConfig = {}): ApiProviderClient {
   const baseURL = config.baseURL ?? '';
   const timeoutMs = config.timeoutMs ?? 20_000;
   const defaultFetch = config.fetch ?? globalThis.fetch;
   const defaultHeaders = normalizeHeaders(config.headers);
+  const cache = new ApiCache(config.cache);
+  const cacheDefaults = cache.getConfig();
 
   const requestInterceptors: RequestInterceptor[] = [...(config.interceptors?.request ?? [])];
   const responseInterceptors: ResponseInterceptor[] = [...(config.interceptors?.response ?? [])];
@@ -63,7 +68,9 @@ export function createApiClient(config: ApiClientConfig = {}): ApiProviderClient
     }
   }
 
-  async function executeOnce<T>(ctx: RequestContext): Promise<T | undefined> {
+  async function executeOnce<T>(
+    ctx: RequestContext
+  ): Promise<{ data: T | undefined; status: number }> {
     const url = buildUrl(ctx);
     const headers = ctx.headers;
     const { headers: finalHeaders, body } = encodeBody(
@@ -86,10 +93,26 @@ export function createApiClient(config: ApiClientConfig = {}): ApiProviderClient
       ? createXhrFetch(ctx.options.onRequestProgress)
       : defaultFetch;
 
+    // Strip our custom fields before handing the init to fetch. The browser
+    // rejects unknown shapes for known fields (notably `cache`, which expects
+    // a `RequestCache` union — a `CacheOptions` object or `false` would make
+    // the request fail with "provisional headers shown" and never leave the
+    // tab). The other extras (`timeoutMs`, `retry`, etc.) fetch tolerates,
+    // but stripping them keeps the wire payload clean.
+    const {
+      cache: _cache,
+      timeoutMs: _timeoutMs,
+      retry: _retry,
+      skipInterceptors: _skipInterceptors,
+      meta: _meta,
+      onRequestProgress: _onRequestProgress,
+      ...fetchInit
+    } = ctx.options;
+
     let response: Response;
     try {
       response = await transport(url, {
-        ...ctx.options,
+        ...fetchInit,
         headers: finalHeaders,
         body,
         signal,
@@ -112,31 +135,18 @@ export function createApiClient(config: ApiClientConfig = {}): ApiProviderClient
 
     const data = await safeParseJson<T>(response);
 
-    if (ctx.options.skipInterceptors) return data;
+    if (ctx.options.skipInterceptors) {
+      return { data, status: response.status };
+    }
     const final = await runResponseInterceptors<T>({ request: ctx, response, data });
 
-    return final.data;
+    return { data: final.data, status: response.status };
   }
 
-  const client = async function apiClient<T = unknown>(
-    endpoint: string,
-    options?: RequestOptions | null,
-    queries?: Record<string, unknown>
-  ): Promise<T | undefined> {
-    const opts: RequestOptions = options ?? {};
-
-    const initialCtx: RequestContext = {
-      endpoint,
-      baseURL,
-      headers: { ...defaultHeaders, ...normalizeHeaders(opts.headers) },
-      queries: { ...(queries ?? {}) },
-      options: { ...opts, headers: undefined },
-      meta: { ...(opts.meta ?? {}) },
-    };
-
-    const ctx = opts.skipInterceptors ? initialCtx : await runRequestInterceptors(initialCtx);
-
-    const retryOpts = resolveRetry(config.retry, opts.retry);
+  async function runWithRetries<T>(
+    ctx: RequestContext
+  ): Promise<{ data: T | undefined; status: number }> {
+    const retryOpts = resolveRetry(config.retry, ctx.options.retry);
     let attempt = 0;
 
     while (true) {
@@ -157,12 +167,123 @@ export function createApiClient(config: ApiClientConfig = {}): ApiProviderClient
           continue;
         }
 
-        if (!opts.skipInterceptors) {
+        if (!ctx.options.skipInterceptors) {
           await runErrorInterceptors(apiError, ctx);
         }
         throw apiError;
       }
     }
+  }
+
+  /**
+   * Cache layer. Order of operations:
+   *
+   *   1. Resolve effective cache settings (client defaults + per-call overrides).
+   *   2. If caching doesn't apply (disabled, non-cacheable method), passthrough.
+   *   3. Look up an in-flight promise for the same key — share if found.
+   *   4. Look up the stored entry:
+   *        - fresh + !refetch  → return cached, no network
+   *        - stale + swr       → return cached, fire background refetch
+   *        - expired / missing → network, store result
+   */
+  async function runWithCache<T>(ctx: RequestContext): Promise<T | undefined> {
+    const perCall = ctx.options.cache;
+    if (perCall === false || cacheDefaults.enabled === false) {
+      const { data } = await runWithRetries<T>(ctx);
+      return data;
+    }
+
+    const effective = resolveCacheConfig({
+      ...cacheDefaults,
+      ...(typeof perCall === 'object' && perCall ? perCall : {}),
+    });
+
+    if (!effective.enabled) {
+      const { data } = await runWithRetries<T>(ctx);
+      return data;
+    }
+
+    const method = (ctx.options.method || 'GET').toUpperCase();
+    if (!effective.cacheableMethods.some((m) => m.toUpperCase() === method)) {
+      const { data } = await runWithRetries<T>(ctx);
+      return data;
+    }
+
+    const override =
+      perCall && typeof perCall === 'object' ? (perCall as CacheOptions).key : undefined;
+    const refetch =
+      perCall && typeof perCall === 'object' ? Boolean((perCall as CacheOptions).refetch) : false;
+
+    const key = buildCacheKey({
+      method,
+      url: buildUrl(ctx),
+      body: shouldOmitBody(method) ? undefined : ctx.options.body,
+      override,
+    });
+
+    // Step 1 — share an in-flight promise if one exists for this key.
+    if (effective.dedupe && !refetch) {
+      const pending = cache.getInFlight<T>(key);
+      if (pending) return pending;
+    }
+
+    // Step 2 — consult the store.
+    const entry = cache.get<T>(key);
+    if (entry && !refetch) {
+      if (isFresh(entry)) {
+        return entry.data;
+      }
+      if (effective.swr && !isExpired(entry)) {
+        // Stale-while-revalidate: hand back cached data immediately, refresh
+        // the entry in the background. Errors are swallowed — the caller
+        // already has data and the failure surfaces on the next miss.
+        if (!cache.getInFlight<T>(key)) {
+          const bg = runWithRetries<T>(ctx)
+            .then(({ data, status }) => {
+              cache.set<T>(key, data, status);
+              return data;
+            })
+            .catch(() => entry.data)
+            .finally(() => cache.clearInFlight(key));
+          cache.setInFlight<T>(key, bg);
+        }
+        return entry.data;
+      }
+    }
+
+    // Step 3 — fresh network call, store result, share the in-flight promise.
+    const networkPromise = runWithRetries<T>(ctx)
+      .then(({ data, status }) => {
+        cache.set<T>(key, data, status);
+        return data;
+      })
+      .finally(() => cache.clearInFlight(key));
+
+    if (effective.dedupe) {
+      cache.setInFlight<T>(key, networkPromise);
+    }
+    return networkPromise;
+  }
+
+  const client = async function apiClient<T = unknown>(
+    endpoint: string,
+    options?: RequestOptions | null,
+    queries?: Record<string, unknown>
+  ): Promise<T | undefined> {
+    const opts: RequestOptions = options ?? {};
+
+    const initialCtx: RequestContext = {
+      endpoint,
+      baseURL,
+      headers: { ...defaultHeaders, ...normalizeHeaders(opts.headers) },
+      queries: { ...(queries ?? {}) },
+      options: { ...opts, headers: undefined },
+      meta: { ...(opts.meta ?? {}) },
+    };
+
+    const ctx = opts.skipInterceptors ? initialCtx : await runRequestInterceptors(initialCtx);
+
+    return runWithCache<T>(ctx);
   } as ApiProviderClient;
 
   client.useRequest = (interceptor) => {
@@ -189,6 +310,11 @@ export function createApiClient(config: ApiClientConfig = {}): ApiProviderClient
 
   Object.defineProperty(client, 'config', {
     value: Object.freeze({ ...config, baseURL, timeoutMs }),
+    enumerable: true,
+    writable: false,
+  });
+  Object.defineProperty(client, 'cache', {
+    value: cache,
     enumerable: true,
     writable: false,
   });
