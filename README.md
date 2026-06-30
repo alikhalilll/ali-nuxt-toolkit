@@ -16,7 +16,7 @@
 | Package                                                           | Version                                                                                                                                                 | Downloads                                                                                                                                               | Min+gzip                                                                                                                                                                     | One-liner                                                                                                                                                                                             |
 | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [`@alikhalilll/a-tel-input`](./packages/ui-components/ATelInput)  | [![npm](https://img.shields.io/npm/v/@alikhalilll/a-tel-input.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/a-tel-input)                   | [![dl](https://img.shields.io/npm/dm/@alikhalilll/a-tel-input.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/a-tel-input)                   | [![size](https://img.shields.io/bundlephobia/minzip/@alikhalilll/a-tel-input?label=&color=444)](https://bundlephobia.com/package/@alikhalilll/a-tel-input)                   | International tel input — country auto-detect, libphonenumber-js validation, responsive popover/drawer picker, **first-class VeeValidate + Zod integration** with async server-side validation hooks. |
-| [`@alikhalilll/nuxt-api-provider`](./packages/api-provider)       | [![npm](https://img.shields.io/npm/v/@alikhalilll/nuxt-api-provider.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-api-provider)       | [![dl](https://img.shields.io/npm/dm/@alikhalilll/nuxt-api-provider.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-api-provider)       | [![size](https://img.shields.io/bundlephobia/minzip/@alikhalilll/nuxt-api-provider?label=&color=444)](https://bundlephobia.com/package/@alikhalilll/nuxt-api-provider)       | Typed `fetch` client — interceptors, retry/backoff, timeouts, upload/download progress, structured `ApiError`.                                                                                        |
+| [`@alikhalilll/nuxt-api-provider`](./packages/api-provider)       | [![npm](https://img.shields.io/npm/v/@alikhalilll/nuxt-api-provider.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-api-provider)       | [![dl](https://img.shields.io/npm/dm/@alikhalilll/nuxt-api-provider.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-api-provider)       | [![size](https://img.shields.io/bundlephobia/minzip/@alikhalilll/nuxt-api-provider?label=&color=444)](https://bundlephobia.com/package/@alikhalilll/nuxt-api-provider)       | Typed `fetch` client — caching (TanStack-Query-style: SWR, dedupe, GC), interceptors, retry/backoff, timeouts, upload/download progress, structured `ApiError`.                                       |
 | [`@alikhalilll/nuxt-crypto`](./packages/crypto)                   | [![npm](https://img.shields.io/npm/v/@alikhalilll/nuxt-crypto.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-crypto)                   | [![dl](https://img.shields.io/npm/dm/@alikhalilll/nuxt-crypto.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-crypto)                   | [![size](https://img.shields.io/bundlephobia/minzip/@alikhalilll/nuxt-crypto?label=&color=444)](https://bundlephobia.com/package/@alikhalilll/nuxt-crypto)                   | AES-256-GCM + PBKDF2 via Web Crypto — key cache, pluggable algorithms, server-only mode, device-fingerprint binding.                                                                                  |
 | [`@alikhalilll/nuxt-auto-middleware`](./packages/auto-middleware) | [![npm](https://img.shields.io/npm/v/@alikhalilll/nuxt-auto-middleware.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-auto-middleware) | [![dl](https://img.shields.io/npm/dm/@alikhalilll/nuxt-auto-middleware.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-auto-middleware) | [![size](https://img.shields.io/bundlephobia/minzip/@alikhalilll/nuxt-auto-middleware?label=&color=444)](https://bundlephobia.com/package/@alikhalilll/nuxt-auto-middleware) | Layout-based route middleware — globs, named groups, per-page overrides, typed registry.                                                                                                              |
 
@@ -230,8 +230,9 @@ inner input stays focusable and `aria-busy="true"` is set for assistive tech.
 
 ## `@alikhalilll/nuxt-api-provider`
 
-A strongly-typed `fetch` client. Interceptor chain, retry+backoff, request timeouts,
-upload + download progress, and a structured `ApiError` with a cross-realm `isApiError()` guard.
+A strongly-typed `fetch` client. TanStack-Query-style caching enabled by default, interceptor chain,
+retry+backoff, request timeouts, upload + download progress, and a structured `ApiError` with a
+cross-realm `isApiError()` guard.
 
 ```ts
 // nuxt.config.ts
@@ -242,6 +243,9 @@ export default defineNuxtConfig({
     provideName: '$apiProvider',
     defaultTimeoutMs: 20_000,
     retry: { attempts: 2, delayMs: 500, backoff: 2 },
+    // Caching defaults: staleTime 30s, gcTime 5min, SWR, GET/HEAD only.
+    // Override or set `hydrate: true` to forward the SSR cache to the client.
+    cache: { staleTime: 60_000, hydrate: true },
     onRequestPath: '~/api/on-request',
     onErrorPath: '~/api/on-error',
   },
@@ -256,11 +260,20 @@ export const useApi = (): ApiProviderClient => useNuxtApp().$apiProvider;
 // usage — the 3rd arg is the query object (null/undefined/'' skipped, arrays repeat)
 const posts = await useApi()<Post[]>('/posts', null, { userId: 1, tag: ['news', 'featured'] });
 await useApi()<Post>('/posts', { method: 'POST', body: { userId: 42, title: 'Hello' } });
+
+// per-call cache control
+await useApi()<Stock>('/stocks/AAPL', { cache: false }); // bypass
+await useApi()<User>('/me', { cache: { refetch: true } }); // force refetch
+useApi().cache.invalidate((key) => key.includes('/posts')); // manual invalidate
 ```
 
+Repeated GETs return cached data within `staleTime` (30s default) without hitting the network.
+After that they return cached data _and_ refresh in the background (stale-while-revalidate).
+Concurrent identical calls share one in-flight promise (deduplication). Mutations are never cached.
+
 Pass `onRequestProgress` and the client transparently swaps to `XMLHttpRequest` for upload progress
-— retry, timeout, `AbortSignal`, and `ApiError` still work identically; the fast path stays on
-native `fetch`.
+— retry, timeout, `AbortSignal`, `ApiError`, and caching still work identically; the fast path stays
+on native `fetch`.
 
 Errors are `ApiError` (HTTP **and** network; `status === 0` means no response). Discriminate with
 `isApiError(e)` — uses a `Symbol.for(...)` brand that survives bundle duplication and

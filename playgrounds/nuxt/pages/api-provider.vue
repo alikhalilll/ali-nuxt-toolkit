@@ -21,6 +21,19 @@ type LogLevel = 'info' | 'success' | 'error';
 const log = ref<Array<{ level: LogLevel; msg: string }>>([]);
 const push = (msg: string, level: LogLevel = 'info') => log.value.unshift({ msg, level });
 
+// Count actual network calls by wrapping the global fetch. Lives on the
+// client only — gives the cache demo a truthful "hit vs. miss" signal that
+// isn't fooled by the request-interceptor chain (which fires per logical
+// call, not per network round-trip).
+const networkCalls = ref(0);
+if (import.meta.client) {
+  const originalFetch = globalThis.fetch.bind(globalThis);
+  globalThis.fetch = ((input, init) => {
+    networkCalls.value++;
+    return originalFetch(input as RequestInfo, init);
+  }) as typeof fetch;
+}
+
 const post = ref<Post | null>(null);
 const loadPost = async () => {
   push('GET /posts/1');
@@ -34,16 +47,18 @@ const loadPost = async () => {
 
 const userPosts = ref<Post[]>([]);
 const loadUserPosts = async () => {
-  push('GET /posts?userId=1');
-  userPosts.value = (await api<Post[]>('/posts', null, { userId: 1 })) ?? [];
+  push('GET /posts/user/1');
+  // dummyjson wraps list responses in `{ posts, total, skip, limit }`.
+  const res = await api<{ posts: Post[] }>('/posts/user/1');
+  userPosts.value = res?.posts ?? [];
   push(`→ ${userPosts.value.length} posts`, 'success');
 };
 
 const created = ref<Post | null>(null);
 const createPost = async () => {
-  push('POST /posts with JSON body');
+  push('POST /posts/add with JSON body');
   created.value =
-    (await api<Post>('/posts', {
+    (await api<Post>('/posts/add', {
       method: 'POST',
       body: { userId: 42, title: 'Hello', body: 'From the playground' },
     })) ?? null;
@@ -66,11 +81,11 @@ const deletePost = async () => {
 };
 
 const uploadForm = async () => {
-  push('POST /posts with FormData');
+  push('POST /posts/add with FormData');
   const form = new FormData();
   form.append('title', 'multipart');
   form.append('body', 'from FormData');
-  const res = await api<Post>('/posts', { method: 'POST', body: form });
+  const res = await api<Post>('/posts/add', { method: 'POST', body: form });
   push(`→ id ${res?.id}`, 'success');
 };
 
@@ -105,6 +120,70 @@ const triggerAbort = async () => {
   } catch (e) {
     if (isApiError(e)) push(`→ aborted: ${e.message}`, 'error');
   }
+};
+
+// ---------------------------------------------------------------------------
+// Cache demo
+// ---------------------------------------------------------------------------
+
+const cacheEntryCount = ref(0);
+const cacheLastStoredAt = ref<number | null>(null);
+const refreshCacheStats = () => {
+  let count = 0;
+  let lastStoredAt: number | null = null;
+  for (const [, entry] of api.cache.entriesIter()) {
+    count++;
+    if (lastStoredAt === null || entry.storedAt > lastStoredAt) {
+      lastStoredAt = entry.storedAt;
+    }
+  }
+  cacheEntryCount.value = count;
+  cacheLastStoredAt.value = lastStoredAt;
+};
+
+const cacheGet = async (label: string, opts: Parameters<typeof api>[1] = null) => {
+  const before = networkCalls.value;
+  push(`${label} (entries=${cacheEntryCount.value})`);
+  await api<Post>('/posts/1', opts);
+  refreshCacheStats();
+  const after = networkCalls.value;
+  if (after === before) {
+    push(`→ cache hit (no network)`, 'success');
+  } else {
+    push(`→ network call (entry stored at ${formatStoredAt()})`, 'success');
+  }
+};
+
+const cacheHit = () => cacheGet('GET /posts/1 — expect cache hit');
+const cacheMiss = () => cacheGet('GET /posts/1 — expect cold miss');
+const cacheForceRefetch = () =>
+  cacheGet('GET /posts/1 — force refetch', { cache: { refetch: true } });
+const cacheBypass = () => cacheGet('GET /posts/1 — cache disabled', { cache: false });
+
+const cacheInvalidate = () => {
+  const dropped = api.cache.invalidate((key) => key.includes('GET'));
+  refreshCacheStats();
+  push(`cache.invalidate(GET) → dropped ${dropped}`, 'info');
+};
+
+const cacheClear = () => {
+  api.cache.clear();
+  refreshCacheStats();
+  push('cache.clear() → cleared', 'info');
+};
+
+const cacheDedupeBurst = async () => {
+  const before = networkCalls.value;
+  push('5 concurrent GET /posts/2 (expect dedupe)');
+  await Promise.all(Array.from({ length: 5 }, () => api<Post>('/posts/2')));
+  refreshCacheStats();
+  push(`→ ${networkCalls.value - before} network call(s) for 5 logical calls`, 'success');
+};
+
+const formatStoredAt = () => {
+  if (cacheLastStoredAt.value === null) return '—';
+  const d = new Date(cacheLastStoredAt.value);
+  return d.toLocaleTimeString();
 };
 
 let unregister: (() => void) | null = null;
@@ -233,6 +312,41 @@ const btnDanger =
             {{ interceptorActive ? 'on' : 'off' }}
           </span>
         </button>
+      </div>
+    </div>
+
+    <div class="mb-4 rounded-xl border border-brand-border bg-surface p-5">
+      <h2 class="mb-3 border-l-[3px] border-brand pl-2 text-lg font-semibold">Cache</h2>
+      <p class="mb-3 text-sm text-text-dim">
+        Defaults:
+        <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-brand-2">staleTime 30s</code>,
+        <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-brand-2">gcTime 5min</code>, SWR
+        on, GET/HEAD only. The buttons below operate on the same
+        <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-brand-2">/posts/1</code> endpoint
+        — watch the network counter and entry timestamp to see hit vs. miss.
+      </p>
+      <div class="mb-3 flex flex-wrap gap-3 text-xs text-text-dim">
+        <span>
+          Network calls (page lifetime):
+          <strong class="text-text">{{ networkCalls }}</strong>
+        </span>
+        <span>
+          Cache entries:
+          <strong class="text-text">{{ cacheEntryCount }}</strong>
+        </span>
+        <span>
+          Last stored at:
+          <strong class="text-text">{{ formatStoredAt() }}</strong>
+        </span>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <button :class="btnPrimary" @click="cacheMiss">First fetch</button>
+        <button :class="btnBase" @click="cacheHit">Repeat (cache hit)</button>
+        <button :class="btnBase" @click="cacheForceRefetch">Force refetch</button>
+        <button :class="btnBase" @click="cacheBypass">Bypass cache</button>
+        <button :class="btnBase" @click="cacheDedupeBurst">Concurrent ×5 (dedupe)</button>
+        <button :class="btnBase" @click="cacheInvalidate">Invalidate GET</button>
+        <button :class="btnDanger" @click="cacheClear">Clear all</button>
       </div>
     </div>
 

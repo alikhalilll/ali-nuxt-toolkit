@@ -10,6 +10,7 @@ order: 1
 A strongly-typed `fetch` client for Nuxt 3 / 4 with interceptors, retry/backoff, and a framework-agnostic core you can use anywhere.
 
 - **Typed client type** — `ApiProviderClient` is exported so you can annotate your own wrappers and composables.
+- **Caching, on by default** — TanStack-Query-style: `staleTime` 30s, `gcTime` 5min, stale-while-revalidate, request deduplication. GET/HEAD only — mutations never cached. Per-call overrides and a `client.cache` API for manual control.
 - **Interceptor chain** — register multiple request/response/error interceptors via `.useRequest`, `.useResponse`, `.useError`.
 - **Retry + backoff** — per-client defaults with per-call overrides. Configurable status codes and exponential delay.
 - **Smart body encoding** — plain objects → JSON; `FormData` / `URLSearchParams` / `Blob` / `ArrayBuffer` / `string` pass through with correct Content-Type.
@@ -306,9 +307,174 @@ The body parser falls through gracefully: `204` / `205` give `undefined`, valid 
 
 `normalizeErrorPayload` (re-exported from `/core`) is what turns server payloads into the `{ message, details }` shape attached to the error. It dives into common envelopes — `errors`, `detail`, `details`, and `data.errors` — flattening arrays and nested records into `details.errors`.
 
+## Caching
+
+The client ships with a request cache modelled on [TanStack Query](https://tanstack.com/query/latest) and **enabled by default**. The mental model is `staleTime` + `gcTime`:
+
+- An entry is **fresh** for `staleTime` after it's stored — reads inside this window return cached data with **no network call**.
+- After `staleTime` the entry is **stale** but still cached for `gcTime`. Reads return cached data immediately **and** fire a background refetch (stale-while-revalidate).
+- After `gcTime` of inactivity, the entry is garbage-collected.
+
+In-flight identical calls are **deduplicated** — fire 10 `GET /me` at once and only one network request goes out. Only `GET` and `HEAD` are cached; every mutation passes through untouched.
+
+::DemoApiCache
+::
+
+The panel above is wired to the real `$apiProvider.cache`. The status badge tracks the tracked entry's lifecycle (**Fresh** → **Stale** → **Expired**), the green and amber bars tick down its `staleTime` and `gcTime` windows in real time, and **Network calls** counts actual `fetch` round-trips so cache hits stay distinguishable from network calls. Try _First fetch_ then _Repeat (hit)_ — the network counter stays put. _Burst ×5_ fires five identical GETs concurrently and they collapse into one network call (deduplication).
+
+### Defaults
+
+| Setting            | Default          | Meaning                                                 |
+| ------------------ | ---------------- | ------------------------------------------------------- |
+| `enabled`          | `true`           | Cache is on out of the box.                             |
+| `staleTime`        | `30_000` (30s)   | Fresh window — pure cache hit, zero network.            |
+| `gcTime`           | `300_000` (5min) | Stale window — cache hit + background refetch.          |
+| `swr`              | `true`           | When stale, refresh in the background.                  |
+| `cacheableMethods` | `['GET','HEAD']` | Mutations are never cached.                             |
+| `dedupe`           | `true`           | Identical concurrent calls share one in-flight promise. |
+| `maxEntries`       | `500`            | LRU eviction safety net.                                |
+
+Tune them globally in `nuxt.config.ts`:
+
+```ts
+apiProvider: {
+  baseURL: '...',
+  cache: {
+    staleTime: 60_000,      // 1 minute fresh window
+    gcTime: 10 * 60_000,    // 10 minute survival
+    swr: true,
+    hydrate: true,          // forward SSR cache to the client (see below)
+  },
+}
+```
+
+### Per-call overrides
+
+```ts
+// Long-fresh: this list barely changes — keep it for 5 minutes.
+const countries = await api<Country[]>('/countries', { cache: { staleTime: 5 * 60_000 } });
+
+// Disable the cache for this one call.
+const live = await api<Quote>('/stocks/AAPL', { cache: false });
+
+// Cache a POST you know is idempotent (a search endpoint).
+const results = await api<Hit[]>('/search', {
+  method: 'POST',
+  body: { q: 'nuxt' },
+  cache: { cacheableMethods: ['POST'] },
+});
+```
+
+### Forcing a refetch
+
+```ts
+// Bypass the fresh window for this call. The response replaces the cached entry.
+const fresh = await api<User>('/me', { cache: { refetch: true } });
+```
+
+### Custom cache keys
+
+By default the key is derived from `method + URL + sorted query string + body fingerprint`. Supply your own when the auto-derived shape is too narrow (different query strings should share a cache) or too broad (per-locale cache that the URL doesn't reflect):
+
+```ts
+// Locale-scoped cache for the same endpoint.
+const intro = await api<Intro>('/intro', {
+  cache: { key: ['intro', locale.value] },
+});
+```
+
+### Manual invalidation after mutations
+
+The cache exposes a small imperative API. The pattern is the same as TanStack Query — mutate, then invalidate:
+
+```ts
+// Drop every entry whose key touches the posts namespace.
+await api<Post>('/posts', { method: 'POST', body: draft });
+api.cache.invalidate((key) => key.startsWith('GET:') && key.includes('/posts'));
+
+// Or do it from a response interceptor for any mutation that touches /posts.
+api.useResponse((ctx) => {
+  const method = (ctx.request.options.method || 'GET').toUpperCase();
+  if (method === 'GET' || method === 'HEAD') return;
+  if (ctx.request.endpoint.startsWith('/posts')) {
+    api.cache.invalidate((key) => key.includes('/posts'));
+  }
+});
+
+// Nuke everything.
+api.cache.clear();
+```
+
+| Method                    | Purpose                                                              |
+| ------------------------- | -------------------------------------------------------------------- |
+| `cache.invalidate(pred)`  | Drop every entry matching the predicate. Returns the number removed. |
+| `cache.delete(key)`       | Drop a single entry by its cache key.                                |
+| `cache.clear()`           | Drop every stored entry. In-flight requests keep running.            |
+| `cache.serialize()`       | Dump the store as a `SerializedCache` snapshot.                      |
+| `cache.hydrate(snapshot)` | Restore entries from a snapshot. Expired entries are skipped.        |
+| `cache.entriesIter()`     | Iterate `[key, entry]` pairs, ordered by recency (LRU at the front). |
+
+### Disabling the cache
+
+```ts
+// Globally
+apiProvider: {
+  cache: {
+    enabled: false;
+  }
+}
+
+// Per call
+await api('/something', { cache: false });
+```
+
+### SSR → CSR hydration
+
+By default the SSR cache and the CSR cache are independent. The Nuxt module can wire them together via the Nuxt payload when you opt in:
+
+```ts
+apiProvider: {
+  cache: { hydrate: true },
+}
+```
+
+With `hydrate: true`:
+
+- On the server, after rendering completes, `client.cache.serialize()` is stored in `useState('apiProvider:<name>:cache', ...)`.
+- On the client, the state is read back during plugin init and applied via `client.cache.hydrate(snapshot)`.
+
+Net effect: an SSR fetch for `/posts/1` populates the client cache too, so the first client navigation hits the cache instead of refetching. Combine with `staleTime` to control how long the hydrated entry stays fresh.
+
+::alert{type="info"}
+Hydrating the cache adds the cached payload to the SSR response. If your responses are large or contain anything user-specific you don't want serialised into HTML, leave hydration off and let `useAsyncData` handle the SSR hand-off per key instead.
+::
+
+### `CacheOptions` reference
+
+Per-call options on `RequestOptions.cache`. May also be `false` to disable for that call.
+
+| Field              | Type                           | Default        | Purpose                                                 |
+| ------------------ | ------------------------------ | -------------- | ------------------------------------------------------- |
+| `enabled`          | `boolean`                      | client default | Per-call enable/disable.                                |
+| `staleTime`        | `number` (ms)                  | client default | Fresh window override.                                  |
+| `gcTime`           | `number` (ms)                  | client default | GC horizon override.                                    |
+| `swr`              | `boolean`                      | client default | Background refetch on stale.                            |
+| `cacheableMethods` | `readonly string[]`            | client default | Methods eligible for caching.                           |
+| `dedupe`           | `boolean`                      | client default | Share in-flight identical calls.                        |
+| `maxEntries`       | `number`                       | client default | LRU bound (rarely useful per-call).                     |
+| `key`              | `string \| readonly unknown[]` | auto-derived   | Explicit cache key. Arrays are deeply hashed.           |
+| `refetch`          | `boolean`                      | `false`        | Force the network, replace the cached entry on success. |
+
+### `CacheConfig` reference
+
+Client-level config under `ApiClientConfig.cache` (or `apiProvider.cache` in `nuxt.config.ts`). Same fields as `CacheOptions` minus `key` and `refetch`, which are per-call only. The Nuxt module accepts one extra field — `hydrate: boolean` — handled by the module itself, not the core client.
+
 ## `RequestOptions` reference
 
-`RequestOptions` extends the standard `RequestInit` (so `method`, `credentials`, `cache`, `mode`, `redirect`, `referrer`, `keepalive`, `integrity`, etc. all pass through) and adds:
+`RequestOptions` extends the standard `RequestInit` (so `method`, `credentials`, `mode`, `redirect`, `referrer`, `keepalive`, `integrity`, etc. all pass through). Two `RequestInit` fields are **overridden**:
+
+- `body` — accepts richer shapes (objects, arrays, `FormData`, `URLSearchParams`, `Blob`, `ArrayBuffer`, `string`) and encodes them with the right `Content-Type`.
+- `cache` — repurposed for the application-level [request cache](#caching). The browser's HTTP-cache directive (`'default' | 'no-cache' | ...`) is no longer set via this field; use the `Cache-Control` header instead.
 
 | Field               | Type                                                                                         | Default        | Purpose                                                                                                |
 | ------------------- | -------------------------------------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------ |
@@ -319,6 +485,7 @@ The body parser falls through gracefully: `204` / `205` give `undefined`, valid 
 | `skipInterceptors`  | `boolean`                                                                                    | `false`        | Bypass request, response, **and** error interceptors for this call.                                    |
 | `meta`              | `Record<string, unknown>`                                                                    | `{}`           | Arbitrary data forwarded to interceptors via `ctx.meta`.                                               |
 | `onRequestProgress` | `(p: RequestProgress) => void`                                                               | —              | Upload + download progress. Switches transport to `XMLHttpRequest`.                                    |
+| `cache`             | `CacheOptions \| false`                                                                      | client default | Per-call cache override. `false` disables caching for this call. See [Caching](#caching).              |
 
 ## Cancel previous request (debounced search)
 
@@ -543,6 +710,7 @@ const repo = await client<{ stargazers_count: number }>('/repos/nuxt/nuxt');
 | `headers`      | `HeadersInit`                     | —                  | Default headers merged into every request.                             |
 | `fetch`        | `typeof fetch`                    | `globalThis.fetch` | Inject a custom fetch (test doubles, polyfills, instrumented fetches). |
 | `interceptors` | `{ request?, response?, error? }` | `{}`               | Initial interceptor arrays — equivalent to calling `.useX()` later.    |
+| `cache`        | `CacheConfig`                     | defaults           | Request-cache configuration. See [Caching](#caching).                  |
 
 ### Initial interceptors at construction
 
@@ -639,19 +807,25 @@ The `/core` entry exports the small building blocks the client itself uses. They
 | `createXhrFetch`          | `(onProgress) => fetch`. The XHR-backed fetch used for upload progress. Browser-only.                                 |
 | `normalizeErrorPayload`   | `(input, fallback) => { message, details }`. Flattens common server error shapes into `ApiErrorDetails`.              |
 | `ApiError` / `isApiError` | The error class and its brand-checked guard (works across realms).                                                    |
+| `ApiCache`                | Framework-agnostic request cache. Construct directly or read via `client.cache`. See [Caching](#caching).             |
+| `buildCacheKey`           | `(input) => string`. Deterministic key from `{ method, url, body, override }`.                                        |
+| `DEFAULT_CACHE_CONFIG`    | The default `CacheConfig` constant.                                                                                   |
+| `resolveCacheConfig`      | `(input?) => Required<CacheConfig>`. Merge a user config over defaults.                                               |
+| `isFresh` / `isExpired`   | Pure entry-lifecycle helpers — `(entry, now?) => boolean`.                                                            |
 
 ## Module options
 
-| Option             | Type                    | Default          | Purpose                                                         |
-| ------------------ | ----------------------- | ---------------- | --------------------------------------------------------------- |
-| `baseURL`          | `string`                | `''`             | Prepended to every relative endpoint.                           |
-| `provideName`      | `string`                | `'$apiProvider'` | Injected under `$<name>`. Leading `$` is stripped.              |
-| `defaultTimeoutMs` | `number`                | `20000`          | Client-wide request timeout.                                    |
-| `server`           | `boolean`               | `true`           | Register the plugin on the server. Set `false` for client-only. |
-| `retry`            | `Partial<RetryOptions>` | `{}`             | Default retry policy, overridable per call.                     |
-| `onRequestPath`    | `string`                | —                | Path to a module with a default-exported `RequestInterceptor`.  |
-| `onSuccessPath`    | `string`                | —                | Path to a module with a default-exported `ResponseInterceptor`. |
-| `onErrorPath`      | `string`                | —                | Path to a module with a default-exported `ErrorInterceptor`.    |
+| Option             | Type                                  | Default          | Purpose                                                                                              |
+| ------------------ | ------------------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------- |
+| `baseURL`          | `string`                              | `''`             | Prepended to every relative endpoint.                                                                |
+| `provideName`      | `string`                              | `'$apiProvider'` | Injected under `$<name>`. Leading `$` is stripped.                                                   |
+| `defaultTimeoutMs` | `number`                              | `20000`          | Client-wide request timeout.                                                                         |
+| `server`           | `boolean`                             | `true`           | Register the plugin on the server. Set `false` for client-only.                                      |
+| `retry`            | `Partial<RetryOptions>`               | `{}`             | Default retry policy, overridable per call.                                                          |
+| `cache`            | `CacheConfig & { hydrate?: boolean }` | defaults         | Cache config — see [Caching](#caching). `hydrate: true` forwards the SSR cache via the Nuxt payload. |
+| `onRequestPath`    | `string`                              | —                | Path to a module with a default-exported `RequestInterceptor`.                                       |
+| `onSuccessPath`    | `string`                              | —                | Path to a module with a default-exported `ResponseInterceptor`.                                      |
+| `onErrorPath`      | `string`                              | —                | Path to a module with a default-exported `ErrorInterceptor`.                                         |
 
 ## Exported types
 
@@ -673,5 +847,12 @@ import type {
   ApiErrorDetails,
   IError,
   isApiError,
+  // Cache surface
+  CacheConfig,
+  CacheOptions,
+  CacheEntry,
+  CachePredicate,
+  SerializedCache,
+  ApiCache,
 } from '@alikhalilll/nuxt-api-provider/types';
 ```

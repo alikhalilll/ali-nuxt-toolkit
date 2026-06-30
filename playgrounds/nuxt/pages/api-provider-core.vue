@@ -9,7 +9,7 @@ interface Post {
   body: string;
 }
 
-const baseURL = ref('https://jsonplaceholder.typicode.com');
+const baseURL = ref('https://dummyjson.com');
 const traceId = ref(
   typeof crypto !== 'undefined' && 'randomUUID' in crypto
     ? crypto.randomUUID()

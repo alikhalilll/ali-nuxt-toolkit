@@ -77,7 +77,7 @@ export default defineNuxtConfig({
     },
   },
   apiProvider: {
-    baseURL: 'https://jsonplaceholder.typicode.com',
+    baseURL: 'https://dummyjson.com',
     provideName: '$apiProvider',
     defaultTimeoutMs: 10_000,
     retry: { attempts: 1, delayMs: 200 },

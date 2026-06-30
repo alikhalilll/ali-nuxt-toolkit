@@ -10,12 +10,12 @@ Four focused packages published under the `@alikhalilll` npm scope: three Nuxt m
 
 ## Packages
 
-| Package                                                 | Type          | Summary                                                                            |
-| ------------------------------------------------------- | ------------- | ---------------------------------------------------------------------------------- |
-| [`@alikhalilll/nuxt-api-provider`](/api-provider)       | Nuxt module   | Typed `fetch` client with interceptors, retry, upload/download progress.           |
-| [`@alikhalilll/nuxt-crypto`](/crypto)                   | Nuxt module   | AES-GCM + PBKDF2 encryption with key caching and pluggable algorithms.             |
-| [`@alikhalilll/nuxt-auto-middleware`](/auto-middleware) | Nuxt module   | Layout-based middleware with glob matching, groups, per-page overrides.            |
-| [`@alikhalilll/a-tel-input`](/ui)                       | Vue 3 library | Phone input with country picker, libphonenumber validation, popover/drawer picker. |
+| Package                                                 | Type          | Summary                                                                                                  |
+| ------------------------------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------- |
+| [`@alikhalilll/nuxt-api-provider`](/api-provider)       | Nuxt module   | Typed `fetch` client with caching (TanStack-Query-style), interceptors, retry, upload/download progress. |
+| [`@alikhalilll/nuxt-crypto`](/crypto)                   | Nuxt module   | AES-GCM + PBKDF2 encryption with key caching and pluggable algorithms.                                   |
+| [`@alikhalilll/nuxt-auto-middleware`](/auto-middleware) | Nuxt module   | Layout-based middleware with glob matching, groups, per-page overrides.                                  |
+| [`@alikhalilll/a-tel-input`](/ui)                       | Vue 3 library | Phone input with country picker, libphonenumber validation, popover/drawer picker.                       |
 
 ## Install
 

@@ -18,7 +18,7 @@ You only need to re-run `pnpm build` when you change `package.json` exports or h
 
 | Area                                                                                                  | Where                                                       |
 | ----------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| `@alikhalilll/nuxt-api-provider` — basic client, retry, progress                                      | `pages/api-*.vue`, `composables/useApi.ts`                  |
+| `@alikhalilll/nuxt-api-provider` — basic client, caching (hit/SWR/dedupe), retry, progress            | `pages/api-*.vue`, `composables/useApi.ts`                  |
 | `@alikhalilll/nuxt-crypto` — encrypt/decrypt round-trip, server-only mode, device-fingerprint binding | `pages/crypto.vue`, `server/api/*`                          |
 | `@alikhalilll/nuxt-auto-middleware` — layout rules, groups, per-page overrides                        | `middleware/*.ts`, `layouts/*.vue`, `pages/dashboard/*.vue` |
 | `@alikhalilll/a-*` — tell-input + popover/drawer/responsive-popover via per-package Nuxt modules      | `pages/ui.vue` (module wired in `nuxt.config.ts`)           |

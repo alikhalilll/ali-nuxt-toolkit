@@ -5,7 +5,7 @@ let client: ReturnType<typeof createApiClient> | null = null;
 function getClient() {
   if (client) return client;
   client = createApiClient({
-    baseURL: 'https://jsonplaceholder.typicode.com',
+    baseURL: 'https://dummyjson.com',
     headers: { 'User-Agent': 'ali-nuxt-toolkit-playground/core' },
     retry: { attempts: 1, delayMs: 200 },
   });
