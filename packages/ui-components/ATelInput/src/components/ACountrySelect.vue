@@ -629,9 +629,7 @@ defineExpose({
 
 .a-country-select__search {
   border-bottom: 1px solid hsl(var(--ak-ui-border) / 0.7);
-  /* Drop bottom padding — the list owns the gap below the search border so the
-     sticky group header can overlap it and sit flush against the search bar. */
-  padding: 0.375rem 0.375rem 0;
+  padding: 0.375rem 0.375rem 0.75rem;
 }
 .a-country-select__search-box {
   position: relative;
