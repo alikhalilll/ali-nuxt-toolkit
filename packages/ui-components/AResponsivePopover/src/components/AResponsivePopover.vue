@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, getCurrentInstance } from 'vue';
 import { useMediaQuery } from '@vueuse/core';
 import { APopover } from '@alikhalilll/a-popover';
 import { ADrawer } from '@alikhalilll/a-drawer';
@@ -12,6 +12,36 @@ const props = withDefaults(defineProps<AResponsivePopoverProps>(), {
   scrollLock: 'events',
   forceBottomSheet: false,
 });
+
+/**
+ * Auto-detect nesting inside another vaul drawer by walking the Vue component tree.
+ * When we find a `DrawerRoot` ancestor we render `DrawerRootNested` — otherwise the
+ * two vaul roots race each other and the outer drawer closes when the inner overlay
+ * is clicked (plus the outer focus trap eats keystrokes in the inner drawer).
+ *
+ * The walk mirrors exactly what `inject()` inside `DrawerRootNested` will see —
+ * Vue's provide/inject follows the component tree, and slot content's instance
+ * parent is whichever component renders `<slot/>` (not where the content was
+ * declared), so an inner popover mounted inside an outer drawer's slot naturally
+ * reaches the vaul `DrawerRoot` ancestor. A DOM sniff (`document.querySelector`)
+ * would give the wrong answer twice: it fires on *sibling* open drawers elsewhere
+ * on the page (Reka's provide/inject wouldn't reach them → `DrawerRootNested`
+ * crashes on missing context), and it lingers during the outer drawer's ~500ms
+ * exit animation while the node still has `data-vaul-drawer`.
+ *
+ * Only coupling is the component name — `'DrawerRoot'` is `vaul-vue`'s public
+ * component name and is stable across versions.
+ */
+const instance = getCurrentInstance();
+const nested = (() => {
+  let parent = instance?.parent;
+  while (parent) {
+    const name = parent.type?.__name ?? (parent.type as { name?: string })?.name;
+    if (name === 'DrawerRoot') return true;
+    parent = parent.parent;
+  }
+  return false;
+})();
 
 defineSlots<AResponsivePopoverSlots>();
 
@@ -68,6 +98,7 @@ provideResponsivePopoverContext({
     v-model:open="open"
     :modal="drawerModal"
     :no-body-styles="drawerNoBodyStyles"
+    :nested="nested"
     data-slot="responsive-popover"
   >
     <slot :is-desktop="false" />

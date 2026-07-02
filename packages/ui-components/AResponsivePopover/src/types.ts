@@ -31,6 +31,11 @@ export interface AResponsivePopoverProps {
    * the `breakpoint` media query so desktops also render the vaul drawer — useful for
    * pickers that should always feel modal on touch + desktop alike (e.g. country
    * pickers inside a primarily-mobile flow). Default `false`.
+   *
+   * When the drawer branch is picked, nesting inside another vaul drawer is detected
+   * automatically by walking the Vue component tree for a `DrawerRoot` ancestor, so
+   * consumers never have to opt in — an inner responsive popover flips itself to
+   * `DrawerRootNested` whenever an outer vaul drawer is a real ancestor.
    */
   forceBottomSheet?: boolean;
 }

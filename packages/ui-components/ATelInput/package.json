@@ -136,7 +136,9 @@
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",
-    "libphonenumber-js": "^1.12.0"
+    "libphonenumber-js": "^1.12.0",
+    "reka-ui": "^2.9.0",
+    "vaul-vue": "^0.4.0"
   },
   "devDependencies": {
     "@nuxt/kit": "^4.4.2",

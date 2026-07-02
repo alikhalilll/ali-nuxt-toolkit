@@ -222,6 +222,10 @@ export interface ATelInputProps {
    * width — bypasses the responsive breakpoint so desktops also get the vaul drawer.
    * Useful for primarily-mobile flows where a modal bottom-sheet is the desired UX on
    * every form factor. Forwarded to `ACountrySelect` → `AResponsivePopover`.
+   *
+   * When this input is dropped inside another vaul drawer (a modal-as-drawer, another
+   * responsive popover, etc.), the picker auto-detects the nesting and switches its
+   * drawer branch to `DrawerRootNested` — no consumer opt-in needed.
    */
   forceBottomSheet?: boolean;
 }
