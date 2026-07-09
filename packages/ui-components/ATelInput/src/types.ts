@@ -172,6 +172,18 @@ export interface ATelInputProps {
    * Clearing the input is not debounced — the picker hides immediately. Default 150ms.
    */
   detectDebounceMs?: number;
+  /**
+   * When a country is already pinned (e.g. via `defaultCountry`) and the user types a
+   * local-format number, the bound `phone` model is always normalized to libphonenumber's
+   * canonical `nationalNumber` — trunk zero stripped, digits only. This flag controls
+   * whether the *visible* input is also rewritten to that stripped form once the user
+   * pauses.
+   *
+   * - `false` (default): the input stays exactly as typed (`01066105963`), only the
+   *   emitted model is normalized (`1066105963`). Preserves the user's on-screen edit.
+   * - `true`: after the debounce settles, the visible input snaps to the stripped form.
+   */
+  trimDisplay?: boolean;
   /** Override the flag URL builder, forwarded to ACountrySelect. */
   flagUrl?: (iso2: string, width: number) => string;
   /** Custom search predicate, forwarded to ACountrySelect. */

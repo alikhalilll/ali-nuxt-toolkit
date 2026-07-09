@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, useId, watch } from 'vue';
-import { parsePhoneNumberFromString } from 'libphonenumber-js';
+import { parsePhoneNumberFromString, type CountryCode } from 'libphonenumber-js';
 import { cn } from '@alikhalilll/a-ui-base';
 import { usePhoneValidation } from '../composables/usePhoneValidation';
 import { injectTelInputDefaults } from '../composables/useTelInputDefaults';
@@ -29,6 +29,7 @@ const props = withDefaults(defineProps<ATelInputProps>(), {
   ipEndpoint: 'https://ipapi.co/json/',
   detectFromInput: true,
   detectDebounceMs: 800,
+  trimDisplay: false,
   showValidationIcon: false,
   validateOn: 'change',
 });
@@ -135,7 +136,31 @@ const typing = useTypingPhase({
     if (!current) return;
 
     const typedInternational = (displayValue.value ?? '').trimStart().startsWith('+');
-    if (selectedIso2.value && !typedInternational) return;
+    if (selectedIso2.value && !typedInternational) {
+      // Picker stays pinned to the hint country (the tier-3 re-routing guard above still
+      // applies). But we still run libphonenumber's national-format parse to normalize
+      // the bound value — e.g. Egyptian `01066105963` collapses to `1066105963`, matching
+      // what the E.164 sync path (useSyncedModel on modelValue) already produces for
+      // external writes. Display-side rewrite is opt-in via `trimDisplay`.
+      try {
+        const parsed = parsePhoneNumberFromString(current, selectedIso2.value as CountryCode);
+        const stripped = parsed?.nationalNumber ? String(parsed.nationalNumber) : '';
+        if (stripped && stripped !== current) {
+          if (props.trimDisplay) {
+            // Bare assignment — the phone watcher sees phoneEditedByInput=false and
+            // syncs displayValue to the stripped form.
+            phone.value = stripped;
+          } else {
+            // commitPhone flips phoneEditedByInput=true so the watcher leaves
+            // displayValue alone; only the bound model changes.
+            commitPhone(stripped);
+          }
+        }
+      } catch {
+        /* libphonenumber throws on partial input — leave phone as-is */
+      }
+      return;
+    }
 
     typing.markDetectionAttempt();
 
