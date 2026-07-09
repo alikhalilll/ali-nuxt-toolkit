@@ -131,17 +131,19 @@ const typing = useTypingPhase({
   debounceMs: computed(() => Math.max(0, props.detectDebounceMs)),
   onSettle: () => {
     if (!props.detectFromInput) return;
-    if (selection.detectionLocked.value) return;
     const current = phone.value;
     if (!current) return;
 
     const typedInternational = (displayValue.value ?? '').trimStart().startsWith('+');
+
+    // Normalize-only path — runs whenever a country is pinned and the user typed a
+    // local format, regardless of how the pin was set (hint / picker / input). Uses
+    // libphonenumber's national-format parse so `01066105963` collapses to
+    // `1066105963`, matching what the E.164 sync path already produces for external
+    // writes. Only touches the digits model — never re-routes the picker — so it
+    // sits *before* the `detectionLocked` guard below. Display-side rewrite is
+    // opt-in via `trimDisplay`.
     if (selectedIso2.value && !typedInternational) {
-      // Picker stays pinned to the hint country (the tier-3 re-routing guard above still
-      // applies). But we still run libphonenumber's national-format parse to normalize
-      // the bound value — e.g. Egyptian `01066105963` collapses to `1066105963`, matching
-      // what the E.164 sync path (useSyncedModel on modelValue) already produces for
-      // external writes. Display-side rewrite is opt-in via `trimDisplay`.
       try {
         const parsed = parsePhoneNumberFromString(current, selectedIso2.value as CountryCode);
         const stripped = parsed?.nationalNumber ? String(parsed.nationalNumber) : '';
@@ -161,6 +163,11 @@ const typing = useTypingPhase({
       }
       return;
     }
+
+    // Picker re-routing path — this DOES care about the lock, because it would
+    // change the selected country. A manual pick or a previous input-driven match
+    // pins the picker; subsequent local-format typing must not churn it.
+    if (selection.detectionLocked.value) return;
 
     typing.markDetectionAttempt();
 
