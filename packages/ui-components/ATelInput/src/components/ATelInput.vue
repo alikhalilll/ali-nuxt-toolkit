@@ -143,25 +143,36 @@ const typing = useTypingPhase({
     // writes. Only touches the digits model — never re-routes the picker — so it
     // sits *before* the `detectionLocked` guard below. Display-side rewrite is
     // opt-in via `trimDisplay`.
+    //
+    // Why `isValid()` gates the strip + return: `parsePhoneNumberFromString(x, iso2)`
+    // is lenient — it returns a `PhoneNumber` with a plausible `nationalNumber` even
+    // when `x` doesn't actually belong to `iso2` (e.g. pasting a Saudi local-format
+    // number into an EG-pinned field). Without the gate, we'd strip under the wrong
+    // country's rules AND `return`, skipping the matcher that would correctly re-route
+    // the picker. If the parse is invalid, fall through to `tryMatchPhone`; the
+    // detectionLocked guard below still protects `'picker'`/`'input'` pins from
+    // tier-3 ambiguous re-routes.
     if (selectedIso2.value && !typedInternational) {
       try {
         const parsed = parsePhoneNumberFromString(current, selectedIso2.value as CountryCode);
-        const stripped = parsed?.nationalNumber ? String(parsed.nationalNumber) : '';
-        if (stripped && stripped !== current) {
-          if (props.trimDisplay) {
-            // Bare assignment — the phone watcher sees phoneEditedByInput=false and
-            // syncs displayValue to the stripped form.
-            phone.value = stripped;
-          } else {
-            // commitPhone flips phoneEditedByInput=true so the watcher leaves
-            // displayValue alone; only the bound model changes.
-            commitPhone(stripped);
+        if (parsed?.isValid()) {
+          const stripped = String(parsed.nationalNumber ?? '');
+          if (stripped && stripped !== current) {
+            if (props.trimDisplay) {
+              // Bare assignment — the phone watcher sees phoneEditedByInput=false and
+              // syncs displayValue to the stripped form.
+              phone.value = stripped;
+            } else {
+              // commitPhone flips phoneEditedByInput=true so the watcher leaves
+              // displayValue alone; only the bound model changes.
+              commitPhone(stripped);
+            }
           }
+          return;
         }
       } catch {
-        /* libphonenumber throws on partial input — leave phone as-is */
+        /* libphonenumber throws on partial input — fall through to the matcher */
       }
-      return;
     }
 
     // Picker re-routing path — this DOES care about the lock, because it would
@@ -173,6 +184,24 @@ const typing = useTypingPhase({
 
     const match = tryMatchPhone(current);
     if (!match) return;
+
+    // Fall-through guard for the "pinned country + no `+`" path (where the normalize
+    // branch above fell through because the pinned-country parse was invalid). The
+    // matcher's tier-3 is a prefix-only lookup — accepting it blindly can either
+    // (a) churn the picker on a stray tier-3 cross-country hit, or (b) rewrite the
+    // user-typed digits via a same-country dial-prefix strip (e.g. `2001234567`
+    // under EG tier-3 becomes `01234567`). Only trust a re-route to a DIFFERENT
+    // country whose parse actually validates there; same-country matches are a
+    // no-op so what the user typed stays intact.
+    if (!typedInternational && selectedIso2.value) {
+      if (match.country.value === selectedIso2.value) return;
+      try {
+        const verify = parsePhoneNumberFromString(current, match.country.value as CountryCode);
+        if (!verify?.isValid()) return;
+      } catch {
+        return;
+      }
+    }
 
     if (match.country.value === selectedIso2.value && match.nationalNumber === phone.value) {
       // No-op except for the lock — the matcher confirmed our current state.
