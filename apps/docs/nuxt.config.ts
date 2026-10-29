@@ -77,7 +77,10 @@ export default defineNuxtConfig({
     },
   },
   apiProvider: {
-    baseURL: 'https://dummyjson.com',
+    // Docs demos talk to static JSON under /public/api/*. Resolving against the
+    // Nuxt app baseURL keeps the demos working both at `/` locally and under
+    // the GitHub Pages project subpath (e.g. `/ali-nuxt-toolkit/`).
+    baseURL: withBase('/api'),
     provideName: '$apiProvider',
     defaultTimeoutMs: 10_000,
     retry: { attempts: 1, delayMs: 200 },

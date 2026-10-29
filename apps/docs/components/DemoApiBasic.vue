@@ -17,7 +17,7 @@ const run = async () => {
   loading.value = true;
   result.value = '';
   try {
-    const post = await $apiProvider<Post>('/posts/1');
+    const post = await $apiProvider<Post>('/posts/1.json');
     result.value = JSON.stringify(post, null, 2);
   } catch (e) {
     if (isApiError(e)) {
@@ -35,7 +35,7 @@ const run = async () => {
 <template>
   <div class="my-4 rounded-lg border border-border bg-surface p-5">
     <h4 class="mb-3 text-[11px] font-bold uppercase tracking-widest text-text-dim">
-      Live · GET /posts/1
+      Live · GET /posts/1.json
     </h4>
     <button
       :disabled="loading"

@@ -207,7 +207,7 @@ const toggleInterceptor = () => {
 const retryDemo = async () => {
   push('GET /status/503 with retry.attempts=2');
   try {
-    await api('https://httpbin.org/status/503', {
+    await api('https://httpbingo.org/status/503', {
       retry: { attempts: 2, delayMs: 200, backoff: 2 },
       timeoutMs: 5000,
     });
@@ -229,13 +229,19 @@ const runProgress = async () => {
   downloadLoaded.value = 0;
   progressRunning.value = true;
 
-  const blob = new Blob([new Uint8Array(2 * 1024 * 1024)], { type: 'application/octet-stream' });
+  const uploadBytes = 256 * 1024;
+  const blob = new Blob([new Uint8Array(uploadBytes)], { type: 'application/octet-stream' });
   const form = new FormData();
   form.append('file', blob, 'dummy.bin');
 
-  push('POST with onRequestProgress (~2 MB)');
+  // See DemoApiProgress.vue — httpbingo's HTTP/2 responses omit `Content-Length`,
+  // so the browser can't compute a download ratio. We estimate based on the
+  // known upload size + /anything's ~1.37x base64 echo overhead.
+  const estimatedDownloadBytes = Math.ceil(uploadBytes * 1.37) + 2048;
+
+  push('POST with onRequestProgress (~256 KB)');
   try {
-    await api('https://httpbin.org/post', {
+    await api('https://httpbingo.org/anything', {
       method: 'POST',
       body: form,
       timeoutMs: 60_000,
@@ -246,7 +252,8 @@ const runProgress = async () => {
           if (p.ratio != null) uploadRatio.value = p.ratio;
         } else {
           downloadLoaded.value = p.loaded;
-          if (p.ratio != null) downloadRatio.value = p.ratio;
+          const ratio = p.ratio ?? Math.min(1, p.loaded / estimatedDownloadBytes);
+          downloadRatio.value = ratio;
         }
       },
     });

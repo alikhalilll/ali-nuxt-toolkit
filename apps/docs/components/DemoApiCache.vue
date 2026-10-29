@@ -50,7 +50,7 @@ onBeforeUnmount(() => {
 });
 
 const trackedEntry = computed(() => {
-  // The demo only ever caches GETs to /posts/1, so we scan rather than rebuild
+  // The demo only ever caches GETs to /posts/1.json, so we scan rather than rebuild
   // the cache key (private to the lib). First entry wins.
   void tick.value; // dep
   for (const [key, entry] of $apiProvider.cache.entriesIter()) {
@@ -178,7 +178,7 @@ const busy = ref<string | null>(null);
 const runGet = async (
   id: string,
   label: string,
-  endpoint = '/posts/1',
+  endpoint = '/posts/1.json',
 
   opts: any = null
 ) => {
@@ -218,24 +218,25 @@ const formatStored = () => {
   return new Date(trackedEntry.value.storedAt).toLocaleTimeString();
 };
 
-const firstFetch = () => runGet('first', 'GET /posts/1');
-const cacheHit = () => runGet('hit', 'GET /posts/1');
+const firstFetch = () => runGet('first', 'GET /posts/1.json');
+const cacheHit = () => runGet('hit', 'GET /posts/1.json');
 const forceRefetch = () =>
-  runGet('refetch', 'GET /posts/1 · cache.refetch=true', '/posts/1', {
+  runGet('refetch', 'GET /posts/1.json · cache.refetch=true', '/posts/1.json', {
     cache: { refetch: true },
   });
-const bypass = () => runGet('bypass', 'GET /posts/1 · cache=false', '/posts/1', { cache: false });
+const bypass = () =>
+  runGet('bypass', 'GET /posts/1.json · cache=false', '/posts/1.json', { cache: false });
 
 const dedupeBurst = async () => {
   busy.value = 'burst';
   const before = networkCalls.value;
   try {
-    await Promise.all(Array.from({ length: 5 }, () => $apiProvider<Post>('/posts/2')));
+    await Promise.all(Array.from({ length: 5 }, () => $apiProvider<Post>('/posts/2.json')));
     const delta = networkCalls.value - before;
     lastResult.value = {
       kind: 'dedupe',
       label: delta <= 1 ? 'Deduped' : 'Partial dedupe',
-      detail: `5 × GET /posts/2 fired concurrently → ${delta} network call(s)`,
+      detail: `5 × GET /posts/2.json fired concurrently → ${delta} network call(s)`,
     };
   } finally {
     busy.value = null;
@@ -324,7 +325,7 @@ const btnDanger =
           <span
             class="rounded-md border border-border bg-code-bg px-2.5 py-1 text-xs font-mono text-text-dim"
           >
-            GET /posts/1
+            GET /posts/1.json
           </span>
           <span
             class="inline-flex items-center gap-2 rounded-full border border-border bg-code-bg px-3 py-1 text-[10px] font-semibold uppercase tracking-wider"

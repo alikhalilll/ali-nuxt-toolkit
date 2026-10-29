@@ -22,12 +22,26 @@ const run = async () => {
   uploadLoaded.value = 0;
   downloadLoaded.value = 0;
 
-  const blob = new Blob([new Uint8Array(2 * 1024 * 1024)], { type: 'application/octet-stream' });
+  const uploadBytes = 256 * 1024;
+  const blob = new Blob([new Uint8Array(uploadBytes)], { type: 'application/octet-stream' });
   const form = new FormData();
   form.append('file', blob, 'demo.bin');
 
+  // httpbingo serves HTTP/2 without a `Content-Length` response header, so
+  // the browser's XHR progress events report `lengthComputable: false` and
+  // `ratio` is null. The library passes that through faithfully. For the
+  // demo we estimate the download size from the known upload size — /anything
+  // base64-encodes the body inside its JSON envelope (~1.37x) plus a small
+  // metadata overhead.
+  const estimatedDownloadBytes = Math.ceil(uploadBytes * 1.37) + 2048;
+
   try {
-    await $apiProvider('https://httpbin.org/post', {
+    // httpbingo.org/anything — Go reimplementation of httpbin, with
+    // `Access-Control-Allow-Origin` set on preflight. postman-echo.com used to
+    // work but silently dropped its CORS headers. /anything is the generic
+    // reflect endpoint; /post has a stricter multipart-parsing deadline that
+    // times out around 1 MB on the free tier.
+    await $apiProvider('https://httpbingo.org/anything', {
       method: 'POST',
       body: form,
       timeoutMs: 60_000,
@@ -38,7 +52,8 @@ const run = async () => {
           if (p.ratio != null) uploadRatio.value = p.ratio;
         } else {
           downloadLoaded.value = p.loaded;
-          if (p.ratio != null) downloadRatio.value = p.ratio;
+          const ratio = p.ratio ?? Math.min(1, p.loaded / estimatedDownloadBytes);
+          downloadRatio.value = ratio;
         }
       },
     });
@@ -54,7 +69,7 @@ const run = async () => {
 <template>
   <div class="my-4 rounded-lg border border-border bg-surface p-5">
     <h4 class="mb-3 text-[11px] font-bold uppercase tracking-widest text-text-dim">
-      Live · onRequestProgress (2 MB upload)
+      Live · onRequestProgress (256 KB upload)
     </h4>
     <button
       :disabled="running"
