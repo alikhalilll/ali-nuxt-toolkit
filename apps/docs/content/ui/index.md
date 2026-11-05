@@ -11,8 +11,9 @@ Headless, [shadcn-vue](https://www.shadcn-vue.com/) style components for Vue 3 +
 
 ## Components
 
+- [**`ASkeleton`**](/ui/skeleton) — self-generating skeleton loader. First paint mirrors the slot HTML structure, second load replays a pixel-aligned shape captured from the real DOM.
+- [**`ASmartSkeleton`**](/ui/smart-skeleton) — intelligent, zero-shift skeleton loader. Lays content out unseen in normal DOM flow, measures font metrics with Canvas 2D precision, and reveals with synchronized document-clock shimmer animations.
 - [**`ATelInput`**](/ui/tel-input) — international phone input. Built on [reka-ui](https://reka-ui.com) and [vaul-vue](https://github.com/unovue/vaul-vue). Country auto-detect, libphonenumber-js validation, responsive popover/drawer picker, VeeValidate + Zod integration.
-- [**`ASkeleton`**](/ui/skeleton) — auto-generating skeleton loader. First paint mirrors the slot's HTML structure; second load replays a pixel-aligned shape captured from the real DOM. Public composable + primitives for crafting custom skeleton flows.
 
 ## Theming
 

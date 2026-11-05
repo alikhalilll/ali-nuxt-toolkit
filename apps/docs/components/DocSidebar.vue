@@ -48,14 +48,20 @@ const modules: ModuleEntry[] = [
       {
         label: 'Components',
         items: [
-          { path: '/ui/tel-input', title: 'TelInput', kind: 'page', pkg: 'a-tel-input' },
           {
             path: '/ui/skeleton',
             title: 'Skeleton',
             kind: 'page',
             pkg: 'a-skeleton',
+          },
+          {
+            path: '/ui/smart-skeleton',
+            title: 'SmartSkeleton',
+            kind: 'page',
+            pkg: 'a-smart-skeleton',
             isNew: true,
           },
+          { path: '/ui/tel-input', title: 'TelInput', kind: 'page', pkg: 'a-tel-input' },
         ],
       },
     ],

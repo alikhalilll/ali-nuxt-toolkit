@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, type HTMLAttributes } from 'vue';
+import { computed, toRef, type HTMLAttributes } from 'vue';
 import { cn } from '@alikhalilll/a-ui-base';
+import { useSkeletonBase, type VariantAnimation } from '../../composables/useSkeletonBase';
 import ASkeletonHeading from './ASkeletonHeading.vue';
 import ASkeletonText from './ASkeletonText.vue';
 
@@ -8,7 +9,7 @@ interface Props {
   bars?: number;
   height?: number | string;
   showHeader?: boolean;
-  animation?: 'pulse' | 'shimmer' | 'wave' | 'none';
+  animation?: VariantAnimation;
   class?: HTMLAttributes['class'];
 }
 
@@ -19,9 +20,7 @@ const props = withDefaults(defineProps<Props>(), {
   animation: 'pulse',
 });
 
-const animClass = computed(() =>
-  props.animation === 'none' ? null : `a-skel-anim-${props.animation}`
-);
+const { animClass } = useSkeletonBase(toRef(props, 'animation'));
 
 const chartStyle = computed(() => ({
   height: typeof props.height === 'number' ? `${props.height}px` : String(props.height),

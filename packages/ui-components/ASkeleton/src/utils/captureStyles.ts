@@ -34,6 +34,8 @@ import {
   readComputedStyles,
   type TextLineRect,
 } from './domRead';
+import { isForcedBlock, isIgnored, isSelfSkeletonising, isStopped } from './hints';
+import { TEXT_TAGS as SHARED_TEXT_TAGS } from '../walkers/classify';
 
 export type { TextLineRect };
 
@@ -121,37 +123,9 @@ const ATOMIC_TAGS = new Set([
   'br',
 ]);
 
-/** Tags whose content is text — captured as text bars (per-line via Range). */
-const TEXT_OWNERS = new Set([
-  'p',
-  'h1',
-  'h2',
-  'h3',
-  'h4',
-  'h5',
-  'h6',
-  'span',
-  'a',
-  'em',
-  'strong',
-  'small',
-  'code',
-  'b',
-  'i',
-  'mark',
-  'label',
-  'caption',
-  'time',
-  'dt',
-  'dd',
-  'li',
-  'th',
-  'td',
-  'figcaption',
-  'blockquote',
-  'cite',
-  'q',
-]);
+/** Tags whose content is text — captured as text bars (per-line via Range).
+ * Shared with every other walker via `../walkers/classify.ts:TEXT_TAGS`. */
+const TEXT_OWNERS = SHARED_TEXT_TAGS;
 
 /**
  * Visual CSS properties read from `getComputedStyle()`. Property listed here
@@ -274,7 +248,11 @@ function capture(
     ctx.state.truncated = true;
     return null;
   }
-  if (el.dataset?.skeletonIgnore !== undefined) return null;
+  if (isIgnored(el)) return null;
+  /* `self-skeletonising` subtrees paint their own loader — treat the element
+   * as atomic so the walker preserves the outer rect for layout but doesn't
+   * descend into whatever shimmer scaffolding lives inside. */
+  const selfSkeletonising = isSelfSkeletonising(el);
 
   const cs = window.getComputedStyle(el);
   if (cs.display === 'none' || cs.visibility === 'hidden') return null;
@@ -309,14 +287,23 @@ function capture(
 
   const style = readComputedStyles(cs, VISUAL_PROPS);
 
-  /* Classify the leaf — drives how `<ASkeletonClone>` renders this node. */
+  /* Classify the leaf — drives how `<ASkeletonClone>` renders this node.
+   *
+   * Author hints win over tag-based classification:
+   *   - `isForcedBlock` / `isStopped` → `block`, no children
+   *   - `selfSkeletonising` → `block`, no children (the subtree paints itself)
+   * These three short-circuit the normal tag table so a `<section>` with
+   * `.a-skel-block-hint` renders as one shimmer block instead of recursing. */
+  const forcedBlock = isForcedBlock(el) || isStopped(el) || selfSkeletonising;
   const isAtomic = ATOMIC_TAGS.has(tag);
   const hasOwnText = hasDirectText(el);
   const childrenEls = collectVisibleChildren(el);
 
   let kind: CapturedNode['kind'];
 
-  if (tag === 'img' || tag === 'picture') {
+  if (forcedBlock) {
+    kind = 'block';
+  } else if (tag === 'img' || tag === 'picture') {
     kind = 'image';
   } else if (tag === 'video') {
     kind = 'video';

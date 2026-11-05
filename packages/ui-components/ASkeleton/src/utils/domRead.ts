@@ -9,6 +9,8 @@
  * silent drift between the two pipelines.
  */
 
+import { isIgnored } from './hints';
+
 /** A single rendered text-line rectangle, expressed in root-relative pixels. */
 export interface TextLineRect {
   x: number;
@@ -79,12 +81,12 @@ export function hasDirectText(el: Element): boolean {
   return false;
 }
 
-/** Element children, with `data-skeleton-ignore` descendants filtered out. */
+/** Element children, with skeleton-ignored descendants filtered out. */
 export function collectVisibleChildren(el: Element): HTMLElement[] {
   const out: HTMLElement[] = [];
   for (let i = 0; i < el.children.length; i++) {
     const c = el.children[i] as HTMLElement;
-    if (c.dataset?.skeletonIgnore !== undefined) continue;
+    if (isIgnored(c)) continue;
     out.push(c);
   }
   return out;

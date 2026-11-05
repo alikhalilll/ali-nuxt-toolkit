@@ -14,6 +14,7 @@
     "@alikhalilll/nuxt-auto-middleware": "workspace:*",
     "@alikhalilll/a-input": "workspace:*",
     "@alikhalilll/a-skeleton": "workspace:*",
+    "@alikhalilll/a-smart-skeleton": "workspace:*",
     "@alikhalilll/a-popover": "workspace:*",
     "@alikhalilll/a-drawer": "workspace:*",
     "@alikhalilll/a-responsive-popover": "workspace:*",

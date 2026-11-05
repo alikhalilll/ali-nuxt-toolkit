@@ -33,6 +33,7 @@ export default defineNuxtConfig({
     '@alikhalilll/nuxt-api-provider',
     '@alikhalilll/nuxt-crypto',
     '@alikhalilll/a-skeleton/nuxt',
+    '@alikhalilll/a-smart-skeleton/nuxt',
   ],
   // Note: @alikhalilll/a-ui-base/tokens.css is @imported from the top of docs.css instead of
   // listed here. Vite + pnpm workspaces resolves the same workspace-symlinked CSS via
@@ -72,6 +73,7 @@ export default defineNuxtConfig({
         '/ui',
         '/ui/tel-input',
         '/ui/skeleton',
+        '/ui/smart-skeleton',
       ],
       failOnError: false,
     },

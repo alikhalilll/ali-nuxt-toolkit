@@ -5,10 +5,12 @@ import ASkeletonText from './ASkeletonText.vue';
 import ASkeletonInput from './ASkeletonInput.vue';
 import ASkeletonButton from './ASkeletonButton.vue';
 
+import type { VariantAnimation } from '../../composables/useSkeletonBase';
+
 interface Props {
   fields?: number;
   showSubmit?: boolean;
-  animation?: 'pulse' | 'shimmer' | 'wave' | 'none';
+  animation?: VariantAnimation;
   class?: HTMLAttributes['class'];
 }
 

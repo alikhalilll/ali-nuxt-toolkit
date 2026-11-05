@@ -90,7 +90,7 @@ function resumeShowcase() {
   showcasePaused.value = false;
 }
 
-const currentShowcase = computed(() => showcaseTabs[showcaseIndex.value]);
+const currentShowcase = computed(() => showcaseTabs[showcaseIndex.value] ?? showcaseTabs[0]!);
 
 // Live ATelInput state — owned here since it lives inside the ui exhibit.
 const heroPhone = ref('');

@@ -150,6 +150,36 @@ const TEXT_OWNER_TAGS = new Set([
  */
 const TEXT_PLACEHOLDER = ' '.repeat(24);
 
+/**
+ * Resolve a hint for a vnode's props. The vnode walker runs at render-time
+ * (no DOM yet) so the DOM-based `hints` helpers in `./hints.ts` don't apply —
+ * we match props directly. Still, the two sides must agree on which attribute
+ * / class names resolve to which hint; a single helper here means a drift
+ * between the vnode walker and the DOM walker would show up as a failing test
+ * on the first hint added without updating this file.
+ *
+ * `className` is matched against the vnode's `class` prop in all three shapes
+ * Vue accepts (string, array, object).
+ */
+function vnodeHasHint(props: Record<string, unknown>, attr: string, className: string): boolean {
+  if (props[attr] !== undefined) return true;
+  const cls = props.class;
+  if (typeof cls === 'string') return cls.split(/\s+/).includes(className);
+  if (Array.isArray(cls)) {
+    return cls.some((entry) => {
+      if (typeof entry === 'string') return entry.split(/\s+/).includes(className);
+      if (entry && typeof entry === 'object') {
+        return (entry as Record<string, unknown>)[className] === true;
+      }
+      return false;
+    });
+  }
+  if (cls && typeof cls === 'object') {
+    return (cls as Record<string, unknown>)[className] === true;
+  }
+  return false;
+}
+
 export interface BuildOptions {
   /** Animation class applied to every emitted shimmer surface. `null` disables animation. */
   animationClass: string | null;
@@ -258,18 +288,29 @@ function walk(
     if (SVG_INTERIOR_TAGS.has(tag)) return;
 
     /* Author opt-outs — applied BEFORE the tag-based dispatch so they win.
-     * Five attributes supported:
-     *   data-skeleton-ignore  — render verbatim (chrome).
-     *   data-skeleton-stop    — single block, no recursion.
-     *   data-skeleton-text    — force inline text-bar treatment.
-     *   data-skeleton-block   — force atomic shimmer-block treatment.
-     *   data-skeleton-variant — render the named variant primitive. */
+     * Each has two spellings: a data-attribute (verbose, matches CSS data
+     * selectors) and a class name (terse, matches selector theming). Both
+     * resolve through `vnodeHasHint` so the two syntaxes always agree.
+     *
+     * Six hint kinds:
+     *   ignore  — render verbatim (chrome).
+     *   stop    — single block, no recursion.
+     *   own     — subtree draws its own skeleton; render verbatim.
+     *   text    — force inline text-bar treatment.
+     *   block   — force atomic shimmer-block treatment.
+     *   variant — render the named variant primitive (data-attr only). */
     const props = v.props ?? {};
-    if (props['data-skeleton-ignore'] !== undefined) {
+    if (vnodeHasHint(props, 'data-skeleton-ignore', 'a-skel-ignore')) {
       push(out, cloneVNode(v), state);
       return;
     }
-    if (props['data-skeleton-stop'] !== undefined) {
+    if (vnodeHasHint(props, 'data-skeleton-own', 'a-skel-own')) {
+      /* Self-skeletonising subtree — don't walk its interior; it has its own
+       * loader. Rendering verbatim leaves the inner shimmer intact. */
+      push(out, cloneVNode(v), state);
+      return;
+    }
+    if (vnodeHasHint(props, 'data-skeleton-stop', 'a-skel-stop')) {
       push(
         out,
         h('div', {
@@ -286,7 +327,7 @@ function walk(
       push(out, textContentSpan(' ', opts.animationClass), state);
       return;
     }
-    if (props['data-skeleton-block'] !== undefined) {
+    if (vnodeHasHint(props, 'data-skeleton-block', 'a-skel-block-hint')) {
       push(
         out,
         h('div', {

@@ -1,20 +1,20 @@
 <script setup lang="ts">
-import { computed, type HTMLAttributes } from 'vue';
+import { computed, toRef, type HTMLAttributes } from 'vue';
 import { cn } from '@alikhalilll/a-ui-base';
+import { useSkeletonBase, type VariantAnimation } from '../../composables/useSkeletonBase';
 
 interface Props {
   lines?: number;
   width?: number | string;
   /** Animation variant. Default `'pulse'`. */
-  animation?: 'pulse' | 'shimmer' | 'wave' | 'none';
+  animation?: VariantAnimation;
   class?: HTMLAttributes['class'];
 }
 
 const props = withDefaults(defineProps<Props>(), { lines: 1, animation: 'pulse' });
 
-const animClass = computed(() =>
-  props.animation === 'none' ? null : `a-skel-anim-${props.animation}`
-);
+const { animClass, a11yAttrs, srLabel } = useSkeletonBase(toRef(props, 'animation'));
+
 const rootStyle = computed(() =>
   props.width !== undefined
     ? { width: typeof props.width === 'number' ? `${props.width}px` : String(props.width) }
@@ -31,19 +31,13 @@ function widthForLine(i: number): string {
 </script>
 
 <template>
-  <div
-    :class="cn('a-skel-variants-text', props.class)"
-    :style="rootStyle"
-    role="status"
-    aria-live="polite"
-    aria-busy="true"
-  >
+  <div :class="cn('a-skel-variants-text', props.class)" :style="rootStyle" v-bind="a11yAttrs">
     <div
       v-for="i in props.lines"
       :key="i"
       :class="cn('a-skel a-skel-variant-text', animClass)"
       :style="{ width: widthForLine(i - 1), marginTop: i > 1 ? '0.5em' : undefined }"
     />
-    <span class="a-skel-sr-only">Loading…</span>
+    <span class="a-skel-sr-only">{{ srLabel }}</span>
   </div>
 </template>

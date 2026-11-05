@@ -3,7 +3,69 @@ export { default as ASkeleton } from './components/ASkeleton.vue';
 export { default as ASkeletonLayer } from './components/ASkeletonLayer.vue';
 export { default as ASkeletonBlock } from './components/ASkeletonBlock.vue';
 export { default as ASkeletonClone } from './components/ASkeletonClone.vue';
+export { default as ASkeletonGhost } from './components/ASkeletonGhost.vue';
+export { default as ASkeletonBones } from './components/ASkeletonBones.vue';
+export { default as ASkeletonProvider } from './components/ASkeletonProvider.vue';
+
+/* SSR + theme surface. */
+export {
+  addStyles,
+  applyTheme,
+  DEFAULT_COLORS,
+  DEFAULT_THEME,
+  removeStyles,
+  resetStylesForTest,
+  skeletonCSS,
+  stylesHtml,
+  themeStyleTag,
+  themeVariables,
+} from './boot';
+export type {
+  SkeletonAnimation as ThemeSkeletonAnimation,
+  SkeletonColors,
+  SkeletonCSSOptions,
+  SkeletonMode,
+  SkeletonSpeed,
+  SkeletonText,
+  SkeletonTextBottom,
+  SkeletonTextTop,
+  SkeletonTheme,
+} from './boot';
+
+/* Framework-agnostic engine classes — the port of `skullet/lib`'s core
+ * loading + content lifecycles. Consumers writing a non-Vue adapter use
+ * these directly; the Vue adapter wraps them in `<ASkeletonBones>` and
+ * `useSkeletonLifecycle`. */
+export { Ghost, Memory, setLoadingSize, takeLoadingSize } from './engine';
+export type { GhostOptions, LoadingSize, MemoryOptions } from './engine';
+export { SKELETON_CONFIG_KEY, useSkeletonConfig } from './composables/useSkeletonConfig';
+export type { SkeletonConfig } from './composables/useSkeletonConfig';
 export { StructuralSkeleton } from './components/StructuralSkeleton';
+
+/* Measure engine — public surface for consumers who want to drive it
+ * manually (e.g. a Suspense wrapper that measures outside Vue's render loop). */
+export {
+  barOf,
+  clipWithin,
+  clipped as clippedRect,
+  cornersOf,
+  drawSkeleton,
+  intersect as intersectRects,
+  measureSkeleton,
+  metricsOf,
+  radiiOf,
+  textContext,
+} from './measure';
+export type {
+  Clip,
+  Corners,
+  DrawOptions,
+  MeasureOptions,
+  ShimmerAnimation,
+  SkeletonRect,
+  TextBottom,
+  TextTop,
+} from './measure';
 
 /* Style-capture engine — public surface for advanced consumers who want to
  * roll their own capture/replay flow. */
@@ -53,9 +115,86 @@ export { walkStructural } from './utils/walkStructural';
 export { buildStructuralSkeleton } from './utils/buildStructuralSkeleton';
 export { fingerprintSlot } from './utils/fingerprint';
 
+/* v3 shared infra — hints, dev warnings, reveal planner, motion. */
+export {
+  HINT_ATTRS,
+  HINT_CLASSES,
+  isForcedBlock,
+  isIgnored,
+  isSelfSkeletonising,
+  isStopped,
+} from './utils/hints';
+export { isDev, warnOnce } from './utils/dev';
+export { warnMissingSample, warnSizeMismatch, warnUnsizedImage } from './utils/warnings';
+export {
+  clearReveal,
+  debugging,
+  everywhere as debugEverywhere,
+  reportLoading,
+  reportReveal,
+  setDebug,
+} from './utils/debug';
+export type { DebugSource } from './utils/debug';
+export { flushShapes, forgetShapes, recallShape, rememberShape, trackShape } from './utils/shapes';
+export { canAnimate, prefersReducedMotion, prefersReducedTransparency } from './utils/motion';
+export { fill, sampleFrom } from './utils/sample';
+export { imageReady, pendingImages, IMAGE_TIMEOUT } from './utils/images';
+export { resolveState } from './utils/resolveState';
+export type { ASkeletonState, ResolveStateInput } from './utils/resolveState';
+
+/* Reveal planner + applier — public so consumers can roll their own
+ * animation flows (e.g. SkeletonSuspense-style wrappers). */
+export {
+  byPosition,
+  byRow,
+  byContent,
+  exitDuration,
+  fadeIn,
+  fadeOut,
+  noteSkeleton,
+  pieces as revealPieces,
+  planReveal,
+  quickly,
+  revealContext,
+  unitOf,
+  ACTIVE_WINDOW,
+  BATCH_WINDOW,
+  CASCADE_SPREAD,
+  FADE_DURATION,
+  MAX_DELAY,
+  MAX_DURATION,
+  QUICK_FADE,
+  SECONDARY_DELAY,
+  SKELETON_DELAY,
+  SMALL_HEIGHT,
+  SMALL_PIECES,
+} from './reveal';
+export type { Piece, Plan, RevealContext, RevealMode } from './reveal';
+
+/* v3 DOM attribute names — scoped CSS selectors + test fixtures reach for
+ * these so there's one source of truth. */
+export {
+  ATTR_COVERED,
+  ATTR_DEBUG,
+  ATTR_EXITING,
+  ATTR_GHOST,
+  ATTR_LAYER,
+  ATTR_LOADING,
+  ATTR_PANE,
+  ATTR_RECT,
+  ATTR_REVEAL,
+  ATTR_SNAPSHOT,
+  ATTR_STATUS,
+  ATTR_XRAY,
+  ATTR_BAR,
+} from './utils/attrs';
+
 /* Types */
 export type {
+  ASkeletonEmits,
   ASkeletonProps,
+  ASkeletonMode,
+  ASkeletonReveal,
   ASkeletonSlots,
   ASkeletonLayerProps,
   ASkeletonBlockProps,

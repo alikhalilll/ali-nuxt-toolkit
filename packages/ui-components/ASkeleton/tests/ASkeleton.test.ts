@@ -19,7 +19,7 @@ describe('<ASkeleton>', () => {
 
   it('renders the DOM-mirror skeleton when loading=true', () => {
     const wrapper = mount(ASkeleton, {
-      props: { loading: true },
+      props: { loading: true, mode: 'mirror' },
       slots: {
         default: () =>
           h('div', { class: 'card bg-white rounded-2xl p-6' }, [
@@ -52,17 +52,17 @@ describe('<ASkeleton>', () => {
     expect(wrapper.find('.a-skeleton__fallback').exists()).toBe(true);
   });
 
-  it('respects the animation prop', () => {
+  it('respects the animation prop (mirror mode class suffix)', () => {
     const wrapper = mount(ASkeleton, {
-      props: { loading: true, animation: 'pulse' },
+      props: { loading: true, animation: 'pulse', mode: 'mirror' },
       slots: { default: () => h('p', null, 'x') },
     });
     expect(wrapper.find('.a-skel-block--anim-pulse').exists()).toBe(true);
   });
 
-  it('disables animation when animation="none"', () => {
+  it('disables animation when animation="none" (mirror mode)', () => {
     const wrapper = mount(ASkeleton, {
-      props: { loading: true, animation: 'none' },
+      props: { loading: true, animation: 'none', mode: 'mirror' },
       slots: { default: () => h('p', null, 'x') },
     });
     expect(wrapper.find('.a-skel-block--anim-shimmer').exists()).toBe(false);
@@ -78,9 +78,9 @@ describe('<ASkeleton>', () => {
     expect(wrapper.attributes('role')).toBe('status');
   });
 
-  it('renders an outlined button with surface fallback when no bg is supplied', () => {
+  it('renders an outlined button with surface fallback when no bg is supplied (mirror)', () => {
     const wrapper = mount(ASkeleton, {
-      props: { loading: true },
+      props: { loading: true, mode: 'mirror' },
       slots: {
         default: () => h('button', { class: 'border border-zinc-300 px-4 py-3' }, 'Talk to sales'),
       },
@@ -88,9 +88,9 @@ describe('<ASkeleton>', () => {
     expect(wrapper.find('button.a-skel-block').exists()).toBe(true);
   });
 
-  it('preserves explicit-bg buttons without the skeleton fallback', () => {
+  it('preserves explicit-bg buttons without the skeleton fallback (mirror)', () => {
     const wrapper = mount(ASkeleton, {
-      props: { loading: true },
+      props: { loading: true, mode: 'mirror' },
       slots: {
         default: () => h('button', { class: 'bg-emerald-600 px-4 py-3' }, 'Start free trial'),
       },
@@ -245,14 +245,14 @@ describe('<ASkeleton>', () => {
     expect(wrapper.findAll('article.card')).toHaveLength(3);
   });
 
-  it('flips between loading and not-loading states reactively', async () => {
+  it('flips between loading and not-loading states reactively (mirror)', async () => {
     const Host = defineComponent({
       props: { loading: { type: Boolean, default: true } },
       setup(props) {
         return () =>
           h(
             ASkeleton,
-            { loading: props.loading },
+            { loading: props.loading, mode: 'mirror' },
             { default: () => h('p', { class: 'real' }, 'Hello') }
           );
       },

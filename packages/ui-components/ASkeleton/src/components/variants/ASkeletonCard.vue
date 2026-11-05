@@ -7,13 +7,15 @@ import ASkeletonText from './ASkeletonText.vue';
 import ASkeletonButton from './ASkeletonButton.vue';
 import ASkeletonAvatar from './ASkeletonAvatar.vue';
 
+import type { VariantAnimation } from '../../composables/useSkeletonBase';
+
 interface Props {
   media?: boolean;
   heading?: boolean;
   lines?: number;
   actions?: boolean;
   footerAvatar?: boolean;
-  animation?: 'pulse' | 'shimmer' | 'wave' | 'none';
+  animation?: VariantAnimation;
   class?: HTMLAttributes['class'];
 }
 

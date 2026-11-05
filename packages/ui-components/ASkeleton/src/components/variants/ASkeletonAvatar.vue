@@ -1,19 +1,18 @@
 <script setup lang="ts">
-import { computed, type HTMLAttributes } from 'vue';
+import { computed, toRef, type HTMLAttributes } from 'vue';
 import { cn } from '@alikhalilll/a-ui-base';
+import { useSkeletonBase, type VariantAnimation } from '../../composables/useSkeletonBase';
 
 interface Props {
   size?: number | string;
   shape?: 'circle' | 'square' | 'rounded';
-  animation?: 'pulse' | 'shimmer' | 'wave' | 'none';
+  animation?: VariantAnimation;
   class?: HTMLAttributes['class'];
 }
 
 const props = withDefaults(defineProps<Props>(), { size: 48, shape: 'circle', animation: 'pulse' });
 
-const animClass = computed(() =>
-  props.animation === 'none' ? null : `a-skel-anim-${props.animation}`
-);
+const { animClass } = useSkeletonBase(toRef(props, 'animation'));
 
 const sizeStyle = computed(() => {
   const s = typeof props.size === 'number' ? `${props.size}px` : String(props.size);

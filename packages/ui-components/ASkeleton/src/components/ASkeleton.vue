@@ -6,6 +6,7 @@ import {
   onBeforeUnmount,
   ref,
   shallowRef,
+  toRef,
   useId,
   useSlots,
   watch,
@@ -13,11 +14,18 @@ import {
   type VNode,
 } from 'vue';
 import { cn } from '@alikhalilll/a-ui-base';
-import type { ASkeletonProps, ASkeletonSlots } from '../types';
+import type { ASkeletonEmits, ASkeletonProps, ASkeletonSlots } from '../types';
 import { StructuralSkeleton } from './StructuralSkeleton';
 import ASkeletonClone from './ASkeletonClone.vue';
 import { captureSnapshot, type CaptureSnapshot } from '../utils/captureStyles';
 import { resolvePrototypeVNodes } from '../utils/buildStructuralSkeleton';
+import { ATTR_DEBUG, ATTR_PANE, ATTR_REVEAL, ATTR_STATUS } from '../utils/attrs';
+import { debugging } from '../utils/debug';
+import { useSkeletonState } from '../composables/useSkeletonState';
+import { useSkeletonSource } from '../composables/useSkeletonSource';
+import { useSkeletonLifecycle } from '../composables/useSkeletonLifecycle';
+import ASkeletonGhost from './ASkeletonGhost.vue';
+import ASkeletonBones from './ASkeletonBones.vue';
 
 /**
  * `<ASkeleton>` — the package's headline wrapper.
@@ -57,16 +65,49 @@ const props = withDefaults(defineProps<ASkeletonProps>(), {
   persist: false,
   animation: 'shimmer',
   fallback: 'shimmer',
-  /* Default is `clone` — comprehensive computed-style snapshot + replay,
-   * works correctly regardless of how styles reach the DOM (Tailwind, inline
-   * style, CSS-in-JS hashes, scoped styles). Switch to `mirror` for SSR-safe,
-   * vnode-tree-based skeletons that don't need a client-side measurement pass. */
-  mode: 'clone',
+  /* Default is `measure` — skullet-style ghost + bones in a shadow-DOM
+   * layer. Font-metric text bars, clip-aware rounded corners, reactive
+   * re-measurement via `MutationObserver` + `ResizeObserver`.
+   *
+   * Alternatives:
+   *   - `clone`  — mounts the slot off-screen, snapshots `getComputedStyle()`
+   *                for every leaf, replays as positioned divs. Pixel-identical
+   *                surface regardless of styling pipeline. Client-side only.
+   *   - `mirror` — walks the slot's vnode tree, preserves tags + classes.
+   *                SSR-safe (no DOM read). Picks up the fallback when the
+   *                slot has no shape or `#prototype` is empty. */
+  mode: 'measure',
   repeat: 1,
+  reveal: 'smart',
 });
 defineSlots<ASkeletonSlots>();
+const emit = defineEmits<ASkeletonEmits>();
 
 const slots = useSlots();
+
+/* ─── State machine + source waterfall (extracted composables) ────────────────
+ *
+ * SOLID: the state resolution, the shape-precedence waterfall, and the
+ * reveal-lifecycle side effects each live in a dedicated composable so this
+ * SFC is composition + template only. Adding a new state branch or a new
+ * fallback source doesn't require touching ASkeleton.vue.
+ *
+ * `state` → `useSkeletonState({ loading, error, empty, data })`
+ * `shapeData` → `useSkeletonSource({ data, sample, id })`
+ * reveal/@reveal/dev-warnings/debug → `useSkeletonLifecycle({ ... })` below
+ */
+const { state, isLoading, driven } = useSkeletonState({
+  loading: toRef(props, 'loading'),
+  error: toRef(props, 'error'),
+  empty: toRef(props, 'empty'),
+  data: toRef(props, 'data'),
+});
+
+const { shapeData, source: shapeSourceLabel } = useSkeletonSource({
+  data: toRef(props, 'data'),
+  sample: toRef(props, 'sample'),
+  id: toRef(props, 'cacheKey'),
+});
 
 const instanceId = useId();
 void instanceId;
@@ -125,13 +166,13 @@ const repeatIndices = computed(() => Array.from({ length: repeatCount.value }, (
  * classes preserved as shimmer placeholders), and the consumer's grid
  * layout fills correctly without the hydration crash. Single-copy clone
  * mode (`repeat === 1`, the default) keeps the pixel-identical replay. */
-const effectiveMode = computed<'clone' | 'mirror'>(() => {
+const effectiveMode = computed<'clone' | 'mirror' | 'measure'>(() => {
   if (props.mode === 'clone' && repeatCount.value > 1) return 'mirror';
   return props.mode;
 });
 
 const rootClass = computed(() => {
-  if (props.loading) {
+  if (isLoading.value) {
     return cn('a-skeleton', `a-skeleton--mode-${effectiveMode.value}`, props.class);
   }
   if (hasUserClass.value) return props.class;
@@ -154,9 +195,15 @@ const rootClass = computed(() => {
  * shared references, copy #2's hydration finds copy #1's `.el` already wired
  * elsewhere and `nextSibling` returns null. */
 function resolveShapeVNodes(): VNode[] {
-  if (!props.loading) return [];
+  if (!isLoading.value) return [];
   const proto = slots.prototype?.();
-  const def = slots.default?.();
+  /* Data-driven consumers write `#default="{ data }"` and destructure. When
+   * the walker invokes the slot for the shape (not the content), we pass
+   * the stand-in value — the real data if present, else the last-seen
+   * data under the same `cacheKey`, else `sample`. Without this, the
+   * destructure crashes with `Cannot destructure 'data' of undefined`. */
+  const scope = driven.value ? { data: shapeData.value } : undefined;
+  const def = slots.default?.(scope as never);
   return resolvePrototypeVNodes(
     def as unknown as VNode[] | undefined,
     proto as unknown as VNode[] | undefined
@@ -186,6 +233,11 @@ const ShapeHost = defineComponent({
     return () => h('div', { class: 'a-skeleton__shape-host', 'aria-hidden': 'true' }, p.render());
   },
 });
+
+/* `measure` mode: skullet-style ghost + bones. The ghost mounts the shape
+ * (slot content with the `shapeData` stand-in in data-driven mode); the
+ * bones layer renders beside it and finds the ghost via a DOM-sibling
+ * lookup, so no ref-synchronisation ceremony is needed in this component. */
 
 /* ─── `clone` strategy state ──────────────────────────────────────────────── */
 const captureRef = ref<HTMLElement | null>(null);
@@ -261,13 +313,58 @@ watch(
 /* Re-capture when loading flips false → true (the wrapper element is the same
  * but a fresh capture is needed for the current shape). */
 watch(
-  () => props.loading,
+  () => isLoading.value,
   (next, prev) => {
     if (effectiveMode.value !== 'clone') return;
     if (next && !prev && captureRef.value) takeSnapshot();
   },
   { flush: 'post' }
 );
+
+/* ─── Pane refs ─────────────────────────────────────────────────────────────
+ * Four refs — one per pane. `useSkeletonLifecycle` picks the right one on
+ * state transitions. Each is nulled out when the pane isn't rendered,
+ * reflecting Vue's `v-if` lifecycle. */
+const contentRef = ref<HTMLElement | null>(null);
+const errorRef = ref<HTMLElement | null>(null);
+const emptyRef = ref<HTMLElement | null>(null);
+const skeletonRef = ref<HTMLElement | null>(null);
+
+/* The pane source — what the skeleton drew from. Shown in the debug
+ * overlay's loading tag; chosen from the shape-waterfall. The slot-presence
+ * branches ensure "prototype" / "default" show up even when there's no
+ * data/sample, which is the common hand-rolled skeleton case. */
+function pickShapeSource() {
+  const resolved = shapeSourceLabel.value;
+  if (resolved === 'data') return 'data';
+  if (resolved === 'last') return 'cache';
+  if (resolved === 'sample') return 'sample';
+  if (slots.prototype) return 'prototype';
+  if (slots.default) return 'default';
+  return 'fallback';
+}
+
+useSkeletonLifecycle({
+  state,
+  reveal: toRef(props, 'reveal'),
+  mode: toRef(props, 'mode') as unknown as import('vue').Ref<string>,
+  cacheKey: toRef(props, 'cacheKey'),
+  data: toRef(props, 'data'),
+  sample: toRef(props, 'sample'),
+  driven,
+  revealEl: computed(() => captureRef.value) as unknown as import('vue').Ref<HTMLElement | null>,
+  skeletonRef,
+  contentRef,
+  errorRef,
+  emptyRef,
+  sourceOf: pickShapeSource,
+  emit,
+});
+
+/* `debugging` import is kept to make the ancestor-walk check accessible to
+ * consumers that forward-pass refs; the overlay itself is wired by
+ * `useSkeletonLifecycle`. */
+void debugging;
 
 /* Re-capture when the shape vnodes count changes (e.g. v-for over a list that
  * started empty, then data arrived while `loading` is still true). Without
@@ -303,16 +400,86 @@ onBeforeUnmount(() => {
   <div
     ref="captureRef"
     :class="rootClass"
-    :data-loading="props.loading ? '' : undefined"
-    :role="props.loading ? 'status' : undefined"
-    :aria-busy="props.loading ? 'true' : undefined"
-    :aria-live="props.loading ? 'polite' : undefined"
+    :data-loading="isLoading ? '' : undefined"
+    :role="isLoading ? 'status' : undefined"
+    :aria-busy="isLoading ? 'true' : undefined"
+    :aria-live="isLoading ? 'polite' : undefined"
+    :[ATTR_REVEAL]="''"
+    :[ATTR_DEBUG]="props.debug ? '' : undefined"
   >
-    <template v-if="!props.loading">
-      <slot />
+    <!-- Screen-reader label — rendered as a visually-hidden status span
+         while the skeleton pane is up. AT users hear the `label` prop
+         (e.g. "Loading profile") instead of nothing. -->
+    <span v-if="isLoading && props.label" :[ATTR_STATUS]="''" class="a-skel-sr-only">{{
+      props.label
+    }}</span>
+
+    <template v-if="slots.skeleton && isLoading">
+      <!-- Author-supplied custom skeleton — rendered verbatim with
+           data-a-skel-own so measure mode / clone mode don't descend. -->
+      <div ref="skeletonRef" :[ATTR_PANE]="'skeleton'" data-skeleton-own>
+        <slot name="skeleton" />
+      </div>
     </template>
-    <template v-else>
-      <template v-if="effectiveMode === 'clone'">
+    <template v-else-if="state === 'error'">
+      <div ref="errorRef" :[ATTR_PANE]="'error'" role="alert">
+        <slot name="error" :error="props.error" />
+      </div>
+    </template>
+    <template v-else-if="state === 'empty'">
+      <div ref="emptyRef" :[ATTR_PANE]="'empty'">
+        <slot name="empty">
+          <!-- No `#empty` provided — fall back to the default slot with
+               `undefined` data so static markup still renders. -->
+          <slot :data="undefined" />
+        </slot>
+      </div>
+    </template>
+    <template v-else-if="state === 'content'">
+      <!-- `data-driven` → scope `{ data }` into the default slot so
+           consumers can destructure. Control mode → no scope (back-compat). -->
+      <template v-if="driven">
+        <!-- The content pane uses a transparent wrapper (CSS below) so
+             the slot's children stay direct flex/grid items of the
+             outer wrapper. The ref is still queryable for the reveal
+             animation. -->
+        <div ref="contentRef" :[ATTR_PANE]="'content'" class="a-skel-pane">
+          <slot :data="props.data as never" />
+        </div>
+      </template>
+      <template v-else>
+        <div ref="contentRef" :[ATTR_PANE]="'content'" class="a-skel-pane">
+          <slot />
+        </div>
+      </template>
+    </template>
+    <!-- state === 'skeleton' (default: clone / mirror / measure rendering) -->
+    <div v-else ref="skeletonRef" :[ATTR_PANE]="'skeleton'" class="a-skel-pane">
+      <!-- Measure mode (R12): the Ghost class owns the loading-pane DOM
+           entirely. <ASkeletonBones> is now a thin shell that mounts a
+           Ghost on the slot root; the Ghost injects
+           [data-a-skel-ghost] / [data-a-skel-snapshot] /
+           [data-a-skel-layer] children, observes mutations/resizes,
+           picks the shape source (ghost / recall / fallback), measures,
+           and paints the bones. -->
+      <template v-if="effectiveMode === 'measure'">
+        <ASkeletonBones
+          :id="props.cacheKey"
+          :exact="props.data != null"
+          :refetch="props.data != null && props.loading === true"
+        >
+          <template v-for="i in repeatIndices" :key="`measure-${i}`">
+            <template v-if="slots.prototype">
+              <slot name="prototype" />
+            </template>
+            <template v-else>
+              <slot :data="shapeData as never" />
+            </template>
+          </template>
+        </ASkeletonBones>
+      </template>
+
+      <template v-else-if="effectiveMode === 'clone'">
         <!-- Prototype copies — direct grid items, used by the snapshot
              walker to read accurate per-leaf rects at real layout positions.
              The mirror-fallback and replay overlays (below) paint on top
@@ -377,7 +544,7 @@ onBeforeUnmount(() => {
           </slot>
         </div>
       </template>
-    </template>
+    </div>
   </div>
 </template>
 
@@ -453,5 +620,35 @@ onBeforeUnmount(() => {
    * wrong, the mirror underneath still gives a structural skeleton instead
    * of a blank wrapper. */
   z-index: 0;
+}
+
+/* Panes are layout-transparent. The outer `.a-skeleton` wrapper remains the
+ * grid/flex container (so the consumer's class drives layout); the pane div
+ * is purely a DOM anchor for the reveal animation + state tracking. Using
+ * `display: contents` means the pane's children are laid out as if they
+ * were direct children of `.a-skeleton`, so prototype copies in the
+ * skeleton pane still fall into the consumer's grid, and content-slot
+ * children stay direct children for `flex-wrap` / `grid-cols-N` consumers.
+ *
+ * `display: contents` is universally supported in evergreen browsers; the
+ * accessibility caveat (contents elements aren't exposed to AT) is a FEATURE
+ * here — the pane carries only data-attributes, no semantic content. */
+.a-skel-pane {
+  display: contents;
+}
+
+/* Visually-hidden screen-reader label used while loading. Follows the
+ * standard `sr-only` recipe so the text is announced by AT but takes zero
+ * visual space. */
+.a-skel-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 </style>

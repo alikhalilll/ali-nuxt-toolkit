@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'vue';
 import type { CachedShape, ShapeNode, ShapeNodeType, TextLineRect } from '../types';
+import { isIgnored, isStopped } from './hints';
 
 export interface WalkOptions {
   maxDepth: number;
@@ -57,7 +58,7 @@ export function walkDom(root: HTMLElement, options: WalkOptions): CachedShape {
     }
 
     const html = el as HTMLElement;
-    if (html.dataset?.skeletonIgnore !== undefined) return;
+    if (isIgnored(el)) return;
 
     const cs = window.getComputedStyle(el);
     if (cs.display === 'none' || cs.visibility === 'hidden' || cs.opacity === '0') return;
@@ -67,11 +68,11 @@ export function walkDom(root: HTMLElement, options: WalkOptions): CachedShape {
 
     const tag = el.tagName.toUpperCase();
     const isLeafTag = LEAF_TAGS.has(tag);
-    const hasStop = html.dataset?.skeletonStop !== undefined;
+    const hasStop = isStopped(el);
     const childElements: Element[] = [];
     for (let i = 0; i < el.children.length; i++) {
       const c = el.children[i];
-      if ((c as HTMLElement).dataset?.skeletonIgnore === undefined) childElements.push(c);
+      if (!isIgnored(c)) childElements.push(c);
     }
     const hasOwnText = hasDirectTextContent(el);
     const reachedDepth = depth >= options.maxDepth;

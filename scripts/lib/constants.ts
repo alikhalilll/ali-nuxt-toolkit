@@ -20,6 +20,7 @@ export const PUBLISHABLE_PACKAGES = [
   'auto-middleware',
   'a-tel-input',
   'a-skeleton',
+  'a-smart-skeleton',
 ] as const;
 export type PublishablePackage = (typeof PUBLISHABLE_PACKAGES)[number];
 
@@ -56,6 +57,7 @@ const UI_COMPONENT_DIRS: Record<string, string> = {
   'a-responsive-popover': 'AResponsivePopover',
   'a-tel-input': 'ATelInput',
   'a-skeleton': 'ASkeleton',
+  'a-smart-skeleton': 'ASmartSkeleton',
 };
 
 /** Absolute directory for any workspace package, accounting for the nested ui-components set. */
@@ -77,6 +79,7 @@ export const ATTW_IGNORE_NO_RESOLUTION: Record<PublishablePackage, string[]> = {
   crypto: [],
   'a-tel-input': ['./styles.css'],
   'a-skeleton': ['./styles.css'],
+  'a-smart-skeleton': ['./styles.css'],
 };
 
 export const BUMP_TYPES = ['patch', 'minor', 'major', 'prerelease', 'none'] as const;

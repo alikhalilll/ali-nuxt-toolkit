@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { computed, type HTMLAttributes } from 'vue';
+import { computed, toRef, type HTMLAttributes } from 'vue';
 import { cn } from '@alikhalilll/a-ui-base';
+import { useSkeletonBase, type VariantAnimation } from '../../composables/useSkeletonBase';
 
 interface Props {
   rows?: number;
   columns?: number;
   showHeader?: boolean;
-  animation?: 'pulse' | 'shimmer' | 'wave' | 'none';
+  animation?: VariantAnimation;
   class?: HTMLAttributes['class'];
 }
 
@@ -17,9 +18,7 @@ const props = withDefaults(defineProps<Props>(), {
   animation: 'pulse',
 });
 
-const animClass = computed(() =>
-  props.animation === 'none' ? null : `a-skel-anim-${props.animation}`
-);
+const { animClass } = useSkeletonBase(toRef(props, 'animation'));
 
 const rowStyle = computed(() => ({
   gridTemplateColumns: `repeat(${props.columns}, minmax(0, 1fr))`,

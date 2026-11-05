@@ -134,11 +134,61 @@ export interface StructuralShape {
 export type SkeletonAnimation = 'shimmer' | 'pulse' | 'none';
 export type SkeletonFallback = 'shimmer' | 'block';
 
-export type ASkeletonMode = 'mirror' | 'clone';
+export type ASkeletonMode = 'mirror' | 'clone' | 'measure';
 
-export interface ASkeletonProps {
-  /** When true, render the captured skeleton (or `fallback` slot) instead of the default slot. */
-  loading: boolean;
+/**
+ * How a loading pane transitions to a content pane. Defaults to `'smart'`
+ * — the context-aware planner from `./reveal/plan.ts`. Set to `'instant'`
+ * to preserve the pre-v3 hard-flip behaviour.
+ */
+export type ASkeletonReveal = 'instant' | 'together' | 'sequence' | 'smart';
+
+export interface ASkeletonProps<T = unknown> {
+  /**
+   * When true, render the skeleton pane regardless of `data`. Combined with
+   * `data`, this flips to "refetch mode": the skeleton is drawn from the
+   * data on screen (so the shape stays identical) and the reveal applier
+   * crossfades the content pane quickly once the next data arrives.
+   */
+  loading?: boolean;
+  /**
+   * Data-driven mode. When `data` is bound (even to `null`), `<ASkeleton>`
+   * tracks it: `null`/`undefined` → skeleton; otherwise → content, with
+   * the default slot invoked as `#default="{ data }"` so the consumer can
+   * destructure the resolved value. Pairs with `sample` for first-paint.
+   */
+  data?: T | null;
+  /**
+   * Stand-in data used to draw the skeleton when `data` is still nullish.
+   * The shape of `sample` drives the skeleton's layout (strings become
+   * text bars, nested objects become nested shimmer blocks).
+   */
+  sample?: T;
+  /**
+   * When truthy, render the `#empty` slot (or the default slot if no
+   * `#empty` provided). Wins over data presence but loses to `error`.
+   */
+  empty?: boolean;
+  /**
+   * When non-null, render the `#error` slot with `{ error }` scope. Wins
+   * over `empty`, `data`, and the data-driven skeleton inference. The
+   * `@reveal` event does **not** fire on error-to-content transitions.
+   */
+  error?: unknown;
+  /** Reveal animation mode. Default `'smart'`. */
+  reveal?: ASkeletonReveal;
+  /**
+   * Screen-reader text announced while the skeleton pane is up. Rendered
+   * as `<span data-a-skel-status>` next to the pane, so AT users hear
+   * "Loading profile" rather than nothing.
+   */
+  label?: string;
+  /**
+   * Force-enable the debug overlay for this `<ASkeleton>` instance. The
+   * overlay also activates globally when `?a-skel-debug=1` is in the URL
+   * or `localStorage['a-skel:debug'] === '1'`.
+   */
+  debug?: boolean;
   /**
    * Rendering strategy. Default `'mirror'`.
    *   - `'mirror'`: walks the slot's vnode tree and preserves every element
@@ -194,9 +244,24 @@ export interface ASkeletonProps {
   class?: HTMLAttributes['class'];
 }
 
-export interface ASkeletonSlots {
-  /** The real content. Rendered when `loading` is false; measured to build the skeleton. */
-  default?: () => unknown;
+export interface ASkeletonSlots<T = unknown> {
+  /**
+   * The real content. Rendered when `data` arrives (data-driven mode) or
+   * when `loading=false` (control mode). In data-driven mode, invoked as
+   * `#default="{ data }"` so the consumer can destructure the resolved
+   * value; in control mode the slot has no scope.
+   */
+  default?: (ctx?: { data: T }) => unknown;
+  /**
+   * Rendered when `error` is set, with the error scoped in as `{ error }`.
+   * Takes precedence over every other pane.
+   */
+  error?: (ctx: { error: unknown }) => unknown;
+  /**
+   * Rendered when `empty` is true. Falls back to the default slot (with no
+   * data) if omitted.
+   */
+  empty?: () => unknown;
   /**
    * Optional single-instance template used as the skeleton's shape source while
    * `loading=true`. When the default slot iterates with `v-for`, the skeleton
@@ -207,6 +272,17 @@ export interface ASkeletonSlots {
   prototype?: () => unknown;
   /** Custom UI to render on a cache miss. Defaults to a single shimmer block. */
   fallback?: () => unknown;
+  /**
+   * Custom skeleton — overrides every mode. Rendered verbatim with
+   * `[data-a-skel-own]` so no engine descends into it.
+   */
+  skeleton?: () => unknown;
+}
+
+/** Events emitted by `<ASkeleton>`. */
+export interface ASkeletonEmits {
+  /** Fired exactly once per skeleton → content transition. */
+  (e: 'reveal'): void;
 }
 
 export interface ASkeletonLayerProps {

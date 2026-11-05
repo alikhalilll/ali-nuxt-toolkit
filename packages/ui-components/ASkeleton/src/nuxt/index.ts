@@ -25,6 +25,10 @@ const COMPONENTS: Record<string, string> = {
   ASkeleton: '@alikhalilll/a-skeleton',
   ASkeletonLayer: '@alikhalilll/a-skeleton',
   ASkeletonBlock: '@alikhalilll/a-skeleton',
+  /* v3 — ghost + bones + provider */
+  ASkeletonProvider: '@alikhalilll/a-skeleton',
+  ASkeletonGhost: '@alikhalilll/a-skeleton',
+  ASkeletonBones: '@alikhalilll/a-skeleton',
   /* Variant primitives */
   ASkeletonText: '@alikhalilll/a-skeleton',
   ASkeletonHeading: '@alikhalilll/a-skeleton',

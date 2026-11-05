@@ -5,11 +5,13 @@ import ASkeletonHeading from './ASkeletonHeading.vue';
 import ASkeletonText from './ASkeletonText.vue';
 import ASkeletonImage from './ASkeletonImage.vue';
 
+import type { VariantAnimation } from '../../composables/useSkeletonBase';
+
 interface Props {
   media?: boolean;
   paragraphs?: number;
   linesPerParagraph?: number;
-  animation?: 'pulse' | 'shimmer' | 'wave' | 'none';
+  animation?: VariantAnimation;
   class?: HTMLAttributes['class'];
 }
 

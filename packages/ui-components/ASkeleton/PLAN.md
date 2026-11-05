@@ -312,7 +312,7 @@ Files touched: `src/utils/buildStructuralSkeleton.ts`, new `src/utils/transforme
 
 ### Phase 6 — Docs + playground
 
-- [ ] One section per variant in `apps/docs/content/ui/skeleton.md`.
+- [ ] One section per variant in `apps/docs/content/ui/smart-skeleton.md`.
 - [ ] One demo component per variant in `apps/docs/components/DemoSkeleton{Name}.vue`.
 - [ ] Playground page gets a section per category: **auto-detect**, **type-string**, **variant primitive**, **theme switcher**.
 - [ ] Migration guide ("upgrading from 1.x" — no breaking changes; surfaces new primitives + opt-outs).

@@ -46,6 +46,8 @@ import {
   hasDirectText,
   readComputedStyles,
 } from './domRead';
+import { isIgnored, isStopped } from './hints';
+import { TEXT_TAGS as SHARED_TEXT_TAGS } from '../walkers/classify';
 
 export interface WalkStructuralOptions {
   /** Max recursion depth. Default 12. */
@@ -89,36 +91,8 @@ const ATOMIC_TAGS: ReadonlySet<string> = new Set([
  * instead of `leaf-text` (a shimmer text bar at the element's natural
  * rendered dimensions).
  */
-const TEXT_OWNERS: ReadonlySet<string> = new Set([
-  'h1',
-  'h2',
-  'h3',
-  'h4',
-  'h5',
-  'h6',
-  'p',
-  'span',
-  'a',
-  'em',
-  'strong',
-  'small',
-  'code',
-  'b',
-  'i',
-  'mark',
-  'label',
-  'caption',
-  'time',
-  'dt',
-  'dd',
-  'li',
-  'th',
-  'td',
-  'figcaption',
-  'blockquote',
-  'cite',
-  'q',
-]);
+/* Shared with every other walker via `../walkers/classify.ts:TEXT_TAGS`. */
+const TEXT_OWNERS = SHARED_TEXT_TAGS;
 
 /**
  * Layout-affecting CSS captured on **every** node. Includes display + box
@@ -284,7 +258,7 @@ function capture(
     ctx.state.truncated = true;
     return null;
   }
-  if (el.dataset?.skeletonIgnore !== undefined) return null;
+  if (isIgnored(el)) return null;
 
   const cs = window.getComputedStyle(el);
   if (cs.display === 'none' || cs.visibility === 'hidden') return null;
@@ -309,7 +283,7 @@ function capture(
 
   if (rect.width < ctx.minSize || effectiveHeight < ctx.minSize) return null;
 
-  const hasStop = el.dataset?.skeletonStop !== undefined;
+  const hasStop = isStopped(el);
   const isAtomic = ATOMIC_TAGS.has(tag);
   const reachedDepth = depth >= ctx.maxDepth;
   const childrenEls = collectVisibleChildren(el);

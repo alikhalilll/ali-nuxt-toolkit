@@ -185,7 +185,8 @@ const themes: Theme[] = [
 ];
 
 const activeId = ref<string>('default-dark');
-const active = computed(() => themes.find((t) => t.id === activeId.value) ?? themes[0]);
+const fallbackTheme = themes[0]!;
+const active = computed(() => themes.find((t) => t.id === activeId.value) ?? fallbackTheme);
 
 const activeStyle = computed(() => active.value.vars as unknown as Record<string, string>);
 
