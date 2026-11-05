@@ -183,7 +183,7 @@ const empty = ref(false);
                   </p>
                   <button
                     type="button"
-                    class="mt-4 cursor-pointer rounded-lg bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+                    class="mt-4 cursor-pointer rounded-lg bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-fg transition-opacity hover:opacity-90"
                     @click="setState('content')"
                   >
                     Invite First Member

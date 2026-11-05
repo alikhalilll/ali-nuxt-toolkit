@@ -175,7 +175,7 @@ const SAMPLE_PRODUCT = {
 
                       <button
                         type="button"
-                        class="cursor-pointer rounded-lg bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+                        class="cursor-pointer rounded-lg bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-fg transition-opacity hover:opacity-90"
                       >
                         Add to Cart
                       </button>

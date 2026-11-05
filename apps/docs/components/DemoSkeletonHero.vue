@@ -230,7 +230,7 @@ async function fetchDeployment() {
                       </a>
                       <button
                         type="button"
-                        class="rounded-md bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground hover:opacity-90 transition-opacity"
+                        class="rounded-md bg-primary px-3 py-1 text-xs font-semibold text-primary-fg hover:opacity-90 transition-opacity"
                       >
                         Manage
                       </button>
