@@ -1,5 +1,5 @@
 /**
- * Stylesheet injection with ref counting — port of `skullet/lib/styles.ts`.
+ * Stylesheet injection with ref counting — port of `/styles.ts`.
  *
  * Each `<ASkeleton>` increments the ref count on mount; the stylesheet is
  * injected on the first mount and removed when the last unmounts. The
@@ -16,8 +16,8 @@
 const STYLE_ATTR = 'data-a-skel-styles';
 
 /* The scoped CSS that hides the ghost's paint. Applied in both JS-only
- * and server-rendered contexts. See the skullet reference at
- * `skullet/lib/styles.ts:23-138` for the complete selector logic. */
+ * and server-rendered contexts. See the the upstream library reference at
+ * `the upstream library/styles.ts:23-138` for the complete selector logic. */
 const SCOPED_CSS = `
 [data-a-skel-loading] { position: relative; pointer-events: none; user-select: none; }
 [data-a-skel-loading] [data-a-skel-ghost] { visibility: hidden; }

@@ -84,7 +84,7 @@ export function isForcedBlock(el: Element | null): boolean {
 /**
  * "This subtree draws its own skeleton — leave it alone." The walker stops
  * descending here and renders the element itself as a transparent pass-through.
- * Matches skullet's `[skullet-own]` semantic.
+ * Marks a subtree that draws its own skeleton.
  */
 export function isSelfSkeletonising(el: Element | null): boolean {
   if (!el) return false;

@@ -1,8 +1,8 @@
 /**
  * `sampleFrom(data)` + `fill(text)` — same shape, no sensitive content.
  *
- * Port of `skullet/lib/dev.ts:24-37` (`sampleFrom`) and
- * `skullet/lib/snapshot.ts:21-22` (`fill`). Used by the dev warning that
+ * Port of `/dev.ts:24-37` (`sampleFrom`) and
+ * `the upstream library/snapshot.ts:21-22` (`fill`). Used by the dev warning that
  * suggests a `:sample` prop when data is bound but no sample exists —
  * the engine runs the user's real data through `sampleFrom` and logs a
  * pastable literal.

@@ -1,5 +1,5 @@
 /**
- * `measureSkeleton(root, layer)` — the skullet-style measurement entry point.
+ * `measureSkeleton(root, layer)` — the ghost/layer-style measurement entry point.
  *
  * Walks the ghost DOM once and produces a flat list of `SkeletonRect[]` that
  * the bones painter mounts into the shadow-DOM layer. Two primitives:
@@ -13,7 +13,7 @@
  *     close enough (≤40% of the font size apart, ≥50% vertical overlap)
  *     merge into a single bar.
  *
- * Scoped port of `skullet/lib/measure.ts:382-497`. Simplifications vs the
+ * Scoped port of `/measure.ts:382-497`. Simplifications vs the
  * reference:
  *   - No `onCovered` callback — the walker emits rects directly; the
  *     ASkeleton CSS scopes paint-hiding to `[data-a-skel-covered]` on

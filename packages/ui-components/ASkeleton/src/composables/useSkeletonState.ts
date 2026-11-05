@@ -33,7 +33,7 @@ export interface SkeletonStateHandle {
 export function useSkeletonState(input: StateInput): SkeletonStateHandle {
   const instance = getCurrentInstance();
 
-  /* Data-driven detection via vnode.props inspection — same trick skullet
+  /* Data-driven detection via vnode.props inspection — same trick
    * uses at `vue/Skeleton.ts:166`. A consumer who writes `<ASkeleton>`
    * without a `:data` binding gets the control API (`loading` drives
    * everything); binding `:data` even to `null` switches to data-driven

@@ -1,7 +1,7 @@
 /**
  * `Ghost` — the loading-pane lifecycle, as a framework-agnostic class.
  *
- * Faithful port of `skullet/lib/ghost.ts`. The Vue adapter
+ * Faithful port of `/ghost.ts`. The Vue adapter
  * (`ASkeletonBones.vue`) instantiates one Ghost per `<ASkeleton>` while
  * loading; the Ghost owns:
  *
@@ -55,7 +55,7 @@ export interface GhostOptions {
 
 type Source = 'ghost' | 'recall' | 'fallback';
 
-/* Three bars with decreasing widths — matches `skullet/lib/ghost.ts:34-39`.
+/* Three bars with decreasing widths — matches `the upstream library/ghost.ts:34-39`.
  * Used when nothing else is available (no data, no sample, no cached shape). */
 const FALLBACK_HTML = [100, 90, 60]
   .map(
@@ -167,7 +167,7 @@ export class Ghost {
    *   4. Else if the ghost has any content → use the ghost.
    *   5. Else → fall back to three generic bars.
    *
-   * Matches `skullet/lib/ghost.ts:151-201` modulo our not-yet-ported
+   * Matches `the upstream library/ghost.ts:151-201` modulo our not-yet-ported
    * `autoKey` (so the recall path only fires when `id` is explicit).
    */
   private choose(): void {

@@ -2,7 +2,7 @@
 import type { RevealMode } from '@alikhalilll/a-smart-skeleton';
 
 /**
- * **Loading settings** — skullet.lochie.me showcase #5.
+ * **Loading settings**
  *
  * Vertical list of 3 toggle rows (label + inline toggle control).
  */

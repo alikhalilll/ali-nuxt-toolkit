@@ -1,5 +1,5 @@
 /**
- * Shape persistence — port of `skullet/lib/shapes.ts`.
+ * Shape persistence — port of `/shapes.ts`.
  *
  * Two-tier store so skeletons survive both reloads (localStorage) and
  * same-session navigations (in-memory session map). The session map is the
@@ -12,7 +12,7 @@
  * and v3 (tree `StructuralShape`) in the existing `useSkeletonCache` can't
  * be read back as v4 — a mismatch auto-purges on read.
  *
- * Budgets borrowed from skullet:
+ * Storage budgets:
  *   - Up to 50 entries total — LRU-evicts the oldest on write.
  *   - Up to 20 KB per entry — larger entries skip localStorage (session
  *     only); the console warns once per key.

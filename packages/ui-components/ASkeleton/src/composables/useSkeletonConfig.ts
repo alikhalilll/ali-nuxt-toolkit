@@ -1,7 +1,7 @@
 /**
  * Package-wide configuration injected by `<ASkeletonProvider>` and read by
- * every `<ASkeleton>` instance. Mirrors skullet's `SkulletProvider` / `useSkullet`
- * pattern (`skullet/vue/config.ts`).
+ * every `<ASkeleton>` instance. Mirrors the provider pattern
+ *
  *
  * The injection is strictly optional — a consumer who doesn't mount a
  * provider gets the frozen `DEFAULT_CONFIG`, and nothing in the engine

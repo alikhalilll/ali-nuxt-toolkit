@@ -1,5 +1,5 @@
 /**
- * Rounded-corner clipping — port of `skullet/lib/measure.ts:28-105`.
+ * Rounded-corner clipping — port of `/measure.ts:28-105`.
  *
  * Needed when a block overflows a parent with `overflow: hidden` +
  * `border-radius`: the block's visible rect is the intersection with the

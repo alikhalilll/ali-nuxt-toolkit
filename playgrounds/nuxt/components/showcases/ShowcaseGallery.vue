@@ -2,7 +2,7 @@
 import type { RevealMode } from '@alikhalilll/a-smart-skeleton';
 
 /**
- * **Loading gallery** — skullet.lochie.me showcase #2.
+ * **Loading gallery**
  *
  * 3 × 2 grid of image placeholders.
  */
@@ -15,14 +15,14 @@ interface Shot {
 
 const SAMPLE: Shot[] = Array.from({ length: 6 }, (_, i) => ({
   id: i,
-  src: `https://picsum.photos/seed/skullet-s${i}/320/200`,
+  src: `https://picsum.photos/seed/gallery-s${i}/320/200`,
 }));
 
 const { data } = useShowcaseData<Shot[]>(
   () =>
     Array.from({ length: 6 }, (_, i) => ({
       id: Date.now() + i,
-      src: `https://picsum.photos/seed/skullet-${i}-${Math.random()}/320/200`,
+      src: `https://picsum.photos/seed/gallery-${i}-${Math.random()}/320/200`,
     })),
   1000
 );

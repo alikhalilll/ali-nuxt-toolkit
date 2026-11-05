@@ -2,7 +2,7 @@
 import type { RevealMode } from '@alikhalilll/a-smart-skeleton';
 
 /**
- * **Loading thread** — skullet.lochie.me showcase #3.
+ * **Loading thread**
  *
  * Circular avatar + username + 3 stacked comment blocks + send button.
  */

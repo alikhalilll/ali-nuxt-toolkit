@@ -2,7 +2,7 @@
 import type { RevealMode } from '@alikhalilll/a-smart-skeleton';
 
 /**
- * **Loading track player** — skullet.lochie.me showcase #7.
+ * **Loading track player**
  *
  * Album art placeholder + play controls + time display.
  */

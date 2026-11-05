@@ -2,7 +2,7 @@
 import type { RevealMode } from '@alikhalilll/a-smart-skeleton';
 
 /**
- * **Loading activity feed** — skullet.lochie.me showcase #6.
+ * **Loading activity feed**
  *
  * 3 stacked notification rows (small avatar + username/timestamp + message).
  */
@@ -29,7 +29,7 @@ const { data } = useShowcaseData<Entry[]>(() => [
     id: 'a0',
     avatar: 'https://i.pravatar.cc/36?u=lochie-activity',
     actor: 'Lochie',
-    action: 'opened an issue in skullet',
+    action: 'opened a pull request',
     when: '2m ago',
   },
   {

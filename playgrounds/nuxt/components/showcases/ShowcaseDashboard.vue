@@ -2,7 +2,7 @@
 import type { RevealMode } from '@alikhalilll/a-smart-skeleton';
 
 /**
- * **Loading dashboard metrics** — skullet.lochie.me showcase #4.
+ * **Loading dashboard metrics**
  *
  * 2 × 2 grid of metric cards (label + large number + ±% change).
  */

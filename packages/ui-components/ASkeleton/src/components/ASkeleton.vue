@@ -65,7 +65,7 @@ const props = withDefaults(defineProps<ASkeletonProps>(), {
   persist: false,
   animation: 'shimmer',
   fallback: 'shimmer',
-  /* Default is `measure` — skullet-style ghost + bones in a shadow-DOM
+  /* Default is `measure` — ghost/layer-style ghost + bones in a shadow-DOM
    * layer. Font-metric text bars, clip-aware rounded corners, reactive
    * re-measurement via `MutationObserver` + `ResizeObserver`.
    *
@@ -234,7 +234,7 @@ const ShapeHost = defineComponent({
   },
 });
 
-/* `measure` mode: skullet-style ghost + bones. The ghost mounts the shape
+/* `measure` mode: ghost/layer-style ghost + bones. The ghost mounts the shape
  * (slot content with the `shapeData` stand-in in data-driven mode); the
  * bones layer renders beside it and finds the ghost via a DOM-sibling
  * lookup, so no ref-synchronisation ceremony is needed in this component. */

@@ -1,5 +1,5 @@
 /**
- * Framework-agnostic engine classes — the port of `skullet/lib`'s core.
+ * Framework-agnostic engine classes — measure/ghost/reveal core.
  *
  * `Ghost` manages the loading pane; `Memory` manages the shown pane.
  * Both are plain ES2022 classes with no Vue dependency, so a React /

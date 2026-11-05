@@ -2,7 +2,7 @@
 import type { RevealMode } from '@alikhalilll/a-smart-skeleton';
 
 /**
- * **Loading portfolio** — skullet.lochie.me showcase #8.
+ * **Loading portfolio**
  *
  * Header with title + total ± % + 3 asset rows (ticker + name + value).
  */

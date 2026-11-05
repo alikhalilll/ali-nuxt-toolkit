@@ -2,7 +2,7 @@
 import type { RevealMode } from '@alikhalilll/a-smart-skeleton';
 
 /**
- * **Loading article** — skullet.lochie.me showcase #1.
+ * **Loading article**
  *
  * Avatar (small circle) + author + 2–3 line title + "x min read" metadata.
  * Demonstrates: data-driven slot, text-bar line stacking, author avatar

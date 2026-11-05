@@ -1,7 +1,7 @@
 /**
  * Pick the stand-in value the ghost / prototype should render during the
  * skeleton pane. Implements the **shape precedence waterfall** from
- * `skullet/lib/ghost.ts:151-201`:
+ * `the upstream library/ghost.ts:151-201`:
  *
  *   1. current `data` on screen (refetch over existing content)
  *   2. last-seen `data` under the same `id` / `cacheKey`

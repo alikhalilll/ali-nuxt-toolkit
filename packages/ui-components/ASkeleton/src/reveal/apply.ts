@@ -1,7 +1,7 @@
 /**
  * Reveal applier — turns a `Plan` into actual `Element.animate()` calls.
  *
- * Scoped port of `skullet/lib/fade.ts`. Delegates planning to `./plan.ts`
+ * Scoped port of `/fade.ts`. Delegates planning to `./plan.ts`
  * and animation primitives to the Web Animations API. Each pane goes
  * through two phases:
  *
@@ -94,7 +94,7 @@ const PLAN_APPLIERS: Record<Plan['kind'], (el: HTMLElement, plan: Plan) => Promi
 };
 
 /**
- * True when `el` is the skeleton pane of its reveal. Skullet detects this
+ * True when `el` is the skeleton pane of its reveal. Detected
  * by the presence of the ghost / layer / self-skeleton attrs inside the
  * pane; our equivalent is the pane's `data-a-skel-pane="skeleton"` key.
  */
@@ -152,7 +152,7 @@ export interface PaneBox {
 /**
  * Measure `element` as it leaves — fractional (not `offsetWidth` / `offsetHeight`),
  * so a shrink-to-fit pane's text doesn't rewrap on the way out when a width
- * gets rounded down. Port of `skullet/lib/fade.ts:244-255`.
+ * gets rounded down. Port of `/fade.ts:244-255`.
  */
 export function boxOf(element: HTMLElement): PaneBox {
   const rect = element.getBoundingClientRect();
@@ -170,7 +170,7 @@ export function boxOf(element: HTMLElement): PaneBox {
  * Pin an exiting pane absolutely at its measured box so the incoming pane
  * can lay out from zero without fighting for space. Marks the pane
  * `[data-a-skel-exiting]` so CSS can hide it from pointer/keyboard events.
- * Port of `skullet/lib/fade.ts:258-272`.
+ * Port of `/fade.ts:258-272`.
  */
 function popOut(element: HTMLElement, box: PaneBox = boxOf(element)): PaneBox {
   Object.assign(element.style, {
@@ -195,7 +195,7 @@ interface Resize {
 }
 
 /* Tracks the running height ease per reveal root so a second resize mid-flight
- * starts from where the first got to. Port of `skullet/lib/fade.ts:277`. */
+ * starts from where the first got to. Port of `/fade.ts:277`. */
 const resizes = new WeakMap<HTMLElement, Resize>();
 
 /**
@@ -203,7 +203,7 @@ const resizes = new WeakMap<HTMLElement, Resize>();
  * incoming pane's natural height. Called from `fadeOut` after `popOut` has
  * removed the outgoing pane from flow.
  *
- * Port of `skullet/lib/fade.ts:280-308`.
+ * Port of `/fade.ts:280-308`.
  */
 function resize(root: HTMLElement, box: PaneBox): void {
   const incoming = root.querySelector<HTMLElement>(
@@ -240,7 +240,7 @@ function restoreRoot(root: HTMLElement, { overflow, boxSizing }: Resize): void {
 
 /** Sequence-exit: bones fade out piece-by-piece using the entry plan's
  * `pieceDelay`, reused in reverse. Covers skeleton→content handoff when
- * the entry used `sequence`. Simplified from `skullet/lib/fade.ts:367-405`. */
+ * the entry used `sequence`. Simplified from `the upstream library/fade.ts:367-405`. */
 function sequenceOut(element: HTMLElement, plan: Plan & { kind: 'sequence' }): Promise<void> {
   if (!canAnimate()) return Promise.resolve();
   const pieces = Array.from(element.querySelectorAll('*')) as HTMLElement[];

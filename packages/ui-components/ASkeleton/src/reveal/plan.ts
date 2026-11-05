@@ -1,7 +1,7 @@
 /**
  * Reveal planner — decides how a loading pane transitions to a content pane.
  *
- * Scoped port of `skullet/lib/plan.ts`. Four built-in modes:
+ * Scoped port of `/plan.ts`. Four built-in modes:
  *
  *   - `instant`  — resolve immediately, no fade.
  *   - `together` — one global crossfade (all pieces fade together).
@@ -10,7 +10,7 @@
  *                   loads or users mid-gesture, `together` for small reveals
  *                   or refetches, `sequence` otherwise.
  *
- * NOT ported from skullet: the `sweep` mode (diagonal wipe with SVG gloss
+ * Not included: the `sweep` mode (diagonal wipe with SVG gloss
  * filter + shared wave front). It's visually niche, frame-drop sensitive,
  * and takes a 300-line implementation. Deferred to a follow-up — `smart`
  * falls back to `byContent → byRow` when the heuristic would have chosen
@@ -65,7 +65,7 @@ export type Plan =
       duration: number;
     };
 
-/** ─── Constants (match skullet's lib/plan.ts) ──────────────────────────── */
+/** ─── Constants (match the upstream library's lib/plan.ts) ──────────────────────────── */
 export const SKELETON_DELAY = 150;
 export const QUICK_FADE = 120;
 export const SMALL_HEIGHT = 72;
@@ -155,7 +155,7 @@ function hasOwnText(el: Element): boolean {
 
 /**
  * Recursively find the leaves of `root` that carry text or media — the
- * atoms a reveal animates in. Matches skullet's `pieces()` (ll. 148-164).
+ * atoms a reveal animates in. Matches the upstream library's `pieces()` (ll. 148-164).
  */
 export function pieces(root: Element): Element[] {
   const out: Element[] = [];
@@ -184,7 +184,7 @@ export function pieces(root: Element): Element[] {
  * ≥3 siblings of the same tag + class signature counts as a "unit".
  * Falls back to the piece itself when no such ancestor exists.
  *
- * Mirrors skullet's `unitOf()` (`skullet/lib/plan.ts:167-183`).
+ * Mirrors the upstream library's `unitOf()` (`the upstream library/plan.ts:167-183`).
  */
 export function unitOf(piece: Element, root: Element): Element {
   let cursor: Element | null = piece.parentElement;
@@ -211,7 +211,7 @@ const clamp01 = (n: number): number => (n < 0 ? 0 : n > 1 ? 1 : n);
 
 /**
  * Delay as a function of piece position (vertical 80%, horizontal 20%),
- * scaled by `CASCADE_SPREAD`. Matches skullet's `byPosition()`
+ * scaled by `CASCADE_SPREAD`. Matches the upstream library's `byPosition()`
  * (ll. 353-357).
  */
 export function byPosition(piece: Piece): number {
@@ -222,7 +222,7 @@ export function byPosition(piece: Piece): number {
 
 /**
  * Top-to-bottom only, visible-portion only. Secondary text (smaller font
- * than the unit's max) is delayed by `SECONDARY_DELAY`. Matches skullet's
+ * than the unit's max) is delayed by `SECONDARY_DELAY`. Matches the upstream library's
  * `byRow()` (ll. 362-368).
  */
 export function byRow(piece: Piece): number | null {
@@ -238,7 +238,7 @@ export function byRow(piece: Piece): number | null {
 /**
  * Short-circuit: input-active OR skeleton-barely-up → instant.
  * Refetch → quick `together`. Otherwise null (fall through to byContent).
- * Matches skullet's `quickly()` (ll. 375-380).
+ * Matches the upstream library's `quickly()` (ll. 375-380).
  */
 export function quickly(ctx: RevealContext): Plan | null {
   if (ctx.input || ctx.waited < SKELETON_DELAY) return { kind: 'instant' };
@@ -248,7 +248,7 @@ export function quickly(ctx: RevealContext): Plan | null {
 
 /**
  * Small reveals → `together`. Larger → `sequence` via byRow.
- * Matches skullet's `byContent()` (ll. 383-386).
+ * Matches the upstream library's `byContent()` (ll. 383-386).
  */
 export function byContent(ctx: RevealContext): Plan {
   if (ctx.height < SMALL_HEIGHT || ctx.pieces <= SMALL_PIECES) {

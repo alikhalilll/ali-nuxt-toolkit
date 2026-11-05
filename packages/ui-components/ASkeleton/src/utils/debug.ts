@@ -1,5 +1,5 @@
 /**
- * Debug overlay — port of `skullet/lib/debug.ts`.
+ * Debug overlay — port of `/debug.ts`.
  *
  * Attached to the page lazily: enabled via `?a-skel-debug=1` in the URL,
  * `localStorage['a-skel:debug'] === '1'`, `setDebug(true)` programmatically,

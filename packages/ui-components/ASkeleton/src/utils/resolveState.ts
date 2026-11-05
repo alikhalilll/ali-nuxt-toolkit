@@ -10,7 +10,7 @@
  *   5. otherwise                                        → 'content'
  *
  * Data-driven mode is detected by whether the consumer bound a `data` prop
- * at all (even to `null`). Skullet's trick: inspect
+ * at all (even to `null`). The upstream library's trick: inspect
  * `instance.vnode.props?.data in instance.vnode.props`. We pass `driven`
  * as an input to keep this helper pure and testable without a Vue instance.
  */

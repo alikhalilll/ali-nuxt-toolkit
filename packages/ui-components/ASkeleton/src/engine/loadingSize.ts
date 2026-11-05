@@ -29,7 +29,7 @@ export function setLoadingSize(reveal: Element | null, size: LoadingSize): void 
 
 /**
  * Read and clear the recorded size for a reveal. The one-shot semantic
- * matches skullet's `takeLoadingSize` (`skullet/lib/ghost.ts:60-65`):
+ * matches the upstream library's `takeLoadingSize` (`the upstream library/ghost.ts:60-65`):
  * only the first `Memory` after the Ghost tears down gets the comparison.
  */
 export function takeLoadingSize(reveal: Element | null): LoadingSize | undefined {

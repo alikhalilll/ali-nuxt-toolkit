@@ -1,7 +1,7 @@
 /**
  * Motion-preference + animation-support checks.
  *
- * Port of `skullet/lib/motion.ts:1-16`. Every animation side effect in the
+ * Port of `/motion.ts:1-16`. Every animation side effect in the
  * engine gates on these — `prefers-reduced-motion: reduce` short-circuits
  * the fade/sweep/sequence planners to the "instant" plan, and `canAnimate()`
  * reports whether the host runtime has the Web Animations API (false in

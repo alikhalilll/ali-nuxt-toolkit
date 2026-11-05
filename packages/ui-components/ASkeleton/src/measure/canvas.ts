@@ -6,7 +6,7 @@
  * canvas (jsdom / happy-dom) — the metrics computation falls back to a
  * geometric default when that happens.
  *
- * Port of `skullet/lib/canvas.ts:1-7`.
+ * Port of `/canvas.ts:1-7`.
  */
 
 let context: CanvasRenderingContext2D | null | undefined;

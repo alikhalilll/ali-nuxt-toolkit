@@ -3,7 +3,7 @@
  *
  * The planner is pure; we construct `RevealContext` values by hand and assert
  * the resulting `Plan` matches the mode. Delay numbers come from the exported
- * constants so tests stay in sync when skullet's defaults change.
+ * constants so tests stay in sync when the upstream library's defaults change.
  */
 import { describe, expect, it } from 'vitest';
 import {

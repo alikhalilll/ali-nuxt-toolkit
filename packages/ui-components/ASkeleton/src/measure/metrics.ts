@@ -1,7 +1,7 @@
 /**
  * Canvas-based font metrics + typography-aware bar placement.
  *
- * Port of `skullet/lib/measure.ts:120-215`. Each unique font (style + weight
+ * Port of `/measure.ts:120-215`. Each unique font (style + weight
  * + size + family) is measured once via Canvas 2D `measureText()` and cached.
  * `barOf(rect, style, fontSize)` turns the metrics into a single-line bar's
  * top/bottom edges — the bar lives between two typographic lines (defaults
@@ -98,7 +98,7 @@ export function barOf(
   const metrics = metricsOf(style);
   if (!metrics) {
     /* No canvas (or metrics unresolvable) — centre a bar at 72% of
-     * fontSize across the box. Matches skullet's fallback. */
+     * fontSize across the box. Matches the upstream library's fallback. */
     const height = Math.min(fontSize * 0.72, rect.bottom - rect.top);
     const middle = (rect.top + rect.bottom) / 2;
     return { barTop: middle - height / 2, barBottom: middle + height / 2 };

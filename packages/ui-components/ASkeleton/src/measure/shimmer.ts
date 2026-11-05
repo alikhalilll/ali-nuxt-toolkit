@@ -3,7 +3,7 @@
  * animates them on the **document clock** so every skeleton on the page
  * shimmers in one coherent sweep, however late a particular bone mounts.
  *
- * Full WAAPI port of `skullet/lib/shimmer.ts`. The key trick is
+ * Full WAAPI port of `/shimmer.ts`. The key trick is
  * `animation.startTime = 0` — pins the animation to `performance.timeOrigin`
  * so a bone mounted at t=5s picks up the sweep where it is right now,
  * instead of restarting from zero. Visually, every bone belongs to one
@@ -35,7 +35,7 @@ import type { SkeletonRect } from './measure';
 const BASE_FILL = 'var(--ak-skel-base, hsl(220 13% 84%))';
 const HIGHLIGHT_FILL = 'var(--ak-skel-highlight, hsl(0 0% 100% / 0.6))';
 
-/** Timings — match skullet's defaults. Consumer tweaks via CSS variables. */
+/** Timings — match the upstream library's defaults. Consumer tweaks via CSS variables. */
 const DURATIONS = {
   shimmer: { slow: 4000, fast: 2000 },
   pulse: { slow: 2400, fast: 1200 },

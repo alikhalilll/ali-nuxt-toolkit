@@ -1,7 +1,7 @@
 /**
  * `Memory` — the content-pane lifecycle, as a framework-agnostic class.
  *
- * Faithful port of `skullet/lib/memory.ts`. The Vue adapter instantiates
+ * Faithful port of `/memory.ts`. The Vue adapter instantiates
  * one Memory per `<ASkeleton>` once content arrives; the Memory:
  *
  *   - Serialises the content's HTML into the shape store on mount (and

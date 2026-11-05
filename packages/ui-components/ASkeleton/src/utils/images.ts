@@ -1,5 +1,5 @@
 /**
- * Per-image load tracking — port of `skullet/lib/images.ts:1-30`.
+ * Per-image load tracking — port of `/images.ts:1-30`.
  *
  * The reveal applier (`src/reveal/apply.ts`) uses these to keep individual
  * `<img>` stand-in bones shimmering until each image's decode settles.
@@ -8,7 +8,7 @@
  * layout with a missing image, then the image slams in.
  *
  * `IMAGE_TIMEOUT` is the ceiling — a stalled image request can't hold the
- * reveal forever. 10 s matches skullet.
+ * reveal forever. 10 s timeout.
  */
 
 export const IMAGE_TIMEOUT = 10_000;

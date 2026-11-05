@@ -1,7 +1,7 @@
 /**
  * Reveal-mode utilities — upfront duration bounds for a given mode.
  *
- * Port of `skullet/lib/reveals.ts`. Returns the longest-case ms a reveal
+ * Port of `/reveals.ts`. Returns the longest-case ms a reveal
  * might take, used by the applier to size exit animations and by the
  * debug overlay to tag timing.
  */

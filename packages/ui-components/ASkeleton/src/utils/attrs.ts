@@ -1,12 +1,12 @@
 /**
  * Centralised attribute names used across the v3 pipeline.
  *
- * Modelled on skullet's `constants.ts` — one import, every DOM selector
+ * Modelled on the upstream library's `constants.ts` — one import, every DOM selector
  * ever used by the engine. If a new attribute is added, this is the only
  * place its name is defined; CSS selectors in `styles.src.css`, test
  * fixtures, and runtime checks all reach for the constant.
  *
- * The `data-` prefix is intentional: unprefixed `skullet-foo` reads like
+ * The `data-` prefix is intentional: unprefixed attribute names read like
  * a custom-element name to browsers and lints; `data-a-skel-foo` is a
  * legitimate HTML author attribute everywhere.
  */

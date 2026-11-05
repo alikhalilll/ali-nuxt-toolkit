@@ -1,5 +1,5 @@
 /**
- * Theme model — port of `skullet/lib/theme.ts`.
+ * Theme model — port of `/theme.ts`.
  *
  * A theme is light + dark colour pairs plus animation / speed / typographic
  * text-bar edges. The functions here turn a theme into:
