@@ -1,5 +1,25 @@
 # `@alikhalilll/a-skeleton`
 
+> **This package is deprecated.** It's been superseded by
+> **[`@alikhalilll/a-smart-skeleton`](https://www.npmjs.com/package/@alikhalilll/a-smart-skeleton)**,
+> the next-generation measured skeleton loader with Canvas 2D font metrics,
+> synchronized document-clock shimmer, and native SSR boot. No new features will land
+> here; the existing 1.x line remains installable but won't receive further updates.
+>
+> **Migration:**
+>
+> ```bash
+> pnpm remove @alikhalilll/a-skeleton
+> pnpm add @alikhalilll/a-smart-skeleton
+> ```
+>
+> See the [ASmartSkeleton docs](https://alikhalilll.github.io/ali-nuxt-toolkit/ui/smart-skeleton)
+> for the component API; most `<ASkeleton>` call sites port directly to `<ASmartSkeleton>`
+> with the same `data` / `sample` / `loading` / `empty` / `error` props and the same
+> `#default="{ data }"` scoped slot.
+
+---
+
 > Smart skeleton states for Vue 3 / Nuxt 3+.
 > Measure your content, draw bones over it, cross-fade when data lands.
 > Nothing moves when it arrives.
@@ -116,7 +136,7 @@ What happens:
 Each example is live in the Nuxt playground at `/showcases` and ships as
 a `.vue` component under
 [`playgrounds/nuxt/components/showcases/`](../../../playgrounds/nuxt/components/showcases/).
-They mirror [skullet.lochie.me](https://skullet.lochie.me/)'s showcase
+They mirror [](https:///)'s showcase
 gallery one-to-one.
 
 ### 1. Article card
@@ -368,11 +388,11 @@ Slots:
 
 ## Modes
 
-| Mode                      | How it works                                                                                                                                                                                                                                                                                                                                          | Best when                                                                                                                      |
-| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| **`measure`** _(default)_ | **Ghost + layer + bones** (skullet-style). The slot mounts invisibly inside `[data-a-skel-ghost]`; the measurement engine walks it once, reads Canvas font metrics for text bars, applies clip-aware rounded corners, and paints `<div data-a-skel-rect>` bones into a shadow-DOM layer. `MutationObserver` + `ResizeObserver` re-measure on changes. | New code; the clearest, most faithful bones. Reflows with layout.                                                              |
-| **`clone`**               | Mounts the slot off-screen inside a capture host, snapshots every leaf's `getComputedStyle()`, then replays the snapshot as positioned divs each carrying its captured inline CSS.                                                                                                                                                                    | You want the skeleton to look _pixel-identical_ to the real surface (bg, border, shadow, filter, transform). Client-side only. |
-| **`mirror`**              | Walks the slot's **vnode tree** at render time. Preserves every element with its real `class` / inline `style`; swaps text leaves for `<span class="a-skel-text-content">`.                                                                                                                                                                           | SSR-safe placeholders (no DOM read needed). First-paint fallback before measure/clone's observers settle.                      |
+| Mode                      | How it works                                                                                                                                                                                                                                                                                                                                              | Best when                                                                                                                      |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| **`measure`** _(default)_ | **Ghost + layer + bones** (ghost/layer-style). The slot mounts invisibly inside `[data-a-skel-ghost]`; the measurement engine walks it once, reads Canvas font metrics for text bars, applies clip-aware rounded corners, and paints `<div data-a-skel-rect>` bones into a shadow-DOM layer. `MutationObserver` + `ResizeObserver` re-measure on changes. | New code; the clearest, most faithful bones. Reflows with layout.                                                              |
+| **`clone`**               | Mounts the slot off-screen inside a capture host, snapshots every leaf's `getComputedStyle()`, then replays the snapshot as positioned divs each carrying its captured inline CSS.                                                                                                                                                                        | You want the skeleton to look _pixel-identical_ to the real surface (bg, border, shadow, filter, transform). Client-side only. |
+| **`mirror`**              | Walks the slot's **vnode tree** at render time. Preserves every element with its real `class` / inline `style`; swaps text leaves for `<span class="a-skel-text-content">`.                                                                                                                                                                               | SSR-safe placeholders (no DOM read needed). First-paint fallback before measure/clone's observers settle.                      |
 
 Plus an advanced opt-in: `useSkeleton()` + `<ASkeletonLayer>` for **structural
 normal-flow** skeletons that reflow with their parent. See the "Composables"

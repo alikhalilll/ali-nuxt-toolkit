@@ -18,6 +18,8 @@ interface SubPage {
   pkg?: string;
   /** Show a gradient NEW pill next to the title. */
   isNew?: boolean;
+  /** Show a muted DEPRECATED pill — the package still installs but won't get new features. */
+  isDeprecated?: boolean;
 }
 
 interface SubGroup {
@@ -49,12 +51,6 @@ const modules: ModuleEntry[] = [
         label: 'Components',
         items: [
           {
-            path: '/ui/skeleton',
-            title: 'Skeleton',
-            kind: 'page',
-            pkg: 'a-skeleton',
-          },
-          {
             path: '/ui/smart-skeleton',
             title: 'SmartSkeleton',
             kind: 'page',
@@ -62,6 +58,13 @@ const modules: ModuleEntry[] = [
             isNew: true,
           },
           { path: '/ui/tel-input', title: 'TelInput', kind: 'page', pkg: 'a-tel-input' },
+          {
+            path: '/ui/skeleton',
+            title: 'Skeleton',
+            kind: 'page',
+            pkg: 'a-skeleton',
+            isDeprecated: true,
+          },
         ],
       },
     ],
@@ -158,6 +161,9 @@ function scrollTo(id: string, e: MouseEvent) {
                         <span class="doc-tree__name">
                           {{ sub.title }}
                           <span v-if="sub.isNew" class="badge-new">NEW</span>
+                          <span v-else-if="sub.isDeprecated" class="badge-deprecated"
+                            >DEPRECATED</span
+                          >
                         </span>
                         <span v-if="sub.pkg" class="doc-tree__pkg">{{ sub.pkg }}</span>
                       </NuxtLink>

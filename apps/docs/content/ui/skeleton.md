@@ -1,11 +1,30 @@
 ---
-title: ASkeleton
-description: A self-generating skeleton loader for Vue 3 / Nuxt 3+. Three rendering strategies (clone, mirror, structural), comprehensive style capture, per-line text geometry, fifteen named variants, themeable via CSS variables.
+title: ASkeleton (deprecated)
+description: Deprecated — superseded by @alikhalilll/a-smart-skeleton. A self-generating skeleton loader for Vue 3 / Nuxt 3+. Three rendering strategies, comprehensive style capture, per-line text geometry.
 package: '@alikhalilll/a-skeleton'
-order: 2
+order: 3
 ---
 
 # `@alikhalilll/a-skeleton`
+
+## ::callout
+
+type: warning
+title: This package is deprecated
+
+---
+
+`@alikhalilll/a-skeleton` has been superseded by [**`@alikhalilll/a-smart-skeleton`**](/ui/smart-skeleton) — the next-generation measured skeleton loader with Canvas 2D font metrics, synchronized document-clock shimmer, and native SSR boot. The 1.x line remains installable but won't get new features.
+
+**Migration:**
+
+```bash
+pnpm remove @alikhalilll/a-skeleton
+pnpm add @alikhalilll/a-smart-skeleton
+```
+
+Most `<ASkeleton>` call sites port directly to `<ASmartSkeleton>` with the same `data` / `sample` / `loading` / `empty` / `error` props and the same `#default="{ data }"` scoped slot.
+::
 
 > A self-generating skeleton loader for Vue 3 / Nuxt 3+.
 > Three rendering strategies (clone, mirror, structural) · pixel-identical computed-style snapshot ·

@@ -1,3 +1,24 @@
+/* Deprecation notice — this package is superseded by @alikhalilll/a-smart-skeleton.
+ * The warning fires once per process in development; production builds strip the
+ * `process.env.NODE_ENV` branch via bundler dead-code elimination, so the only cost
+ * is a single property read. Kept outside component setup so it fires on `import`
+ * even when the components are tree-shaken or never mounted. */
+declare const process: { env: { NODE_ENV?: string } };
+try {
+  if (
+    typeof process !== 'undefined' &&
+    process.env.NODE_ENV !== 'production' &&
+    typeof console !== 'undefined'
+  ) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      '[a-skeleton] @alikhalilll/a-skeleton is deprecated — migrate to @alikhalilll/a-smart-skeleton. See https://alikhalilll.github.io/ali-nuxt-toolkit/ui/smart-skeleton for the migration guide.'
+    );
+  }
+} catch {
+  /* No `process` outside bundling; stay silent. */
+}
+
 /* Components */
 export { default as ASkeleton } from './components/ASkeleton.vue';
 export { default as ASkeletonLayer } from './components/ASkeletonLayer.vue';
@@ -32,7 +53,7 @@ export type {
   SkeletonTheme,
 } from './boot';
 
-/* Framework-agnostic engine classes — the port of `skullet/lib`'s core
+/* Framework-agnostic engine classes — the measure/ghost/reveal core
  * loading + content lifecycles. Consumers writing a non-Vue adapter use
  * these directly; the Vue adapter wraps them in `<ASkeletonBones>` and
  * `useSkeletonLifecycle`. */

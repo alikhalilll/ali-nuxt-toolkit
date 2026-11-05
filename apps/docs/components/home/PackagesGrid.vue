@@ -16,6 +16,8 @@ interface PackageCard {
   modeLabel: string;
   /** Show a gradient NEW pill on the card. */
   isNew?: boolean;
+  /** Show a muted DEPRECATED pill — package still installs but won't get updates. */
+  isDeprecated?: boolean;
 }
 
 const packages: PackageCard[] = [
@@ -60,16 +62,6 @@ const packages: PackageCard[] = [
     modeLabel: 'Vue 3 (Nuxt + non-Nuxt)',
   },
   {
-    name: '@alikhalilll/a-skeleton',
-    docs: '/ui/skeleton',
-    npm: 'https://www.npmjs.com/package/@alikhalilll/a-skeleton',
-    description:
-      'Self-generating skeleton loader — first paint mirrors the slot HTML structure, second load replays a pixel-aligned shape captured from the real DOM. Themeable via CSS vars.',
-    accent: 'ui',
-    mode: 'vue',
-    modeLabel: 'Vue 3 (Nuxt + non-Nuxt)',
-  },
-  {
     name: '@alikhalilll/a-smart-skeleton',
     docs: '/ui/smart-skeleton',
     npm: 'https://www.npmjs.com/package/@alikhalilll/a-smart-skeleton',
@@ -79,6 +71,17 @@ const packages: PackageCard[] = [
     mode: 'vue',
     modeLabel: 'Vue 3 (Nuxt + non-Nuxt)',
     isNew: true,
+  },
+  {
+    name: '@alikhalilll/a-skeleton',
+    docs: '/ui/skeleton',
+    npm: 'https://www.npmjs.com/package/@alikhalilll/a-skeleton',
+    description:
+      'Deprecated — superseded by @alikhalilll/a-smart-skeleton. The 1.x line remains installable but won’t receive new features.',
+    accent: 'ui',
+    mode: 'vue',
+    modeLabel: 'Vue 3 (Nuxt + non-Nuxt)',
+    isDeprecated: true,
   },
 ];
 
@@ -124,6 +127,7 @@ onMounted(() => {
           <span class="pkg-dot" aria-hidden="true" />
           <h3 class="font-mono text-[13px] font-semibold text-text">{{ pkg.name }}</h3>
           <span v-if="pkg.isNew" class="badge-new ml-auto">NEW</span>
+          <span v-else-if="pkg.isDeprecated" class="badge-deprecated ml-auto">DEPRECATED</span>
         </div>
         <span :class="['pkg-mode', `pkg-mode--${pkg.mode}`]" :title="pkg.modeLabel">
           <svg
@@ -258,5 +262,19 @@ onMounted(() => {
 }
 .pkg-mode--nuxt-only {
   color: var(--text-muted);
+}
+
+.badge-deprecated {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-family: ui-monospace, monospace;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  background: color-mix(in oklab, var(--surface) 70%, transparent);
 }
 </style>

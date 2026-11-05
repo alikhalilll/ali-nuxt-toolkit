@@ -828,3 +828,23 @@ pre.bg-code-bg::-webkit-scrollbar-thumb {
     animation: none;
   }
 }
+
+/* DEPRECATED badge — muted, used anywhere a package is still installable but
+ * superseded by a replacement. Visually the inverse of .badge-new. */
+.badge-deprecated {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-family: ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.4;
+  color: var(--color-text-dim);
+  border: 1px solid var(--color-border);
+  background: color-mix(in oklab, var(--color-surface) 70%, transparent);
+  vertical-align: middle;
+}
