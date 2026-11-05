@@ -65,4 +65,35 @@ describe('skeletonCSS', () => {
     expect(css).toContain(':root { --ask-base: #111;');
     expect(css).not.toContain('@media (prefers-color-scheme: dark)');
   });
+
+  it('drops a radius that would escape its declaration', () => {
+    const vars = themeVariables({ radius: '6px; } html { display: none } /*' }, 'light');
+    expect(vars['--ask-radius']).toBeUndefined();
+  });
+
+  it('keeps a valid radius shorthand', () => {
+    const vars = themeVariables({ radius: '4px 8px 4px 8px' }, 'light');
+    expect(vars['--ask-radius']).toBe('4px 8px 4px 8px');
+  });
+
+  it('drops colour values that could close the declaration', () => {
+    const vars = themeVariables(
+      { light: { base: 'red; } html { display: none', highlight: '#fff' } },
+      'light'
+    );
+    expect(vars['--ask-base']).toBeUndefined();
+    expect(vars['--ask-highlight']).toBe('#fff');
+  });
+
+  it('drops animation and speed values outside the enum', () => {
+    const vars = themeVariables(
+      {
+        animation: 'url(javascript:alert(1))' as never,
+        speed: 'FAST;' as never,
+      },
+      'light'
+    );
+    expect(vars['--ask-animation']).toBeUndefined();
+    expect(vars['--ask-speed']).toBeUndefined();
+  });
 });

@@ -44,6 +44,35 @@ export const DEFAULT_THEME = {
   text: { top: 'ascender', bottom: 'descender' },
 } as const satisfies SkeletonTheme;
 
+// Colours pass through getComputedStyle without ever reaching the stylesheet, so
+// the custom-property declarations are the only path a string takes directly into
+// CSS text. A value with `;` or `}` would close its declaration and inject rules,
+// so the four keyword props are gated against their own enums and length-like props
+// are gated against a conservative length regex — anything else is dropped.
+const ANIMATION = new Set<SkeletonAnimation>(['shimmer', 'group-shimmer', 'pulse', 'none']);
+const SPEED = new Set<SkeletonSpeed>(['slow', 'fast']);
+const TEXT_TOP = new Set<TextTop>(['ascender', 'cap-height', 'x-height']);
+const TEXT_BOTTOM = new Set<TextBottom>(['baseline', 'descender']);
+
+// A CSS <length>, <percentage>, calc(), or the whitespace-separated list of them that
+// border-radius allows — digits, dots, whitespace, parens, and unit letters only.
+// Reject angle brackets and semicolons so no value can break out of the declaration.
+const LENGTH = /^[\d.\s,%()+\-*/a-z]+$/i;
+
+const safeLength = (value: string): string | null => {
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.length > 100) return null;
+  if (/[<>;}{"'`]/.test(trimmed)) return null;
+  return LENGTH.test(trimmed) ? trimmed : null;
+};
+
+const safeColor = (value: string): string | null => {
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.length > 200) return null;
+  if (/[;}<>]/.test(trimmed)) return null;
+  return trimmed;
+};
+
 /** A theme's custom properties for one set of colours, for a style attribute. */
 export function themeVariables(
   theme: SkeletonTheme = {},
@@ -52,14 +81,27 @@ export function themeVariables(
   const variables: Record<string, string> = {};
   const colors = mode && (theme[mode] ?? DEFAULT_COLORS[mode]);
   if (colors) {
-    variables['--ask-base'] = colors.base;
-    variables['--ask-highlight'] = colors.highlight;
+    const base = safeColor(colors.base);
+    const highlight = safeColor(colors.highlight);
+    if (base) variables['--ask-base'] = base;
+    if (highlight) variables['--ask-highlight'] = highlight;
   }
-  if (theme.radius) variables['--ask-radius'] = theme.radius;
-  if (theme.animation) variables['--ask-animation'] = theme.animation;
-  if (theme.speed) variables['--ask-speed'] = theme.speed;
-  if (theme.text?.top) variables['--ask-text-top'] = theme.text.top;
-  if (theme.text?.bottom) variables['--ask-text-bottom'] = theme.text.bottom;
+  if (theme.radius) {
+    const radius = safeLength(theme.radius);
+    if (radius) variables['--ask-radius'] = radius;
+  }
+  if (theme.animation && ANIMATION.has(theme.animation)) {
+    variables['--ask-animation'] = theme.animation;
+  }
+  if (theme.speed && SPEED.has(theme.speed)) {
+    variables['--ask-speed'] = theme.speed;
+  }
+  if (theme.text?.top && TEXT_TOP.has(theme.text.top)) {
+    variables['--ask-text-top'] = theme.text.top;
+  }
+  if (theme.text?.bottom && TEXT_BOTTOM.has(theme.text.bottom)) {
+    variables['--ask-text-bottom'] = theme.text.bottom;
+  }
   return variables;
 }
 

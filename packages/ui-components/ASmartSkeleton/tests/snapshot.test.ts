@@ -1,6 +1,6 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { autoKey, fill, restore, serialize } from '../src/core/snapshot';
-import { sampleFrom } from '../src/core/dev';
+import { checkNonce, sampleFrom } from '../src/core/dev';
 
 const mount = (html: string) => {
   const element = document.body.appendChild(document.createElement('div'));
@@ -38,6 +38,35 @@ describe('serialize', () => {
     const html = serialize(mount(`<input value="secret">`), false);
     expect(html).not.toContain('secret');
   });
+
+  it('drops legacy URL-bearing attrs', () => {
+    const html = serialize(
+      mount(
+        `<button formaction="/x" formtarget="_top">x</button><body background="/y"><a ping="/z">p</a>`
+      ),
+      false
+    );
+    expect(html).not.toMatch(/formaction|formtarget|background=|ping=/);
+  });
+
+  it('drops a style attribute with a javascript url or expression', () => {
+    const html = serialize(
+      mount(
+        `<div style="background: url(javascript:alert(1))">a</div><div style="width: expression(alert(1))">b</div><div style="color: red">c</div>`
+      ),
+      false
+    );
+    expect(html).not.toMatch(/javascript:|expression\(/);
+    expect(html).toContain('color: red');
+  });
+
+  it('drops data: href values', () => {
+    const html = serialize(
+      mount(`<a href="data:text/html,<script>alert(1)</script>">x</a>`),
+      false
+    );
+    expect(html).not.toContain('data:text/html');
+  });
 });
 
 describe('restore', () => {
@@ -65,6 +94,55 @@ describe('autoKey', () => {
 
   it('has nothing to key on an empty element', () => {
     expect(autoKey(mount(''))).toBeNull();
+  });
+});
+
+describe('checkNonce', () => {
+  it('warns once when a page has a restrictive CSP and no nonce is passed', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const meta = document.createElement('meta');
+    meta.setAttribute('http-equiv', 'Content-Security-Policy');
+    meta.setAttribute('content', "default-src 'self'; script-src 'self'");
+    document.head.appendChild(meta);
+
+    checkNonce(undefined);
+    checkNonce(undefined);
+
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0]![0]).toMatch(/nonce/i);
+
+    meta.remove();
+    warn.mockRestore();
+  });
+
+  it('stays quiet when a nonce was passed', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const meta = document.createElement('meta');
+    meta.setAttribute('http-equiv', 'Content-Security-Policy');
+    meta.setAttribute('content', "default-src 'self'; script-src 'self'");
+    document.head.appendChild(meta);
+
+    checkNonce('abc');
+
+    expect(warn).not.toHaveBeenCalled();
+
+    meta.remove();
+    warn.mockRestore();
+  });
+
+  it('stays quiet when CSP allows unsafe-inline', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const meta = document.createElement('meta');
+    meta.setAttribute('http-equiv', 'Content-Security-Policy');
+    meta.setAttribute('content', "script-src 'self' 'unsafe-inline'");
+    document.head.appendChild(meta);
+
+    checkNonce(undefined);
+
+    expect(warn).not.toHaveBeenCalled();
+
+    meta.remove();
+    warn.mockRestore();
   });
 });
 

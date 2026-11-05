@@ -38,6 +38,7 @@ export type {
   SkeletonTheme,
 } from './theme';
 export { debugging, setDebug } from './debug';
+export { checkNonce } from './dev';
 export { DEFAULT_TEXT, measureSkeleton } from './measure';
 export type { SkeletonRect, TextBottom, TextTop } from './measure';
 export { rectsOf, drawSkeleton, motionOf, shimmer } from './shimmer';

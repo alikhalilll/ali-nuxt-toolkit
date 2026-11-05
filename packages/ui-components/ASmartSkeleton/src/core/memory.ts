@@ -17,9 +17,24 @@ export type MemoryOptions = {
 
 const SAVE_DELAY = 250;
 
+// Synthetic, per-element id for `warnOnce` dedupe when the consumer didn't pass one.
+// Without this every id-less skeleton shares the same `sample:null` / `jump:null` bucket,
+// so only the first warning across the whole app ever fires.
+const anonIds = new WeakMap<HTMLElement, string>();
+let anonSeq = 0;
+const anonId = (element: HTMLElement) => {
+  let id = anonIds.get(element);
+  if (!id) {
+    id = `anon:${++anonSeq}`;
+    anonIds.set(element, id);
+  }
+  return id;
+};
+
 /** Remembers the shape of shown content, so its next skeleton can be drawn from it. */
 export class Memory {
   private key: string | null;
+  private warnKey: string;
   private timer: ReturnType<typeof setTimeout> | undefined;
   private mutations: MutationObserver;
   private resize: ResizeObserver | null;
@@ -30,6 +45,7 @@ export class Memory {
     private options: MemoryOptions = {}
   ) {
     this.key = options.id ?? autoKey(element);
+    this.warnKey = this.key ?? anonId(element);
     this.untrack = this.key ? trackShape(this.key, () => this.save()) : () => {};
 
     if (isDev || debugging(element)) this.check();
@@ -70,7 +86,7 @@ export class Memory {
 
     if (before.guessed && rendered && !sample && data != null) {
       warnOnce(
-        `sample:${this.key}`,
+        `sample:${this.warnKey}`,
         `${name} has no \`sample\`, so a first load guesses its shape${id ? '' : " and it can't be remembered"}. Pass this to make it exact:\n  sample={${JSON.stringify(sampleFrom(data))}}`
       );
     }
@@ -105,13 +121,13 @@ export class Memory {
         .map((image) => image.currentSrc.split('/').pop() || 'an image');
       if (unsized.length) {
         warnOnce(
-          `unsized:${this.key}`,
+          `unsized:${this.warnKey}`,
           `${name}'s skeleton had no room for ${unsized.length === 1 ? 'an image' : `${unsized.length} images`} (${unsized.slice(0, 3).join(', ')}${unsized.length > 3 ? ', …' : ''}), so the layout jumped when they loaded. Give each \`width\` and \`height\` attributes, or an \`aspect-ratio\`, so its space is known before it loads.`
         );
         return;
       }
       warnOnce(
-        `jump:${this.key}`,
+        `jump:${this.warnKey}`,
         before.guessed
           ? `${name}'s skeleton was ${before.width}×${before.height}px but its content is ${width}×${height}px, so the layout jumped on reveal. ${rendered ? 'Pass `sample` data shaped like the real thing' : 'Pass an `id` so its shape is remembered'}, and give images a size.`
           : `${name}'s skeleton was drawn from the data on screen (${before.width}×${before.height}px), but the new data is ${width}×${height}px, so the layout jumped on reveal. When new data adds to what's shown — another page of a list — give the addition a reveal of its own.`

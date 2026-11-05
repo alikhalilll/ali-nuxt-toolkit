@@ -23,6 +23,24 @@ export function warnOnce(id: string, message: string) {
 
 const URL_LIKE = /^(https?:|\/|data:|blob:)/;
 
+/**
+ * Warns once per app if the page has a meta CSP that restricts inline scripts and
+ * the consumer did not pass a nonce through the provider. Silent when CSP is absent
+ * or when the loading pane isn't on the client yet — we can't read CSP headers from
+ * script, so the meta-tag check is a best-effort signal to developers.
+ */
+export function checkNonce(nonce: string | undefined): void {
+  if (!isDev || typeof document === 'undefined' || nonce) return;
+  const meta = document.querySelector('meta[http-equiv="Content-Security-Policy" i]');
+  const content = meta?.getAttribute('content') ?? '';
+  if (!/script-src/i.test(content)) return;
+  if (/'unsafe-inline'/.test(content) || /\*/.test(content)) return;
+  warnOnce(
+    'csp:missing-nonce',
+    'ASmartSkeleton ships an inline boot script that measures the server-rendered skeleton before first paint. Your page has a Content-Security-Policy with script-src but no nonce was passed to <ASmartSkeletonProvider :nonce="…">, so the browser will block it and first paint will be blank. Pass the same nonce you used for the response header.'
+  );
+}
+
 /** Same keys and lengths as `data`, with every string replaced by filler. */
 export function sampleFrom(data: unknown): unknown {
   if (typeof data === 'string') return URL_LIKE.test(data) ? '' : fill(data);

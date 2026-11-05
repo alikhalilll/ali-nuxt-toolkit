@@ -23,12 +23,23 @@ export function flushShapes(key: string) {
   for (const save of shown.get(key) ?? []) save();
 }
 
+// Treats anything parsed from localStorage as hostile: must be the expected envelope,
+// `shapes` must be a plain string-to-string dictionary, and the output is a null-prototype
+// object so no later lookup can be confused by an inherited key.
 function read(): Stored {
   try {
-    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null');
-    return parsed?.v === VERSION ? parsed.shapes : {};
+    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null');
+    if (!raw || typeof raw !== 'object' || raw.v !== VERSION) return Object.create(null);
+    const incoming = raw.shapes;
+    if (!incoming || typeof incoming !== 'object') return Object.create(null);
+    const out: Stored = Object.create(null);
+    for (const key of Object.keys(incoming)) {
+      const value = (incoming as Record<string, unknown>)[key];
+      if (typeof value === 'string') out[key] = value;
+    }
+    return out;
   } catch {
-    return {};
+    return Object.create(null);
   }
 }
 

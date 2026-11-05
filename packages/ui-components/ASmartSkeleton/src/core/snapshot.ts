@@ -13,10 +13,21 @@ const STRIPPED = new Set([
   'srcdoc',
   'action',
   'formaction',
+  'formtarget',
+  'background',
+  'ping',
+  'dynsrc',
+  'lowsrc',
   'value',
   'alt',
   ATTR_COVERED,
 ]);
+
+// A style attribute saved from an unknown origin can carry `url(javascript:…)`,
+// `expression(…)` (legacy IE), or close the attribute to inject rules; drop the whole
+// attribute if any show up — `data:` URLs in CSS are left alone because they render
+// as images, not documents, and are a routine way to inline background art.
+const STYLE_UNSAFE = /url\s*\(\s*['"]?\s*(javascript|vbscript):|expression\s*\(|<|>/i;
 
 export const fill = (value: string) =>
   value.replace(/[A-Z]/g, 'X').replace(/[a-z]/g, 'x').replace(/\d/g, '0');
@@ -67,7 +78,8 @@ function sanitize(root: ParentNode) {
       const unsafe =
         lower.startsWith('on') ||
         STRIPPED.has(lower) ||
-        (lower.endsWith('href') && /^\s*javascript:/i.test(value));
+        (lower.endsWith('href') && /^\s*(javascript|vbscript|data):/i.test(value)) ||
+        (lower === 'style' && STYLE_UNSAFE.test(value));
       if (unsafe) element.removeAttribute(name);
     }
 

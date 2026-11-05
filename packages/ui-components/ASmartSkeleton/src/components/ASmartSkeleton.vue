@@ -20,6 +20,7 @@ import {
   ATTR_REVEAL,
   ATTR_SNAPSHOT,
   ATTR_STATUS,
+  checkNonce,
   fadeIn,
   fadeOut,
   Ghost,
@@ -52,18 +53,17 @@ export const Loading = defineComponent({
     const script = claimStub() ? INLINE_STUB : INLINE_SCRIPT;
     let ghost: Ghost | null = null;
 
-    const attach = () => {
-      ghost?.destroy();
-      if (element.value) {
-        ghost = new Ghost(element.value, {
-          id: props.id,
-          exact: props.exact,
-          refetch: props.refetch,
-        });
-      }
-    };
-    onMounted(attach);
-    watch(() => [props.id, props.exact, props.refetch], attach);
+    const optionsOf = () => ({ id: props.id, exact: props.exact, refetch: props.refetch });
+    onMounted(() => {
+      checkNonce(config.nonce);
+      if (element.value) ghost = new Ghost(element.value, optionsOf());
+    });
+    // Options-only changes update the live ghost in place; the observers and shadow sheet
+    // outlive a prop flip, which happens every data arrival in data-driven mode.
+    watch(
+      () => [props.id, props.exact, props.refetch],
+      () => ghost?.update(optionsOf())
+    );
     onBeforeUnmount(() => ghost?.destroy());
 
     return () => [

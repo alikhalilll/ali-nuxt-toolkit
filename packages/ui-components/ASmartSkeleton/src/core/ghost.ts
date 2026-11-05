@@ -102,13 +102,7 @@ export class Ghost {
 
     this.hadContent = hasContent(this.ghost);
 
-    const reveal = root.closest(`[${ATTR_REVEAL}]`);
-    if (reveal) {
-      noteSkeleton(reveal, {
-        served: served.has(root),
-        refetch: !!options.refetch && this.hadContent,
-      });
-    }
+    this.note();
     this.choose();
     this.measure();
     // Covered paint is marked now; the inline script's stand-in sheet can go
@@ -127,6 +121,23 @@ export class Ghost {
     root.addEventListener('load', this.schedule, true);
     addEventListener('resize', this.schedule);
     document.fonts?.ready.then(this.schedule);
+  }
+
+  /** Swaps in fresh options without tearing down the observers or stylesheet refcount. */
+  update(options: GhostOptions = {}) {
+    this.options = options;
+    this.note();
+    this.choose();
+    this.measure();
+  }
+
+  private note() {
+    const reveal = this.root.closest(`[${ATTR_REVEAL}]`);
+    if (!reveal) return;
+    noteSkeleton(reveal, {
+      served: served.has(this.root),
+      refetch: !!this.options.refetch && this.hadContent,
+    });
   }
 
   private schedule = () => {
