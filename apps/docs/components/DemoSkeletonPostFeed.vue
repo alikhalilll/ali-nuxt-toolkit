@@ -24,15 +24,25 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import PostCard from './PostCardDemo/PostCard.vue';
 
 // --- Docs theme tracking -----------------------------------------------
-const docsIsDark = ref(false);
+// The docs' pre-paint inline script (see nuxt.config.ts head.script) sets
+// `html.dark` / `html.light` from localStorage BEFORE any Vue code runs,
+// so by the time this setup() fires on the client the class already
+// reflects the user's real preference. Read it synchronously here so the
+// provider gets the right `mode` on the first render — otherwise the
+// skeleton paints with light colours for one tick and then flips to dark,
+// which reads as a jarring flash on hard refresh.
+//
+// SSR fallback is `true` (dark) to match `composables/useColorMode.ts`,
+// which defaults the same way; the pre-paint script will override on the
+// client if the user actually prefers light.
+const docsIsDark = ref(
+  typeof document !== 'undefined' ? document.documentElement.classList.contains('dark') : true
+);
 let themeObserver: MutationObserver | null = null;
-function syncDocsTheme() {
-  if (typeof document === 'undefined') return;
-  docsIsDark.value = document.documentElement.classList.contains('dark');
-}
 onMounted(() => {
-  syncDocsTheme();
-  themeObserver = new MutationObserver(syncDocsTheme);
+  themeObserver = new MutationObserver(() => {
+    docsIsDark.value = document.documentElement.classList.contains('dark');
+  });
   themeObserver.observe(document.documentElement, {
     attributes: true,
     attributeFilter: ['class'],
