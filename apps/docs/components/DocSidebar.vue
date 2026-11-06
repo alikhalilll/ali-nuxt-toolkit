@@ -58,13 +58,6 @@ const modules: ModuleEntry[] = [
             isNew: true,
           },
           { path: '/ui/tel-input', title: 'TelInput', kind: 'page', pkg: 'a-tel-input' },
-          {
-            path: '/ui/skeleton',
-            title: 'Skeleton',
-            kind: 'page',
-            pkg: 'a-skeleton',
-            isDeprecated: true,
-          },
         ],
       },
     ],

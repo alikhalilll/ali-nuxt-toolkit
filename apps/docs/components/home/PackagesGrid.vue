@@ -72,17 +72,6 @@ const packages: PackageCard[] = [
     modeLabel: 'Vue 3 (Nuxt + non-Nuxt)',
     isNew: true,
   },
-  {
-    name: '@alikhalilll/a-skeleton',
-    docs: '/ui/skeleton',
-    npm: 'https://www.npmjs.com/package/@alikhalilll/a-skeleton',
-    description:
-      'Deprecated — superseded by @alikhalilll/a-smart-skeleton. The 1.x line remains installable but won’t receive new features.',
-    accent: 'ui',
-    mode: 'vue',
-    modeLabel: 'Vue 3 (Nuxt + non-Nuxt)',
-    isDeprecated: true,
-  },
 ];
 
 const mounted = ref(false);

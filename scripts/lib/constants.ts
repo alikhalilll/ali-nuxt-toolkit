@@ -19,7 +19,6 @@ export const PUBLISHABLE_PACKAGES = [
   'crypto',
   'auto-middleware',
   'a-tel-input',
-  'a-skeleton',
   'a-smart-skeleton',
 ] as const;
 export type PublishablePackage = (typeof PUBLISHABLE_PACKAGES)[number];
@@ -56,7 +55,6 @@ const UI_COMPONENT_DIRS: Record<string, string> = {
   'a-drawer': 'ADrawer',
   'a-responsive-popover': 'AResponsivePopover',
   'a-tel-input': 'ATelInput',
-  'a-skeleton': 'ASkeleton',
   'a-smart-skeleton': 'ASmartSkeleton',
 };
 
@@ -78,7 +76,6 @@ export const ATTW_IGNORE_NO_RESOLUTION: Record<PublishablePackage, string[]> = {
   'auto-middleware': [],
   crypto: [],
   'a-tel-input': ['./styles.css'],
-  'a-skeleton': ['./styles.css'],
   'a-smart-skeleton': ['./styles.css'],
 };
 

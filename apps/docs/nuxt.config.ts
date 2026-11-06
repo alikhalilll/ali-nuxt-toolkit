@@ -32,7 +32,6 @@ export default defineNuxtConfig({
     '@nuxt/content',
     '@alikhalilll/nuxt-api-provider',
     '@alikhalilll/nuxt-crypto',
-    '@alikhalilll/a-skeleton/nuxt',
     '@alikhalilll/a-smart-skeleton/nuxt',
   ],
   // Note: @alikhalilll/a-ui-base/tokens.css is @imported from the top of docs.css instead of
@@ -41,7 +40,7 @@ export default defineNuxtConfig({
   // implicitly via the package's subpath — the second copy lands AFTER docs.css in the
   // <head> cascade and the lib's `.hidden { display: none }` ends up overriding the
   // docs site's `.md\:flex` responsive utility, breaking the desktop nav + sidebars.
-  css: ['~/assets/docs.css', '@alikhalilll/a-skeleton/styles.css'],
+  css: ['~/assets/docs.css'],
   vite: {
     plugins: [tailwindcss()],
   },

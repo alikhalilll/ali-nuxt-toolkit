@@ -11,7 +11,6 @@ export default defineNuxtConfig({
     '@alikhalilll/a-responsive-popover/styles.css',
     '@alikhalilll/a-input/styles.css',
     '@alikhalilll/a-tel-input/styles.css',
-    '@alikhalilll/a-skeleton/styles.css',
     '@alikhalilll/a-smart-skeleton/styles.css',
     '~/assets/main.css',
   ],
@@ -36,7 +35,6 @@ export default defineNuxtConfig({
     '@alikhalilll/a-drawer/nuxt',
     '@alikhalilll/a-responsive-popover/nuxt',
     '@alikhalilll/a-tel-input/nuxt',
-    '@alikhalilll/a-skeleton/nuxt',
     '@alikhalilll/a-smart-skeleton/nuxt',
   ],
   apiProvider: {

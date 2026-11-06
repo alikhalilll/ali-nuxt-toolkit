@@ -14,7 +14,6 @@ const navLinks = [
 
 const uiNavItems: { to: string; label: string; pkg?: string; isNew?: boolean }[] = [
   { to: '/ui', label: 'Overview' },
-  { to: '/ui/skeleton', label: 'ASkeleton', pkg: 'a-skeleton' },
   { to: '/ui/smart-skeleton', label: 'ASmartSkeleton', pkg: 'a-smart-skeleton', isNew: true },
   { to: '/ui/tel-input', label: 'ATelInput', pkg: 'a-tel-input' },
 ];

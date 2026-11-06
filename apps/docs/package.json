@@ -20,7 +20,6 @@
     "@alikhalilll/nuxt-auto-middleware": "workspace:*",
     "@alikhalilll/a-ui-base": "workspace:*",
     "@alikhalilll/a-tel-input": "workspace:*",
-    "@alikhalilll/a-skeleton": "workspace:*",
     "@alikhalilll/a-smart-skeleton": "workspace:*",
     "@nuxt/content": "^3.0.0",
     "@vee-validate/zod": "^4.13.0",
