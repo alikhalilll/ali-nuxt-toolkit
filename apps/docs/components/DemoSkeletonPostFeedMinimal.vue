@@ -90,47 +90,63 @@ const SAMPLE_POSTS: Post[] = [
   },
 ];
 
-const feed = ref<Post[] | null>(SAMPLE_POSTS);
-const loading = ref(false);
+const REAL_POSTS: Post[] = [
+  {
+    id: 'mini-real-1',
+    author: {
+      id: 'u-elena',
+      name: 'Elena Rostova',
+      avatar:
+        'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=120&h=120&fit=crop&crop=faces',
+      verified: true,
+    },
+    created_at_relative: 'just now',
+    is_owner: false,
+    body: 'Rolled the chrome-capture change into production. Zero visible layout shift on the feed, and the cold-cache first paint now matches the real card footprint to the pixel.',
+    media: [],
+    reactions_count: 51,
+    comments_count: 12,
+    is_reacted: true,
+  },
+  {
+    id: 'mini-real-2',
+    author: {
+      id: 'u-marcus',
+      name: 'Marcus Lee',
+      avatar:
+        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&h=120&fit=crop&crop=faces',
+    },
+    created_at_relative: '4 min ago',
+    is_owner: true,
+    body: "Confirmed the url(…) backgrounds are being filtered out — gradient rings still carry through, hero bitmaps don't.",
+    media: [],
+    reactions_count: 18,
+    comments_count: 3,
+    is_reacted: false,
+  },
+];
+
+// Start in the skeleton state so the hero lands on the measured placeholder
+// first — then the auto-fetch below completes the capture → reveal arc
+// without any interaction. Clicking Refresh replays the same arc.
+const feed = ref<Post[] | null>(null);
+const loading = ref(true);
+
+// Delay a beat past hydration so the ghost tree has time to measure before
+// `feed.value` flips. Otherwise `reveal="smart"` short-circuits to instant
+// (content landed under 150 ms) and the viewer never sees the skeleton.
+onMounted(() => {
+  setTimeout(() => {
+    feed.value = REAL_POSTS;
+    loading.value = false;
+  }, 1600);
+});
+
 function refreshFeed() {
   loading.value = true;
   feed.value = null;
   setTimeout(() => {
-    feed.value = [
-      {
-        id: 'mini-real-1',
-        author: {
-          id: 'u-elena',
-          name: 'Elena Rostova',
-          avatar:
-            'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=120&h=120&fit=crop&crop=faces',
-          verified: true,
-        },
-        created_at_relative: 'just now',
-        is_owner: false,
-        body: 'Rolled the chrome-capture change into production. Zero visible layout shift on the feed, and the cold-cache first paint now matches the real card footprint to the pixel.',
-        media: [],
-        reactions_count: 51,
-        comments_count: 12,
-        is_reacted: true,
-      },
-      {
-        id: 'mini-real-2',
-        author: {
-          id: 'u-marcus',
-          name: 'Marcus Lee',
-          avatar:
-            'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&h=120&fit=crop&crop=faces',
-        },
-        created_at_relative: '4 min ago',
-        is_owner: true,
-        body: "Confirmed the url(…) backgrounds are being filtered out — gradient rings still carry through, hero bitmaps don't.",
-        media: [],
-        reactions_count: 18,
-        comments_count: 3,
-        is_reacted: false,
-      },
-    ];
+    feed.value = REAL_POSTS;
     loading.value = false;
   }, 1600);
 }
