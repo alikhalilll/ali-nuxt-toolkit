@@ -2,19 +2,19 @@
 /**
  * Minimal hero demo — just a feed + a Refresh button.
  *
- * No controls, no advanced settings, no theme panel. The one job of this
- * demo is to show, in the smallest possible footprint, what ASmartSkeleton
- * does: real content lays out, invisible measurement runs, chrome-captured
- * bones appear during loading, real posts fade in.
+ * Styled to match the other skeleton examples on the docs page
+ * (DemoSkeletonDataDriven, DemoSkeletonStates, DemoSkeletonHints): wrapped
+ * in `<DemoTabs :code="...">`, Tailwind utility classes only, header row
+ * with a title + API chip on the left and a pulsing-dot reload button
+ * on the right.
  *
- * The full interactive version (reveal modes, animation styles, theming) is
- * a separate component — `<DemoSkeletonPostFeed>` — placed later on the
- * page under its own "Customize" heading.
+ * The full interactive version (reveal modes, animation styles, theming)
+ * lives in `<DemoSkeletonPostFeed>` under the page's "Customize" section.
  */
-import { onBeforeUnmount, onMounted, ref, computed } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import PostCard from './PostCardDemo/PostCard.vue';
 
-// --- Docs theme tracking (same pattern as the full demo) ---------------
+// --- Docs theme tracking ----------------------------------------------
 const docsIsDark = ref(false);
 let themeObserver: MutationObserver | null = null;
 function syncDocsTheme() {
@@ -40,7 +40,7 @@ const DEMO_THEME = {
   dark: { base: '#31363f', highlight: 'rgba(255,255,255,0.08)' },
 };
 
-// --- Data ---------------------------------------------------------------
+// --- Data -------------------------------------------------------------
 interface Post {
   id: string;
   author: { id: string; name: string; avatar?: string | null; verified?: boolean };
@@ -91,9 +91,9 @@ const SAMPLE_POSTS: Post[] = [
 ];
 
 const feed = ref<Post[] | null>(SAMPLE_POSTS);
-const isLoading = ref(false);
+const loading = ref(false);
 function refreshFeed() {
-  isLoading.value = true;
+  loading.value = true;
   feed.value = null;
   setTimeout(() => {
     feed.value = [
@@ -131,148 +131,91 @@ function refreshFeed() {
         is_reacted: false,
       },
     ];
-    isLoading.value = false;
+    loading.value = false;
   }, 1600);
 }
+
+const code = `<script setup lang="ts">
+import { ref } from 'vue';
+import PostCard from './PostCard.vue';
+
+const SAMPLE_POSTS = [ /* ... two sample shapes ... */ ];
+
+const feed = ref<Post[] | null>(SAMPLE_POSTS);
+async function refreshFeed() {
+  feed.value = null;
+  feed.value = await $fetch('/api/community/posts');
+}
+\u003c/script>
+
+<template>
+  <ASmartSkeleton
+    id="community-feed"
+    :data="feed"
+    :sample="SAMPLE_POSTS"
+  >
+    <template #default="{ data }">
+      <div class="flex flex-col gap-3">
+        <PostCard v-for="post in data" :key="post.id" :post="post" />
+      </div>
+    </template>
+  </ASmartSkeleton>
+</template>`;
 </script>
 
 <template>
-  <DemoStage :center="false">
-    <div class="pfm">
-      <!-- Single action — the only thing a visitor needs to do first -->
-      <div class="pfm__bar">
-        <span class="pfm__hint">Click <strong>Refresh</strong> to watch the skeleton phase:</span>
-        <button
-          type="button"
-          class="pfm__cta"
-          :disabled="isLoading"
-          :aria-busy="isLoading"
-          @click="refreshFeed"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            aria-hidden="true"
-            :class="{ 'pfm__cta-icon--spin': isLoading }"
-          >
-            <path
-              d="M21 12a9 9 0 1 1-3-6.7M21 4v5h-5"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
-          <span>{{ isLoading ? 'Loading' : 'Refresh feed' }}</span>
-        </button>
-      </div>
+  <div class="my-6">
+    <DemoTabs :code="code">
+      <div class="p-4 sm:p-6">
+        <!-- Header row — mirrors DemoSkeletonDataDriven etc. -->
+        <div class="mb-5 flex items-center justify-between border-b border-border/60 pb-3 text-xs">
+          <div class="flex items-center gap-2">
+            <span class="font-semibold text-text">Social Feed</span>
+            <span class="rounded bg-surface-2 px-2 py-0.5 text-[11px] text-text-dim">
+              <code>:data="feed" :sample="SAMPLE_POSTS"</code>
+            </span>
+          </div>
 
-      <div class="pfm__stage">
-        <ASmartSkeletonProvider :mode="providerMode" :theme="DEMO_THEME" reveal="smart">
-          <ASmartSkeleton id="docs-hero-feed" :data="feed" :sample="SAMPLE_POSTS">
-            <template #default="{ data }">
-              <div class="pfm__list">
-                <PostCard v-for="post in data as Post[]" :key="post.id" :post="post" />
-              </div>
-            </template>
-          </ASmartSkeleton>
-        </ASmartSkeletonProvider>
+          <button
+            type="button"
+            class="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-1.5 text-xs font-semibold text-text shadow-sm transition-all hover:bg-surface-2 active:scale-95 disabled:opacity-50"
+            :disabled="loading"
+            @click="refreshFeed"
+          >
+            <span
+              class="size-2 rounded-full"
+              :class="loading ? 'bg-amber-400 animate-ping' : 'bg-primary'"
+            />
+            <span>{{ loading ? 'Fetching…' : 'Refresh feed' }}</span>
+          </button>
+        </div>
+
+        <!-- Feed stage — same container pattern as the product-card demo -->
+        <div class="pfm mx-auto max-w-md">
+          <div class="overflow-hidden rounded-xl border border-border bg-surface/50 p-3">
+            <ASmartSkeletonProvider :mode="providerMode" :theme="DEMO_THEME" reveal="smart">
+              <ASmartSkeleton id="docs-hero-feed" :data="feed" :sample="SAMPLE_POSTS">
+                <template #default="{ data }">
+                  <div class="flex flex-col gap-3">
+                    <PostCard v-for="post in data as Post[]" :key="post.id" :post="post" />
+                  </div>
+                </template>
+              </ASmartSkeleton>
+            </ASmartSkeletonProvider>
+          </div>
+        </div>
       </div>
-    </div>
-  </DemoStage>
+    </DemoTabs>
+  </div>
 </template>
 
 <style scoped>
-.pfm {
-  display: grid;
-  gap: 12px;
-  width: 100%;
-  max-width: 720px;
-  margin: 0 auto;
-}
-
-/* --- Top bar --------------------------------------------------------- */
-.pfm__bar {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  padding: 10px 14px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  box-shadow: 0 1px 0 var(--color-border-soft);
-}
-
-.pfm__hint {
-  flex: 1;
-  font-size: 12.5px;
-  color: var(--color-text-dim);
-  min-width: 200px;
-}
-.pfm__hint strong {
-  color: var(--color-text);
-  font-weight: 600;
-}
-
-.pfm__cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 7px 14px 7px 12px;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: #fff;
-  background: linear-gradient(135deg, var(--color-brand) 0%, var(--color-brand-3) 100%);
-  border: 1px solid transparent;
-  border-radius: 10px;
-  cursor: pointer;
-  box-shadow:
-    0 1px 0 rgb(0 0 0 / 0.08),
-    0 6px 18px -10px color-mix(in oklab, var(--color-brand) 60%, transparent);
-  transition:
-    filter 0.12s,
-    transform 0.08s;
-}
-.pfm__cta:hover {
-  filter: brightness(1.05);
-}
-.pfm__cta:active {
-  transform: translateY(1px);
-}
-.pfm__cta:disabled {
-  opacity: 0.7;
-  cursor: progress;
-}
-.pfm__cta svg {
-  width: 14px;
-  height: 14px;
-}
-.pfm__cta-icon--spin {
-  animation: pfm-spin 0.9s linear infinite;
-}
-@keyframes pfm-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* --- Feed stage ------------------------------------------------------ */
-.pfm__stage {
-  padding: 16px;
-  background: color-mix(in oklab, var(--color-surface-2) 70%, var(--color-bg));
-  border: 1px solid var(--color-border);
-  border-radius: 14px;
-}
-
-.pfm__list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-/* Same PostCard retint pattern as the full demo so chrome capture tracks
- * the docs palette on theme flip. */
+/*
+ * PostCardDemo mirrors the real production card (`bg-white` +
+ * `border-[#EDF0F3]` + `text-gray-800`). We retint via `:deep()` to the
+ * docs' own tokens so chrome capture snapshots the live docs palette —
+ * flip the site theme and the skeleton's chrome bones follow.
+ */
 .pfm :deep(article) {
   background: var(--color-bg);
   border-color: var(--color-border) !important;
@@ -295,8 +238,6 @@ function refreshFeed() {
 .pfm :deep(article footer) {
   border-top-color: var(--color-border) !important;
 }
-
-/* Soft inset ring on text + box bones to echo the `ASkeletonBlock` look */
 .pfm :deep([ask-rect='text']),
 .pfm :deep([ask-rect='box']) {
   box-shadow: inset 0 0 0 1px rgb(169 175 188 / 0.35);
