@@ -182,9 +182,15 @@ export default defineNuxtConfig({
          */
         {
           // Tri-state pre-paint: read stored 'light'|'dark'|'system' and resolve to
-          // light/dark before first paint to avoid flash-of-wrong-theme. Defaults to
-          // 'system' which follows prefers-color-scheme.
-          innerHTML: `(function(){try{var k='ant-docs-theme';var s=localStorage.getItem(k);var p=(s==='light'||s==='dark'||s==='system')?s:'system';var d=p==='dark'||(p==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d);document.documentElement.classList.toggle('light',!d);}catch(e){document.documentElement.classList.add('dark');}})();`,
+          // light/dark before first paint to avoid flash-of-wrong-theme.
+          //
+          // Reads from both localStorage AND the `ant-docs-theme` cookie (either
+          // may be fresher depending on which tab last set the preference) and
+          // writes back BOTH the preference and the resolved value to the cookie
+          // layer. The server reads these cookies on the next request so SSR can
+          // render in the correct mode from the first byte, eliminating the flash
+          // for returning visitors — see composables/useColorMode.ts.
+          innerHTML: `(function(){try{var k='ant-docs-theme',rk='ant-docs-resolved';function rc(n){return(document.cookie.split('; ').find(function(r){return r.indexOf(n+'=')===0})||'').split('=')[1]||''}function wc(n,v){document.cookie=n+'='+v+';path=/;max-age=31536000;samesite=lax'}var ls='';try{ls=localStorage.getItem(k)||''}catch(e){}var ck=rc(k);var s=ls||ck;var p=(s==='light'||s==='dark'||s==='system')?s:'system';var d=p==='dark'||(p==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d);document.documentElement.classList.toggle('light',!d);wc(k,p);wc(rk,d?'dark':'light');}catch(e){document.documentElement.classList.add('dark');}})();`,
           type: 'text/javascript',
           tagPosition: 'head',
         },

@@ -20,38 +20,18 @@
  * (including the PostCards via scoped `:deep()` and the plugin's own bones
  * via the provider).
  */
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import PostCard from './PostCardDemo/PostCard.vue';
+import { useColorMode } from '~/composables/useColorMode';
 
 // --- Docs theme tracking -----------------------------------------------
-// The docs' pre-paint inline script (see nuxt.config.ts head.script) sets
-// `html.dark` / `html.light` from localStorage BEFORE any Vue code runs,
-// so by the time this setup() fires on the client the class already
-// reflects the user's real preference. Read it synchronously here so the
-// provider gets the right `mode` on the first render — otherwise the
-// skeleton paints with light colours for one tick and then flips to dark,
-// which reads as a jarring flash on hard refresh.
-//
-// SSR fallback is `true` (dark) to match `composables/useColorMode.ts`,
-// which defaults the same way; the pre-paint script will override on the
-// client if the user actually prefers light.
-const docsIsDark = ref(
-  typeof document !== 'undefined' ? document.documentElement.classList.contains('dark') : true
-);
-let themeObserver: MutationObserver | null = null;
-onMounted(() => {
-  themeObserver = new MutationObserver(() => {
-    docsIsDark.value = document.documentElement.classList.contains('dark');
-  });
-  themeObserver.observe(document.documentElement, {
-    attributes: true,
-    attributeFilter: ['class'],
-  });
-});
-onBeforeUnmount(() => {
-  themeObserver?.disconnect();
-  themeObserver = null;
-});
+// Reads from the SSR-aware `useColorMode()` composable, which pulls the
+// resolved mode from the `ant-docs-resolved` cookie on the server (set by
+// the pre-paint inline script in nuxt.config.ts) and from
+// `useState` + localStorage on the client. Means the provider renders
+// with the right mode on the first byte of the response — no flash on
+// hard refresh, even before any JS runs.
+const { isDark: docsIsDark } = useColorMode();
 
 // --- Data --------------------------------------------------------------
 interface Post {
