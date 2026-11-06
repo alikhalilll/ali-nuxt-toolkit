@@ -102,7 +102,7 @@
   },
   "scripts": {
     "clean": "rimraf dist web-types.json",
-    "build": "node scripts/build-inline.mjs && tsx ../../../scripts/build/run-component-build.ts",
+    "build": "node scripts/build-inline.mjs && tsx ../../../scripts/build/run-component-build.ts && node scripts/build-css.mjs",
     "dev": "node scripts/build-inline.mjs && tsdown --watch",
     "test": "vitest run",
     "test:watch": "vitest",

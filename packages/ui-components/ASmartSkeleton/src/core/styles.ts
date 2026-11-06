@@ -8,6 +8,7 @@ import {
   ATTR_LOADING,
   ATTR_OWN,
   ATTR_PANE,
+  ATTR_RECT,
   ATTR_REVEAL,
   ATTR_STATUS,
   ATTR_XRAY,
@@ -59,6 +60,25 @@ ask-reveal[loading]:not(:defined) {
 [${ATTR_BAR}] {
   display: block;
   background-color: ${BASE};
+  background-repeat: no-repeat;
+}
+
+/*
+ * Bones drawn by \`drawSkeleton\` live in the light DOM (no shadow root), so a
+ * consumer can target them with their own stylesheet. Positioning stays inline
+ * (per-bone), but the fill colour reads from a CSS custom property so the
+ * consumer's theme flows through — set \`--ask-base\` on any ancestor to
+ * recolour every bone inside it, or use the type modifier to style text / media
+ * / box bones separately.
+ *
+ * Chrome bones are excluded: they reproduce the consumer's own container paint
+ * (background, border, shadow) that \`captureChrome\` snapshotted, so they must
+ * NOT get a generic fill underneath. Without the \`:not()\`, a bordered-only
+ * container (e.g. a footer with \`border-t\`) would show as a solid filled
+ * rectangle instead of just its captured divider.
+ */
+[${ATTR_RECT}]:not([${ATTR_RECT}="chrome"]) {
+  background-color: var(--ask-base, var(--ask-block, var(--ak-skeleton-block, rgb(128 128 128 / 0.2))));
   background-repeat: no-repeat;
 }
 

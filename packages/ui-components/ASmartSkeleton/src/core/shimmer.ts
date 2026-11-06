@@ -1,4 +1,4 @@
-import { ATTR_RECT, BASE, DURATIONS, HIGHLIGHT } from './constants';
+import { ATTR_RECT, DURATIONS, HIGHLIGHT } from './constants';
 import type { SkeletonAnimation, SkeletonSpeed } from './theme';
 import { animationsOf, prefersReducedMotion } from './motion';
 import type { SkeletonRect } from './measure';
@@ -123,16 +123,35 @@ export function paceOf(element: Element): number | null {
   return (motion.duration * SWEEP) / (REFERENCE_WIDTH + MAX_BAND);
 }
 
-// In a shadow root, so a framework hydrating `layer` never meets bones it didn't render
-const shadow = (layer: HTMLElement) => layer.shadowRoot ?? layer.attachShadow({ mode: 'open' });
-
 /** The rect elements drawn into `layer`. */
-export const rectsOf = (layer: Element): HTMLElement[] =>
-  layer.shadowRoot ? ([...layer.shadowRoot.children] as HTMLElement[]) : [];
+export const rectsOf = (layer: Element): HTMLElement[] => [
+  ...layer.querySelectorAll<HTMLElement>(`:scope > [${ATTR_RECT}]`),
+];
 
-/** Draws `rects` into `layer`, reusing the elements already there. */
+/** Soft floor on skeleton bone corners — anything sharper than this reads as a glyph,
+ *  not a placeholder, which fights the whole point of a skeleton. 4 px is the smallest
+ *  radius that still reads as "rounded" at typical display DPI. Applied only to
+ *  text / media / box bones; chrome bones carry the consumer's own radius verbatim. */
+const MIN_BONE_RADIUS = 4;
+const clampRadius = (radius: string): string =>
+  radius.replace(/(\d+(?:\.\d+)?)px/g, (_, raw) => {
+    const n = parseFloat(raw);
+    return Number.isFinite(n) && n < MIN_BONE_RADIUS ? `${MIN_BONE_RADIUS}px` : `${n}px`;
+  });
+
+/** Draws `rects` into `layer`, reusing the elements already there.
+ *
+ * Bones live in the light DOM (not a shadow root) so a consumer's stylesheet
+ * can reach them — selectors like `[ask-rect="text"]`, `[ask-rect="media"]`,
+ * `[ask-rect="box"]`, or the `--ask-base` / `--ask-highlight` custom
+ * properties — and theme the skeleton with the consumer's own tokens rather
+ * than plugin defaults. Positioning (x/y/width/height/radius) stays inline
+ * because it is per-bone; fill colour comes from the stylesheet.
+ *
+ * Added after mount, so Vue/React hydration never sees them.
+ */
 export function drawSkeleton(layer: HTMLElement, rects: SkeletonRect[]) {
-  const root = shadow(layer);
+  const existing = rectsOf(layer);
   const rect = layer.getBoundingClientRect();
   const group = {
     left: rect.left + scrollX,
@@ -144,22 +163,58 @@ export function drawSkeleton(layer: HTMLElement, rects: SkeletonRect[]) {
   const motion = motionOf(layer);
 
   rects.forEach((part, index) => {
-    let element = root.children[index] as HTMLElement | undefined;
+    let element = existing[index];
     if (!element) {
       element = document.createElement('div');
-      element.setAttribute(ATTR_RECT, '');
-      // Inline: no page stylesheet reaches into the shadow root
-      element.style.cssText = `position:absolute;display:block;pointer-events:none;background-color:${BASE};background-repeat:no-repeat`;
-      root.append(element);
+      // Positioning-only: the stylesheet owns colour so the consumer can retheme
+      element.style.cssText = `position:absolute;display:block;pointer-events:none;background-repeat:no-repeat`;
+      layer.append(element);
     }
+    // Type attribute set every pass — bone reuse across renders may change type
+    element.setAttribute(ATTR_RECT, part.type);
 
     Object.assign(element.style, {
       left: `${part.x}px`,
       top: `${part.y}px`,
       width: `${part.width}px`,
       height: `${part.height}px`,
-      borderRadius: part.radius,
+      // Chrome reproduces the real element's border-radius exactly (0 stays 0);
+      // placeholder bones get a 4-px floor so sharp-cornered text / media / box
+      // bones still read as rounded skeletons, not glyphs of the real content.
+      borderRadius: part.type === 'chrome' ? part.radius : clampRadius(part.radius),
     });
+
+    if (part.type === 'chrome') {
+      // Chrome bones reproduce the container's painted surface (bg / borders / shadow),
+      // captured from the consumer's own CSS. Reset shimmer side-effects so an element
+      // reused across draws isn't left with a shimmer background from a previous pass,
+      // then apply the captured paint inline — the stylesheet default fill would obscure
+      // the real colour.
+      for (const anim of animationsOf(element)) anim.cancel();
+      element.style.backgroundImage = '';
+      element.style.backgroundSize = '';
+      element.style.backgroundRepeat = '';
+      const chrome = part.chrome;
+      element.style.background = chrome?.background ?? '';
+      element.style.borderTop = chrome?.borderTop ?? '';
+      element.style.borderRight = chrome?.borderRight ?? '';
+      element.style.borderBottom = chrome?.borderBottom ?? '';
+      element.style.borderLeft = chrome?.borderLeft ?? '';
+      element.style.boxShadow = chrome?.boxShadow ?? '';
+      // Chrome never shimmers — it's the outline, not a loading placeholder
+      element.dataset.motion = 'chrome';
+      return;
+    }
+
+    // Non-chrome bones: drop any chrome state left on a reused element, then shimmer.
+    if (element.dataset.motion === 'chrome') {
+      element.style.background = '';
+      element.style.borderTop = '';
+      element.style.borderRight = '';
+      element.style.borderBottom = '';
+      element.style.borderLeft = '';
+      element.style.boxShadow = '';
+    }
 
     // Restarted only when its place, group, the page's width or the motion changes
     const key = `${Math.round(group.left + part.x)}|${Math.round(part.y)}|${Math.round(part.height)}|${Math.round(group.left)}|${Math.round(group.width)}|${Math.round(group.height)}|${document.documentElement.clientWidth}|${motion.animation}|${motion.duration}`;
@@ -169,5 +224,6 @@ export function drawSkeleton(layer: HTMLElement, rects: SkeletonRect[]) {
     }
   });
 
-  while (root.children.length > rects.length) root.lastElementChild!.remove();
+  // Trim excess bones left over from a previous, longer draw
+  for (let i = existing.length - 1; i >= rects.length; i--) existing[i]!.remove();
 }

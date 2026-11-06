@@ -8,13 +8,30 @@ import {
   TEXT_TAGS,
 } from './constants';
 
+/** Captured paint from a container — background / borders / box-shadow — reproduced on
+ *  the chrome bone so the outline survives shape recall from storage, SSR pre-paint, and
+ *  any path where the real DOM isn't visible under the layer. */
+export type SkeletonChrome = {
+  background?: string;
+  borderTop?: string;
+  borderRight?: string;
+  borderBottom?: string;
+  borderLeft?: string;
+  boxShadow?: string;
+};
+
 /** A box to draw, relative to the layer it was measured against. */
 export type SkeletonRect = {
+  /** Which kind of leaf this bone stands in for — exposed as `[ask-rect="<type>"]` so
+   *  consumers can style text / media / box / chrome bones differently in their own CSS. */
+  type: 'text' | 'media' | 'box' | 'chrome';
   x: number;
   y: number;
   width: number;
   height: number;
   radius: string;
+  /** Present on `type === 'chrome'` bones — the container's own paint, captured verbatim from `getComputedStyle`. */
+  chrome?: SkeletonChrome;
 };
 
 type Rect = { left: number; right: number; top: number; bottom: number };
@@ -213,6 +230,17 @@ const bordered = (style: CSSStyleDeclaration) =>
       isSet(style[`border${side}Style`], 'none') && isSet(style[`border${side}Width`], '0px')
   );
 
+// Dividers (`border-t` on a footer, `border-b` on a heading) still need to show
+// up in the skeleton, even though they don't make the container a solid block.
+// This looser check feeds chrome capture; `bordered` above remains what
+// `isPainted` reads so single-side borders keep their "divider" semantics for
+// the isBlock classifier.
+const anyBordered = (style: CSSStyleDeclaration) =>
+  SIDES.some(
+    (side) =>
+      isSet(style[`border${side}Style`], 'none') && isSet(style[`border${side}Width`], '0px')
+  );
+
 // An inset hairline along one side, drawn as a shadow, is a divider like a one-sided border
 const isRule = (shadow: string) => {
   const [x = 0, y = 0, blur = 0, spread = 0] = (
@@ -226,11 +254,70 @@ const isRule = (shadow: string) => {
 const shadowPaints = (boxShadow: string) =>
   isSet(boxShadow, 'none') && !boxShadow.split(/,(?![^(]*\))/).every(isRule);
 
+/** Splits `background-image` on its top-level commas (respecting nested parens, which
+ *  gradient stops abuse heavily) and drops any layer that starts with `url(`. Returns
+ *  an empty string when nothing survives — the caller treats that as "no background". */
+function stripUrlLayers(bgImage: string): string {
+  const layers: string[] = [];
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i < bgImage.length; i++) {
+    const ch = bgImage[i];
+    if (ch === '(') depth++;
+    else if (ch === ')') depth--;
+    else if (ch === ',' && depth === 0) {
+      layers.push(bgImage.slice(start, i));
+      start = i + 1;
+    }
+  }
+  layers.push(bgImage.slice(start));
+  return layers
+    .map((l) => l.trim())
+    .filter((l) => l && !l.startsWith('url('))
+    .join(', ');
+}
+
 const isPainted = (style: CSSStyleDeclaration) =>
   (isSet(style.backgroundColor, 'transparent') && !TRANSPARENT.test(style.backgroundColor)) ||
   isSet(style.backgroundImage, 'none') ||
   shadowPaints(style.boxShadow) ||
   bordered(style);
+
+/** Reads the painted chrome off a container so the skeleton can reproduce it exactly —
+ *  background, four border sides, and box-shadow, but only the properties that are set.
+ *  Returns `undefined` when nothing paints, so callers can skip emitting a chrome bone. */
+function captureChrome(style: CSSStyleDeclaration): SkeletonChrome | undefined {
+  const chrome: SkeletonChrome = {};
+
+  const bg = style.backgroundColor;
+  if (isSet(bg, 'transparent') && !TRANSPARENT.test(bg)) chrome.background = bg;
+  // Keep gradient layers (Tailwind ring utilities, shadcn chrome, etc.) but drop
+  // `url(...)` layers — a hero bitmap re-downloaded into the skeleton is wasteful
+  // and almost always wrong.
+  const bgImage = style.backgroundImage;
+  if (isSet(bgImage, 'none')) {
+    const gradientsOnly = stripUrlLayers(bgImage);
+    if (gradientsOnly) {
+      chrome.background = chrome.background
+        ? `${gradientsOnly}, ${chrome.background}`
+        : gradientsOnly;
+    }
+  }
+
+  for (const side of SIDES) {
+    const width = style[`border${side}Width`];
+    const styleProp = style[`border${side}Style`];
+    const color = style[`border${side}Color`];
+    if (isSet(styleProp, 'none') && isSet(width, '0px') && parseFloat(width) > 0) {
+      const key = `border${side}` as 'borderTop' | 'borderRight' | 'borderBottom' | 'borderLeft';
+      chrome[key] = `${width} ${styleProp} ${color}`;
+    }
+  }
+
+  if (shadowPaints(style.boxShadow)) chrome.boxShadow = style.boxShadow;
+
+  return Object.keys(chrome).length ? chrome : undefined;
+}
 
 const isMedia = (element: Element) => MEDIA.has(element.localName);
 
@@ -330,6 +417,7 @@ function toBars(lines: Line[]): SkeletonRect[] {
   return merged.map((line) => {
     const height = line.barBottom - line.barTop;
     return {
+      type: 'text' as const,
       x: line.left,
       y: line.barTop,
       width: line.right - line.left,
@@ -412,6 +500,7 @@ export function measureSkeleton(
         if (visible) {
           const box = local(visible);
           blocks.push({
+            type: isMedia(element) ? 'media' : 'box',
             x: box.left,
             y: box.top,
             width: box.right - box.left,
@@ -428,6 +517,34 @@ export function measureSkeleton(
           addLine(rect, style, clip);
         }
         continue;
+      }
+
+      // A painted container (a card, a chip) doesn't become a solid block — it still
+      // has interior bones to measure — but its own paint (bg / border / radius / shadow)
+      // is captured as a `chrome` bone so the outline survives shape recall and SSR
+      // pre-paint, when the real DOM isn't painted under the layer yet. Emitted BEFORE
+      // the recursion so it draws underneath the interior bones in document order.
+      //
+      // Single-side borders (`border-t` on a footer divider) deliberately fail
+      // `isPainted` — they're dividers, not chip paint — but they still need to
+      // appear in the skeleton, so `anyBordered` widens the capture trigger.
+      if (isPainted(style) || anyBordered(style)) {
+        const chrome = captureChrome(style);
+        if (chrome) {
+          const visible = clipped(element.getBoundingClientRect(), clip);
+          if (visible) {
+            const box = local(visible);
+            blocks.push({
+              type: 'chrome',
+              x: box.left,
+              y: box.top,
+              width: box.right - box.left,
+              height: box.bottom - box.top,
+              radius: roundedBy(clip, visible, radiusOf(element, style), style),
+              chrome,
+            });
+          }
+        }
       }
 
       const clips = style.overflowX !== 'visible' || style.overflowY !== 'visible';

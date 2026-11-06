@@ -1,5 +1,6 @@
 import { CASCADE_SPREAD, FADE_DURATION } from './constants';
 import {
+  instant,
   MAX_DELAY,
   MAX_DURATION,
   sequence,
@@ -10,10 +11,18 @@ import {
 } from './plan';
 import { sweep, SWEEP_SPREAD } from './sweep';
 
-const NAMED = { together, sequence, smart, sweep };
+// `instant` is advertised as a string mode in the README and is exported as a
+// `RevealSpec`, but was previously missing from this map, so passing
+// `reveal="instant"` returned `undefined` and crashed `arrive()` with
+// "Cannot read properties of undefined (reading 'hold')".
+const NAMED = { together, sequence, smart, sweep, instant };
 
-export const revealSpec = (mode: RevealMode = 'smart'): RevealSpec =>
-  typeof mode === 'string' ? NAMED[mode] : mode;
+// Unknown strings fall back to `smart` instead of crashing — a stale template
+// or a typo should quietly do the right thing, not blow up the reveal.
+export const revealSpec = (mode: RevealMode = 'smart'): RevealSpec => {
+  if (typeof mode !== 'string') return mode;
+  return (NAMED as Record<string, RevealSpec>)[mode] ?? smart;
+};
 
 /** Longest a pane can take to leave under `mode`, for a framework that has to know up front. */
 export function exitDuration(mode?: RevealMode) {

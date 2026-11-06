@@ -1,34 +1,35 @@
-# @alikhalilll/a-smart-skeleton
+# `@alikhalilll/a-smart-skeleton`
 
-> Smart, dynamic skeleton loader for Vue 3, Nuxt 3+, and vanilla Web Components. Lays content out unseen, measures typography and geometry down to exact canvas font metrics and clip regions, and reveals real content with smooth animations (smart, sequence, sweep, together).
+> Measured skeleton loaders for Vue 3 and Nuxt 3+. Captures your real component's layout — background, border, radius, box-shadow, text lines, and media boxes — and replays it as a pixel-faithful placeholder. One template to maintain. Zero cumulative layout shift.
 
 [![npm](https://img.shields.io/npm/v/@alikhalilll/a-smart-skeleton.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/a-smart-skeleton)
-[![License: MIT](https://img.shields.io/badge/License-MIT-444.svg)](./LICENSE)
+[![license](https://img.shields.io/npm/l/@alikhalilll/a-smart-skeleton.svg?color=444)](https://github.com/alikhalilll/ali-nuxt-toolkit/blob/main/LICENSE)
+[![docs](https://img.shields.io/badge/docs-live%20demo-5c6ac4)](https://alikhalilll.github.io/ali-nuxt-toolkit/ui/smart-skeleton)
+
+**[Live demo and full documentation →](https://alikhalilll.github.io/ali-nuxt-toolkit/ui/smart-skeleton)**
+
+Hand-authored skeletons are the second template you have to maintain. Padding drifts, font sizes bump, images start loading later — the skeleton guesses wrong and the reveal jumps. `ASmartSkeleton` lays your real content out invisibly, measures the live geometry, and reconstructs a skeleton from what it saw. One template — the real one — stays the source of truth.
 
 ---
 
-## Why `@alikhalilll/a-smart-skeleton`?
+## Table of contents
 
-Handcrafted skeleton placeholders easily drift out of sync with real content, resulting in jarring layout shifts when data arrives.
-
-`@alikhalilll/a-smart-skeleton` solves this by:
-
-1. **Zero Layout Shift (CLS = 0)**: Content (or a sample schema) is rendered unseen in an off-screen ghost tree. Its geometry is measured, generating matching skeleton bones that occupy the exact layout footprint before first paint.
-2. **Typographic Accuracy**: Using 2D canvas font metrics, text is measured along font lines (`ascender`, `capHeight`, `xHeight`, `baseline`, `descender`). Visual bars follow your actual typography, not generic rectangular gray blocks.
-3. **Clip-Aware Geometry**: Elements nested inside rounded containers or clipped bounds (`overflow: hidden`) compute intersecting bounding boxes (`clipWithin`) so bones mirror real borders and clips.
-4. **Rich Animation Suite**:
-   - **Bones animations**: `shimmer` (page-wide band), `group-shimmer` (per-skeleton), `pulse` (soft opacity wave), or `none`.
-   - **Reveal modes**: `smart` (intelligent contextual reveal), `together` (fade together), `sequence` (staggered cascade from top to bottom), `sweep` (glossy gradient sweep across the reveal with automatic stall detection), and `instant`.
-   - **Height easing**: When content height differs slightly from the skeleton guess, the container smoothly eases to the new height (`280ms`) rather than snapping.
-5. **Stand-in Bones for Images**: Slow images don't block text from revealing. Content reveals on schedule while pending images remain covered by individual stand-in bones until decoded.
-6. **Shape Memory**: Saves layouts under an `id` or auto-key to `localStorage` across user visits, ensuring second visits load instant skeleton shapes before network data resolves.
-7. **SSR Pre-Paint Script**: Bundles a minimal inline script (`ResizeObserver`-driven) that measures server-rendered skeletons after layout and before the very first paint.
+- [Install](#install)
+- [Minimal example](#minimal-example)
+- [Full example — social feed card](#full-example--social-feed-card)
+- [States: `loading`, `content`, `empty`, `error`](#states-loading-content-empty-error)
+- [Hints — `ask-block`, `ask-ignore`, `ask-own`](#hints--ask-block-ask-ignore-ask-own)
+- [Chrome capture](#chrome-capture)
+- [Reveal transitions](#reveal-transitions)
+- [Theming](#theming)
+- [API reference](#api-reference)
+- [Changelog highlights](#changelog-highlights)
 
 ---
 
-## Installation
+## Install
 
-```bash
+```sh
 pnpm add @alikhalilll/a-smart-skeleton
 # or
 npm install @alikhalilll/a-smart-skeleton
@@ -36,260 +37,321 @@ npm install @alikhalilll/a-smart-skeleton
 yarn add @alikhalilll/a-smart-skeleton
 ```
 
-Import styles in your main entry (if not using the Nuxt module):
+**Nuxt 3 / 4** — add the module, four components auto-import:
 
 ```ts
-import '@alikhalilll/a-smart-skeleton/styles.css';
-```
-
----
-
-## Nuxt 3 / 4 Setup
-
-Add the module to `nuxt.config.ts`:
-
-```ts
+// nuxt.config.ts
 export default defineNuxtConfig({
   modules: ['@alikhalilll/a-smart-skeleton/nuxt'],
-  aSmartSkeleton: {
-    prefix: 'A', // Optional prefix
-    styles: true, // Automatically injects styles.css
-  },
 });
 ```
 
-Components auto-imported in Nuxt:
+**Vue 3 + Vite** — import the stylesheet and optionally register the auto-import resolver:
 
-- `<ASmartSkeleton>`
-- `<ASmartSkeletonBox>`
-- `<ASmartSkeletonSuspense>`
-- `<ASmartSkeletonProvider>`
+```ts
+// main.ts
+import '@alikhalilll/a-smart-skeleton/styles.css';
+```
+
+```ts
+// vite.config.ts  (optional, for unplugin-vue-components)
+import Components from 'unplugin-vue-components/vite';
+import ASmartSkeletonResolver from '@alikhalilll/a-smart-skeleton/resolver';
+
+export default {
+  plugins: [Components({ resolvers: [ASmartSkeletonResolver()] })],
+};
+```
+
+Full install guide with troubleshooting → [docs/install](https://alikhalilll.github.io/ali-nuxt-toolkit/ui/smart-skeleton#install).
 
 ---
 
-## Vue 3 Usage
+## Minimal example
 
-### Basic Data-Driven Skeleton
-
-When `data` is `null` or `undefined`, the skeleton measures the `sample` data. Once `data` resolves, it smoothly reveals the real content.
+The simplest useful pattern — bind `data`, pass a `sample`, give it an `id`, done:
 
 ```vue
 <script setup lang="ts">
-import { ref } from 'vue';
-import { ASmartSkeleton } from '@alikhalilll/a-smart-skeleton';
-
-interface User {
-  name: string;
-  role: string;
-  avatar: string;
-}
-
-const SAMPLE_USER: User = {
-  name: 'Alex Johnson',
-  role: 'Senior Software Engineer',
-  avatar: '',
-};
+import { ref, onMounted } from 'vue';
 
 const user = ref<User | null>(null);
 
-// Simulating fetch
-setTimeout(() => {
-  user.value = {
-    name: 'Sarah Connor',
-    role: 'Cyberdyne Systems Lead',
-    avatar: 'https://example.com/avatar.jpg',
-  };
-}, 1500);
+const SAMPLE_USER = {
+  name: 'Sarah Connor',
+  role: 'Chief Mitigation Officer',
+  avatar: 'https://example.com/avatar.jpg',
+};
+
+onMounted(async () => {
+  user.value = await $fetch('/api/me');
+});
 </script>
 
 <template>
-  <ASmartSkeleton :data="user" :sample="SAMPLE_USER" id="user-profile" label="Loading user profile">
+  <ASmartSkeleton :data="user" :sample="SAMPLE_USER" id="user-card">
     <template #default="{ data }">
-      <div class="user-card">
-        <img :src="data.avatar" alt="Avatar" class="avatar" />
-        <div class="meta">
-          <h3>{{ data.name }}</h3>
-          <p>{{ data.role }}</p>
-        </div>
-      </div>
+      <UserCard :user="data" />
     </template>
   </ASmartSkeleton>
 </template>
 ```
 
----
+**Three things to know:**
 
-### Reveal Modes
+1. **Always pass a `sample`.** It's what the skeleton measures before real data arrives.
+2. **Give the skeleton a stable `id`.** Shape memory is keyed by `id` across visits.
+3. **Give images explicit `width` / `height`** (or `aspect-ratio`) so the skeleton can reserve their space.
 
-Select how content replaces its skeleton using the `reveal` prop:
-
-```vue
-<!-- Smart contextual reveal (default) -->
-<ASmartSkeleton :data="user" :sample="SAMPLE_USER" reveal="smart">
-  ...
-</ASmartSkeleton>
-
-<!-- Glossy sweep animation across the element -->
-<ASmartSkeleton :data="user" :sample="SAMPLE_USER" reveal="sweep">
-  ...
-</ASmartSkeleton>
-
-<!-- Top-to-bottom sequence cascade -->
-<ASmartSkeleton :data="user" :sample="SAMPLE_USER" reveal="sequence">
-  ...
-</ASmartSkeleton>
-
-<!-- Simple concurrent crossfade -->
-<ASmartSkeleton :data="user" :sample="SAMPLE_USER" reveal="together">
-  ...
-</ASmartSkeleton>
-```
-
-Listen for when the reveal animation completes via `@reveal`:
-
-```vue
-<ASmartSkeleton :data="user" :sample="SAMPLE_USER" @reveal="onRevealed">
-  ...
-</ASmartSkeleton>
-```
+Live on the site → [Quick start demo](https://alikhalilll.github.io/ali-nuxt-toolkit/ui/smart-skeleton#quick-start).
 
 ---
 
-### States: Empty & Error
+## Full example — social feed card
 
-Handle error and empty states directly inside the skeleton boundary:
+A real social feed: `<article>` wrapper with `border` + `bg-white` + `rounded-[12px]`, split sub-components for `Header` (avatar + author + actions menu), body text, `MediaGrid`, and a `footer` divider holding the reactions and comment buttons.
 
-```vue
-<ASmartSkeleton :data="items" :empty="items?.length === 0" :error="error">
-  <template #default="{ data }">
-    <ItemList :items="data" />
-  </template>
-
-  <template #empty>
-    <p>No items found in this collection.</p>
-  </template>
-
-  <template #error="{ error }">
-    <p class="error">Failed to load items: {{ error }}</p>
-  </template>
-</ASmartSkeleton>
-```
-
----
-
-### Standalone Skeleton Box
-
-For manual placeholder boxes, use `<ASmartSkeletonBox>`:
+Interactive version with reveal-mode / animation / theme controls → [Customize demo](https://alikhalilll.github.io/ali-nuxt-toolkit/ui/smart-skeleton#customize).
 
 ```vue
+<!-- PostList.vue (parent) -->
+<script setup lang="ts">
+import { ref, computed } from 'vue';
+import PostCard from './PostCard.vue';
+
+interface Post {
+  id: string;
+  author: { id: string; name: string; avatar?: string | null; verified?: boolean };
+  created_at_relative: string;
+  body: string;
+  media?: { type: 'image' | 'video'; url: string }[];
+  reactions_count: number;
+  comments_count: number;
+  is_reacted?: boolean;
+}
+
+// Sample bodies match the real-feed replacements 1:1 in length so the
+// reveal doesn't trigger the plugin's dev-only "layout jumped" warning.
+const SAMPLE_POSTS: Post[] = [
+  /* ... three sample shapes ... */
+];
+
+const feed = ref<Post[] | null>(null);
+async function loadFeed() {
+  feed.value = null;
+  feed.value = await $fetch<Post[]>('/api/community/posts');
+}
+
+const theme = computed(() => ({
+  light: { base: '#d1d4dc', highlight: '#ffffff' },
+  dark: { base: '#31363f', highlight: 'rgba(255,255,255,0.08)' },
+  animation: 'shimmer' as const,
+  speed: 'slow' as const,
+}));
+</script>
+
 <template>
-  <div class="card">
-    <ASmartSkeletonBox width="100%" height="200px" radius="8px" />
-    <ASmartSkeletonBox width="70%" height="1.2em" radius="4px" />
-    <ASmartSkeletonBox width="40%" height="1em" radius="4px" />
-  </div>
-</template>
-```
-
----
-
-### Suspense Integration
-
-`<ASmartSkeletonSuspense>` handles Vue's `<Suspense>` boundary lifecycle, keeping an exact clone of the fallback skeleton in place to crossfade smoothly once async setup finishes:
-
-```vue
-<template>
-  <ASmartSkeletonSuspense id="async-quote" reveal="smart">
-    <AsyncQuoteComponent />
-    <template #skeleton>
-      <QuoteCard :quote="SAMPLE_QUOTE" />
-    </template>
-  </ASmartSkeletonSuspense>
-</template>
-```
-
----
-
-### Global Provider & Theming
-
-Configure colors, speed, animations, font metric edges, and CSP nonce across your whole app:
-
-```vue
-<template>
-  <ASmartSkeletonProvider
-    mode="system"
-    :theme="{
-      light: { base: 'rgb(0 0 0 / 0.07)', highlight: 'rgb(255 255 255 / 0.6)' },
-      dark: { base: 'rgb(255 255 255 / 0.08)', highlight: 'rgb(255 255 255 / 0.1)' },
-      radius: '6px',
-      animation: 'shimmer',
-      speed: 'slow',
-      text: { top: 'ascender', bottom: 'descender' },
-    }"
-    reveal="smart"
-    :debug="false"
-  >
-    <App />
+  <ASmartSkeletonProvider :theme="theme" mode="system" reveal="smart">
+    <ASmartSkeleton id="community-feed" :data="feed" :sample="SAMPLE_POSTS">
+      <template #default="{ data }">
+        <div class="flex flex-col gap-4">
+          <PostCard v-for="post in data as Post[]" :key="post.id" :post="post" />
+        </div>
+      </template>
+    </ASmartSkeleton>
   </ASmartSkeletonProvider>
 </template>
 ```
 
----
+```vue
+<!-- PostCard.vue (child) -->
+<script setup lang="ts">
+import Header from './Header.vue';
+import MediaGrid from './MediaGrid.vue';
+import Reactions from './Reactions.vue';
 
-## Web Components / Custom Element
-
-Use the `<a-smart-skeleton-reveal>` custom element in standard HTML without Vue:
-
-```html
-<script type="module" src="@alikhalilll/a-smart-skeleton/element"></script>
-
-<a-smart-skeleton-reveal loading id="article-preview" reveal="smart">
-  <article>
-    <h2>Article Title Headline</h2>
-    <p>Detailed body paragraph explaining the context of the article.</p>
-  </article>
-</a-smart-skeleton-reveal>
-
-<script>
-  const el = document.querySelector('a-smart-skeleton-reveal');
-  setTimeout(() => {
-    el.show(`
-      <article>
-        <h2>Real Fetched Title</h2>
-        <p>This is the real body text loaded over the wire.</p>
-      </article>
-    `);
-  }, 2000);
+defineProps<{ post: Post }>();
 </script>
+
+<template>
+  <article
+    :id="`post-${post.id}`"
+    class="border border-[#EDF0F3] rounded-[12px] bg-white flex flex-col w-full"
+  >
+    <Header :post="post" class="px-5 pb-4 pt-4" />
+
+    <div class="px-5 pb-4 flex flex-col gap-3">
+      <p class="text-sm leading-relaxed whitespace-pre-wrap break-words">{{ post.body }}</p>
+      <MediaGrid :media="post.media" />
+    </div>
+
+    <footer class="px-5 py-4 border-t border-[#EDF0F3] flex gap-4 items-center">
+      <Reactions :count="post.reactions_count" :is-reacted="post.is_reacted" />
+      <!--
+        `data-ask-block` collapses the icon + count into a single pill bone
+        during loading — otherwise the walker recurses and emits a tiny
+        media bone for the icon and a separate text bar for the number.
+      -->
+      <button
+        type="button"
+        data-ask-block
+        class="text-sm text-gray-600 rounded-lg flex gap-1.5 items-center hover:text-primary"
+      >
+        <svg class="size-4" aria-hidden="true"><!-- comment icon --></svg>
+        <span>{{ post.comments_count }}</span>
+      </button>
+    </footer>
+  </article>
+</template>
 ```
 
----
+**What this example exercises** (and what the demo on the docs site shows live):
 
-## Author Hints & Attributes
-
-Customize measuring behavior with attributes:
-
-- `ask-ignore` / `[ask-ignore]`: Skip an element and its children during measurement.
-- `ask-block` / `[ask-block]`: Force an element to be measured as a solid rectangle block rather than text lines.
-- `ask-own` / `[ask-own]`: Subtree provides its own custom skeleton bones; measuring stops at this boundary.
-- `ask-xray` / `[ask-xray]`: Debug mode that exposes the ghost tree through translucent bones.
+- **Chrome capture** on the painted `<article>` — the skeleton reproduces the background, border, and radius verbatim from the real element's computed style. See [Chrome capture section](https://alikhalilll.github.io/ali-nuxt-toolkit/ui/smart-skeleton#chrome-capture).
+- **Divider capture** on the `<footer>`'s `border-t` — one-sided borders survive as hairlines in the skeleton.
+- **`data-ask-block`** on action buttons for one-bone pills instead of SVG + text fragments. See [Hints](https://alikhalilll.github.io/ali-nuxt-toolkit/ui/smart-skeleton#hints--ask-block-ask-ignore-ask-own).
+- **Split sub-component walker** — the plugin follows DOM nodes, not Vue VNodes, so SFC boundaries are transparent.
+- **Provider-driven theming** — switch `mode`, `theme.light`, `theme.dark`, `animation`, `speed`, `reveal` in one place. See [Theming](https://alikhalilll.github.io/ali-nuxt-toolkit/ui/smart-skeleton#theming).
 
 ---
 
-## CSS Variables
+## States: `loading`, `content`, `empty`, `error`
 
-| Variable            | Default                   | Description                                                     |
-| ------------------- | ------------------------- | --------------------------------------------------------------- |
-| `--ask-base`        | `rgb(128 128 128 / 0.2)`  | Base bone background color                                      |
-| `--ask-highlight`   | `rgb(255 255 255 / 0.12)` | Shimmer sweep highlight color                                   |
-| `--ask-radius`      | `0.25em`                  | Default border-radius for text lines and standalone boxes       |
-| `--ask-animation`   | `shimmer`                 | Animation: `shimmer`, `group-shimmer`, `pulse`, `none`          |
-| `--ask-speed`       | `slow`                    | Animation speed: `slow`, `fast`                                 |
-| `--ask-text-top`    | `ascender`                | Top typographic boundary (`ascender`, `cap-height`, `x-height`) |
-| `--ask-text-bottom` | `descender`               | Bottom typographic boundary (`baseline`, `descender`)           |
+One component handles all four states. Resolution order is `loading` → `error` → `empty` → `content`:
+
+```vue
+<ASmartSkeleton
+  :data="posts"
+  :sample="SAMPLE_POSTS"
+  :error="fetchError"
+  :empty="posts?.length === 0"
+  @reveal="onContentRevealed"
+>
+  <template #default="{ data }">
+    <PostList :posts="data" />
+  </template>
+  <template #empty>
+    <EmptyIllustration message="No posts yet" />
+  </template>
+  <template #error="{ error }">
+    <ErrorBanner :error="error" @retry="reload" />
+  </template>
+</ASmartSkeleton>
+```
+
+`@reveal` fires once per `skeleton → content` transition. Full behaviour → [States demo](https://alikhalilll.github.io/ali-nuxt-toolkit/ui/smart-skeleton#states-loading-content-empty-error).
 
 ---
 
-## License
+## Hints — `ask-block`, `ask-ignore`, `ask-own`
+
+Three attributes let you override the walker where it matters:
+
+| Hint         | Alias                  | What it does                                                                                 |
+| ------------ | ---------------------- | -------------------------------------------------------------------------------------------- |
+| `ask-block`  | `data-skeleton-block`  | Draws the element as **one** bone sized to its box + border-radius. Walker does not recurse. |
+| `ask-ignore` | `data-skeleton-ignore` | Element keeps its layout footprint but emits **zero** bones.                                 |
+| `ask-own`    | `data-skeleton-own`    | Subtree opts out — you're drawing its skeleton yourself.                                     |
+
+See it in action → [Hints demo](https://alikhalilll.github.io/ali-nuxt-toolkit/ui/smart-skeleton#hints--ask-block-ask-ignore-ask-own).
+
+---
+
+## Chrome capture
+
+When the walker crosses a **painted container** (a background, a border on any side, or a box-shadow) it emits an extra `type: 'chrome'` bone that carries the captured `background`, per-side `border-*`, `border-radius`, and `box-shadow` inline. The bone skips the shimmer animation so it reads as an outline, not a placeholder fill.
+
+- `backgroundColor` and gradient `backgroundImage` layers are kept. `url(…)` layers are stripped — hero bitmaps don't re-download in the skeleton.
+- Each border side is captured separately, so a `border-t` footer divider survives as a hairline.
+- `border-radius` is captured per-corner where the parent's overflow clips it.
+- Chrome bones ignore `--ask-base` by design — they're reproductions, not placeholders.
+
+Full details and before/after shots → [Chrome capture section](https://alikhalilll.github.io/ali-nuxt-toolkit/ui/smart-skeleton#chrome-capture).
+
+---
+
+## Reveal transitions
+
+| Mode       | Behaviour                                                                     |
+| ---------- | ----------------------------------------------------------------------------- |
+| `smart`    | Instant if the content lands under ~150 ms, otherwise crossfade. The default. |
+| `together` | Simple crossfade.                                                             |
+| `sequence` | Staggered top-to-bottom cascade.                                              |
+| `sweep`    | A highlight beam sweeps across the transition edge.                           |
+| `instant`  | Snap, no transition.                                                          |
+
+`prefers-reduced-motion: reduce` forces `instant` automatically. Compare them side-by-side → [Reveal transitions](https://alikhalilll.github.io/ali-nuxt-toolkit/ui/smart-skeleton#reveal-transitions).
+
+---
+
+## Theming
+
+Every surface is driven by CSS custom properties. Set them on any ancestor:
+
+```css
+.my-feed {
+  --ask-base: #d1d4dc;
+  --ask-highlight: #ffffff;
+}
+```
+
+For app-wide defaults, wrap your app in `<ASmartSkeletonProvider>`:
+
+```vue
+<ASmartSkeletonProvider
+  mode="system"
+  :theme="{
+    light: { base: '#d1d4dc', highlight: '#ffffff' },
+    dark: { base: '#31363f', highlight: 'rgba(255,255,255,0.08)' },
+    animation: 'shimmer',
+    speed: 'slow',
+  }"
+  reveal="smart"
+>
+  <App />
+</ASmartSkeletonProvider>
+```
+
+Bones ship as `<div [ask-rect="text|media|box|chrome"]>` in the **light DOM** (no shadow root), so your stylesheet reaches them without `:deep()`. A 4-px minimum radius is applied to every non-chrome bone so nothing reads as a sharp glyph.
+
+```css
+/* Handcrafted ASkeletonBlock-style look on placeholder bones. */
+[ask-rect='text'],
+[ask-rect='box'] {
+  box-shadow: inset 0 0 0 1px rgb(169 175 188 / 0.35);
+}
+```
+
+Full CSS variable table + per-type targeting → [Theming](https://alikhalilll.github.io/ali-nuxt-toolkit/ui/smart-skeleton#theming).
+
+---
+
+## API reference
+
+**`<ASmartSkeleton>`** — `data`, `sample`, `loading`, `id`, `label`, `empty`, `error`, `reveal` · emits `@reveal` · slots `default` / `empty` / `error` / `skeleton`.
+
+**`<ASmartSkeletonProvider>`** — `theme`, `mode`, `reveal`, `debug`, `nonce`.
+
+**`<ASmartSkeletonBox>`** — standalone shimmer bar · `width`, `height`, `radius`.
+
+**`<ASmartSkeletonSuspense>`** — Suspense-boundary wrapper that measures a fallback skeleton.
+
+**Author hints (HTML attrs)** — `ask-block`, `ask-ignore`, `ask-own` (each with a `data-skeleton-*` alias).
+
+Full props / slots / events reference → [API reference](https://alikhalilll.github.io/ali-nuxt-toolkit/ui/smart-skeleton#api-reference).
+
+---
+
+## Changelog highlights
+
+- **Chrome capture** (`type: 'chrome'`) — reproduces card outlines pixel-for-pixel from the consumer's own paint. Partial borders (`border-t` dividers) are preserved. `url(…)` background layers are filtered out so hero bitmaps don't re-download.
+- **Light-DOM bones** — placeholders now live in the light DOM with a `[ask-rect="text|media|box|chrome"]` attribute, so consumer stylesheets can style them per type without `:deep()` on a shadow root.
+- **4-px minimum radius** — every non-chrome bone is floored at 4 px so sharp-cornered placeholders don't read as glyphs of the real content.
+- **Fixed `reveal="instant"`** — previously threw `Cannot read properties of undefined (reading 'hold')`. Unknown reveal strings now fall through to `smart` instead of crashing.
+- **Cleaned stylesheet** — the published `dist/styles.css` is now a hand-authored ~4 KB file. No Tailwind utilities, `@property` globals, or theme tokens leak into the consumer's `:root`.
+
+See the full version history → [CHANGELOG](https://github.com/alikhalilll/ali-nuxt-toolkit/blob/main/packages/ui-components/ASmartSkeleton/CHANGELOG.md) · browse source → [GitHub](https://github.com/alikhalilll/ali-nuxt-toolkit/tree/main/packages/ui-components/ASmartSkeleton) · open an issue → [Issues](https://github.com/alikhalilll/ali-nuxt-toolkit/issues).
+
+---
 
 MIT © [alikhalilll](https://github.com/alikhalilll)

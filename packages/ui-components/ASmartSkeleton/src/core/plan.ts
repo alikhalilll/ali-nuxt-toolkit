@@ -56,7 +56,7 @@ export type RevealSpec = {
 };
 
 /** A built-in reveal by name, or one of your own. */
-export type RevealMode = 'together' | 'sequence' | 'smart' | 'sweep' | RevealSpec;
+export type RevealMode = 'together' | 'sequence' | 'smart' | 'sweep' | 'instant' | RevealSpec;
 
 export const SKELETON_DELAY = 150; // A skeleton up for less than this is a flash — smart holds it back
 const QUICK_FADE = 120; // A refetch, already familiar

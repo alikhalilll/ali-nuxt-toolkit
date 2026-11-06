@@ -6,7 +6,6 @@ import {
   ATTR_OWN,
   ATTR_PANE,
   ATTR_SNAPSHOT,
-  BASE,
   FADE_DURATION,
   RESIZE_DURATION,
 } from './constants';
@@ -88,7 +87,9 @@ function holdImages(element: HTMLElement, root: HTMLElement) {
       const bone = bones.find((b) => sameBox(b.getBoundingClientRect(), rect));
       const box = bone?.getBoundingClientRect() ?? rect;
       const stand = document.createElement('div');
-      stand.setAttribute(ATTR_RECT, '');
+      // Same "media"-type bone the main pass produces — fill colour comes from the
+      // stylesheet (`[ask-rect]` → `var(--ask-base)`) so a consumer theme reaches it.
+      stand.setAttribute(ATTR_RECT, 'media');
       Object.assign(stand.style, {
         position: 'absolute',
         left: `${box.left - origin.left - root.clientLeft}px`,
@@ -96,7 +97,6 @@ function holdImages(element: HTMLElement, root: HTMLElement) {
         width: `${box.width}px`,
         height: `${box.height}px`,
         borderRadius: bone?.style.borderRadius || getComputedStyle(image).borderRadius,
-        backgroundColor: BASE,
         backgroundRepeat: 'no-repeat',
         pointerEvents: 'none',
       });

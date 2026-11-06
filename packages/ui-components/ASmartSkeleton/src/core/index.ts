@@ -40,7 +40,7 @@ export type {
 export { debugging, setDebug } from './debug';
 export { checkNonce } from './dev';
 export { DEFAULT_TEXT, measureSkeleton } from './measure';
-export type { SkeletonRect, TextBottom, TextTop } from './measure';
+export type { SkeletonChrome, SkeletonRect, TextBottom, TextTop } from './measure';
 export { rectsOf, drawSkeleton, motionOf, shimmer } from './shimmer';
 export { Ghost } from './ghost';
 export type { GhostOptions } from './ghost';
