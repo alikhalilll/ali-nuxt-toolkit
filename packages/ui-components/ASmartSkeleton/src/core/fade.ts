@@ -258,17 +258,21 @@ type Resize = { animation: Animation; overflow: string; boxSizing: string };
 // A reveal's running resize, so the next starts from where it got to and restores the styles it found
 const resizes = new WeakMap<HTMLElement, Resize>();
 
-// Eases a reveal from the height the outgoing pane gave it to the incoming one's; the outgoing pane is already out of flow
-function resize(root: HTMLElement, box: PaneBox) {
-  const incoming = root.querySelector<HTMLElement>(
-    `:scope > [${ATTR_PANE}]:not([${ATTR_EXITING}])`
-  );
-  if (!incoming) return;
+/**
+ * Eases `root` from `from` px to `to` px with the package's canonical height
+ * curve. Used by every size change — pane swaps, ghost shape changes (sample
+ * data swap), remembered-shape recall, image loads, font swaps, container
+ * reflow — so resizing is a package-wide behaviour, not a reveal-specific one.
+ *
+ * `prefers-reduced-motion: reduce` is the only gate; a <0.5 px delta short-
+ * circuits as a no-op. Mid-flight animations interrupt cleanly: the next call
+ * starts from where the previous one got to.
+ */
+export function easeHeight(root: HTMLElement, from: number, to: number) {
+  if (prefersReducedMotion()) return;
   const running = resizes.get(root);
-  const shown = root.getBoundingClientRect().height;
   running?.animation.cancel();
-  const to = root.getBoundingClientRect().height;
-  const from = running ? shown : to - incoming.getBoundingClientRect().height + box.height;
+
   if (Math.abs(from - to) < 0.5) {
     if (running) restore(root, running);
     return;
@@ -285,6 +289,22 @@ function resize(root: HTMLElement, box: PaneBox) {
   settle(animation).then(() => {
     if (resizes.get(root) === current) restore(root, current);
   });
+}
+
+// Eases a reveal from the height the outgoing pane gave it to the incoming one's; the outgoing pane is already out of flow
+function resize(root: HTMLElement, box: PaneBox) {
+  const incoming = root.querySelector<HTMLElement>(
+    `:scope > [${ATTR_PANE}]:not([${ATTR_EXITING}])`
+  );
+  if (!incoming) return;
+  const running = resizes.get(root);
+  const shown = root.getBoundingClientRect().height;
+  // Cancel the in-flight animation before reading `to`: a mid-flight `height`
+  // keyframe would otherwise bias the measurement.
+  running?.animation.cancel();
+  const to = root.getBoundingClientRect().height;
+  const from = running ? shown : to - incoming.getBoundingClientRect().height + box.height;
+  easeHeight(root, from, to);
 }
 
 function restore(root: HTMLElement, { overflow, boxSizing }: Resize) {
@@ -325,7 +345,14 @@ export function fadeOut(element: HTMLElement, box?: PaneBox): Promise<void> {
   return Promise.resolve().then(() => {
     const plan = parent && plans.get(parent);
     const instant = prefersReducedMotion() || plan?.kind === 'instant';
-    if (parent && !instant) resize(parent, stood);
+    // Height continuity is a layout concern — it eases the parent between a
+    // skeleton that guessed the shape wrong and the real content, which is a
+    // separate question from how the content itself arrives. `smart` often
+    // chooses `instant` for fast loads (<150ms) or recent input, and the
+    // consumer may also pick `reveal="instant"` to skip the fade. In both
+    // cases we still want the frame around the swap to settle smoothly, so
+    // the only gate here is the visitor's reduced-motion preference.
+    if (parent && !prefersReducedMotion()) resize(parent, stood);
 
     // Content stays until the skeleton replacing it shows — which may be never
     if (plan?.kind === 'skeleton') return fade(plan.hold, FADE_DURATION);
@@ -333,12 +360,15 @@ export function fadeOut(element: HTMLElement, box?: PaneBox): Promise<void> {
       element.style.opacity = '0';
       return;
     }
-    if (plan?.kind === 'sequence' && isSkeleton(element)) {
-      return sequenceOut(element, plan);
-    }
-    if (plan?.kind === 'wipe' && isSkeleton(element)) {
-      return wipe(element, plan, false);
-    }
+    // Skeletons always leave with a flat `FADE_DURATION` fade, even when the
+    // content arrives as a `sequence` or `wipe`. The content's arrival
+    // animation is preserved — only the outgoing bones stop cascading. On a
+    // tall feed where `smart` picks `byRow`, the cascaded exit otherwise
+    // runs ~520 ms (`CASCADE_SPREAD + FADE_DURATION`), outlasting the
+    // 280 ms height ease and reading as the skeleton "lingering" after the
+    // card has already settled. A flat 200 ms exit clears inside the resize
+    // window.
+    if (isSkeleton(element)) return fade(0, FADE_DURATION);
     if (plan?.kind === 'together') return fade(plan.delay, plan.duration);
     return fade(0, FADE_DURATION);
   });

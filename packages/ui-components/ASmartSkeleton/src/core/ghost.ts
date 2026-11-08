@@ -12,6 +12,7 @@ import {
   UNCOVER,
 } from './constants';
 import { reportLoading } from './debug';
+import { easeHeight } from './fade';
 import { noteSkeleton } from './plan';
 import { warnOnce } from './dev';
 import { measureSkeleton } from './measure';
@@ -85,6 +86,11 @@ export class Ghost {
   private frame = 0;
   private mutations: MutationObserver;
   private resize: ResizeObserver | null;
+  // Last loading-pane height, so the parent reveal can ease when the ghost's
+  // natural height changes between re-measures — sample swaps, remembered
+  // shape recall, image loads, font swaps, container reflows. The mechanism
+  // is package-wide; it isn't tied to pane-swap reveals.
+  private lastHeight = 0;
 
   constructor(
     private root: HTMLElement,
@@ -211,10 +217,22 @@ export class Ghost {
     drawSkeleton(this.layer, measureSkeleton(active, this.layer));
 
     const reveal = this.root.closest(`[${ATTR_REVEAL}]`);
+    const currentHeight = this.root.offsetHeight;
+
+    // Natural-height change between re-measures eases the containing reveal.
+    // Covers every non-pane-swap path that moves the skeleton's size: sample
+    // data swap, remembered shape recall, images loading in, fonts settling,
+    // and window-resize-driven reflow. First measure after construction only
+    // records the baseline; subsequent measures that find a delta animate.
+    if (reveal && this.lastHeight && this.lastHeight !== currentHeight) {
+      easeHeight(reveal as HTMLElement, this.lastHeight, currentHeight);
+    }
+    this.lastHeight = currentHeight;
+
     if (reveal) {
       loadingSizes.set(reveal, {
         width: this.root.offsetWidth,
-        height: this.root.offsetHeight,
+        height: currentHeight,
         // Drawn from real data, so a sample would have changed nothing
         guessed: !(this.options.exact && this.source === 'ghost'),
         images: [...active.querySelectorAll('img')].map(

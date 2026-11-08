@@ -24,7 +24,12 @@ export const ATTR_DEBUG = 'ask-debug'; // Debug outlines for this subtree alone
 export const BASE = 'var(--ask-base, rgb(128 128 128 / 0.2))';
 export const HIGHLIGHT = 'var(--ask-highlight, rgb(255 255 255 / 0.12))';
 export const FADE_DURATION = 200;
-export const CASCADE_SPREAD = 320; // From the first piece of a sequenced reveal to the last
+// CASCADE_SPREAD is paired with FADE_DURATION so a `sequence` reveal totals
+// `CASCADE_SPREAD + FADE_DURATION` — 80 + 200 = 280 ms, exactly the height
+// ease. A larger spread (we previously shipped 320 ms) stretched a tall
+// feed's cascade to ~520 ms and left the last few rows fading in after the
+// parent had already settled, which read as the skeleton lingering.
+export const CASCADE_SPREAD = 80; // From the first piece of a sequenced reveal to the last
 export const RESIZE_DURATION = 280; // A reveal easing to its new height, when its skeleton guessed the content wrong
 export const IMAGE_TIMEOUT = 10000; // Longest a reveal holds for an image — a stalled request mustn't keep a skeleton up for good
 // One loop of each animation, by `speed`; a shimmer's is across a 1280px-wide screen

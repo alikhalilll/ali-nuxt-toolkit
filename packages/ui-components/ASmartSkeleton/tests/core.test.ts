@@ -50,8 +50,12 @@ describe('constants', () => {
 
   it('defines expected animation timings', () => {
     expect(FADE_DURATION).toBe(200);
-    expect(CASCADE_SPREAD).toBe(320);
+    // Paired with FADE_DURATION so a `sequence` reveal totals exactly
+    // `RESIZE_DURATION` — the cascade finishes inside the parent's
+    // height-ease window instead of dragging past it.
+    expect(CASCADE_SPREAD).toBe(80);
     expect(RESIZE_DURATION).toBe(280);
+    expect(CASCADE_SPREAD + FADE_DURATION).toBe(RESIZE_DURATION);
     expect(IMAGE_TIMEOUT).toBe(10000);
     expect(DURATIONS.shimmer.slow).toBe(4000);
     expect(DURATIONS.shimmer.fast).toBe(2000);
