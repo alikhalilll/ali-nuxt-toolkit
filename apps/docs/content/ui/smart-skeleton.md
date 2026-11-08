@@ -279,6 +279,50 @@ When multiple skeletons mount at different times — paginated feeds, staggered 
 ::DemoSmartSkeletonGrid
 ::
 
+## Debugging a wrong-looking skeleton
+
+If the measured skeleton doesn't line up with your real card — bones in the wrong places, padding missing, cards too narrow — turn on the built-in trace. The plugin ships a `traceMeasurement()` logger that fires once per element the walker touches, so you can see exactly what the DOM looks like **when the ghost tree is being measured**.
+
+### Enable it
+
+Any one of these flips the plugin into debug mode:
+
+- Add `?ask-debug` to the URL
+- Run `localStorage.setItem('a-smart-skeleton:debug', '1')` in DevTools, then reload
+- Call `setDebug(true)` once from your app code
+- Add an `ask-debug` attribute to any ancestor of the `<ASmartSkeleton>` you're investigating (scopes the trace to that subtree)
+
+### What you'll see
+
+Open DevTools and trigger a skeleton render (cold refresh, sort change, anything that puts `:data` back to `null`). The console fills with lines like:
+
+```
+[a-smart-skeleton] <header> 456×60  padding:4px 20px 16px 20px
+{ class: 'flex gap-3 items-start px-5 pb-4 pt-4', element: <header…> }
+
+[a-smart-skeleton] <div> 420×38  padding:0px 0px 0px 0px  · ⚠ 0-padding
+{ class: 'flex flex-col', element: <div…> }
+```
+
+Each line is one element's measured box, with its class list, computed `padding`, and width × height. The `⚠ 0-padding` marker appears on containers that have non-empty children but no inner padding — the common signal that something went wrong between what you wrote and what the browser rendered.
+
+### How to read the trace
+
+Pick the element you care about (usually one that should have padding but doesn't) and look at three things:
+
+| What you see                                                                                                       | What it means                                                                                                                                                                             | Fix                                                                                                                                                                        |
+| ------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The expected class is in `class:` **and** padding is non-zero                                                      | Everything's fine. The visual problem is elsewhere (CSS specificity, parent `overflow`, a wrapper collapsing margins).                                                                    | Look upstream.                                                                                                                                                             |
+| The expected class is in `class:` **but** padding is `0px 0px…`                                                    | The class reached the DOM but your CSS didn't emit the rule. Classic UnoCSS/Tailwind lazy-scan miss — the utility isn't in the output bundle because the scanner didn't see it.           | Add the utility to your CSS tool's safelist, or make sure the component's source file is covered by the scan globs.                                                        |
+| The expected class is **not** in `class:`                                                                          | Vue dropped it. Happens when a child component has a true fragment root (multiple top-level elements, not `v-if`/`v-else`). Vue can't auto-forward the fallthrough class into a fragment. | Collapse the child to a single root with `:class` branching inside, or use `defineOptions({ inheritAttrs: false })` + manual `:class="[…own, $attrs.class]"` on each root. |
+| `class:` includes utilities but `padding` is correct **in the real card** and wrong **only in the skeleton trace** | The ghost tree rendered before an async style settled — fonts, lazy CSS modules, etc.                                                                                                     | Preload the font / stylesheet, or set an explicit `aspect-ratio` on the container so the first-paint measurement is correct.                                               |
+
+### Why this is a diagnostic, not a fix
+
+The plugin reads the **real DOM** at measurement time. The `<MyComponent />` tag you wrote in your template has already been compiled away — only the component's output is in the DOM. If a class you passed got dropped somewhere in between, the plugin has no way to reach back and retrieve it. The trace just makes the gap visible, so you can fix it at the right layer (Vue template, CSS tool config, or wherever the drop actually happened).
+
+See the [`traceMeasurement` API reference](#api-reference) for the exported signature if you want to call it from your own walker.
+
 ## Accessibility
 
 - `aria-busy="true"` is applied to the outer wrapper while loading.
@@ -342,11 +386,22 @@ When multiple skeletons mount at different times — paginated feeds, staggered 
 
 ### Author hints (HTML attributes)
 
-| Attribute    | Alias                  | Effect                                    |
-| ------------ | ---------------------- | ----------------------------------------- |
-| `ask-block`  | `data-skeleton-block`  | Draw as one bone, no recursion.           |
-| `ask-ignore` | `data-skeleton-ignore` | Keep the layout footprint, emit no bones. |
-| `ask-own`    | `data-skeleton-own`    | Subtree draws its own skeleton.           |
+| Attribute    | Alias                  | Effect                                                                                   |
+| ------------ | ---------------------- | ---------------------------------------------------------------------------------------- |
+| `ask-block`  | `data-skeleton-block`  | Draw as one bone, no recursion.                                                          |
+| `ask-ignore` | `data-skeleton-ignore` | Keep the layout footprint, emit no bones.                                                |
+| `ask-own`    | `data-skeleton-own`    | Subtree draws its own skeleton.                                                          |
+| `ask-debug`  | `data-skeleton-debug`  | Scope the measurement trace to this subtree. See **Debugging a wrong-looking skeleton**. |
+
+### Debug helpers
+
+Imported from `@alikhalilll/a-smart-skeleton/core`:
+
+| Export                              | Signature                                                                                     | What it does                                                                                             |
+| ----------------------------------- | --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `setDebug(on: boolean)`             | Switches debug mode on or off globally.                                                       | Alternative to the `?ask-debug` URL flag — useful inside tests or a feature-flag check.                  |
+| `traceMeasurement(el, style, rect)` | Logs one element's class list, computed padding, and measured bounds.                         | Called automatically by the measure walker when debug is on. Also exported for custom measurement loops. |
+| `debugging(el?)`                    | Returns `true` when the global debug flag is set, or when `el` has an `[ask-debug]` ancestor. | Gate your own diagnostics on the same flag.                                                              |
 
 ## Patterns and pitfalls
 
