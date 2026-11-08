@@ -54,11 +54,11 @@ onMounted(replay);
 onBeforeUnmount(clear);
 
 const code = `<script setup lang="ts">
-// Six cards mount 180 ms apart — each `<ASmartSkeleton>` draws its own
+// Six cards mount 180 ms apart — each <ASmartSkeleton> draws its own
 // bones, but every bone shares one document-clock sweep. The result:
 // every skeleton on the page shimmers in phase, even as cards mount
 // at different times (paginated feeds, async grid cells, etc.).
-<\/script>
+\u003c/script>
 
 <template>
   <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
