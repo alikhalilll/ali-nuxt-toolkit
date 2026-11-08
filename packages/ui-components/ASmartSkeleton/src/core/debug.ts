@@ -22,7 +22,15 @@ function fromPage() {
   }
 }
 
-const everywhere = () => (enabled ??= typeof window !== 'undefined' && fromPage());
+// Detection uses `globalThis.window` (a property access) rather than
+// `typeof window !== 'undefined'`. The `typeof` form minifies to
+// `typeof window<"u"`, which Nitro's SSR pipeline then constant-folds to
+// `"undefined"<"u"` inside the embedded `INLINE_SCRIPT` string literal —
+// producing an unescaped `"undefined"` that breaks the outer double-quoted
+// string when consumers re-bundle for the server. `globalThis.window` has
+// identical semantics (truthy in a browser, undefined in Node / SSR) but
+// Nitro's typeof-fold doesn't match the pattern, so the string survives.
+const everywhere = () => (enabled ??= globalThis.window !== undefined && fromPage());
 
 /** On with `?ask-debug`, `a-smart-skeleton:debug` = "1" in localStorage or `setDebug(true)`; for `element`, also inside `[ask-debug]`. */
 export const debugging = (element?: Element | null) =>
