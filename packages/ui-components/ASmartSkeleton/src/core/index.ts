@@ -18,6 +18,8 @@ export {
   FADE_DURATION,
   IMAGE_TIMEOUT,
   RESIZE_DURATION,
+  REVEAL_EASING,
+  SKELETON_FADE_DURATION,
 } from './constants';
 export { addStyles, SMART_SKELETON_CSS, removeStyles } from './styles';
 export { INLINE_SCRIPT, INLINE_STUB, inlineScriptTag } from './inline.generated';

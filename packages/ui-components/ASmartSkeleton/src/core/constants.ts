@@ -23,14 +23,29 @@ export const ATTR_DEBUG = 'ask-debug'; // Debug outlines for this subtree alone
 // Themed by ASmartSkeletonProvider; the fallbacks are translucent so one grey reads on light and dark pages alike
 export const BASE = 'var(--ask-base, rgb(128 128 128 / 0.2))';
 export const HIGHLIGHT = 'var(--ask-highlight, rgb(255 255 255 / 0.12))';
-export const FADE_DURATION = 200;
-// CASCADE_SPREAD is paired with FADE_DURATION so a `sequence` reveal totals
-// `CASCADE_SPREAD + FADE_DURATION` — 80 + 200 = 280 ms, exactly the height
-// ease. A larger spread (we previously shipped 320 ms) stretched a tall
-// feed's cascade to ~520 ms and left the last few rows fading in after the
-// parent had already settled, which read as the skeleton lingering.
-export const CASCADE_SPREAD = 80; // From the first piece of a sequenced reveal to the last
-export const RESIZE_DURATION = 280; // A reveal easing to its new height, when its skeleton guessed the content wrong
+// Content fade and the parent's height ease run for the same duration and
+// end on the same frame so the swap reads as one continuous motion. The
+// skeleton's own fade (`SKELETON_FADE_DURATION`) is deliberately shorter
+// so the bones clear out of the way while the frame is still settling —
+// the viewer's eye isn't fighting a fading skeleton on top of content
+// that's already settled.
+export const FADE_DURATION = 320;
+export const SKELETON_FADE_DURATION = 180;
+// Set to 0 so a `sequence` reveal's total (`CASCADE_SPREAD + FADE_DURATION`)
+// also equals `RESIZE_DURATION`; sequence still arrives top-to-bottom via the
+// per-piece `boneDelay`, but no row lingers past the frame settle.
+export const CASCADE_SPREAD = 0; // From the first piece of a sequenced reveal to the last
+export const RESIZE_DURATION = 320; // A reveal easing to its new height, when its skeleton guessed the content wrong
+/**
+ * Shared cubic-bezier curve used by every reveal animation so they all
+ * decelerate on the same rhythm. `(0.22, 1, 0.36, 1)` is the iOS-style
+ * standard-decelerate curve — slightly softer landing than Material's
+ * `(0.4, 0, 0.2, 1)` and firmer takeoff than our old
+ * `(0.2, 0, 0, 1)`, which reads as more "professional" on long-distance
+ * height changes (tall skeleton → short content) because it never
+ * accelerates past the midpoint.
+ */
+export const REVEAL_EASING = 'cubic-bezier(0.22, 1, 0.36, 1)';
 export const IMAGE_TIMEOUT = 10000; // Longest a reveal holds for an image — a stalled request mustn't keep a skeleton up for good
 // One loop of each animation, by `speed`; a shimmer's is across a 1280px-wide screen
 export const DURATIONS = {

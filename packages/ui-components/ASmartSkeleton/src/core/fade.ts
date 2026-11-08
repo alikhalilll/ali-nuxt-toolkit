@@ -8,6 +8,8 @@ import {
   ATTR_SNAPSHOT,
   FADE_DURATION,
   RESIZE_DURATION,
+  REVEAL_EASING,
+  SKELETON_FADE_DURATION,
 } from './constants';
 import { imageReady, pendingImages } from './images';
 import { animationsOf, canAnimate, prefersReducedMotion } from './motion';
@@ -38,7 +40,7 @@ function appear(element: Element, delay = 0, duration = FADE_DURATION, from = 0,
     element.animate([{ ...enter, opacity: from }, { opacity: 1 }], {
       duration,
       delay,
-      easing: 'ease',
+      easing: REVEAL_EASING,
       fill: 'backwards',
     })
   );
@@ -114,7 +116,7 @@ function holdImages(element: HTMLElement, root: HTMLElement) {
         settle(
           stand.animate([{ opacity: 1 }, { opacity: 0 }], {
             duration: FADE_DURATION,
-            easing: 'ease',
+            easing: REVEAL_EASING,
             fill: 'forwards',
           })
         ).then(() => stand.remove());
@@ -282,7 +284,7 @@ export function easeHeight(root: HTMLElement, from: number, to: number) {
   Object.assign(root.style, { overflow: 'clip', boxSizing: 'border-box' });
   const animation = root.animate([{ height: `${from}px` }, { height: `${to}px` }], {
     duration: RESIZE_DURATION,
-    easing: 'cubic-bezier(0.2, 0, 0, 1)',
+    easing: REVEAL_EASING,
   });
   const current = { animation, overflow, boxSizing };
   resizes.set(root, current);
@@ -297,6 +299,7 @@ function resize(root: HTMLElement, box: PaneBox) {
     `:scope > [${ATTR_PANE}]:not([${ATTR_EXITING}])`
   );
   if (!incoming) return;
+  const outgoing = root.querySelector<HTMLElement>(`:scope > [${ATTR_PANE}][${ATTR_EXITING}]`);
   const running = resizes.get(root);
   const shown = root.getBoundingClientRect().height;
   // Cancel the in-flight animation before reading `to`: a mid-flight `height`
@@ -305,6 +308,23 @@ function resize(root: HTMLElement, box: PaneBox) {
   const to = root.getBoundingClientRect().height;
   const from = running ? shown : to - incoming.getBoundingClientRect().height + box.height;
   easeHeight(root, from, to);
+
+  // Shrink the outgoing pane's own height in lockstep with the container
+  // when it was taller than the incoming pane. Without this, the pane stays
+  // at its popped-out full height while the container shrinks around it —
+  // the frame correctly clips the overflow, but the skeleton bones sitting
+  // in the exiting pane remain visible *below* the already-settled content
+  // until the container catches up, which reads as the skeleton
+  // "overflowing" the real content. Clipping the pane to the container's
+  // target height from frame one keeps the two edges aligned.
+  if (outgoing && to < box.height - 0.5 && canAnimate()) {
+    outgoing.style.overflow = 'clip';
+    outgoing.animate([{ height: `${box.height}px` }, { height: `${to}px` }], {
+      duration: RESIZE_DURATION,
+      easing: REVEAL_EASING,
+      fill: 'forwards',
+    });
+  }
 }
 
 function restore(root: HTMLElement, { overflow, boxSizing }: Resize) {
@@ -335,7 +355,7 @@ export function fadeOut(element: HTMLElement, box?: PaneBox): Promise<void> {
       element.animate([{ opacity: from }, { opacity: 0 }], {
         duration: duration * from,
         delay,
-        easing: 'ease',
+        easing: REVEAL_EASING,
         fill: 'forwards',
       })
     );
@@ -360,15 +380,14 @@ export function fadeOut(element: HTMLElement, box?: PaneBox): Promise<void> {
       element.style.opacity = '0';
       return;
     }
-    // Skeletons always leave with a flat `FADE_DURATION` fade, even when the
-    // content arrives as a `sequence` or `wipe`. The content's arrival
-    // animation is preserved — only the outgoing bones stop cascading. On a
-    // tall feed where `smart` picks `byRow`, the cascaded exit otherwise
-    // runs ~520 ms (`CASCADE_SPREAD + FADE_DURATION`), outlasting the
-    // 280 ms height ease and reading as the skeleton "lingering" after the
-    // card has already settled. A flat 200 ms exit clears inside the resize
+    // Skeletons always leave with a flat `SKELETON_FADE_DURATION` fade,
+    // shorter than the content fade / height ease, so the bones clear out of
+    // the way while the frame is still settling — the viewer's eye isn't
+    // fighting a fading skeleton on top of content that's already laid out.
+    // The content's arrival animation (sequence / wipe / together) is
+    // preserved — only the outgoing bones short-fade.
     // window.
-    if (isSkeleton(element)) return fade(0, FADE_DURATION);
+    if (isSkeleton(element)) return fade(0, SKELETON_FADE_DURATION);
     if (plan?.kind === 'together') return fade(plan.delay, plan.duration);
     return fade(0, FADE_DURATION);
   });
@@ -397,7 +416,7 @@ function sequenceOut(element: HTMLElement, plan: SequencePlan) {
           bone.animate([{ opacity: 1 }, { opacity: 0 }], {
             duration: plan.duration,
             delay,
-            easing: 'ease',
+            easing: REVEAL_EASING,
             fill: 'forwards',
           })
         );
@@ -462,7 +481,7 @@ function wipe(element: HTMLElement, plan: WipePlan, incoming: boolean) {
       element.animate([plan.enter, {}], {
         duration: plan.duration,
         delay: Math.max(plan.start - performance.now(), 0),
-        easing: 'ease',
+        easing: REVEAL_EASING,
         fill: 'backwards',
       });
     }
@@ -510,7 +529,7 @@ function wipe(element: HTMLElement, plan: WipePlan, incoming: boolean) {
     return settle(
       element.animate([{ opacity: 1 - stalledAt }, { opacity: 0 }], {
         duration: rest,
-        easing: 'ease',
+        easing: REVEAL_EASING,
         fill: 'forwards',
       })
     ).then(() => {

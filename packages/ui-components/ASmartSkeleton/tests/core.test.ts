@@ -16,6 +16,7 @@ import {
   CASCADE_SPREAD,
   DURATIONS,
   FADE_DURATION,
+  SKELETON_FADE_DURATION,
   RESIZE_DURATION,
   IMAGE_TIMEOUT,
   together,
@@ -49,13 +50,14 @@ describe('constants', () => {
   });
 
   it('defines expected animation timings', () => {
-    expect(FADE_DURATION).toBe(200);
-    // Paired with FADE_DURATION so a `sequence` reveal totals exactly
-    // `RESIZE_DURATION` — the cascade finishes inside the parent's
-    // height-ease window instead of dragging past it.
-    expect(CASCADE_SPREAD).toBe(80);
-    expect(RESIZE_DURATION).toBe(280);
+    // Content fade and the parent height ease share one duration so they end
+    // on the same frame; the skeleton's own fade is deliberately shorter so
+    // the bones clear while the frame is still settling.
+    expect(FADE_DURATION).toBe(320);
+    expect(RESIZE_DURATION).toBe(320);
+    expect(CASCADE_SPREAD).toBe(0);
     expect(CASCADE_SPREAD + FADE_DURATION).toBe(RESIZE_DURATION);
+    expect(SKELETON_FADE_DURATION).toBeLessThan(FADE_DURATION);
     expect(IMAGE_TIMEOUT).toBe(10000);
     expect(DURATIONS.shimmer.slow).toBe(4000);
     expect(DURATIONS.shimmer.fast).toBe(2000);

@@ -197,21 +197,46 @@ The `reveal` prop picks how the skeleton gives way to real content:
 
 ## Resizing — easing to the new height
 
-A skeleton drawn from `sample` data or a remembered shape is a guess. When the real data arrives with a different body length, image count, or line wrap, the frame around the swap doesn't snap — it eases from the outgoing pane's measured box to the incoming pane's live box over 280 ms with `cubic-bezier(0.2, 0, 0, 1)`, so a card that goes from 200 px to 600 px (or the other way) never jerks the viewer's eye.
+A skeleton drawn from `sample` data or a remembered shape is a guess. When the real data arrives with a different body length, image count, or line wrap, the frame around the swap doesn't snap — it eases from the outgoing pane's measured box to the incoming pane's live box over **`RESIZE_DURATION` (320 ms)** with **`REVEAL_EASING` (`cubic-bezier(0.22, 1, 0.36, 1)`)**, so a card that goes from 200 px to 600 px (or the other way) never jerks the viewer's eye.
 
 ::DemoSkeletonResizing
 ::
 
 The mechanism is baked into `fadeOut()` and runs on every reveal except when `prefers-reduced-motion: reduce` is set. It's independent of the `reveal` prop — even `reveal="instant"` (or `smart` picking `instant` for a sub-150 ms fetch) still eases the frame, because layout continuity is a separate concern from how the content itself arrives.
 
-Internally:
+### Timings at a glance
 
-1. The outgoing pane is taken out of flow (`position: absolute` at its measured box).
-2. The parent momentarily lays out at the incoming pane's natural height.
-3. A `Web Animation` on the parent's `height` transitions from the outgoing box's height back to the incoming pane's new height.
-4. `overflow: clip` keeps a shrinking frame from exposing the leaving pane underneath.
+| Constant                 | Default                          | What it drives                                                                                 |
+| ------------------------ | -------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `RESIZE_DURATION`        | 320 ms                           | Height ease on the `[ask-reveal]` container, and the outgoing pane's own shrink                |
+| `FADE_DURATION`          | 320 ms                           | Content pane fade-in — ends on the same frame as the resize                                    |
+| `SKELETON_FADE_DURATION` | 180 ms                           | Skeleton pane fade-out — deliberately shorter so bones clear while the frame is still settling |
+| `REVEAL_EASING`          | `cubic-bezier(0.22, 1, 0.36, 1)` | iOS-style standard-decelerate curve shared by every reveal animation                           |
 
-No consumer configuration is needed — it's on by default. If you need to bypass it (e.g. a parent with a hard-coded height), make sure your container doesn't set `height` itself and the easing will just work.
+All four are exported from `@alikhalilll/a-smart-skeleton` so a consumer can match an animation of their own to the skeleton's rhythm.
+
+### Internal steps
+
+1. The outgoing pane is taken out of flow (`position: absolute` at its measured box) via `popOut()`.
+2. The parent momentarily lays out at the incoming pane's natural height — that reading is the resize's target.
+3. A Web Animation on the parent's `height` interpolates from the outgoing box's height to the incoming pane's live height, with `overflow: clip` applied inline so the shrinking frame doesn't expose the leaving pane underneath.
+4. **In lockstep**: when the outgoing pane was taller than the incoming one, a second animation runs on the outgoing pane's _own_ `height` with the same duration and easing, clipping its bones to the container's current size. Without this step, the skeleton's bottom portion would stay painted below where the real content settles (still within the container's bounds) until the overflow:clip catch-up frame. Both animations end on the same frame.
+5. The skeleton's own fade (`SKELETON_FADE_DURATION`, 180 ms) finishes well before the resize settles, so the viewer's eye isn't fighting a fading skeleton on top of content that's already laid out.
+
+### Exposed primitive — `easeHeight()`
+
+For custom code paths (not just pane swaps), the package exports `easeHeight(root, from, to)` — the same primitive the reveal lifecycle uses internally:
+
+```ts
+import { easeHeight, RESIZE_DURATION } from '@alikhalilll/a-smart-skeleton';
+
+// Animate `panel` from its current height to 480 px with the package's canonical curve.
+const from = panel.getBoundingClientRect().height;
+panel.style.height = '480px';
+easeHeight(panel, from, 480);
+```
+
+No consumer configuration is needed for the built-in reveal — it's on by default. If you need to bypass the easing entirely (e.g. a parent with a hard-coded height), make sure your container doesn't set `height` itself and the easing will just work; otherwise, call `easeHeight()` yourself to drive the rhythm.
 
 ## Theming
 
