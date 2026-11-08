@@ -34,6 +34,48 @@ export function setDebug(on: boolean) {
   else stop();
 }
 
+/**
+ * Logs each element the measure walker visits with its DOM path, class list,
+ * computed padding/border, and bounding rect. Useful for diagnosing cases
+ * where a parent passed presumed-padding classes to a Vue component but the
+ * child's measured box doesn't show them — the trace reveals whether the
+ * class is on the DOM at all (fallthrough worked, UnoCSS didn't emit, etc.)
+ * or whether the DOM really is padded and something else is wrong.
+ *
+ * Enable by passing `?ask-debug` in the URL, `setDebug(true)`, or wrapping
+ * any ancestor in `[ask-debug]` — same gates as the visual debug overlay.
+ */
+const EMPTY_PADDING = /^(0px|0)(\s+(0px|0)){0,3}$/;
+export function traceMeasurement(
+  element: Element,
+  style: CSSStyleDeclaration,
+  rect: { width: number; height: number }
+) {
+  if (!debugging(element)) return;
+  const tag = element.tagName.toLowerCase();
+  const className = (element.getAttribute('class') ?? '').trim();
+  const padding = [
+    style.paddingTop,
+    style.paddingRight,
+    style.paddingBottom,
+    style.paddingLeft,
+  ].join(' ');
+  const warn =
+    EMPTY_PADDING.test(padding) && hasChildrenWithContent(element) ? ' · ⚠ 0-padding' : '';
+  // eslint-disable-next-line no-console
+  console.debug(
+    `[a-smart-skeleton] <${tag}> ${rect.width.toFixed(0)}×${rect.height.toFixed(0)}  padding:${padding}${warn}`,
+    { class: className || '(none)', element }
+  );
+}
+
+function hasChildrenWithContent(element: Element): boolean {
+  for (const child of element.children) {
+    if (child.textContent?.trim() || child.children.length > 0) return true;
+  }
+  return false;
+}
+
 export function reportLoading(reveal: Element | null, source: string) {
   if (!reveal || !debugging(reveal)) return;
   entries.set(reveal, { state: 'loading', source });

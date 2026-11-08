@@ -1,4 +1,5 @@
 import { textContext } from './canvas';
+import { traceMeasurement } from './debug';
 import {
   ATTR_BLOCK,
   ATTR_COVERED,
@@ -494,6 +495,11 @@ export function measureSkeleton(
 
       const style = getComputedStyle(element);
       if (style.display === 'none') continue;
+
+      // Dev-only tracer — logs the walked element's class list + measured
+      // bounds so consumers can see whether Vue dropped a fallthrough class,
+      // UnoCSS missed a utility, etc. No-op outside of `?ask-debug`.
+      traceMeasurement(element, style, element.getBoundingClientRect());
 
       if (isBlock(element, style)) {
         const visible = clipped(element.getBoundingClientRect(), clip);

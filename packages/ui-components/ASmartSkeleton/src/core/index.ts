@@ -37,7 +37,7 @@ export type {
   SkeletonText,
   SkeletonTheme,
 } from './theme';
-export { debugging, setDebug } from './debug';
+export { debugging, setDebug, traceMeasurement } from './debug';
 export { checkNonce } from './dev';
 export { DEFAULT_TEXT, measureSkeleton } from './measure';
 export type { SkeletonChrome, SkeletonRect, TextBottom, TextTop } from './measure';
