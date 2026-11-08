@@ -21,7 +21,11 @@ function pick(h: HintOption) {
 const TAGS = ['TypeScript', 'Vue 3', 'Nuxt', 'Performance'];
 
 const code = `<template>
-  <ASmartSkeleton loading id="user-profile">
+  <ASmartSkeleton
+    :id="\`demo-hints-\${currentHint}\`"
+    loading
+    label="Loading author card"
+  >
     <article class="flex flex-col gap-3">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-3">

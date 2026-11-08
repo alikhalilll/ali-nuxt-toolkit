@@ -73,9 +73,9 @@ const SAMPLE_PRODUCT = {
 <template>
   <!-- While product is null, ASmartSkeleton lays out SAMPLE_PRODUCT invisibly -->
   <ASmartSkeleton
+    id="demo-product-card"
     :data="product"
     :sample="SAMPLE_PRODUCT"
-    id="product-card"
     label="Loading product card"
   >
     <template #default="{ data }">

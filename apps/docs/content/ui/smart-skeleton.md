@@ -195,6 +195,24 @@ The `reveal` prop picks how the skeleton gives way to real content:
 
 `prefers-reduced-motion: reduce` forces `instant` automatically.
 
+## Resizing — easing to the new height
+
+A skeleton drawn from `sample` data or a remembered shape is a guess. When the real data arrives with a different body length, image count, or line wrap, the frame around the swap doesn't snap — it eases from the outgoing pane's measured box to the incoming pane's live box over 280 ms with `cubic-bezier(0.2, 0, 0, 1)`, so a card that goes from 200 px to 600 px (or the other way) never jerks the viewer's eye.
+
+::DemoSkeletonResizing
+::
+
+The mechanism is baked into `fadeOut()` and runs on every reveal except when `prefers-reduced-motion: reduce` is set. It's independent of the `reveal` prop — even `reveal="instant"` (or `smart` picking `instant` for a sub-150 ms fetch) still eases the frame, because layout continuity is a separate concern from how the content itself arrives.
+
+Internally:
+
+1. The outgoing pane is taken out of flow (`position: absolute` at its measured box).
+2. The parent momentarily lays out at the incoming pane's natural height.
+3. A `Web Animation` on the parent's `height` transitions from the outgoing box's height back to the incoming pane's new height.
+4. `overflow: clip` keeps a shrinking frame from exposing the leaving pane underneath.
+
+No consumer configuration is needed — it's on by default. If you need to bypass it (e.g. a parent with a hard-coded height), make sure your container doesn't set `height` itself and the easing will just work.
+
 ## Theming
 
 Everything is driven by CSS custom properties, so a single declaration anywhere above the skeleton re-tints every bone inside:

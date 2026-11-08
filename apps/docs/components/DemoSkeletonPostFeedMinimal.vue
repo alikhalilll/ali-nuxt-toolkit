@@ -155,17 +155,29 @@ async function refreshFeed() {
 \u003c/script>
 
 <template>
-  <ASmartSkeleton
-    id="community-feed"
-    :data="feed"
-    :sample="SAMPLE_POSTS"
+  <!-- Provider sets the colour mode + theme and the default reveal
+       animation for every skeleton inside; omit it to inherit the page's
+       theme and \`smart\` as the default. -->
+  <ASmartSkeletonProvider
+    mode="system"
+    :theme="{
+      light: { base: '#d1d4dc', highlight: '#ffffff' },
+      dark: { base: '#31363f', highlight: 'rgba(255,255,255,0.08)' },
+    }"
+    reveal="smart"
   >
-    <template #default="{ data }">
-      <div class="flex flex-col gap-3">
-        <PostCard v-for="post in data" :key="post.id" :post="post" />
-      </div>
-    </template>
-  </ASmartSkeleton>
+    <ASmartSkeleton
+      id="docs-hero-feed"
+      :data="feed"
+      :sample="SAMPLE_POSTS"
+    >
+      <template #default="{ data }">
+        <div class="flex flex-col gap-3">
+          <PostCard v-for="post in data" :key="post.id" :post="post" />
+        </div>
+      </template>
+    </ASmartSkeleton>
+  </ASmartSkeletonProvider>
 </template>`;
 </script>
 

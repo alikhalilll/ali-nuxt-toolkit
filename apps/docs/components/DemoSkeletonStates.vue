@@ -35,19 +35,22 @@ const code = `<script setup lang="ts">
 import { ref } from 'vue';
 import { ASmartSkeleton } from '@alikhalilll/a-smart-skeleton';
 
-const data = ref(MEMBERS);
-const error = ref(null);
-const empty = ref(false);
+type State = 'loading' | 'content' | 'empty' | 'error';
+const activeState = ref<State>('loading');
 \u003c/script>
 
 <template>
+  <!-- Every props-driven state the component recognises, wired up at once
+       so flipping \`activeState\` re-enters the right branch; in production
+       you'd usually drive a single state at a time off your fetch result. -->
   <ASmartSkeleton
-    :data="data"
+    id="demo-states-card"
+    :loading="activeState === 'loading'"
+    :data="activeState === 'content' ? MEMBERS : null"
     :sample="MEMBERS"
-    :error="error"
-    :empty="empty"
-    id="collaborators-pane"
-    label="Loading collaborators list"
+    :empty="activeState === 'empty'"
+    :error="activeState === 'error' ? 'Network gateway timeout (504)' : undefined"
+    label="Loading team collaborators"
   >
     <!-- Default content -->
     <template #default="{ data }">
