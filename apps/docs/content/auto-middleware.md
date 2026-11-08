@@ -1,22 +1,19 @@
 ---
 title: auto-middleware
-description: Declarative, layout-based route middleware for Nuxt 3/4 with glob patterns, named groups, and per-page overrides.
+description: Declarative layout-based route middleware for Nuxt 3/4 with glob patterns, named groups, per-page overrides, and a typed registry.
 package: '@alikhalilll/nuxt-auto-middleware'
 order: 3
 ---
 
-# @alikhalilll/nuxt-auto-middleware
+# `@alikhalilll/nuxt-auto-middleware`
 
-Declarative, layout-based route middleware for Nuxt 3 / 4. Map layouts to middlewares once in your `nuxt.config.ts` — the module generates a single global route middleware that dispatches the right chain on each navigation.
-
-- **Layout → middleware mapping** with **glob patterns** or RegExp.
-- **Named middleware groups** for DRY rules: `{ auth: ['auth', 'verify-role'] }` referenced as `@auth`.
-- **Per-page overrides** via `definePageMeta({ middlewares: [...] })` or `skipAutoMiddleware: true`.
-- **Typed registry** — the module generates an `AutoMiddlewareName` union and augments `PageMeta`, so typos are compile errors.
-- **Early termination** — a middleware returning `false` stops the chain; any other value is treated as a navigation result.
-- **Zero runtime deps** — just Nuxt.
+> Map **layouts** to middlewares once in `nuxt.config.ts`. The module generates a single global route middleware that dispatches the right chain per navigation. Typed, DRY, zero runtime dependencies.
 
 ::DemoAutoMiddleware
+::
+
+::alert{type="note" title="What this module is — and isn't"}
+It dispatches middlewares **per layout**, not per page. Pages opt in or out through their layout assignment (or `definePageMeta`). If your rules are page-level — "this middleware only runs on `/settings/billing`" — you want Nuxt's standard per-page `middleware` array, not this module.
 ::
 
 ## Install
@@ -24,7 +21,7 @@ Declarative, layout-based route middleware for Nuxt 3 / 4. Map layouts to middle
 ::doc-install{pkg="@alikhalilll/nuxt-auto-middleware"}
 ::
 
-## Register the module
+Register the module and declare your mapping:
 
 ```ts
 // nuxt.config.ts
@@ -47,7 +44,9 @@ export default defineNuxtConfig({
 
 Middleware files live in the standard Nuxt location: `~/middleware/auth.ts`, `~/middleware/verify-role.ts`, etc.
 
-## Basic mapping
+## Quick start — basic mapping
+
+A single rule, the common case:
 
 ```ts
 autoMiddleware: {
@@ -57,11 +56,11 @@ autoMiddleware: {
 },
 ```
 
-Any page using the `default` layout will run `~/middleware/track-pageview.ts` before rendering.
+Any page using the `default` layout runs `~/middleware/track-pageview.ts` before rendering. Pages with no explicit `layout` are treated as `default` — [see matching rules](#matching-rules).
 
 ## Named groups
 
-Groups keep rules DRY when the same stack is used from multiple layouts. Unknown `@group` names throw during `nuxt prepare`.
+Groups keep rules DRY when the same stack runs across multiple layouts. Reference a group as `@name` inside `middlewares`.
 
 ```ts
 autoMiddleware: {
@@ -75,6 +74,10 @@ autoMiddleware: {
   ],
 },
 ```
+
+::alert{type="info" title="Groups are validated at `nuxt prepare`"}
+Reference a group that isn't declared and the build fails before you hit a navigation. The typed registry means the same is true for middleware **names** — a typo surfaces in your editor, not at runtime.
+::
 
 ## Glob patterns
 
@@ -90,6 +93,8 @@ rules: [
 
 ## RegExp patterns
 
+When globs aren't enough:
+
 ```ts
 rules: [
   { layouts: [/^(dashboard|portal)$/], middlewares: ['@auth'] },
@@ -99,20 +104,22 @@ rules: [
 
 ## Per-page extras
 
-Append middlewares for one page without changing the global rules. The field name (`middlewares` by default) is configurable via `pageMetaField`.
+Append middlewares for one page without touching the global rules. The field name (`middlewares` by default) is configurable via `pageMetaField`.
 
 ```vue
 <script setup lang="ts">
 definePageMeta({
   layout: 'dashboard',
-  middlewares: ['force-2fa'], // runs AFTER @auth resolved from the layout rule
+  middlewares: ['force-2fa'],
 });
 </script>
 ```
 
-Because `AutoMiddlewareName` is generated from your rules + groups, typos are compile-time errors.
+::alert{type="info" title="Per-page runs _after_ the layout rule"}
+`force-2fa` above runs after the `@auth` group resolved from the layout rule. Order inside a chain matters — put the gate that can short-circuit first.
+::
 
-## Opt a page out entirely
+## Opting a page out
 
 ```vue
 <script setup lang="ts">
@@ -122,6 +129,10 @@ definePageMeta({
 });
 </script>
 ```
+
+::alert{type="warning" title="`skipAutoMiddleware: true` opts out of _everything_"}
+Including catch-all rules like `layouts: ['**']`. If you want a page to skip only one chain but keep the rest (e.g. skip `@auth` but keep `track-pageview`), rework the groups instead — there is no per-middleware opt-out.
+::
 
 ## Catch-all layout
 
@@ -134,7 +145,7 @@ rules: [
 ],
 ```
 
-When multiple rules match, middlewares are concatenated in config order and deduped (first occurrence wins).
+When multiple rules match, middlewares are concatenated in config order and deduplicated — first occurrence wins.
 
 ## Middleware return values
 
@@ -154,36 +165,40 @@ export default defineNuxtRouteMiddleware(() => {
 });
 ```
 
-Every middleware runs inside `callWithNuxt()`, so `useNuxtApp()` / composables work as usual.
+Every middleware runs inside `callWithNuxt()`, so `useNuxtApp()` and composables work as usual.
 
 ## Typed registry
 
-The module emits `#build/auto-middleware/types.d.ts` with:
+The module emits `#build/auto-middleware/types.d.ts`:
 
 ```ts
 export type AutoMiddlewareName = 'auth' | 'verify-role' | 'require-admin' | 'log-activity';
 ```
 
-…plus an augmentation that adds `middlewares?: AutoMiddlewareName[]` and `skipAutoMiddleware?: boolean` to `PageMeta`.
+Plus an augmentation that adds `middlewares?: AutoMiddlewareName[]` and `skipAutoMiddleware?: boolean` to `PageMeta`.
 
-## Matching rules
+## Matching rules {#matching-rules}
+
+The resolver's rules, in order:
 
 - A page with no explicit layout is treated as `default`.
-- `layout: false` is skipped.
-- `skipAutoMiddleware: true` is skipped.
-- Layout pattern matching is **anchored** — partial matches don't count.
-- Multiple matches are concatenated in config order and deduped.
+- `layout: false` pages are skipped entirely.
+- `skipAutoMiddleware: true` pages are skipped entirely.
+- Layout pattern matching is **anchored** — partial matches don't count. `dashboard/*` matches `dashboard/overview`, not `app-dashboard`.
+- Multiple matching rules are concatenated in config order and deduplicated. First occurrence of a middleware wins.
 
-## Module options
+## API reference
+
+### Module options
 
 | Option          | Type                       | Default         | Purpose                                                               |
 | --------------- | -------------------------- | --------------- | --------------------------------------------------------------------- |
 | `rules`         | `AutoMiddlewareRule[]`     | `[]`            | Layout → middlewares mapping. Required.                               |
 | `groups`        | `Record<string, string[]>` | `{}`            | Named reusable middleware lists, referenced via `@name` inside rules. |
 | `debug`         | `boolean`                  | `false`         | Log resolution + execution at runtime.                                |
-| `pageMetaField` | `string \| false`          | `'middlewares'` | Page-meta key used to append extra middlewares.                       |
+| `pageMetaField` | `string \| false`          | `'middlewares'` | Page-meta key used to append extra middlewares. `false` disables it.  |
 
-## Exported types
+### Exported types
 
 ```ts
 import type {
@@ -191,3 +206,17 @@ import type {
   AutoMiddlewareRule,
 } from '@alikhalilll/nuxt-auto-middleware/types';
 ```
+
+## Pitfalls
+
+::alert{type="warning" title="`layout: false` skips the module entirely"}
+Pages with `layout: false` get **no** auto-middleware dispatch, including catch-all rules. If you have a public landing page with `layout: false`, it won't run `track-pageview` even if your rules say every layout should.
+::
+
+::alert{type="warning" title="Anchored matches only"}
+`layouts: ['dashboard']` does not match `dashboard/overview`. Use `['dashboard', 'dashboard/*']` or `['dashboard/**']` to match descendants. Readers trip on this once and then adopt the two-item pattern reflexively.
+::
+
+::alert{type="note" title="Dedup is first-wins, not last-wins"}
+If `@auth` includes `verify-role` and your per-page `middlewares` also lists `verify-role`, the page-level entry is dropped. Rely on groups as the single source of truth or you'll have ghost entries that don't do anything but look meaningful.
+::

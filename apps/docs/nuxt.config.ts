@@ -4,7 +4,7 @@ const siteUrl =
   process.env.NUXT_PUBLIC_SITE_URL || 'https://alikhalilll.github.io/ali-nuxt-toolkit';
 const siteName = 'ali-nuxt-toolkit';
 const siteDescription =
-  'Three focused, strongly-typed Nuxt 3/4 modules: a typed fetch client with retry and progress, AES-GCM + PBKDF2 crypto, and layout-based route middleware.';
+  'Five focused, strongly-typed packages for Nuxt 3 / 4 and Vue 3: a typed fetch client with caching + retry, AES-GCM + PBKDF2 encryption, layout-based route middleware, a measured skeleton loader, and an international phone input.';
 
 const baseURL = process.env.NUXT_APP_BASE_URL || '/';
 const withBase = (path: string) => `${baseURL}${path}`.replace(/\/+/g, '/');
@@ -124,7 +124,7 @@ export default defineNuxtConfig({
       title: siteName,
       link: [
         { rel: 'icon', type: 'image/svg+xml', href: withBase('favicon.svg') },
-        { rel: 'icon', type: 'image/png', sizes: '32x32', href: withBase('favicon-32.png') },
+        { rel: 'icon', type: 'image/png', sizes: '32x32', href: withBase('favicon-32x32.png') },
         { rel: 'apple-touch-icon', sizes: '180x180', href: withBase('apple-touch-icon.png') },
         // dns-prefetch is cheaper than preconnect and works in older browsers / proxies
         // that strip the preconnect handshake — small but free win on cold loads.
@@ -144,10 +144,10 @@ export default defineNuxtConfig({
         {
           name: 'keywords',
           content:
-            'nuxt, nuxt 3, nuxt 4, nuxt modules, typescript, fetch, api client, interceptors, retry, upload progress, crypto, aes-gcm, pbkdf2, web crypto, middleware, auto middleware, vue',
+            'nuxt, nuxt 3, nuxt 4, nuxt modules, vue 3, typescript, fetch, api client, interceptors, retry, upload progress, crypto, aes-gcm, pbkdf2, web crypto, middleware, auto middleware, skeleton loader, phone input, libphonenumber, vee-validate',
         },
         { name: 'author', content: 'Ali Khalil' },
-        { name: 'theme-color', content: '#0b0d10' },
+        { name: 'theme-color', content: '#0a0a0a' },
         { name: 'color-scheme', content: 'dark light' },
         { name: 'robots', content: 'index, follow' },
         { name: 'googlebot', content: 'index, follow' },

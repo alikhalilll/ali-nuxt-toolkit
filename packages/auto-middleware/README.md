@@ -1,6 +1,15 @@
-# @alikhalilll/nuxt-auto-middleware
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./logo-dark.png">
+    <img src="./logo-light.png" alt="nuxt-auto-middleware" width="96" height="96">
+  </picture>
+</p>
 
-Declarative, layout-based route middleware for Nuxt 3 / 4. Map layouts to middlewares once in your `nuxt.config.ts` — the module generates a single global route middleware that dispatches the right chain on each navigation.
+<h1 align="center">@alikhalilll/nuxt-auto-middleware</h1>
+
+<p align="center">Declarative, layout-based route middleware for Nuxt 3 / 4. Map layouts to middlewares once in <code>nuxt.config.ts</code> — the module generates a single global route middleware that dispatches the right chain per navigation.</p>
+
+---
 
 - **Layout → middleware mapping** with **glob patterns** (`dashboard/*`, `admin*`) or RegExp objects.
 - **Named middleware groups** for DRY configuration: `{ auth: ['auth', 'verify-role'] }` referenced as `@auth`.

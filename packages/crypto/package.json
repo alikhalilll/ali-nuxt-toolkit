@@ -66,6 +66,9 @@
   },
   "files": [
     "dist",
+    "logo.svg",
+    "logo-dark.png",
+    "logo-light.png",
     "README.md",
     "LICENSE"
   ],

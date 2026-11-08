@@ -1,6 +1,15 @@
-# @alikhalilll/nuxt-crypto
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./logo-dark.png">
+    <img src="./logo-light.png" alt="nuxt-crypto" width="96" height="96">
+  </picture>
+</p>
 
-Symmetric encryption for Nuxt 3 / 4, built on the native **Web Crypto API**. Defaults to **AES-256-GCM** with **PBKDF2-SHA256** key derivation.
+<h1 align="center">@alikhalilll/nuxt-crypto</h1>
+
+<p align="center">Symmetric encryption for Nuxt 3 / 4 built on the native <strong>Web Crypto API</strong>. Defaults to <strong>AES-256-GCM</strong> with <strong>PBKDF2-SHA256</strong> key derivation.</p>
+
+---
 
 - **Framework-agnostic core** — `createCryptoService()` works anywhere `SubtleCrypto` exists (browser, Deno, Bun, Node 20+).
 - **Key caching** — derived keys are cached per salt, so bulk decrypt stays fast even at 100k+ PBKDF2 iterations.

@@ -1,4 +1,11 @@
-# `@alikhalilll/a-smart-skeleton`
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./logo-dark.png">
+    <img src="./logo-light.png" alt="a-smart-skeleton" width="96" height="96">
+  </picture>
+</p>
+
+<h1 align="center"><code>@alikhalilll/a-smart-skeleton</code></h1>
 
 > Measured skeleton loaders for Vue 3 and Nuxt 3+. Captures your real component's layout — background, border, radius, box-shadow, text lines, and media boxes — and replays it as a pixel-faithful placeholder. One template to maintain. Zero cumulative layout shift.
 

@@ -94,6 +94,9 @@
     "dist",
     "src",
     "web-types.json",
+    "logo.svg",
+    "logo-dark.png",
+    "logo-light.png",
     "README.md",
     "LICENSE"
   ],

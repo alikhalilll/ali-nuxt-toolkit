@@ -1,4 +1,11 @@
-# `@alikhalilll/a-tel-input`
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./logo-dark.png">
+    <img src="./logo-light.png" alt="a-tel-input" width="96" height="96">
+  </picture>
+</p>
+
+<h1 align="center"><code>@alikhalilll/a-tel-input</code></h1>
 
 > A headless, shadcn-vue style **international telephone input** for Vue 3 / Nuxt 3+.
 > Country auto-detect · libphonenumber-js validation · responsive picker (popover ⇆ drawer) ·

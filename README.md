@@ -1,6 +1,15 @@
-# `ali-nuxt-toolkit`
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./logo-dark.png">
+    <img src="./logo-light.png" alt="ali-nuxt-toolkit" width="112" height="112">
+  </picture>
+</p>
 
-> A focused, strongly-typed toolkit for Nuxt 3 / 4 — a typed `fetch` client, Web-Crypto encryption, layout-based middleware, and a flagship headless **international tel input**. Each package is independently installable, ships a framework-agnostic core, and has zero overlap.
+<h1 align="center"><code>ali-nuxt-toolkit</code></h1>
+
+<p align="center">A focused, strongly-typed toolkit for Nuxt 3 / 4 — a typed <code>fetch</code> client, Web-Crypto encryption, layout-based middleware, and two flagship headless UI components. Each package is independently installable, ships a framework-agnostic core, and has zero overlap.</p>
+
+---
 
 [![CI](https://github.com/alikhalilll/ali-nuxt-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/alikhalilll/ali-nuxt-toolkit/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-444.svg)](./LICENSE)

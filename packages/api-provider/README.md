@@ -1,6 +1,15 @@
-# @alikhalilll/nuxt-api-provider
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./logo-dark.png">
+    <img src="./logo-light.png" alt="nuxt-api-provider" width="96" height="96">
+  </picture>
+</p>
 
-A strongly-typed `fetch` client for Nuxt 3 / 4 with interceptors, retry/backoff, and a framework-agnostic core you can use anywhere.
+<h1 align="center">@alikhalilll/nuxt-api-provider</h1>
+
+<p align="center">A strongly-typed <code>fetch</code> client for Nuxt 3 / 4 with interceptors, retry/backoff, and a framework-agnostic core you can use anywhere.</p>
+
+---
 
 - **Typed client type** — `ApiProviderClient` is exported so you can annotate your own wrappers and composables.
 - **Caching, on by default** — TanStack-Query-style: `staleTime` 30s, `gcTime` 5min, stale-while-revalidate, request deduplication. GET/HEAD only — mutations never cached. Per-call overrides and a `client.cache` API for manual control.
