@@ -255,7 +255,13 @@ function popOut(element: HTMLElement, box = boxOf(element)) {
   return box;
 }
 
-type Resize = { animation: Animation; overflow: string; boxSizing: string };
+type Resize = {
+  animation: Animation;
+  overflow: string;
+  boxSizing: string;
+  willChange: string;
+  contain: string;
+};
 
 // A reveal's running resize, so the next starts from where it got to and restores the styles it found
 const resizes = new WeakMap<HTMLElement, Resize>();
@@ -265,6 +271,13 @@ const resizes = new WeakMap<HTMLElement, Resize>();
  * curve. Used by every size change — pane swaps, ghost shape changes (sample
  * data swap), remembered-shape recall, image loads, font swaps, container
  * reflow — so resizing is a package-wide behaviour, not a reveal-specific one.
+ *
+ * Applies `will-change: height` + `contain: layout` inline for the duration of
+ * the animation so the browser can promote the element onto its own compositor
+ * layer and isolate the per-frame layout work from the rest of the page —
+ * without these hints a tall-to-short height animation re-lays-out every
+ * ancestor on every frame and reads as janky on lower-end devices. Both
+ * styles are restored to what they were when the animation settles.
  *
  * `prefers-reduced-motion: reduce` is the only gate; a <0.5 px delta short-
  * circuits as a no-op. Mid-flight animations interrupt cleanly: the next call
@@ -280,13 +293,24 @@ export function easeHeight(root: HTMLElement, from: number, to: number) {
     return;
   }
 
-  const { overflow, boxSizing } = running ?? root.style;
-  Object.assign(root.style, { overflow: 'clip', boxSizing: 'border-box' });
+  const prior = running ?? root.style;
+  const { overflow, boxSizing, willChange, contain } = {
+    overflow: prior.overflow,
+    boxSizing: prior.boxSizing,
+    willChange: prior.willChange,
+    contain: prior.contain,
+  };
+  Object.assign(root.style, {
+    overflow: 'clip',
+    boxSizing: 'border-box',
+    willChange: 'height',
+    contain: 'layout',
+  });
   const animation = root.animate([{ height: `${from}px` }, { height: `${to}px` }], {
     duration: RESIZE_DURATION,
     easing: REVEAL_EASING,
   });
-  const current = { animation, overflow, boxSizing };
+  const current = { animation, overflow, boxSizing, willChange, contain };
   resizes.set(root, current);
   settle(animation).then(() => {
     if (resizes.get(root) === current) restore(root, current);
@@ -317,19 +341,27 @@ function resize(root: HTMLElement, box: PaneBox) {
   // until the container catches up, which reads as the skeleton
   // "overflowing" the real content. Clipping the pane to the container's
   // target height from frame one keeps the two edges aligned.
+  //
+  // `will-change: height` promotes the pane onto its own compositor layer
+  // so its per-frame height change doesn't force the container to re-lay-out
+  // the entire skeleton subtree. Scrubbed on finish so the hint doesn't
+  // keep a layer alive for a dead element.
   if (outgoing && to < box.height - 0.5 && canAnimate()) {
-    outgoing.style.overflow = 'clip';
-    outgoing.animate([{ height: `${box.height}px` }, { height: `${to}px` }], {
+    Object.assign(outgoing.style, { overflow: 'clip', willChange: 'height' });
+    const shrink = outgoing.animate([{ height: `${box.height}px` }, { height: `${to}px` }], {
       duration: RESIZE_DURATION,
       easing: REVEAL_EASING,
       fill: 'forwards',
     });
+    settle(shrink).then(() => {
+      outgoing.style.willChange = '';
+    });
   }
 }
 
-function restore(root: HTMLElement, { overflow, boxSizing }: Resize) {
+function restore(root: HTMLElement, { overflow, boxSizing, willChange, contain }: Resize) {
   resizes.delete(root);
-  Object.assign(root.style, { overflow, boxSizing });
+  Object.assign(root.style, { overflow, boxSizing, willChange, contain });
 }
 
 /** Resolves once `element` can be removed, leaving as the pane replacing it decides; its parent must be positioned. */

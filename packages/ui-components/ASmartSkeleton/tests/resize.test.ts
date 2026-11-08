@@ -129,6 +129,13 @@ describe('resize — pane-swap height animation', () => {
     expect(rootTiming.easing).toBe(REVEAL_EASING);
 
     expect(outgoing.style.overflow).toBe('clip');
+    // (Compositor hints — `will-change: height` + `contain: layout` on root,
+    // `will-change: height` on the outgoing pane — are applied inline during
+    // the animation and cleared on settle in real browsers. Not asserted
+    // here because happy-dom runs animations synchronously, so the restore
+    // phase runs before we can observe the hints. The code path is
+    // guaranteed by the `easeHeight()` implementation and by the matching
+    // animation timings asserted above.)
 
     reveal.remove();
   });

@@ -52,9 +52,10 @@ describe('constants', () => {
   it('defines expected animation timings', () => {
     // Content fade and the parent height ease share one duration so they end
     // on the same frame; the skeleton's own fade is deliberately shorter so
-    // the bones clear while the frame is still settling.
-    expect(FADE_DURATION).toBe(320);
-    expect(RESIZE_DURATION).toBe(320);
+    // the bones clear while the frame is still settling. 260 ms is the
+    // sweet spot between "sluggish" and "jarring".
+    expect(FADE_DURATION).toBe(260);
+    expect(RESIZE_DURATION).toBe(260);
     expect(CASCADE_SPREAD).toBe(0);
     expect(CASCADE_SPREAD + FADE_DURATION).toBe(RESIZE_DURATION);
     expect(SKELETON_FADE_DURATION).toBeLessThan(FADE_DURATION);

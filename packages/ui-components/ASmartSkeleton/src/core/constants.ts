@@ -28,24 +28,24 @@ export const HIGHLIGHT = 'var(--ask-highlight, rgb(255 255 255 / 0.12))';
 // skeleton's own fade (`SKELETON_FADE_DURATION`) is deliberately shorter
 // so the bones clear out of the way while the frame is still settling —
 // the viewer's eye isn't fighting a fading skeleton on top of content
-// that's already settled.
-export const FADE_DURATION = 320;
-export const SKELETON_FADE_DURATION = 180;
+// that's already settled. 260 ms is the sweet spot: long enough that the
+// frame feels deliberate, short enough that the UI never reads as sluggish.
+export const FADE_DURATION = 260;
+export const SKELETON_FADE_DURATION = 160;
 // Set to 0 so a `sequence` reveal's total (`CASCADE_SPREAD + FADE_DURATION`)
 // also equals `RESIZE_DURATION`; sequence still arrives top-to-bottom via the
 // per-piece `boneDelay`, but no row lingers past the frame settle.
 export const CASCADE_SPREAD = 0; // From the first piece of a sequenced reveal to the last
-export const RESIZE_DURATION = 320; // A reveal easing to its new height, when its skeleton guessed the content wrong
+export const RESIZE_DURATION = 260; // A reveal easing to its new height, when its skeleton guessed the content wrong
 /**
- * Shared cubic-bezier curve used by every reveal animation so they all
- * decelerate on the same rhythm. `(0.22, 1, 0.36, 1)` is the iOS-style
- * standard-decelerate curve — slightly softer landing than Material's
- * `(0.4, 0, 0.2, 1)` and firmer takeoff than our old
- * `(0.2, 0, 0, 1)`, which reads as more "professional" on long-distance
- * height changes (tall skeleton → short content) because it never
- * accelerates past the midpoint.
+ * Shared cubic-bezier curve used by every reveal animation so every fade
+ * and height ease decelerates on the same rhythm. `(0.32, 0.72, 0, 1)` is
+ * Apple's SF Pro / iOS standard — a strong front-loaded takeoff and a
+ * long smooth landing that never overshoots. Pound-for-pound the most
+ * "professional" curve for UI motion, used across iOS, macOS, and
+ * SwiftUI's default implicit animations.
  */
-export const REVEAL_EASING = 'cubic-bezier(0.22, 1, 0.36, 1)';
+export const REVEAL_EASING = 'cubic-bezier(0.32, 0.72, 0, 1)';
 export const IMAGE_TIMEOUT = 10000; // Longest a reveal holds for an image — a stalled request mustn't keep a skeleton up for good
 // One loop of each animation, by `speed`; a shimmer's is across a 1280px-wide screen
 export const DURATIONS = {
