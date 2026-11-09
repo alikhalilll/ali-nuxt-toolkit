@@ -65,6 +65,13 @@ const marks: Mark[] = [
     why: 'A 3×3 dial pad above a tilted handset. The two most literal signals of "dialing a phone number" stacked together. No text, no letterforms — just the two things you use.',
   },
   {
+    id: 'seal-tel-v4',
+    pkg: 'a-tel-input · alt 3',
+    glyph: 'rotary dial',
+    function: 'Same package, alternate mark — the creative pick.',
+    why: 'A rotary telephone dial. Nobody uses one anymore, but it is the single most universally recognised "telephone" glyph — 90+ years of unambiguous meaning compressed into one shape. Warm, characterful, instantly reads as "phone" even at 16 px.',
+  },
+  {
     id: 'seal-api',
     pkg: 'nuxt-api-provider',
     glyph: '{ }',
@@ -302,6 +309,40 @@ const alternatives = [
             <g transform="translate(32 46) rotate(-30)">
               <rect x="-13" y="-3" width="26" height="6" rx="3" fill="currentColor" />
             </g>
+          </svg>
+
+          <!-- Tel · alt 3 (rotary dial) -->
+          <svg
+            v-else-if="mark.id === 'seal-tel-v4'"
+            viewBox="0 0 64 64"
+            width="120"
+            height="120"
+            fill="none"
+            aria-hidden="true"
+          >
+            <circle cx="32" cy="32" r="26" stroke="currentColor" stroke-width="2.5" />
+            <circle cx="32" cy="32" r="16" stroke="currentColor" stroke-width="2" fill="none" />
+            <g fill="currentColor">
+              <circle cx="32" cy="20" r="1.6" />
+              <circle cx="40" cy="22" r="1.6" />
+              <circle cx="46" cy="28" r="1.6" />
+              <circle cx="46" cy="36" r="1.6" />
+              <circle cx="40" cy="42" r="1.6" />
+              <circle cx="24" cy="42" r="1.6" />
+              <circle cx="18" cy="36" r="1.6" />
+              <circle cx="18" cy="28" r="1.6" />
+              <circle cx="24" cy="22" r="1.6" />
+            </g>
+            <circle cx="32" cy="32" r="3" fill="currentColor" />
+            <line
+              x1="32"
+              y1="45"
+              x2="32"
+              y2="50"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+            />
           </svg>
 
           <!-- API -->
