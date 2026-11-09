@@ -114,6 +114,13 @@ const marks: Mark[] = [
     why: 'A direct reconstruction of the intl-tel-input project\'s own logo: a prominent globe with meridian lines positioned upper-right, a proper filled receiver silhouette (Heroicons-style) in the lower-left. Two distinct elements rather than overlapping — reads immediately as "phone call → world" without visual confusion.',
   },
   {
+    id: 'seal-tel-v11',
+    pkg: 'a-tel-input · alt 10',
+    glyph: 'smartphone + globe on screen + signal waves',
+    function: 'Same package, alternate mark — merged phone + globe.',
+    why: 'A smartphone silhouette (body + earpiece + home button) with a globe rendered inside its screen and three signal waves in the corner. Three layers of meaning in one mark: the device is a modern phone, the content on it is an international interface, and it is actively transmitting.',
+  },
+  {
     id: 'seal-api',
     pkg: 'nuxt-api-provider',
     glyph: '{ }',
@@ -579,6 +586,88 @@ const alternatives = [
                 fill="currentColor"
               />
             </g>
+          </svg>
+
+          <!-- Tel · alt 10 (smartphone + globe on screen + signal waves) -->
+          <svg
+            v-else-if="mark.id === 'seal-tel-v11'"
+            viewBox="0 0 64 64"
+            width="120"
+            height="120"
+            fill="none"
+            aria-hidden="true"
+          >
+            <circle cx="32" cy="32" r="26" stroke="currentColor" stroke-width="2.5" />
+            <rect
+              x="18"
+              y="12"
+              width="20"
+              height="38"
+              rx="3"
+              stroke="currentColor"
+              stroke-width="2.5"
+            />
+            <line
+              x1="25"
+              y1="16"
+              x2="31"
+              y2="16"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+            <circle cx="28" cy="30" r="7" stroke="currentColor" stroke-width="1.6" />
+            <line
+              x1="21"
+              y1="30"
+              x2="35"
+              y2="30"
+              stroke="currentColor"
+              stroke-width="1.3"
+              opacity="0.7"
+            />
+            <ellipse
+              cx="28"
+              cy="30"
+              rx="3"
+              ry="7"
+              stroke="currentColor"
+              stroke-width="1.3"
+              opacity="0.7"
+            />
+            <ellipse
+              cx="28"
+              cy="30"
+              rx="7"
+              ry="2.8"
+              stroke="currentColor"
+              stroke-width="1.3"
+              opacity="0.5"
+            />
+            <circle cx="28" cy="45" r="1.6" fill="currentColor" />
+            <path
+              d="M 42 14 Q 46 15 46 19"
+              stroke="currentColor"
+              stroke-width="2"
+              fill="none"
+              stroke-linecap="round"
+            />
+            <path
+              d="M 44 10 Q 50 11 50 17"
+              stroke="currentColor"
+              stroke-width="2"
+              fill="none"
+              stroke-linecap="round"
+              opacity="0.6"
+            />
+            <path
+              d="M 46 6 Q 54 7 54 15"
+              stroke="currentColor"
+              stroke-width="2"
+              fill="none"
+              stroke-linecap="round"
+              opacity="0.35"
+            />
           </svg>
 
           <!-- API -->
