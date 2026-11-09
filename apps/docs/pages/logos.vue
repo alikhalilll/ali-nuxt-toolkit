@@ -86,6 +86,13 @@ const marks: Mark[] = [
     why: 'A full smartphone silhouette with the 3×3 dial pad on its screen and a filled call button at the bottom. Three nested truths at once: the device (phone body), the action (dial pad), and the commit (call button). Most self-explanatory of the set — a user who has never seen the package name still reads "dial a phone."',
   },
   {
+    id: 'seal-tel-v7',
+    pkg: 'a-tel-input · alt 6',
+    glyph: 'handset + sound waves',
+    function: 'Same package, alternate mark — the universal "call" icon.',
+    why: 'The classic handset silhouette with two sound waves radiating from the earpiece — the single most recognised phone glyph on the planet. You have seen this on every iPhone, every Android, every call button on every website. Zero cognitive load.',
+  },
+  {
     id: 'seal-api',
     pkg: 'nuxt-api-provider',
     glyph: '{ }',
@@ -426,6 +433,36 @@ const alternatives = [
               <circle cx="36" cy="36" r="1.3" />
             </g>
             <circle cx="32" cy="44" r="2.5" fill="currentColor" />
+          </svg>
+
+          <!-- Tel · alt 6 (classic handset + sound waves) -->
+          <svg
+            v-else-if="mark.id === 'seal-tel-v7'"
+            viewBox="0 0 64 64"
+            width="120"
+            height="120"
+            fill="none"
+            aria-hidden="true"
+          >
+            <circle cx="32" cy="32" r="26" stroke="currentColor" stroke-width="2.5" />
+            <g transform="translate(28 36) rotate(-40)">
+              <rect x="-14" y="-4.5" width="28" height="9" rx="4.5" fill="currentColor" />
+            </g>
+            <path
+              d="M 42 20 Q 45 20 47 23"
+              stroke="currentColor"
+              stroke-width="2.2"
+              fill="none"
+              stroke-linecap="round"
+            />
+            <path
+              d="M 44 14 Q 50 15 52 20"
+              stroke="currentColor"
+              stroke-width="2.2"
+              fill="none"
+              stroke-linecap="round"
+              opacity="0.6"
+            />
           </svg>
 
           <!-- API -->
