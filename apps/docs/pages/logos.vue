@@ -93,6 +93,13 @@ const marks: Mark[] = [
     why: 'The classic handset silhouette with two sound waves radiating from the earpiece — the single most recognised phone glyph on the planet. You have seen this on every iPhone, every Android, every call button on every website. Zero cognitive load.',
   },
   {
+    id: 'seal-tel-v8',
+    pkg: 'a-tel-input · alt 7',
+    glyph: 'two points + directional call arc',
+    function: 'Same package, alternate mark — the radical rethink.',
+    why: 'No receiver, no dial pad, no letterform. Two dots (caller + destination country) connected by a directional arc — an arrow at the destination end. Says what the package actually does at a semantic level: it bridges one person to a number somewhere else. The one mark in the set that could stand alone as a product-category icon, not just a phone icon.',
+  },
+  {
     id: 'seal-api',
     pkg: 'nuxt-api-provider',
     glyph: '{ }',
@@ -462,6 +469,35 @@ const alternatives = [
               fill="none"
               stroke-linecap="round"
               opacity="0.6"
+            />
+          </svg>
+
+          <!-- Tel · alt 7 (two points + directional call arc) -->
+          <svg
+            v-else-if="mark.id === 'seal-tel-v8'"
+            viewBox="0 0 64 64"
+            width="120"
+            height="120"
+            fill="none"
+            aria-hidden="true"
+          >
+            <circle cx="32" cy="32" r="26" stroke="currentColor" stroke-width="2.5" />
+            <circle cx="18" cy="42" r="4" fill="currentColor" />
+            <circle cx="46" cy="22" r="4" stroke="currentColor" stroke-width="2.5" />
+            <path
+              d="M 21 40 Q 32 14 44 24"
+              stroke="currentColor"
+              stroke-width="2.5"
+              fill="none"
+              stroke-linecap="round"
+            />
+            <path
+              d="M 39 20 L 44 24 L 40 26"
+              stroke="currentColor"
+              stroke-width="2.5"
+              fill="none"
+              stroke-linecap="round"
+              stroke-linejoin="round"
             />
           </svg>
 
