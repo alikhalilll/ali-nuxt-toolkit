@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <circle cx="32" cy="32" r="26" stroke="currentColor" stroke-width="2.5"/>
-  <g transform="translate(28 36) rotate(-40)">
-    <rect x="-14" y="-4.5" width="28" height="9" rx="4.5" fill="currentColor"/>
-  </g>
-  <path d="M 42 20 Q 45 20 47 23" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/>
-  <path d="M 44 14 Q 50 15 52 20" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" opacity="0.6"/>
-</svg>

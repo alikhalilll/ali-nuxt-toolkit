@@ -26,24 +26,7 @@ const logosDir = resolve(root, 'public/logos');
 const pngDir = resolve(logosDir, 'png');
 const publicDir = resolve(root, 'public');
 
-const SEALS = [
-  'brand',
-  'skel',
-  'tel',
-  'tel-v2',
-  'tel-v3',
-  'tel-v4',
-  'tel-v5',
-  'tel-v6',
-  'tel-v7',
-  'tel-v8',
-  'tel-v9',
-  'tel-v10',
-  'tel-v11',
-  'api',
-  'crypto',
-  'mid',
-];
+const SEALS = ['brand', 'skel', 'tel', 'api', 'crypto', 'mid'];
 
 /** Wrap a master SVG so `currentColor` resolves to the given colour. */
 function withColor(svgText, color) {

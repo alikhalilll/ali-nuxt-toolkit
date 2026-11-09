@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./logo-dark.png">
-    <img src="./logo-light.png" alt="a-smart-skeleton" width="96" height="96">
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/alikhalilll/ali-nuxt-toolkit/master/packages/ui-components/ASmartSkeleton/logo-dark.png">
+    <img src="https://raw.githubusercontent.com/alikhalilll/ali-nuxt-toolkit/master/packages/ui-components/ASmartSkeleton/logo-light.png" alt="a-smart-skeleton" width="96" height="96">
   </picture>
 </p>
 

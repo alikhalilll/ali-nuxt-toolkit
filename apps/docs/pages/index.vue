@@ -175,40 +175,37 @@ useHead({
           aria-hidden="true"
         >
           <circle cx="32" cy="32" r="26" stroke="currentColor" stroke-width="2.5" />
-          <line
-            x1="20"
-            y1="32"
-            x2="30"
-            y2="32"
+          <rect
+            x="22"
+            y="12"
+            width="20"
+            height="40"
+            rx="4"
             stroke="currentColor"
-            stroke-width="3.5"
-            stroke-linecap="round"
+            stroke-width="2.5"
           />
           <line
-            x1="25"
-            y1="27"
-            x2="25"
-            y2="37"
+            x1="28"
+            y1="16"
+            x2="36"
+            y2="16"
             stroke="currentColor"
-            stroke-width="3.5"
+            stroke-width="1.5"
             stroke-linecap="round"
+            opacity="0.6"
           />
-          <path
-            d="M 36 25 L 40 22 L 40 42"
-            stroke="currentColor"
-            stroke-width="3.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-          <line
-            x1="34"
-            y1="42"
-            x2="46"
-            y2="42"
-            stroke="currentColor"
-            stroke-width="3.5"
-            stroke-linecap="round"
-          />
+          <g fill="currentColor">
+            <circle cx="28" cy="24" r="1.3" />
+            <circle cx="32" cy="24" r="1.3" />
+            <circle cx="36" cy="24" r="1.3" />
+            <circle cx="28" cy="30" r="1.3" />
+            <circle cx="32" cy="30" r="1.3" />
+            <circle cx="36" cy="30" r="1.3" />
+            <circle cx="28" cy="36" r="1.3" />
+            <circle cx="32" cy="36" r="1.3" />
+            <circle cx="36" cy="36" r="1.3" />
+          </g>
+          <circle cx="32" cy="44" r="2.5" fill="currentColor" />
         </svg>
         <h2 class="pkg__name">a-tel-input</h2>
         <p class="pkg__pitch">
