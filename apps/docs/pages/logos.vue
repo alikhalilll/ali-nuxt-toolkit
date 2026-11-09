@@ -100,6 +100,13 @@ const marks: Mark[] = [
     why: 'No receiver, no dial pad, no letterform. Two dots (caller + destination country) connected by a directional arc — an arrow at the destination end. Says what the package actually does at a semantic level: it bridges one person to a number somewhere else. The one mark in the set that could stand alone as a product-category icon, not just a phone icon.',
   },
   {
+    id: 'seal-tel-v9',
+    pkg: 'a-tel-input · alt 8',
+    glyph: 'globe + handset overlay',
+    function: 'Same package, alternate mark — intl-tel-input inspired.',
+    why: 'A globe (equator + two meridians + one oblique latitude line) with a tilted phone handset overlaid across it. Modelled after the intl-tel-input project logo — the reigning visual standard for international-phone-input libraries. Reads instantly as "phone + world" to anyone who has touched the space before.',
+  },
+  {
     id: 'seal-api',
     pkg: 'nuxt-api-provider',
     glyph: '{ }',
@@ -499,6 +506,49 @@ const alternatives = [
               stroke-linecap="round"
               stroke-linejoin="round"
             />
+          </svg>
+
+          <!-- Tel · alt 8 (globe + handset overlay, intl-tel-input inspired) -->
+          <svg
+            v-else-if="mark.id === 'seal-tel-v9'"
+            viewBox="0 0 64 64"
+            width="120"
+            height="120"
+            fill="none"
+            aria-hidden="true"
+          >
+            <circle cx="32" cy="32" r="26" stroke="currentColor" stroke-width="2.5" />
+            <circle cx="32" cy="32" r="15" stroke="currentColor" stroke-width="2" />
+            <line
+              x1="17"
+              y1="32"
+              x2="47"
+              y2="32"
+              stroke="currentColor"
+              stroke-width="1.6"
+              opacity="0.65"
+            />
+            <ellipse
+              cx="32"
+              cy="32"
+              rx="6.5"
+              ry="15"
+              stroke="currentColor"
+              stroke-width="1.6"
+              opacity="0.65"
+            />
+            <ellipse
+              cx="32"
+              cy="32"
+              rx="14"
+              ry="6"
+              stroke="currentColor"
+              stroke-width="1.6"
+              opacity="0.4"
+            />
+            <g transform="translate(32 32) rotate(-35)">
+              <rect x="-13" y="-4.5" width="26" height="9" rx="4.5" fill="currentColor" />
+            </g>
           </svg>
 
           <!-- API -->
