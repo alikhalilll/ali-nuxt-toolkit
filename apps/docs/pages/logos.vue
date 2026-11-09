@@ -72,6 +72,13 @@ const marks: Mark[] = [
     why: 'A rotary telephone dial. Nobody uses one anymore, but it is the single most universally recognised "telephone" glyph — 90+ years of unambiguous meaning compressed into one shape. Warm, characterful, instantly reads as "phone" even at 16 px.',
   },
   {
+    id: 'seal-tel-v5',
+    pkg: 'a-tel-input · alt 4',
+    glyph: 'outlined handset + dot',
+    function: 'Same package, alternate mark — the modern pick.',
+    why: 'A thin-outlined tilted capsule with two dots for the earpiece and mouthpiece speakers, plus a single accent dot (notification / unread / active call) in the top-right. Minimal, generous negative space, rounded corners. Reads as 2024 iOS / Linear design language.',
+  },
+  {
     id: 'seal-api',
     pkg: 'nuxt-api-provider',
     glyph: '{ }',
@@ -343,6 +350,32 @@ const alternatives = [
               stroke-width="2.5"
               stroke-linecap="round"
             />
+          </svg>
+
+          <!-- Tel · alt 4 (modern outlined handset + dot) -->
+          <svg
+            v-else-if="mark.id === 'seal-tel-v5'"
+            viewBox="0 0 64 64"
+            width="120"
+            height="120"
+            fill="none"
+            aria-hidden="true"
+          >
+            <circle cx="32" cy="32" r="26" stroke="currentColor" stroke-width="2.5" />
+            <g transform="translate(32 32) rotate(-40)">
+              <rect
+                x="-16"
+                y="-5"
+                width="32"
+                height="10"
+                rx="5"
+                stroke="currentColor"
+                stroke-width="2.5"
+              />
+              <circle cx="-11" cy="0" r="1.6" fill="currentColor" />
+              <circle cx="11" cy="0" r="1.6" fill="currentColor" />
+            </g>
+            <circle cx="48" cy="18" r="2.5" fill="currentColor" />
           </svg>
 
           <!-- API -->
