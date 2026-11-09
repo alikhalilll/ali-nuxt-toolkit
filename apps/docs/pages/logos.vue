@@ -79,6 +79,13 @@ const marks: Mark[] = [
     why: 'A thin-outlined tilted capsule with two dots for the earpiece and mouthpiece speakers, plus a single accent dot (notification / unread / active call) in the top-right. Minimal, generous negative space, rounded corners. Reads as 2024 iOS / Linear design language.',
   },
   {
+    id: 'seal-tel-v6',
+    pkg: 'a-tel-input · alt 5',
+    glyph: 'smartphone + dial pad + call button',
+    function: 'Same package, alternate mark — the cell phone.',
+    why: 'A full smartphone silhouette with the 3×3 dial pad on its screen and a filled call button at the bottom. Three nested truths at once: the device (phone body), the action (dial pad), and the commit (call button). Most self-explanatory of the set — a user who has never seen the package name still reads "dial a phone."',
+  },
+  {
     id: 'seal-api',
     pkg: 'nuxt-api-provider',
     glyph: '{ }',
@@ -376,6 +383,49 @@ const alternatives = [
               <circle cx="11" cy="0" r="1.6" fill="currentColor" />
             </g>
             <circle cx="48" cy="18" r="2.5" fill="currentColor" />
+          </svg>
+
+          <!-- Tel · alt 5 (smartphone + dial pad + call button) -->
+          <svg
+            v-else-if="mark.id === 'seal-tel-v6'"
+            viewBox="0 0 64 64"
+            width="120"
+            height="120"
+            fill="none"
+            aria-hidden="true"
+          >
+            <circle cx="32" cy="32" r="26" stroke="currentColor" stroke-width="2.5" />
+            <rect
+              x="22"
+              y="12"
+              width="20"
+              height="40"
+              rx="4"
+              stroke="currentColor"
+              stroke-width="2.5"
+            />
+            <line
+              x1="28"
+              y1="16"
+              x2="36"
+              y2="16"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              opacity="0.6"
+            />
+            <g fill="currentColor">
+              <circle cx="28" cy="24" r="1.3" />
+              <circle cx="32" cy="24" r="1.3" />
+              <circle cx="36" cy="24" r="1.3" />
+              <circle cx="28" cy="30" r="1.3" />
+              <circle cx="32" cy="30" r="1.3" />
+              <circle cx="36" cy="30" r="1.3" />
+              <circle cx="28" cy="36" r="1.3" />
+              <circle cx="32" cy="36" r="1.3" />
+              <circle cx="36" cy="36" r="1.3" />
+            </g>
+            <circle cx="32" cy="44" r="2.5" fill="currentColor" />
           </svg>
 
           <!-- API -->
