@@ -58,6 +58,13 @@ const marks: Mark[] = [
     why: 'Phone handset (the thing you dial) plus a flag pennant (the country the number belongs to). Two picture-literal pieces say both halves of "international phone input" without relying on a glyph the eye has to read.',
   },
   {
+    id: 'seal-tel-v3',
+    pkg: 'a-tel-input · alt 2',
+    glyph: 'dial pad + handset',
+    function: 'Same package, alternate mark — the two actions.',
+    why: 'A 3×3 dial pad above a tilted handset. The two most literal signals of "dialing a phone number" stacked together. No text, no letterforms — just the two things you use.',
+  },
+  {
     id: 'seal-api',
     pkg: 'nuxt-api-provider',
     glyph: '{ }',
@@ -269,6 +276,32 @@ const alternatives = [
               stroke-linecap="round"
             />
             <path d="M 44 14 L 44 20 L 52 17 Z" fill="currentColor" />
+          </svg>
+
+          <!-- Tel · alt 2 (dial pad + handset) -->
+          <svg
+            v-else-if="mark.id === 'seal-tel-v3'"
+            viewBox="0 0 64 64"
+            width="120"
+            height="120"
+            fill="none"
+            aria-hidden="true"
+          >
+            <circle cx="32" cy="32" r="26" stroke="currentColor" stroke-width="2.5" />
+            <g fill="currentColor">
+              <circle cx="22" cy="20" r="1.8" />
+              <circle cx="32" cy="20" r="1.8" />
+              <circle cx="42" cy="20" r="1.8" />
+              <circle cx="22" cy="28" r="1.8" />
+              <circle cx="32" cy="28" r="1.8" />
+              <circle cx="42" cy="28" r="1.8" />
+              <circle cx="22" cy="36" r="1.8" />
+              <circle cx="32" cy="36" r="1.8" />
+              <circle cx="42" cy="36" r="1.8" />
+            </g>
+            <g transform="translate(32 46) rotate(-30)">
+              <rect x="-13" y="-3" width="26" height="6" rx="3" fill="currentColor" />
+            </g>
           </svg>
 
           <!-- API -->
