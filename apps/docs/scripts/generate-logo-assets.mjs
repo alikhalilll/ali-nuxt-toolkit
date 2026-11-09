@@ -38,6 +38,7 @@ const SEALS = [
   'tel-v7',
   'tel-v8',
   'tel-v9',
+  'tel-v10',
   'api',
   'crypto',
   'mid',

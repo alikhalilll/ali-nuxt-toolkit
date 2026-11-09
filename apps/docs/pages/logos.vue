@@ -107,6 +107,13 @@ const marks: Mark[] = [
     why: 'A globe (equator + two meridians + one oblique latitude line) with a tilted phone handset overlaid across it. Modelled after the intl-tel-input project logo — the reigning visual standard for international-phone-input libraries. Reads instantly as "phone + world" to anyone who has touched the space before.',
   },
   {
+    id: 'seal-tel-v10',
+    pkg: 'a-tel-input · alt 9',
+    glyph: 'globe (upper-right) + handset (lower-left)',
+    function: 'Same package, alternate mark — intl-tel-input, exact match.',
+    why: 'A direct reconstruction of the intl-tel-input project\'s own logo: a prominent globe with meridian lines positioned upper-right, a proper filled receiver silhouette (Heroicons-style) in the lower-left. Two distinct elements rather than overlapping — reads immediately as "phone call → world" without visual confusion.',
+  },
+  {
     id: 'seal-api',
     pkg: 'nuxt-api-provider',
     glyph: '{ }',
@@ -548,6 +555,29 @@ const alternatives = [
             />
             <g transform="translate(32 32) rotate(-35)">
               <rect x="-13" y="-4.5" width="26" height="9" rx="4.5" fill="currentColor" />
+            </g>
+          </svg>
+
+          <!-- Tel · alt 9 (intl-tel-input exact match) -->
+          <svg
+            v-else-if="mark.id === 'seal-tel-v10'"
+            viewBox="0 0 64 64"
+            width="120"
+            height="120"
+            fill="none"
+            aria-hidden="true"
+          >
+            <circle cx="32" cy="32" r="26" stroke="currentColor" stroke-width="2.5" />
+            <circle cx="36" cy="30" r="14" stroke="currentColor" stroke-width="2.5" />
+            <line x1="22" y1="30" x2="50" y2="30" stroke="currentColor" stroke-width="2" />
+            <line x1="36" y1="16" x2="36" y2="44" stroke="currentColor" stroke-width="2" />
+            <ellipse cx="36" cy="30" rx="6" ry="14" stroke="currentColor" stroke-width="1.8" />
+            <ellipse cx="36" cy="30" rx="14" ry="5.5" stroke="currentColor" stroke-width="1.8" />
+            <g transform="translate(4 28) scale(1.1)">
+              <path
+                d="M1.5 4.5a3 3 0 013-3h1.372c.86 0 1.61.586 1.819 1.42l1.105 4.423a1.875 1.875 0 01-.694 1.955l-1.293.97c-.135.101-.164.249-.126.352a11.285 11.285 0 006.697 6.697c.103.038.25.009.352-.126l.97-1.293a1.875 1.875 0 011.955-.694l4.423 1.105c.834.209 1.42.959 1.42 1.82V19.5a3 3 0 01-3 3h-2.25C8.552 22.5 1.5 15.448 1.5 6.75V4.5z"
+                fill="currentColor"
+              />
             </g>
           </svg>
 
