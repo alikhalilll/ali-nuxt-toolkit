@@ -51,6 +51,13 @@ const marks: Mark[] = [
     why: 'A dial code is the one thing every user types first. "+1" is the shortest, most universal signal that this is about phone numbers crossing borders.',
   },
   {
+    id: 'seal-tel-v2',
+    pkg: 'a-tel-input · alt',
+    glyph: 'handset + pennant',
+    function: 'Same package, alternate mark — picture-literal.',
+    why: 'Phone handset (the thing you dial) plus a flag pennant (the country the number belongs to). Two picture-literal pieces say both halves of "international phone input" without relying on a glyph the eye has to read.',
+  },
+  {
     id: 'seal-api',
     pkg: 'nuxt-api-provider',
     glyph: '{ }',
@@ -237,6 +244,31 @@ const alternatives = [
             >
               +1
             </text>
+          </svg>
+
+          <!-- Tel · alt (handset + pennant) -->
+          <svg
+            v-else-if="mark.id === 'seal-tel-v2'"
+            viewBox="0 0 64 64"
+            width="120"
+            height="120"
+            fill="none"
+            aria-hidden="true"
+          >
+            <circle cx="32" cy="32" r="26" stroke="currentColor" stroke-width="2.5" />
+            <g transform="translate(30 36) rotate(-40)">
+              <rect x="-16" y="-4" width="32" height="8" rx="4" fill="currentColor" />
+            </g>
+            <line
+              x1="44"
+              y1="14"
+              x2="44"
+              y2="26"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+            <path d="M 44 14 L 44 20 L 52 17 Z" fill="currentColor" />
           </svg>
 
           <!-- API -->
