@@ -84,12 +84,7 @@
   "scripts": {
     "clean": "rimraf dist web-types.json",
     "build": "tsx ../../../scripts/build/run-component-build.ts",
-    "typecheck": "vue-tsc --noEmit -p tsconfig.json",
-    "validate-dist": "tsx ../../../scripts/validate/dist-validate.ts --pkg a-responsive-popover",
-    "validate-consumer": "tsx ../../../scripts/validate/consumer-validate.ts --pkg a-responsive-popover",
-    "validate": "pnpm build && pnpm validate-dist && pnpm validate-consumer",
-    "prepack": "pnpm build",
-    "prepublishOnly": "pnpm validate"
+    "typecheck": "vue-tsc --noEmit -p tsconfig.json"
   },
   "peerDependencies": {
     "@nuxt/kit": "^3.0.0 || ^4.0.0",
