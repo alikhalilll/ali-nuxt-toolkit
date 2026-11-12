@@ -131,8 +131,16 @@ body,
   -moz-osx-font-smoothing: grayscale;
 }
 
-html {
+/* Belt-and-braces: clip at every root-ish ancestor. Any single one of these
+   can leak horizontal scroll if a descendant uses negative insets / absolute
+   positioning that extends past the viewport. */
+html,
+body,
+#__nuxt {
   overflow-x: clip;
+}
+
+html {
   scroll-padding-top: 5rem;
 }
 

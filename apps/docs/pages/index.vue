@@ -448,6 +448,9 @@ useHead({
   position: relative;
   padding: 5rem 0 4rem;
   isolation: isolate;
+  /* `::before` paints a gradient halo via `inset: 0 -4rem` — contain it here
+     instead of relying solely on the root's overflow-x: clip. */
+  overflow: clip;
 }
 .hero::before {
   content: '';
