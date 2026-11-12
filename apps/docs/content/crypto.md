@@ -255,8 +255,8 @@ const fingerprint = await deriveFingerprint({
 });
 ```
 
-::alert{type="warning"}
-Binding ciphertext to a fingerprint is **not appropriate for long-lived user data**. If the device cookie is cleared or the session rotates, those payloads become undecryptable — permanently. Use this for tokens the user can afford to lose: short sessions, magic links, one-shot nonces.
+::alert{type="danger" title="Fingerprint-bound ciphertext is lossy by design"}
+Binding ciphertext to a device fingerprint is **not appropriate for long-lived user data**. If the device cookie is cleared or the session rotates, those payloads become undecryptable — permanently. Use this only for tokens the user can afford to lose: short sessions, magic links, one-shot nonces. Never for password resets, 2FA secrets, encrypted backups, or anything else a user would rightfully expect to survive clearing their cookies.
 ::
 
 ### Customizing the cookie

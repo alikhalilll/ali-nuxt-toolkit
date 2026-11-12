@@ -445,8 +445,8 @@ With `hydrate: true`:
 
 Net effect: an SSR fetch for `/posts/1` populates the client cache too, so the first client navigation hits the cache instead of refetching. Combine with `staleTime` to control how long the hydrated entry stays fresh.
 
-::alert{type="info"}
-Hydrating the cache adds the cached payload to the SSR response. If your responses are large or contain anything user-specific you don't want serialised into HTML, leave hydration off and let `useAsyncData` handle the SSR hand-off per key instead.
+::alert{type="warning" title="Hydration serialises the cache into HTML"}
+Setting `cache.hydrate: true` adds the entire server-rendered cache to the SSR response as JSON inside the Nuxt payload. If your responses are large (list endpoints, dashboards) or contain anything user-specific (PII, auth-scoped data, admin panels), that content ends up in every visitor's initial HTML — view-source visible, possibly cached by CDNs. Leave hydration off and let `useAsyncData` handle the SSR hand-off per key instead.
 ::
 
 ### `CacheOptions` reference

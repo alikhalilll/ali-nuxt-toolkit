@@ -91,6 +91,10 @@ rules: [
 ],
 ```
 
+::alert{type="warning" title="Anchored matches only"}
+`layouts: ['dashboard']` does not match `dashboard/overview`. Use `['dashboard', 'dashboard/*']` or `['dashboard/**']` to match descendants. Readers trip on this once and then adopt the two-item pattern reflexively.
+::
+
 ## RegExp patterns
 
 When globs aren't enough:
@@ -134,6 +138,10 @@ definePageMeta({
 Including catch-all rules like `layouts: ['**']`. If you want a page to skip only one chain but keep the rest (e.g. skip `@auth` but keep `track-pageview`), rework the groups instead — there is no per-middleware opt-out.
 ::
 
+::alert{type="warning" title="`layout: false` skips the module entirely"}
+Pages with `layout: false` get **no** auto-middleware dispatch, including catch-all rules. If you have a public landing page with `layout: false`, it won't run `track-pageview` even if your rules say every layout should.
+::
+
 ## Catch-all layout
 
 Use `**` to run a middleware for every layout (except pages with `layout: false` or `skipAutoMiddleware: true`):
@@ -146,6 +154,10 @@ rules: [
 ```
 
 When multiple rules match, middlewares are concatenated in config order and deduplicated — first occurrence wins.
+
+::alert{type="warning" title="Dedup is first-wins, not last-wins"}
+If `@auth` includes `verify-role` and your per-page `middlewares` also lists `verify-role`, the page-level entry is dropped. Rely on groups as the single source of truth or you'll have ghost entries that don't do anything but look meaningful.
+::
 
 ## Middleware return values
 
@@ -206,17 +218,3 @@ import type {
   AutoMiddlewareRule,
 } from '@alikhalilll/nuxt-auto-middleware/types';
 ```
-
-## Pitfalls
-
-::alert{type="warning" title="`layout: false` skips the module entirely"}
-Pages with `layout: false` get **no** auto-middleware dispatch, including catch-all rules. If you have a public landing page with `layout: false`, it won't run `track-pageview` even if your rules say every layout should.
-::
-
-::alert{type="warning" title="Anchored matches only"}
-`layouts: ['dashboard']` does not match `dashboard/overview`. Use `['dashboard', 'dashboard/*']` or `['dashboard/**']` to match descendants. Readers trip on this once and then adopt the two-item pattern reflexively.
-::
-
-::alert{type="note" title="Dedup is first-wins, not last-wins"}
-If `@auth` includes `verify-role` and your per-page `middlewares` also lists `verify-role`, the page-level entry is dropped. Rely on groups as the single source of truth or you'll have ghost entries that don't do anything but look meaningful.
-::

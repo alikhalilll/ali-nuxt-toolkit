@@ -28,6 +28,7 @@ A hand-authored `<ProductCardSkeleton>` next to `<ProductCard>` is a second temp
 - **Painted chrome is reproduced**, not re-drawn. Backgrounds, borders, radii, and box-shadows copy over verbatim onto chrome bones.
 - **Text follows the font's ascender / descender**, not a guessed line-height.
 - **One document clock** drives every shimmer, so skeletons mounted at different times still sweep in phase.
+- **Direction-aware animations.** The shimmer, the content-reveal sweep, and the `byPosition` sequence order all follow the inherited CSS `direction` — an RTL page flows right-to-left with no prop or custom property.
 - **One component, four states** — loading, content, empty, error — plus the reveal transition between them.
 
 ## Install
@@ -73,6 +74,68 @@ export default {
 
 Wrap a component with `<ASmartSkeleton>`. Pass the data ref and a representative `sample`. While `data` is `null`, the plugin renders the sample out of sight, measures it, and paints the skeleton. When data arrives, it reveals.
 
+Four rules keep the measurement honest. Each one has a short section below with a tiny before/after; the full example at the end puts them together.
+
+## Rule 1 — Always pass a `sample`
+
+The sample is the shape the plugin measures while real data is loading. Its structure should mirror the real response: same number of lines of text, same avatar size, same list length. Skip it and there's nothing to measure, so the skeleton has no shape to draw.
+
+```vue
+<!-- ❌ no sample — the skeleton has nothing to measure -->
+<ASmartSkeleton :data="user">
+  <template #default="{ data }"><UserCard :user="data" /></template>
+</ASmartSkeleton>
+
+<!-- ✅ sample matches real-response shape -->
+<ASmartSkeleton :data="user" :sample="SAMPLE_USER">
+  <template #default="{ data }"><UserCard :user="data" /></template>
+</ASmartSkeleton>
+```
+
+## Rule 2 — Give the skeleton a stable `id`
+
+Shape memory is keyed by `id` across visits. A returning user sees last session's measured shape immediately — no fresh measurement delay, no generic fallback. Omit the `id` and every mount is a cold start.
+
+```vue
+<!-- ❌ no id — cold measurement every mount -->
+<ASmartSkeleton :data="user" :sample="SAMPLE_USER">…</ASmartSkeleton>
+
+<!-- ✅ stable id — shape is recalled across visits -->
+<ASmartSkeleton id="user-card" :data="user" :sample="SAMPLE_USER">…</ASmartSkeleton>
+```
+
+## Rule 3 — Destructure `{ data }` in `#default`
+
+The plugin invokes the slot with `{ data: SAMPLE }` during measurement. If the slot ignores that argument and reads an outer ref instead, that ref is still `null` while loading — children receive empty data, the ghost captures a half-drawn shape, and the cold-load skeleton is wrong. Warm visits hide the bug because the cache was written _after_ real data arrived. See [Thread `data` through the slot](#thread-data-through-the-slot) for the full walkthrough.
+
+```vue
+<!-- ❌ reads the outer ref → rows=[] during measurement -->
+<template #default>
+  <PagesTable :rows="content?.rows ?? []" />
+</template>
+
+<!-- ✅ destructures the slot prop → rows=SAMPLE.rows during measurement -->
+<template #default="{ data }">
+  <PagesTable :rows="data?.rows ?? []" />
+</template>
+```
+
+## Rule 4 — Give images explicit dimensions
+
+An `<img>` without `width` / `height` or `aspect-ratio` reports zero height until the pixels arrive. The skeleton measures that zero and reserves no space, so the reveal jumps when the image finally loads.
+
+```vue
+<!-- ❌ no dimensions — reserved height is 0 until load -->
+<img :src="user.avatar" />
+
+<!-- ✅ aspect-ratio pins the reserved space -->
+<img :src="user.avatar" class="aspect-square w-16" />
+```
+
+## Putting it together
+
+All four rules applied in one component — stable `id`, matching `sample`, `{ data }` destructured in the slot, and the avatar's dimensions pinned via the class on `<UserCard>`'s own `<img>`:
+
 ```vue
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
@@ -98,13 +161,6 @@ onMounted(async () => {
   </ASmartSkeleton>
 </template>
 ```
-
-::alert{type="info" title="Three rules to follow"}
-
-- **Always pass a `sample`.** It stands in before real data arrives; its shape must be close to the real response or the reveal will jump.
-- **Give the skeleton a stable `id`.** Shape memory is keyed by `id` across visits — returning users see last session's shape immediately instead of a fresh measurement.
-- **Give images an explicit `width` / `height` or `aspect-ratio`.** Without one, an `<img>` reports zero height until it loads, so the skeleton reserves no space for it.
-  ::
 
 A product card driven by `:data` + `:sample`:
 
@@ -139,6 +195,10 @@ One component resolves four mutually-exclusive states. Resolution order is `load
 Only when `:data` is passed as a bound prop **and** its value is `null` / `undefined`, or when `loading` is explicitly `true`. Passing nothing (no `:data` prop at all) treats the slot as always-rendered content — the escape hatch is `loading`.
 ::
 
+::alert{type="note" title="Prefer `data` + `sample` over `loading`"}
+The `loading` prop is an escape hatch for state you can't model as "data is `null`". Default to binding `:data` and let the skeleton auto-activate — you get shape memory, the ghost measurement, and the reveal transitions for free.
+::
+
 `@reveal` fires once per `skeleton → content` transition. It does not fire on error / empty transitions or on subsequent re-renders.
 
 ::DemoSkeletonStates
@@ -161,6 +221,10 @@ When the user has `(prefers-reduced-motion: reduce)`, the reveal is forced to `i
 ::
 
 Every option above the "Motion" control in the playground below is wired to the provider in real time. The "Mode" row tracks the docs' own theme toggle, so flipping the site to dark re-tints the entire demo — including the chrome bones.
+
+::alert{type="note" title="`reveal=\"together\"` on lists"}
+The default `smart` picks `byRow` for lists with more than a few pieces, which stacks a per-card cascade on top of the pane fade and the height ease — three animations fighting each other. `together` collapses the list entry into one crossfade that lands with the resize.
+::
 
 ::DemoSkeletonPostFeed
 ::
@@ -197,6 +261,10 @@ The DOM walker is accurate by default. Three attributes let you override its dec
 If you pass your own skeleton via the `#skeleton` slot on `<ASmartSkeleton>`, measurement is skipped entirely — no need to annotate it with `ask-own`. `ask-own` is only for carving a hand-authored island **inside** a measured tree.
 ::
 
+::alert{type="danger" title="`v-if`-gate teleported modals inside the ghost tree"}
+Dialogs with `<Teleport to="body">` or `<ClientOnly>` roots render children inline at their declared location until they move to the target on hydration — the walker measures that inline shell and emits ghost bones for it. Wrap them in `v-if="open"` so they don't exist in the DOM until needed.
+::
+
 ::DemoSkeletonHints
 ::
 
@@ -208,6 +276,10 @@ A skeleton drawn from `sample` data or remembered shape is a guess. When the rea
 - **`REVEAL_EASING`** = `cubic-bezier(0.32, 0.72, 0, 1)` (Apple's SF Pro curve)
 
 A card that goes from 200 px to 600 px, or the other way, never jerks the viewer's eye.
+
+::alert{type="warning" title="Match sample height to real height"}
+The plugin warns `layout jumped on reveal` when the real data differs from the measured sample by more than 1 px. Fix by making the `sample` shape mimic the real response — same number of text lines, same avatar size — not by silencing the warning.
+::
 
 ::DemoSkeletonResizing
 ::
@@ -249,6 +321,43 @@ The height ease runs with `prefers-reduced-motion: reduce` honoured automaticall
 Six cards, each mounted a beat after the last, every bone sharing the same document-clock sweep. Nothing resets, nothing pops in out of phase. The same pattern scales to paginated feeds, async grid cells, staggered data fetches.
 
 ::DemoSkeletonShimmerSync
+::
+
+## Direction-aware animations
+
+::DemoSkeletonDirection
+::
+
+Every directional animation in the skeleton reads the inherited CSS `direction` and flips to match. Set `<html dir="rtl">` once — or scope it with `style="direction: rtl"` on any ancestor — and three things flip together:
+
+- **Shimmer** — the sweep across each bone travels right-to-left instead of left-to-right. Every bone in a group stays in phase; the shared stream is preserved.
+- **Sweep reveal** — the content-wipe front enters from the right edge and crosses to the left, with its trailing gloss band staying behind the front in motion direction.
+- **`sequence` cascade** — the horizontal component of `byPosition` reads right-to-left, so a top-to-bottom cascade tilts in reading order rather than always running toward the right.
+
+There is no prop, no new CSS variable, and no provider setting. The reason: the browser already owns writing direction through `direction` and `dir`, every other UI library you use is reading the same signal, and adding a parallel knob would just drift from it.
+
+```html
+<!-- An entire page in RTL: shimmer, sweep, and sequence cascade all follow. -->
+<html dir="rtl">
+  <body>
+    <ASmartSkeleton :data="profile" :sample="SAMPLE_PROFILE">
+      <ProfileCard :profile="profile" />
+    </ASmartSkeleton>
+  </body>
+</html>
+```
+
+```vue
+<!-- Or scope it to one subtree, e.g. a localised comment thread. -->
+<section dir="rtl">
+  <ASmartSkeleton :data="thread" :sample="SAMPLE_THREAD">
+    <CommentThread :thread="thread" />
+  </ASmartSkeleton>
+</section>
+```
+
+::alert{type="note" title="What stays unchanged"}
+`pulse` is an opacity fade — non-directional, so it looks identical in LTR and RTL. The content fades, the height-ease between panes, and the `byRow` sequence order are purely vertical or non-spatial, so they don't flip. The gradient's 20° slant is kept as-is in RTL (the motion direction flips, the band's visual slant doesn't) because mirroring it crosses from "noticeable" into "sub-threshold" at that angle and would double the geometry the sweep has to reason about.
 ::
 
 ## Chrome capture
@@ -302,6 +411,10 @@ For app-wide defaults, wrap your app in `<ASmartSkeletonProvider>`. The provider
 
 ::alert{type="info" title="Light and dark are the same component tree"}
 The provider doesn't fork its slot into two renders. It flips the `--ask-*` variables based on `mode` and lets the cascade do the rest — which is why chrome bones also re-tint when you toggle the site theme, because they inherit from `<article>`'s computed `background-color` at measurement time.
+::
+
+::alert{type="note" title="Chrome bones ≠ bone fill"}
+`--ask-base` re-tints placeholder bones only. A card's outline keeps whatever colour the real `<article>` had — that's chrome capture working as intended, reproducing real paint rather than re-colouring it.
 ::
 
 ### CSS variables
@@ -376,6 +489,7 @@ A thin wrapper around Vue's `<Suspense>` that measures its fallback like any oth
 - The `label` prop renders as visually hidden text inside an `[ask-status]` element — screen readers hear `label` instead of silence.
 - Skeleton panes are `aria-hidden="true"` and `inert`, so assistive tech doesn't try to announce empty shapes.
 - `(prefers-reduced-motion: reduce)` disables the shimmer and collapses the reveal to `instant`.
+- The inherited CSS `direction` is read at runtime, so a `<html dir="rtl">` page (or any `dir`-scoped subtree) flips the shimmer sweep, the content reveal, and the `sequence` cascade without any extra wiring — the skeleton reads the same writing-direction signal as the rest of the page.
 
 ```vue
 <ASmartSkeleton :data="profile" :sample="SAMPLE_PROFILE" label="Loading your profile">
@@ -458,12 +572,16 @@ Imported from `@alikhalilll/a-smart-skeleton` (or `/core`):
 
 ### Slots
 
-| Slot       | Receives    | When                                                       |
-| ---------- | ----------- | ---------------------------------------------------------- |
-| `default`  | `{ data }`  | `data` is non-null (also the `empty` fallback).            |
-| `empty`    | —           | `empty` is true.                                           |
-| `error`    | `{ error }` | `error` is truthy.                                         |
-| `skeleton` | —           | Optional hand-authored skeleton — opts out of measurement. |
+| Slot       | Receives    | When                                                                                                                       |
+| ---------- | ----------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `default`  | `{ data }`  | Always, with `data` = real payload OR the `sample` during measurement. **Destructure and use this binding** — see pitfall. |
+| `empty`    | —           | `empty` is true.                                                                                                           |
+| `error`    | `{ error }` | `error` is truthy.                                                                                                         |
+| `skeleton` | —           | Optional hand-authored skeleton — opts out of measurement.                                                                 |
+
+::alert{type="warning" title="`#default` must use its `{ data }` argument"}
+The plugin invokes the slot with the sample during the measurement pass. A slot that doesn't destructure it (and instead reads an outer `ref` which is still `null` while loading) hands empty data to its children — the skeleton measures an empty shape and the cold reload is wrong. See [Thread `data` through the slot](#thread-data-through-the-slot) for the before/after.
+::
 
 ### Events
 
@@ -507,32 +625,32 @@ Imported from `@alikhalilll/a-smart-skeleton` (or `/core`):
 | `ask-own`    | `data-skeleton-own`    | Subtree draws its own skeleton.              |
 | `ask-debug`  | `data-skeleton-debug`  | Scope the measurement trace to this subtree. |
 
-## Patterns and pitfalls
+## Thread `data` through the slot
 
-::alert{type="warning" title="Match sample height to real height"}
-The plugin warns `layout jumped on reveal` when the real data differs from the measured sample by more than 1 px. Fix by making the `sample` shape mimic the real response — same number of text lines, same avatar size — not by silencing the warning.
-::
+The sample reaches your child components **only** through the slot's `{ data }` argument. Ignoring it and reading an outer ref directly means the ref is still `null` during measurement — children render empty, the ghost captures a half-drawn shape, and the cold-load skeleton is wrong. Warm visits hit the cache (written _after_ real data arrived) and hide the bug.
 
-::alert{type="warning" title="Give images dimensions"}
-An `<img>` without `width` / `height` or `aspect-ratio` reports zero height until it loads, so the skeleton reserves no space and the reveal shifts. Set at least one.
-::
+```vue
+<!-- ❌ reads the outer ref → rows=[] during measurement -->
+<template #default>
+  <PagesTable :rows="content?.rows ?? []" />
+</template>
 
-::alert{type="note" title="Prefer `data` + `sample` over `loading`"}
-The `loading` prop is an escape hatch. Normal usage is to bind `:data` and let the skeleton auto-activate while it's `null`.
-::
+<!-- ✅ destructures the slot prop → rows=SAMPLE.rows during measurement -->
+<template #default="{ data }">
+  <PagesTable :rows="data?.rows ?? []" />
+</template>
+```
 
-::alert{type="info" title="Use `id` religiously"}
-A stable `id` lets the plugin recall the previous shape from memory, so a user returning to a page sees the real card's shape immediately — not a generic fallback.
-::
+When the slot pulls from a composable-level `computed` instead, make sure every derivation falls back to the sample while the real payload is still `null`:
 
-::alert{type="note" title="`reveal=\"together\"` on lists"}
-The default `smart` picks `byRow` for lists with more than a few pieces, which stacks a per-card cascade on top of the pane fade and the height ease — three animations fighting each other. `together` collapses the list entry into one crossfade that lands with the resize.
-::
+```ts
+const daily = computed<IDailyPoint[]>(
+  () => kpiSeries.value ?? data.value?.daily ?? SAMPLE_PERFORMANCE.daily
+);
+```
 
-::alert{type="danger" title="`v-if`-gate teleported modals inside the ghost tree"}
-Dialogs with `<Teleport to="body">` or `<ClientOnly>` roots render children inline at their declared location until they move to the target on hydration — the walker measures that inline shell and emits ghost bones for it. Wrap them in `v-if="open"` so they don't exist in the DOM until needed.
-::
+::alert{type="note" title="Symptom to pattern-match against"}
+A tabbed admin panel rendered its data tables as **half-drawn skeletons on cold reload** — only the first column had bars, the rest were blank. Warm navigation painted correctly. Cause: `<template #default>` was ignoring the slot prop and reading the composable's `data` ref, which was still `null` during measurement, so the data-table component received `rows=[]` and memory snapshotted an empty table. Fix was one line per tab — `<template #default="{ data }">` — then swap the ref reference for the slot binding.
 
-::alert{type="note" title="Chrome bones ≠ bone fill"}
-If you re-tint via `--ask-base`, the card outline keeps whatever colour the real `<article>` had. That's chrome capture working as intended — you're changing bone fill, not real paint.
+If you see first-column-only bars on refresh that disappear on warm nav, it's this bug.
 ::

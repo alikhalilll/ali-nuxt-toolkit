@@ -7,7 +7,7 @@ order: 4
 
 # UI components
 
-Headless Vue 3 components for Nuxt 3 / 4 — shipped as independently-versioned packages. Install only what you need. Typed end-to-end, themed via CSS custom properties, dark-mode as an invariant rather than a feature.
+Headless Vue 3 components for Nuxt 3 / 4 — shipped as independently-versioned packages. Install only what you need. Typed end-to-end, themed via CSS custom properties, dark-mode as an invariant rather than a feature, and the directional ones (`ASmartSkeleton`) flow right-to-left on an RTL page without extra configuration.
 
 ::alert{type="note" title="These are components, not a system"}
 There is no shared peer dependency, no shared registration, no shared stylesheet to drop in once. Each component ships its own tokens, its own CSS, and its own install path — you pick them up individually. The only thing they have in common is a prefix.
@@ -15,8 +15,37 @@ There is no shared peer dependency, no shared registration, no shared stylesheet
 
 ## Components
 
-- [**`ASmartSkeleton`**](/ui/smart-skeleton) — measured skeleton loader. Lays your real component out unseen, reads its DOM with `getBoundingClientRect()` and Canvas 2D font metrics, and replays it as a placeholder.
-- [**`ATelInput`**](/ui/tel-input) — international phone input. Country auto-detect, `libphonenumber-js` validation, popover-on-desktop / drawer-on-mobile picker, VeeValidate + Zod integration.
+### [`ASmartSkeleton`](/ui/smart-skeleton)
+
+A measured skeleton loader. Lays your real component out unseen, reads its DOM with `getBoundingClientRect()` and Canvas 2D font metrics, and replays it as a placeholder — one template, no second DOM tree to maintain.
+
+- Zero layout shift — bones come from the actual DOM, not a copy.
+- Chrome capture — backgrounds, borders, radii, and shadows are reproduced verbatim from the painted container.
+- One document clock drives every shimmer, so skeletons mounted at different times stay in phase.
+- Direction-aware animations — shimmer, sweep reveal, and `sequence` cascade follow the inherited CSS `direction`.
+- Four states handled in one component: loading, content, empty, error — plus the reveal transition between them.
+
+```vue
+<ASmartSkeleton id="user-card" :data="user" :sample="SAMPLE_USER">
+  <template #default="{ data }">
+    <UserCard :user="data" />
+  </template>
+</ASmartSkeleton>
+```
+
+### [`ATelInput`](/ui/tel-input)
+
+An international telephone input that starts as a clean field and reveals the country flag the moment the dial code is recognised. No front-loaded picker, no clutter.
+
+- `libphonenumber-js` validation in real time.
+- Country picker renders as a popover on desktop, bottom-sheet drawer on mobile.
+- Country auto-detect via IP, locale, or your own `detector` function.
+- First-class VeeValidate + Zod integration with async server-side validation hooks.
+- Native HTML-forms friendly — exposes a hidden `<input>` that carries the E.164 value.
+
+```vue
+<ATelInput v-model="phone" default-country="EG" />
+```
 
 ## Theming
 
