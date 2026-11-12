@@ -77,55 +77,53 @@ const minimalTheme = {
 </script>
 
 <template>
-  <div class="my-4 rounded-lg border border-border bg-surface p-5">
-    <h4 class="mb-2 text-[11px] font-bold uppercase tracking-widest text-text-dim">
-      Minimal · monochrome · xs size · ISO2-only trigger
-    </h4>
-    <p class="mb-4 text-sm text-text-dim">
-      Dense and quiet. Trigger shows only the ISO2 code + a tiny chevron — no flag, no dial code.
-      Keyboard hints hidden via <code>:kbd-open="null"</code>.
-    </p>
+  <h4 class="mb-2 text-[11px] font-bold uppercase tracking-widest text-text-dim">
+    Minimal · monochrome · xs size · ISO2-only trigger
+  </h4>
+  <p class="mb-4 text-sm text-text-dim">
+    Dense and quiet. Trigger shows only the ISO2 code + a tiny chevron — no flag, no dial code.
+    Keyboard hints hidden via <code>:kbd-open="null"</code>.
+  </p>
 
-    <DemoTabs :code="source">
-      <div
-        :style="minimalTheme"
-        class="text-foreground rounded-lg border border-border bg-background p-6"
-      >
-        <div class="max-w-sm">
-          <label
-            class="text-muted-foreground mb-2 block text-[10px] font-medium tracking-wider uppercase"
-          >
-            Phone
-          </label>
+  <DemoTabs :code="source">
+    <div
+      :style="minimalTheme"
+      class="text-foreground rounded-lg border border-border bg-background p-6"
+    >
+      <div class="max-w-sm">
+        <label
+          class="text-muted-foreground mb-2 block text-[10px] font-medium tracking-wider uppercase"
+        >
+          Phone
+        </label>
 
-          <ATelInput
-            v-model:phone="phone"
-            v-model:country="country"
-            default-country="GB"
-            size="xs"
-            show-validation
-            :kbd-open="null"
-            :kbd-close="null"
-          >
-            <template #trigger="{ selectedCountry, open }">
-              <button
-                type="button"
-                :data-state="open ? 'open' : 'closed'"
-                class="hover:bg-muted data-[state=open]:bg-muted border-input inline-flex h-full shrink-0 items-center gap-1 border-r bg-transparent px-2 font-mono text-[11px] tracking-wider transition-colors focus-visible:outline-none"
-                aria-label="Select country"
-              >
-                <span class="text-foreground font-semibold">
-                  {{ selectedCountry?.raw_data.iso2 ?? '??' }}
-                </span>
-                <ChevronDownIcon
-                  class="text-muted-foreground size-3 shrink-0 transition-transform duration-200"
-                  :class="open && 'rotate-180'"
-                />
-              </button>
-            </template>
-          </ATelInput>
-        </div>
+        <ATelInput
+          v-model:phone="phone"
+          v-model:country="country"
+          default-country="GB"
+          size="xs"
+          show-validation
+          :kbd-open="null"
+          :kbd-close="null"
+        >
+          <template #trigger="{ selectedCountry, open }">
+            <button
+              type="button"
+              :data-state="open ? 'open' : 'closed'"
+              class="hover:bg-muted data-[state=open]:bg-muted border-input inline-flex h-full shrink-0 items-center gap-1 border-r bg-transparent px-2 font-mono text-[11px] tracking-wider transition-colors focus-visible:outline-none"
+              aria-label="Select country"
+            >
+              <span class="text-foreground font-semibold">
+                {{ selectedCountry?.raw_data.iso2 ?? '??' }}
+              </span>
+              <ChevronDownIcon
+                class="text-muted-foreground size-3 shrink-0 transition-transform duration-200"
+                :class="open && 'rotate-180'"
+              />
+            </button>
+          </template>
+        </ATelInput>
       </div>
-    </DemoTabs>
-  </div>
+    </div>
+  </DemoTabs>
 </template>

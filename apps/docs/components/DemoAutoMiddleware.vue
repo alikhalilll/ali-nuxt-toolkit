@@ -28,32 +28,30 @@ const resolved = computed(() => {
 </script>
 
 <template>
-  <div class="my-4 rounded-lg border border-border bg-surface p-5">
-    <h4 class="mb-3 text-[11px] font-bold uppercase tracking-widest text-text-dim">
-      Live · rule resolution
-    </h4>
+  <h4 class="mb-3 text-[11px] font-bold uppercase tracking-widest text-text-dim">
+    Live · rule resolution
+  </h4>
 
-    <label class="mb-1 block text-xs uppercase tracking-wider text-text-dim">layout</label>
-    <input
-      v-model="layout"
-      type="text"
-      class="mb-3 w-full rounded border border-border bg-code-bg px-3 py-2 font-mono text-sm text-text focus:border-accent focus:outline-none"
-    />
+  <label class="mb-1 block text-xs uppercase tracking-wider text-text-dim">layout</label>
+  <input
+    v-model="layout"
+    type="text"
+    class="mb-3 w-full rounded border border-border bg-code-bg px-3 py-2 font-mono text-sm text-text focus:border-accent focus:outline-none"
+  />
 
-    <label class="mb-1 block text-xs uppercase tracking-wider text-text-dim">
-      page-meta middlewares (comma separated)
-    </label>
-    <input
-      v-model="extras"
-      type="text"
-      placeholder="e.g. force-2fa"
-      class="mb-3 w-full rounded border border-border bg-code-bg px-3 py-2 font-mono text-sm text-text placeholder:text-text-dim focus:border-accent focus:outline-none"
-    />
+  <label class="mb-1 block text-xs uppercase tracking-wider text-text-dim">
+    page-meta middlewares (comma separated)
+  </label>
+  <input
+    v-model="extras"
+    type="text"
+    placeholder="e.g. force-2fa"
+    class="mb-3 w-full rounded border border-border bg-code-bg px-3 py-2 font-mono text-sm text-text placeholder:text-text-dim focus:border-accent focus:outline-none"
+  />
 
-    <DocOutput
-      lang="text"
-      label="resolved chain"
-      :value="resolved.length ? resolved.join(' → ') : '(none)'"
-    />
-  </div>
+  <DocOutput
+    lang="text"
+    label="resolved chain"
+    :value="resolved.length ? resolved.join(' → ') : '(none)'"
+  />
 </template>

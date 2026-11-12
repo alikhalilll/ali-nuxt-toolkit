@@ -59,41 +59,39 @@ const country = ref<number | null>(null);
 </script>
 
 <template>
-  <div class="my-4 rounded-lg border border-border bg-surface p-5">
-    <h4 class="mb-3 text-[11px] font-bold uppercase tracking-widest text-text-dim">
-      Live · Arabic locale + messages
-    </h4>
+  <h4 class="mb-3 text-[11px] font-bold uppercase tracking-widest text-text-dim">
+    Live · Arabic locale + messages
+  </h4>
 
-    <p class="mb-4 text-sm text-text-dim">
-      <code>locale="ar"</code> localises country names via <code>Intl.DisplayNames</code> and the
-      format hint's numerals; <code>:messages</code> localises every UI string. Open the picker —
-      country names render in Arabic and search matches both Arabic and English spellings.
-    </p>
+  <p class="mb-4 text-sm text-text-dim">
+    <code>locale="ar"</code> localises country names via <code>Intl.DisplayNames</code> and the
+    format hint's numerals; <code>:messages</code> localises every UI string. Open the picker —
+    country names render in Arabic and search matches both Arabic and English spellings.
+  </p>
 
-    <DemoTabs :code="source">
-      <div class="p-5">
-        <div class="max-w-sm" dir="rtl">
-          <ATelInput
-            ref="tellRef"
-            v-model:phone="phone"
-            v-model:country="country"
-            locale="ar"
-            default-country="20"
-            show-validation
-            :messages="arabicMessages"
-          />
-        </div>
-
-        <DocOutput
-          class="mt-4"
-          label="state"
-          :value="{
-            country,
-            phone,
-            validation: validation && { ok: validation.ok, full_phone: validation.full_phone },
-          }"
+  <DemoTabs :code="source">
+    <div class="p-5">
+      <div class="max-w-sm" dir="rtl">
+        <ATelInput
+          ref="tellRef"
+          v-model:phone="phone"
+          v-model:country="country"
+          locale="ar"
+          default-country="20"
+          show-validation
+          :messages="arabicMessages"
         />
       </div>
-    </DemoTabs>
-  </div>
+
+      <DocOutput
+        class="mt-4"
+        label="state"
+        :value="{
+          country,
+          phone,
+          validation: validation && { ok: validation.ok, full_phone: validation.full_phone },
+        }"
+      />
+    </div>
+  </DemoTabs>
 </template>

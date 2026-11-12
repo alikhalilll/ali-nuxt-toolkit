@@ -27,30 +27,28 @@ import { ATelInput } from '@alikhalilll/a-tel-input';
 </script>
 
 <template>
-  <div class="my-4 rounded-lg border border-border bg-surface p-5">
-    <h4 class="mb-4 text-[11px] font-bold uppercase tracking-widest text-text-dim">
-      Live · All five sizes
-    </h4>
+  <h4 class="mb-4 text-[11px] font-bold uppercase tracking-widest text-text-dim">
+    Live · All five sizes
+  </h4>
 
-    <DemoTabs :code="source">
-      <div class="flex flex-col gap-4 p-5">
-        <div v-for="row in rows" :key="row.size" class="flex items-start gap-4">
-          <div
-            class="w-24 shrink-0 pt-2 font-mono text-xs text-text-dim"
-            :title="`${controlHeightPx[row.size]}px tall`"
-          >
-            {{ row.size }} · {{ controlHeightPx[row.size] }}px
-          </div>
-          <div class="max-w-sm flex-1">
-            <ATelInput
-              v-model:phone="row.phone"
-              v-model:country="row.country"
-              :size="row.size"
-              default-country="20"
-            />
-          </div>
+  <DemoTabs :code="source">
+    <div class="flex flex-col gap-4 p-5">
+      <div v-for="row in rows" :key="row.size" class="flex items-start gap-4">
+        <div
+          class="w-24 shrink-0 pt-2 font-mono text-xs text-text-dim"
+          :title="`${controlHeightPx[row.size]}px tall`"
+        >
+          {{ row.size }} · {{ controlHeightPx[row.size] }}px
+        </div>
+        <div class="max-w-sm flex-1">
+          <ATelInput
+            v-model:phone="row.phone"
+            v-model:country="row.country"
+            :size="row.size"
+            default-country="20"
+          />
         </div>
       </div>
-    </DemoTabs>
-  </div>
+    </div>
+  </DemoTabs>
 </template>

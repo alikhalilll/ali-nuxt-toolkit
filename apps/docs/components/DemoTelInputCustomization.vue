@@ -178,92 +178,90 @@ async function alwaysEgypt() { return 'EG'; }
 </script>
 
 <template>
-  <div class="my-4 rounded-lg border border-border bg-surface p-5">
-    <h4 class="mb-2 text-[11px] font-bold uppercase tracking-widest text-text-dim">
-      Everything customized · reference example
-    </h4>
-    <p class="mb-4 text-sm text-text-dim">
-      Curated 7-country list, hi-res flags, name-starts-with searcher, server-side detector (always
-      Egypt), plus eight slot overrides — every single visible region replaced.
-    </p>
+  <h4 class="mb-2 text-[11px] font-bold uppercase tracking-widest text-text-dim">
+    Everything customized · reference example
+  </h4>
+  <p class="mb-4 text-sm text-text-dim">
+    Curated 7-country list, hi-res flags, name-starts-with searcher, server-side detector (always
+    Egypt), plus eight slot overrides — every single visible region replaced.
+  </p>
 
-    <DemoTabs :code="source">
-      <div class="rounded-xl border border-brand-border bg-surface-2/40 p-6">
-        <div class="max-w-md">
-          <ATelInput
-            v-model:phone="phone"
-            v-model:country="country"
-            default-country="20"
-            show-validation
-            :countries="curated"
-            :flag-url="hiResFlag"
-            :searcher="startsWithSearcher"
-            :detector="alwaysEgypt"
-          >
-            <template #prefix>
-              <PhoneIcon class="text-muted-foreground ml-3 size-4 shrink-0" aria-hidden="true" />
-            </template>
+  <DemoTabs :code="source">
+    <div class="rounded-xl border border-brand-border bg-surface-2/40 p-6">
+      <div class="max-w-md">
+        <ATelInput
+          v-model:phone="phone"
+          v-model:country="country"
+          default-country="20"
+          show-validation
+          :countries="curated"
+          :flag-url="hiResFlag"
+          :searcher="startsWithSearcher"
+          :detector="alwaysEgypt"
+        >
+          <template #prefix>
+            <PhoneIcon class="text-muted-foreground ml-3 size-4 shrink-0" aria-hidden="true" />
+          </template>
 
-            <template #valid-icon>
-              <SparklesIcon class="size-5 shrink-0 text-amber-400" aria-hidden="true" />
-            </template>
+          <template #valid-icon>
+            <SparklesIcon class="size-5 shrink-0 text-amber-400" aria-hidden="true" />
+          </template>
 
-            <template #error-icon>
-              <ShieldXIcon class="text-destructive size-5 shrink-0" aria-hidden="true" />
-            </template>
+          <template #error-icon>
+            <ShieldXIcon class="text-destructive size-5 shrink-0" aria-hidden="true" />
+          </template>
 
-            <template #hint="{ formatHint }">
-              <p class="text-muted-foreground flex items-center gap-1.5 text-xs">
-                <ShieldCheckIcon class="size-3 shrink-0" aria-hidden="true" />
-                <span>Example </span>
-                <span class="tabular-nums">· {{ formatHint }}</span>
-              </p>
-            </template>
+          <template #hint="{ formatHint }">
+            <p class="text-muted-foreground flex items-center gap-1.5 text-xs">
+              <ShieldCheckIcon class="size-3 shrink-0" aria-hidden="true" />
+              <span>Example </span>
+              <span class="tabular-nums">· {{ formatHint }}</span>
+            </p>
+          </template>
 
-            <template #error="{ message, reason }">
-              <p class="text-destructive flex flex-wrap items-center gap-2 text-xs">
-                <span
-                  class="bg-destructive/15 border-destructive/30 rounded border px-1.5 py-0.5 font-mono text-[10px] tracking-wider uppercase"
-                >
-                  {{ reason }}
-                </span>
-                <span>{{ message }}</span>
-              </p>
-            </template>
-
-            <template #item-check>
-              <SparklesIcon class="size-3.5 shrink-0 text-amber-400" aria-hidden="true" />
-            </template>
-
-            <template #group-header="{ label, group }">
-              <header
-                class="border-border bg-popover sticky top-0 z-10 flex items-center justify-between border-b px-3 py-2 text-[10px] font-semibold tracking-wider uppercase"
-                :class="group === 'suggested' ? 'text-amber-400' : 'text-muted-foreground'"
+          <template #error="{ message, reason }">
+            <p class="text-destructive flex flex-wrap items-center gap-2 text-xs">
+              <span
+                class="bg-destructive/15 border-destructive/30 rounded border px-1.5 py-0.5 font-mono text-[10px] tracking-wider uppercase"
               >
-                <span class="flex items-center gap-1.5">
-                  <SparklesIcon v-if="group === 'suggested'" class="size-3" />
-                  {{ label }}
-                </span>
-                <span class="text-muted-foreground/60 font-mono tracking-normal normal-case">
-                  {{ group }}
-                </span>
-              </header>
-            </template>
+                {{ reason }}
+              </span>
+              <span>{{ message }}</span>
+            </p>
+          </template>
 
-            <template #empty="{ query }">
-              <div
-                class="text-muted-foreground flex flex-col items-center justify-center gap-2 px-4 py-8 text-center"
-              >
-                <SearchIcon class="text-muted-foreground/40 size-6" aria-hidden="true" />
-                <p class="text-sm">
-                  No matches for <span class="text-foreground font-mono">"{{ query }}"</span>
-                </p>
-                <p class="text-text-muted text-xs">Try a country name or +code.</p>
-              </div>
-            </template>
-          </ATelInput>
-        </div>
+          <template #item-check>
+            <SparklesIcon class="size-3.5 shrink-0 text-amber-400" aria-hidden="true" />
+          </template>
+
+          <template #group-header="{ label, group }">
+            <header
+              class="border-border bg-popover sticky top-0 z-10 flex items-center justify-between border-b px-3 py-2 text-[10px] font-semibold tracking-wider uppercase"
+              :class="group === 'suggested' ? 'text-amber-400' : 'text-muted-foreground'"
+            >
+              <span class="flex items-center gap-1.5">
+                <SparklesIcon v-if="group === 'suggested'" class="size-3" />
+                {{ label }}
+              </span>
+              <span class="text-muted-foreground/60 font-mono tracking-normal normal-case">
+                {{ group }}
+              </span>
+            </header>
+          </template>
+
+          <template #empty="{ query }">
+            <div
+              class="text-muted-foreground flex flex-col items-center justify-center gap-2 px-4 py-8 text-center"
+            >
+              <SearchIcon class="text-muted-foreground/40 size-6" aria-hidden="true" />
+              <p class="text-sm">
+                No matches for <span class="text-foreground font-mono">"{{ query }}"</span>
+              </p>
+              <p class="text-text-muted text-xs">Try a country name or +code.</p>
+            </div>
+          </template>
+        </ATelInput>
       </div>
-    </DemoTabs>
-  </div>
+    </div>
+  </DemoTabs>
 </template>

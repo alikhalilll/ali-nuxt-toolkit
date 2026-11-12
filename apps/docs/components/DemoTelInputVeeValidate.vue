@@ -108,56 +108,54 @@ const onSubmit = handleSubmit((values) => {
 </script>
 
 <template>
-  <div class="my-4 rounded-lg border border-border bg-surface p-5">
-    <h4 class="mb-3 text-[11px] font-bold uppercase tracking-widest text-text-dim">
-      Live · VeeValidate + Zod + server-side check
-    </h4>
+  <h4 class="mb-3 text-[11px] font-bold uppercase tracking-widest text-text-dim">
+    Live · VeeValidate + Zod + server-side check
+  </h4>
 
-    <p class="mb-4 text-sm text-text-dim">
-      Type a number and blur the field. Any number containing <code>123456789</code> is rejected by
-      the fake server (700 ms latency) — watch the spinner inside the field while the request is in
-      flight. The form-level Zod schema catches malformed numbers before the network call.
-    </p>
+  <p class="mb-4 text-sm text-text-dim">
+    Type a number and blur the field. Any number containing <code>123456789</code> is rejected by
+    the fake server (700 ms latency) — watch the spinner inside the field while the request is in
+    flight. The form-level Zod schema catches malformed numbers before the network call.
+  </p>
 
-    <DemoTabs :code="source">
-      <form class="p-5" novalidate @submit.prevent="onSubmit">
-        <div class="max-w-sm space-y-3">
-          <ATelInput
-            v-model:phone="phone"
-            v-model:country="country"
-            v-bind="fieldProps"
-            :error="error"
-            :validating="validating"
-            show-validation
-            @blur="handleBlur"
-          />
+  <DemoTabs :code="source">
+    <form class="p-5" novalidate @submit.prevent="onSubmit">
+      <div class="max-w-sm space-y-3">
+        <ATelInput
+          v-model:phone="phone"
+          v-model:country="country"
+          v-bind="fieldProps"
+          :error="error"
+          :validating="validating"
+          show-validation
+          @blur="handleBlur"
+        />
 
-          <div class="flex items-center gap-2">
-            <button
-              type="submit"
-              class="rounded-md border border-border bg-code-bg px-3 py-1.5 text-sm font-medium hover:bg-surface disabled:opacity-50"
-              :disabled="submitState === 'submitting'"
-            >
-              {{ submitState === 'submitting' ? 'Submitting…' : 'Submit' }}
-            </button>
-            <button
-              v-if="submitState === 'done'"
-              type="button"
-              class="rounded-md border border-border px-3 py-1.5 text-sm text-text-dim hover:bg-surface"
-              @click="reset"
-            >
-              Reset
-            </button>
-          </div>
-
-          <p
-            v-if="submitState === 'done' && submittedValue"
-            class="rounded-md border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-300"
+        <div class="flex items-center gap-2">
+          <button
+            type="submit"
+            class="rounded-md border border-border bg-code-bg px-3 py-1.5 text-sm font-medium hover:bg-surface disabled:opacity-50"
+            :disabled="submitState === 'submitting'"
           >
-            Submitted ✓ — server received <code>{{ submittedValue }}</code>
-          </p>
+            {{ submitState === 'submitting' ? 'Submitting…' : 'Submit' }}
+          </button>
+          <button
+            v-if="submitState === 'done'"
+            type="button"
+            class="rounded-md border border-border px-3 py-1.5 text-sm text-text-dim hover:bg-surface"
+            @click="reset"
+          >
+            Reset
+          </button>
         </div>
-      </form>
-    </DemoTabs>
-  </div>
+
+        <p
+          v-if="submitState === 'done' && submittedValue"
+          class="rounded-md border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-300"
+        >
+          Submitted ✓ — server received <code>{{ submittedValue }}</code>
+        </p>
+      </div>
+    </form>
+  </DemoTabs>
 </template>

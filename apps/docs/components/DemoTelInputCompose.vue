@@ -57,20 +57,19 @@ const result = computed(() =>
 </script>
 
 <template>
-  <div class="my-4 rounded-lg border border-border bg-surface p-5">
-    <h4 class="mb-3 text-[11px] font-bold uppercase tracking-widest text-text-dim">
-      Live · Custom layout (composed from primitives)
-    </h4>
+  <h4 class="mb-3 text-[11px] font-bold uppercase tracking-widest text-text-dim">
+    Live · Custom layout (composed from primitives)
+  </h4>
 
-    <p class="mb-4 text-sm text-text-dim">
-      Recombined primitives: full-width country trigger on top, a plain national-number
-      <code>&lt;input&gt;</code> below, E.164 chip on the right.
-    </p>
+  <p class="mb-4 text-sm text-text-dim">
+    Recombined primitives: full-width country trigger on top, a plain national-number
+    <code>&lt;input&gt;</code> below, E.164 chip on the right.
+  </p>
 
-    <DemoTabs :code="source">
-      <DemoStage caption="Composed from primitives">
-        <div class="compose-stage__field">
-          <!-- Row 1 — full-width country trigger.
+  <DemoTabs :code="source">
+    <DemoStage caption="Composed from primitives">
+      <div class="compose-stage__field">
+        <!-- Row 1 — full-width country trigger.
                Two slot overrides make this read like a native `<select>`:
                  - `#flag` renders the flag AND the localised country name
                    (default just renders the flag, which leaves the trigger
@@ -82,81 +81,80 @@ const result = computed(() =>
                a slot), so a regular `class` prop would be discarded — we
                wrap it in an explicit `<div>` so the `:deep()` selectors in
                `<style scoped>` have a real element to scope against. -->
-          <div class="compose-stage__row compose-stage__row--picker">
-            <span class="compose-stage__hint">Country</span>
-            <div class="compose-stage__picker">
-              <ACountrySelect v-model:selected="country" size="md" trigger-class="w-full">
-                <!-- `#selected-flag` targets ONLY the trigger — flag + country
+        <div class="compose-stage__row compose-stage__row--picker">
+          <span class="compose-stage__hint">Country</span>
+          <div class="compose-stage__picker">
+            <ACountrySelect v-model:selected="country" size="md" trigger-class="w-full">
+              <!-- `#selected-flag` targets ONLY the trigger — flag + country
                      name. The popover's option rows are unaffected (they keep
                      their default flag-only rendering, which is what most
                      users want in a dense list). The chevron comes from the
                      default `#chevron` slot and is pushed to the right edge
                      by CSS — `[flag] [name] [   spacer   ] [chevron]`. -->
-                <template #selected-flag="{ country: selected }">
-                  <span class="compose-stage__picker-label">
-                    <ACountryFlag :iso2="selected.raw_data.iso2" :src="selected.raw_data.flag" />
-                    <span class="compose-stage__picker-name">{{ selected.raw_data.name }}</span>
-                  </span>
-                </template>
-              </ACountrySelect>
-            </div>
-          </div>
-
-          <!-- Row 2 — national-number input on the left, E.164 chip on the right.
-               Validity drives the chip's tint via `cn()` (emerald when ok, surface-2
-               muted otherwise) so the user sees the engine reacting per keystroke. -->
-          <div class="compose-stage__row compose-stage__row--number">
-            <div class="compose-stage__input-wrap">
-              <span class="compose-stage__hint">National number</span>
-              <input
-                v-model="phone"
-                type="tel"
-                inputmode="numeric"
-                placeholder="01066105963"
-                class="compose-stage__input"
-                @input="
-                  (e) => {
-                    const t = e.target as HTMLInputElement;
-                    t.value = t.value.replace(/\\D/g, '');
-                    phone = t.value;
-                  }
-                "
-              />
-            </div>
-
-            <div
-              :class="[
-                'compose-stage__chip',
-                result.ok ? 'compose-stage__chip--ok' : 'compose-stage__chip--idle',
-              ]"
-              :title="result.ok ? 'valid' : (result.reason ?? 'incomplete')"
-            >
-              <span class="compose-stage__chip-label">E.164</span>
-              <span class="compose-stage__chip-value">
-                {{ result.full_phone || '+?' }}
-              </span>
-              <svg
-                v-if="result.ok"
-                class="compose-stage__chip-icon"
-                xmlns="http://www.w3.org/2000/svg"
-                width="11"
-                height="11"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="3"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-            </div>
+              <template #selected-flag="{ country: selected }">
+                <span class="compose-stage__picker-label">
+                  <ACountryFlag :iso2="selected.raw_data.iso2" :src="selected.raw_data.flag" />
+                  <span class="compose-stage__picker-name">{{ selected.raw_data.name }}</span>
+                </span>
+              </template>
+            </ACountrySelect>
           </div>
         </div>
-      </DemoStage>
-    </DemoTabs>
-  </div>
+
+        <!-- Row 2 — national-number input on the left, E.164 chip on the right.
+               Validity drives the chip's tint via `cn()` (emerald when ok, surface-2
+               muted otherwise) so the user sees the engine reacting per keystroke. -->
+        <div class="compose-stage__row compose-stage__row--number">
+          <div class="compose-stage__input-wrap">
+            <span class="compose-stage__hint">National number</span>
+            <input
+              v-model="phone"
+              type="tel"
+              inputmode="numeric"
+              placeholder="01066105963"
+              class="compose-stage__input"
+              @input="
+                (e) => {
+                  const t = e.target as HTMLInputElement;
+                  t.value = t.value.replace(/\\D/g, '');
+                  phone = t.value;
+                }
+              "
+            />
+          </div>
+
+          <div
+            :class="[
+              'compose-stage__chip',
+              result.ok ? 'compose-stage__chip--ok' : 'compose-stage__chip--idle',
+            ]"
+            :title="result.ok ? 'valid' : (result.reason ?? 'incomplete')"
+          >
+            <span class="compose-stage__chip-label">E.164</span>
+            <span class="compose-stage__chip-value">
+              {{ result.full_phone || '+?' }}
+            </span>
+            <svg
+              v-if="result.ok"
+              class="compose-stage__chip-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="11"
+              height="11"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
+        </div>
+      </div>
+    </DemoStage>
+  </DemoTabs>
 </template>
 
 <style scoped>

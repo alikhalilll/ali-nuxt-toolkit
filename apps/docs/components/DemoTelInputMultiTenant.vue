@@ -65,54 +65,52 @@ const source = `<style>
 </script>
 
 <template>
-  <div class="my-4 rounded-lg border border-border bg-surface p-5">
-    <h4 class="mb-3 text-[11px] font-bold uppercase tracking-widest text-text-dim">
-      Live · Multi-tenant — same component, two themes, one page
-    </h4>
+  <h4 class="mb-3 text-[11px] font-bold uppercase tracking-widest text-text-dim">
+    Live · Multi-tenant — same component, two themes, one page
+  </h4>
 
-    <p class="mb-4 text-sm text-text-dim">
-      Two tenants render side-by-side. Each is wrapped in its own class with its own variables —
-      proving the theme is scoped, not global, and that popover portals inherit per-tenant.
-    </p>
+  <p class="mb-4 text-sm text-text-dim">
+    Two tenants render side-by-side. Each is wrapped in its own class with its own variables —
+    proving the theme is scoped, not global, and that popover portals inherit per-tenant.
+  </p>
 
-    <DemoTabs :code="source">
-      <div class="grid gap-4 p-5 md:grid-cols-2">
-        <div
-          :style="acmeTheme"
-          class="text-foreground rounded-lg border border-border bg-background p-5"
+  <DemoTabs :code="source">
+    <div class="grid gap-4 p-5 md:grid-cols-2">
+      <div
+        :style="acmeTheme"
+        class="text-foreground rounded-lg border border-border bg-background p-5"
+      >
+        <h5
+          class="mb-3 text-xs font-semibold tracking-widest uppercase"
+          style="color: hsl(152 70% 50%)"
         >
-          <h5
-            class="mb-3 text-xs font-semibold tracking-widest uppercase"
-            style="color: hsl(152 70% 50%)"
-          >
-            Acme Inc.
-          </h5>
-          <ATelInput
-            v-model:phone="acmePhone"
-            v-model:country="acmeCountry"
-            default-country="20"
-            show-validation
-          />
-        </div>
-
-        <div
-          :style="novaTheme"
-          class="text-foreground rounded-lg border border-border bg-background p-5"
-        >
-          <h5
-            class="mb-3 text-xs font-semibold tracking-widest uppercase"
-            style="color: hsl(270 90% 65%)"
-          >
-            Nova Labs
-          </h5>
-          <ATelInput
-            v-model:phone="novaPhone"
-            v-model:country="novaCountry"
-            default-country="20"
-            show-validation
-          />
-        </div>
+          Acme Inc.
+        </h5>
+        <ATelInput
+          v-model:phone="acmePhone"
+          v-model:country="acmeCountry"
+          default-country="20"
+          show-validation
+        />
       </div>
-    </DemoTabs>
-  </div>
+
+      <div
+        :style="novaTheme"
+        class="text-foreground rounded-lg border border-border bg-background p-5"
+      >
+        <h5
+          class="mb-3 text-xs font-semibold tracking-widest uppercase"
+          style="color: hsl(270 90% 65%)"
+        >
+          Nova Labs
+        </h5>
+        <ATelInput
+          v-model:phone="novaPhone"
+          v-model:country="novaCountry"
+          default-country="20"
+          show-validation
+        />
+      </div>
+    </div>
+  </DemoTabs>
 </template>

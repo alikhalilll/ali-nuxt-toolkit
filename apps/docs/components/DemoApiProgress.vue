@@ -67,38 +67,36 @@ const run = async () => {
 </script>
 
 <template>
-  <div class="my-4 rounded-lg border border-border bg-surface p-5">
-    <h4 class="mb-3 text-[11px] font-bold uppercase tracking-widest text-text-dim">
-      Live · onRequestProgress (256 KB upload)
-    </h4>
-    <button
-      :disabled="running"
-      class="cursor-pointer rounded border border-accent bg-accent px-3.5 py-1.5 text-sm font-semibold text-bg transition-[filter] hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
-      @click="run"
-    >
-      {{ running ? 'Running…' : 'Start' }}
-    </button>
+  <h4 class="mb-3 text-[11px] font-bold uppercase tracking-widest text-text-dim">
+    Live · onRequestProgress (256 KB upload)
+  </h4>
+  <button
+    :disabled="running"
+    class="cursor-pointer rounded border border-accent bg-accent px-3.5 py-1.5 text-sm font-semibold text-bg transition-[filter] hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+    @click="run"
+  >
+    {{ running ? 'Running…' : 'Start' }}
+  </button>
 
-    <div class="mt-4">
-      <div class="mb-1 text-xs text-text-dim">upload · {{ fmt(uploadLoaded) }}</div>
-      <div class="h-2 overflow-hidden rounded-full border border-border bg-code-bg">
-        <div
-          class="h-full bg-accent transition-[width] duration-150 ease-linear"
-          :style="{ width: (uploadRatio * 100).toFixed(1) + '%' }"
-        />
-      </div>
+  <div class="mt-4">
+    <div class="mb-1 text-xs text-text-dim">upload · {{ fmt(uploadLoaded) }}</div>
+    <div class="h-2 overflow-hidden rounded-full border border-border bg-code-bg">
+      <div
+        class="h-full bg-accent transition-[width] duration-150 ease-linear"
+        :style="{ width: (uploadRatio * 100).toFixed(1) + '%' }"
+      />
     </div>
-
-    <div class="mt-3">
-      <div class="mb-1 text-xs text-text-dim">download · {{ fmt(downloadLoaded) }}</div>
-      <div class="h-2 overflow-hidden rounded-full border border-border bg-code-bg">
-        <div
-          class="h-full bg-success transition-[width] duration-150 ease-linear"
-          :style="{ width: (downloadRatio * 100).toFixed(1) + '%' }"
-        />
-      </div>
-    </div>
-
-    <DocOutput v-if="message" class="mt-3" lang="text" label="status" :value="message" />
   </div>
+
+  <div class="mt-3">
+    <div class="mb-1 text-xs text-text-dim">download · {{ fmt(downloadLoaded) }}</div>
+    <div class="h-2 overflow-hidden rounded-full border border-border bg-code-bg">
+      <div
+        class="h-full bg-success transition-[width] duration-150 ease-linear"
+        :style="{ width: (downloadRatio * 100).toFixed(1) + '%' }"
+      />
+    </div>
+  </div>
+
+  <DocOutput v-if="message" class="mt-3" lang="text" label="status" :value="message" />
 </template>

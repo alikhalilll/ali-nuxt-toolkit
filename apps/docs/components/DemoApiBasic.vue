@@ -33,17 +33,15 @@ const run = async () => {
 </script>
 
 <template>
-  <div class="my-4 rounded-lg border border-border bg-surface p-5">
-    <h4 class="mb-3 text-[11px] font-bold uppercase tracking-widest text-text-dim">
-      Live · GET /posts/1.json
-    </h4>
-    <button
-      :disabled="loading"
-      class="cursor-pointer rounded border border-accent bg-accent px-3.5 py-1.5 text-sm font-semibold text-bg transition-[filter] hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
-      @click="run"
-    >
-      {{ loading ? 'Loading…' : 'Fetch' }}
-    </button>
-    <DocOutput v-if="result" class="mt-3" label="response" :value="result" />
-  </div>
+  <h4 class="mb-3 text-[11px] font-bold uppercase tracking-widest text-text-dim">
+    Live · GET /posts/1.json
+  </h4>
+  <button
+    :disabled="loading"
+    class="cursor-pointer rounded border border-accent bg-accent px-3.5 py-1.5 text-sm font-semibold text-bg transition-[filter] hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+    @click="run"
+  >
+    {{ loading ? 'Loading…' : 'Fetch' }}
+  </button>
+  <DocOutput v-if="result" class="mt-3" label="response" :value="result" />
 </template>

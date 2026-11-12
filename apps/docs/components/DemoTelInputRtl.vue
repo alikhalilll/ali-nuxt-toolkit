@@ -27,30 +27,28 @@ const country = ref<number | null>(null);
 </script>
 
 <template>
-  <div class="my-4 rounded-lg border border-border bg-surface p-5">
-    <h4 class="mb-3 text-[11px] font-bold uppercase tracking-widest text-text-dim">
-      Live · RTL layout
-    </h4>
+  <h4 class="mb-3 text-[11px] font-bold uppercase tracking-widest text-text-dim">
+    Live · RTL layout
+  </h4>
 
-    <p class="mb-4 text-sm text-text-dim">
-      Wrapped in <code>&lt;div dir="rtl"&gt;</code>. The phone field row keeps its LTR order — dial
-      prefix, digits, then flag — while the helper text and the country picker follow RTL. Try
-      typing the Arabic-Indic digits <code dir="rtl">٠١٠٦٦١٠٥٩٦٣</code> — they normalise to ASCII.
-    </p>
+  <p class="mb-4 text-sm text-text-dim">
+    Wrapped in <code>&lt;div dir="rtl"&gt;</code>. The phone field row keeps its LTR order — dial
+    prefix, digits, then flag — while the helper text and the country picker follow RTL. Try typing
+    the Arabic-Indic digits <code dir="rtl">٠١٠٦٦١٠٥٩٦٣</code> — they normalise to ASCII.
+  </p>
 
-    <DemoTabs :code="source">
-      <div class="p-5">
-        <div class="max-w-sm" dir="rtl">
-          <ATelInput
-            v-model:phone="phone"
-            v-model:country="country"
-            default-country="20"
-            show-validation
-          />
-        </div>
-
-        <DocOutput class="mt-4" label="state" :value="{ phone, country }" />
+  <DemoTabs :code="source">
+    <div class="p-5">
+      <div class="max-w-sm" dir="rtl">
+        <ATelInput
+          v-model:phone="phone"
+          v-model:country="country"
+          default-country="20"
+          show-validation
+        />
       </div>
-    </DemoTabs>
-  </div>
+
+      <DocOutput class="mt-4" label="state" :value="{ phone, country }" />
+    </div>
+  </DemoTabs>
 </template>

@@ -174,8 +174,17 @@ async function copy() {
   color: var(--color-text);
 }
 
+/* One wrapper = the DemoTabs card. The preview surface sits inside with
+   consistent padding + a subtle contrast background, so individual demos
+   don't need to add their own card chrome and we never end up card-in-card. */
 .demo-tabs__preview {
-  padding: 0;
+  padding: 1.25rem;
+  background: color-mix(in oklab, var(--color-surface) 50%, var(--color-bg));
+}
+@media (min-width: 640px) {
+  .demo-tabs__preview {
+    padding: 1.5rem;
+  }
 }
 
 .demo-tabs__code :deep(.doc-code__body) {

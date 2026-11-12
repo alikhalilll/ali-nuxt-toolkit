@@ -92,69 +92,67 @@ const creamTheme = {
 </script>
 
 <template>
-  <div class="my-4 rounded-lg border border-border bg-surface p-5">
-    <h4 class="mb-2 text-[11px] font-bold uppercase tracking-widest text-text-dim">
-      Cream pill · circular flag · phone-icon suffix
-    </h4>
-    <p class="mb-4 text-sm text-text-dim">
-      Warm light-mode theme, pill radius, and a borderless circular-flag trigger. Big bold label
-      above. The phone icon on the right is a <code>#suffix</code> slot.
-    </p>
+  <h4 class="mb-2 text-[11px] font-bold uppercase tracking-widest text-text-dim">
+    Cream pill · circular flag · phone-icon suffix
+  </h4>
+  <p class="mb-4 text-sm text-text-dim">
+    Warm light-mode theme, pill radius, and a borderless circular-flag trigger. Big bold label
+    above. The phone icon on the right is a <code>#suffix</code> slot.
+  </p>
 
-    <DemoTabs :code="source">
-      <div
-        :style="creamTheme"
-        class="text-foreground rounded-2xl border border-[hsl(28_65%_88%)] bg-[hsl(36_50%_94%)] p-8"
-      >
-        <div class="max-w-md">
-          <label class="mb-3 block text-lg font-bold tracking-tight">Phone Number</label>
+  <DemoTabs :code="source">
+    <div
+      :style="creamTheme"
+      class="text-foreground rounded-2xl border border-[hsl(28_65%_88%)] bg-[hsl(36_50%_94%)] p-8"
+    >
+      <div class="max-w-md">
+        <label class="mb-3 block text-lg font-bold tracking-tight">Phone Number</label>
 
-          <ATelInput
-            v-model:phone="phone"
-            v-model:country="country"
-            default-country="1"
-            size="xl"
-            field-class="border-2"
-            input-class="text-base font-medium tracking-wide"
-          >
-            <template #trigger="{ selectedCountry, open }">
-              <button
-                type="button"
-                :data-state="open ? 'open' : 'closed'"
-                class="inline-flex h-full shrink-0 items-center gap-2 bg-transparent pr-1 pl-3 transition-opacity hover:opacity-80 focus-visible:outline-none"
-                aria-label="Select country"
+        <ATelInput
+          v-model:phone="phone"
+          v-model:country="country"
+          default-country="1"
+          size="xl"
+          field-class="border-2"
+          input-class="text-base font-medium tracking-wide"
+        >
+          <template #trigger="{ selectedCountry, open }">
+            <button
+              type="button"
+              :data-state="open ? 'open' : 'closed'"
+              class="inline-flex h-full shrink-0 items-center gap-2 bg-transparent pr-1 pl-3 transition-opacity hover:opacity-80 focus-visible:outline-none"
+              aria-label="Select country"
+            >
+              <span
+                class="ring-background inline-flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full ring-2"
+                style="background: hsl(36 50% 99%)"
               >
-                <span
-                  class="ring-background inline-flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full ring-2"
-                  style="background: hsl(36 50% 99%)"
-                >
-                  <img
-                    v-if="selectedCountry"
-                    :src="`https://flagcdn.com/w80/${selectedCountry.raw_data.iso2.toLowerCase()}.png`"
-                    :alt="`${selectedCountry.raw_data.iso2} flag`"
-                    class="size-10 rounded-full object-cover"
-                  />
-                  <span v-else class="text-muted-foreground text-xs">?</span>
-                </span>
-                <ChevronDownIcon
-                  class="text-muted-foreground size-4 shrink-0 transition-transform duration-200"
-                  :class="open && 'rotate-180'"
+                <img
+                  v-if="selectedCountry"
+                  :src="`https://flagcdn.com/w80/${selectedCountry.raw_data.iso2.toLowerCase()}.png`"
+                  :alt="`${selectedCountry.raw_data.iso2} flag`"
+                  class="size-10 rounded-full object-cover"
                 />
-              </button>
-            </template>
-
-            <template #suffix>
-              <SmartphoneIcon
-                class="mr-3 size-5 shrink-0"
-                style="color: hsl(20 50% 30%)"
-                aria-hidden="true"
+                <span v-else class="text-muted-foreground text-xs">?</span>
+              </span>
+              <ChevronDownIcon
+                class="text-muted-foreground size-4 shrink-0 transition-transform duration-200"
+                :class="open && 'rotate-180'"
               />
-            </template>
+            </button>
+          </template>
 
-            <template #hint><span /></template>
-          </ATelInput>
-        </div>
+          <template #suffix>
+            <SmartphoneIcon
+              class="mr-3 size-5 shrink-0"
+              style="color: hsl(20 50% 30%)"
+              aria-hidden="true"
+            />
+          </template>
+
+          <template #hint><span /></template>
+        </ATelInput>
       </div>
-    </DemoTabs>
-  </div>
+    </div>
+  </DemoTabs>
 </template>

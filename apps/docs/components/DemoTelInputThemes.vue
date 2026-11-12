@@ -205,70 +205,68 @@ const cssSnippet = computed(() => {
 </script>
 
 <template>
-  <div class="my-4 rounded-lg border border-border bg-surface p-5">
-    <h4 class="mb-3 text-[11px] font-bold uppercase tracking-widest text-text-dim">
-      Live · Theme gallery — every preset is a pure CSS-variable rewrite
-    </h4>
+  <h4 class="mb-3 text-[11px] font-bold uppercase tracking-widest text-text-dim">
+    Live · Theme gallery — every preset is a pure CSS-variable rewrite
+  </h4>
 
-    <p class="mb-4 text-sm text-text-dim">
-      Click any preset to apply it. The same component, same props — only the
-      <code class="rounded bg-code-bg px-1 py-0.5 text-xs text-accent-2">--ak-ui-*</code>
-      variables change. Copy the snippet below into your own stylesheet to use it.
-    </p>
+  <p class="mb-4 text-sm text-text-dim">
+    Click any preset to apply it. The same component, same props — only the
+    <code class="rounded bg-code-bg px-1 py-0.5 text-xs text-accent-2">--ak-ui-*</code>
+    variables change. Copy the snippet below into your own stylesheet to use it.
+  </p>
 
-    <!-- Theme thumbnails — each card is its own click target, shows a 3-dot swatch -->
-    <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-3">
-      <button
-        v-for="t in themes"
-        :key="t.id"
-        type="button"
-        :aria-pressed="activeId === t.id"
-        class="group flex flex-col items-start gap-1.5 rounded-md border bg-surface-2/40 p-3 text-left transition-colors"
-        :class="
-          activeId === t.id
-            ? 'border-brand bg-surface-2 ring-1 ring-brand/30'
-            : 'border-border hover:border-text/40 hover:bg-surface-2/70'
-        "
-        @click="activeId = t.id"
-      >
-        <span class="flex items-center gap-1.5">
-          <span
-            v-for="(hsl, i) in t.swatch"
-            :key="i"
-            class="block h-3 w-3 rounded-full ring-1 ring-black/40"
-            :style="{ background: `hsl(${hsl})` }"
-            aria-hidden="true"
-          />
-        </span>
-        <span class="text-[13px] font-semibold text-text">{{ t.label }}</span>
-        <span class="text-[11px] leading-snug text-text-muted">{{ t.description }}</span>
-      </button>
-    </div>
-
-    <!-- Active theme — apply the CSS vars on a wrapper. The popover portal inherits via cascade. -->
-    <div
-      :key="activeId"
-      :style="activeStyle"
-      class="text-foreground mt-5 rounded-lg border border-border bg-background p-5 transition-colors"
+  <!-- Theme thumbnails — each card is its own click target, shows a 3-dot swatch -->
+  <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-3">
+    <button
+      v-for="t in themes"
+      :key="t.id"
+      type="button"
+      :aria-pressed="activeId === t.id"
+      class="group flex flex-col items-start gap-1.5 rounded-md border bg-surface-2/40 p-3 text-left transition-colors"
+      :class="
+        activeId === t.id
+          ? 'border-brand bg-surface-2 ring-1 ring-brand/30'
+          : 'border-border hover:border-text/40 hover:bg-surface-2/70'
+      "
+      @click="activeId = t.id"
     >
-      <div class="max-w-sm">
-        <ATelInput
-          v-model:phone="phone"
-          v-model:country="country"
-          default-country="20"
-          show-validation
+      <span class="flex items-center gap-1.5">
+        <span
+          v-for="(hsl, i) in t.swatch"
+          :key="i"
+          class="block h-3 w-3 rounded-full ring-1 ring-black/40"
+          :style="{ background: `hsl(${hsl})` }"
+          aria-hidden="true"
         />
-      </div>
-    </div>
-
-    <!-- Copy-ready CSS for the active theme — DocOutput ships its own copy
-         button via the `code` prop, so we drop the bespoke one above. -->
-    <DocOutput class="mt-4" lang="css" label="theme.css" :value="cssSnippet" />
-
-    <p class="mt-3 text-xs text-text-muted">
-      To apply globally, drop the snippet into your global CSS. To scope per-section, replace the
-      selector with any class on a wrapper element — the popover portal still inherits the variables
-      via the CSS cascade.
-    </p>
+      </span>
+      <span class="text-[13px] font-semibold text-text">{{ t.label }}</span>
+      <span class="text-[11px] leading-snug text-text-muted">{{ t.description }}</span>
+    </button>
   </div>
+
+  <!-- Active theme — apply the CSS vars on a wrapper. The popover portal inherits via cascade. -->
+  <div
+    :key="activeId"
+    :style="activeStyle"
+    class="text-foreground mt-5 rounded-lg border border-border bg-background p-5 transition-colors"
+  >
+    <div class="max-w-sm">
+      <ATelInput
+        v-model:phone="phone"
+        v-model:country="country"
+        default-country="20"
+        show-validation
+      />
+    </div>
+  </div>
+
+  <!-- Copy-ready CSS for the active theme — DocOutput ships its own copy
+         button via the `code` prop, so we drop the bespoke one above. -->
+  <DocOutput class="mt-4" lang="css" label="theme.css" :value="cssSnippet" />
+
+  <p class="mt-3 text-xs text-text-muted">
+    To apply globally, drop the snippet into your global CSS. To scope per-section, replace the
+    selector with any class on a wrapper element — the popover portal still inherits the variables
+    via the CSS cascade.
+  </p>
 </template>

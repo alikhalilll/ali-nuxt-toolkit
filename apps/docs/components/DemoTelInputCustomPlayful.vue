@@ -119,93 +119,91 @@ const playfulTheme = {
 </script>
 
 <template>
-  <div class="my-4 rounded-lg border border-border bg-surface p-5">
-    <h4 class="mb-2 text-[11px] font-bold uppercase tracking-widest text-text-dim">
-      Playful · sunset theme · pill radius · xl size
-    </h4>
-    <p class="mb-4 text-sm text-text-dim">
-      Marketing-friendly: warm pill, big xl size, smile suffix, party-popper / frown validation,
-      sparkle check on the selected row in the picker.
-    </p>
+  <h4 class="mb-2 text-[11px] font-bold uppercase tracking-widest text-text-dim">
+    Playful · sunset theme · pill radius · xl size
+  </h4>
+  <p class="mb-4 text-sm text-text-dim">
+    Marketing-friendly: warm pill, big xl size, smile suffix, party-popper / frown validation,
+    sparkle check on the selected row in the picker.
+  </p>
 
-    <DemoTabs :code="source">
-      <div
-        :style="playfulTheme"
-        class="text-foreground rounded-3xl border border-border bg-background px-6 py-8 sm:px-10 sm:py-10"
-      >
-        <div class="mx-auto max-w-md">
-          <h3 class="mb-2 text-2xl font-semibold tracking-tight" style="color: hsl(30 80% 80%)">
-            What's your number?
-          </h3>
-          <p class="text-muted-foreground mb-5 text-sm">
-            We'll only use it to text the confirmation code.
-          </p>
+  <DemoTabs :code="source">
+    <div
+      :style="playfulTheme"
+      class="text-foreground rounded-3xl border border-border bg-background px-6 py-8 sm:px-10 sm:py-10"
+    >
+      <div class="mx-auto max-w-md">
+        <h3 class="mb-2 text-2xl font-semibold tracking-tight" style="color: hsl(30 80% 80%)">
+          What's your number?
+        </h3>
+        <p class="text-muted-foreground mb-5 text-sm">
+          We'll only use it to text the confirmation code.
+        </p>
 
-          <ATelInput
-            v-model:phone="phone"
-            v-model:country="country"
-            default-country="20"
-            size="xl"
-            show-validation
-            placeholder="Phone number"
-          >
-            <template #trigger="{ selectedCountry, open }">
-              <button
-                type="button"
-                :data-state="open ? 'open' : 'closed'"
-                class="inline-flex h-full shrink-0 items-center gap-2 bg-transparent pr-2 pl-3 transition-opacity hover:opacity-80 focus-visible:outline-none"
-                aria-label="Select country"
+        <ATelInput
+          v-model:phone="phone"
+          v-model:country="country"
+          default-country="20"
+          size="xl"
+          show-validation
+          placeholder="Phone number"
+        >
+          <template #trigger="{ selectedCountry, open }">
+            <button
+              type="button"
+              :data-state="open ? 'open' : 'closed'"
+              class="inline-flex h-full shrink-0 items-center gap-2 bg-transparent pr-2 pl-3 transition-opacity hover:opacity-80 focus-visible:outline-none"
+              aria-label="Select country"
+            >
+              <span
+                class="ring-border/60 inline-flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full ring-2"
               >
-                <span
-                  class="ring-border/60 inline-flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full ring-2"
-                >
-                  <img
-                    v-if="selectedCountry"
-                    :src="`https://flagcdn.com/w80/${selectedCountry.raw_data.iso2.toLowerCase()}.png`"
-                    :alt="`${selectedCountry.raw_data.iso2} flag`"
-                    class="size-10 rounded-full object-cover"
-                  />
-                  <span v-else class="text-muted-foreground text-xs">?</span>
-                </span>
-                <span class="text-foreground text-sm font-semibold tabular-nums">
-                  {{ selectedCountry ? selectedCountry.raw_data.dial_code : '+?' }}
-                </span>
-                <ChevronDownIcon
-                  class="text-muted-foreground size-4 shrink-0 transition-transform duration-200"
-                  :class="open && 'rotate-180'"
+                <img
+                  v-if="selectedCountry"
+                  :src="`https://flagcdn.com/w80/${selectedCountry.raw_data.iso2.toLowerCase()}.png`"
+                  :alt="`${selectedCountry.raw_data.iso2} flag`"
+                  class="size-10 rounded-full object-cover"
                 />
-              </button>
-            </template>
-
-            <template #suffix>
-              <SmileIcon
-                class="mr-3 size-5 shrink-0"
-                style="color: hsl(28 100% 60%)"
-                aria-hidden="true"
+                <span v-else class="text-muted-foreground text-xs">?</span>
+              </span>
+              <span class="text-foreground text-sm font-semibold tabular-nums">
+                {{ selectedCountry ? selectedCountry.raw_data.dial_code : '+?' }}
+              </span>
+              <ChevronDownIcon
+                class="text-muted-foreground size-4 shrink-0 transition-transform duration-200"
+                :class="open && 'rotate-180'"
               />
-            </template>
+            </button>
+          </template>
 
-            <template #valid-icon>
-              <PartyPopperIcon class="size-6 shrink-0 text-amber-400" />
-            </template>
+          <template #suffix>
+            <SmileIcon
+              class="mr-3 size-5 shrink-0"
+              style="color: hsl(28 100% 60%)"
+              aria-hidden="true"
+            />
+          </template>
 
-            <template #error-icon>
-              <FrownIcon class="text-destructive size-6 shrink-0" />
-            </template>
+          <template #valid-icon>
+            <PartyPopperIcon class="size-6 shrink-0 text-amber-400" />
+          </template>
 
-            <template #item-check>
-              <SparklesIcon class="size-4 shrink-0 text-amber-400" />
-            </template>
+          <template #error-icon>
+            <FrownIcon class="text-destructive size-6 shrink-0" />
+          </template>
 
-            <template #hint="{ formatHint }">
-              <p class="text-muted-foreground flex items-center gap-1.5 pl-2 text-xs">
-                <SparklesIcon class="size-3" style="color: hsl(28 100% 60%)" />
-                <span class="tabular-nums">{{ formatHint }}</span>
-              </p>
-            </template>
-          </ATelInput>
-        </div>
+          <template #item-check>
+            <SparklesIcon class="size-4 shrink-0 text-amber-400" />
+          </template>
+
+          <template #hint="{ formatHint }">
+            <p class="text-muted-foreground flex items-center gap-1.5 pl-2 text-xs">
+              <SparklesIcon class="size-3" style="color: hsl(28 100% 60%)" />
+              <span class="tabular-nums">{{ formatHint }}</span>
+            </p>
+          </template>
+        </ATelInput>
       </div>
-    </DemoTabs>
-  </div>
+    </div>
+  </DemoTabs>
 </template>
