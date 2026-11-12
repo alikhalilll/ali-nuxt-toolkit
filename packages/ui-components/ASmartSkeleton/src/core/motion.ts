@@ -10,3 +10,14 @@ export const prefersReducedMotion = () =>
 export const prefersReducedTransparency = () => prefers('(prefers-reduced-transparency: reduce)');
 
 export const animationsOf = (element: Element): Animation[] => element.getAnimations?.() ?? [];
+
+export type SkeletonDirection = 'ltr' | 'rtl';
+
+/** The inherited writing direction for `element` — follows `<html dir>` and any CSS `direction`
+ *  along the ancestor chain. Falls back to `ltr` outside a DOM. Reading from `getComputedStyle`
+ *  defers to the browser's own cascade, so consumers opt in by setting `dir` or `direction`
+ *  anywhere above the skeleton rather than threading a new prop or custom property through. */
+export function directionOf(element: Element): SkeletonDirection {
+  if (typeof getComputedStyle !== 'function') return 'ltr';
+  return getComputedStyle(element).direction === 'rtl' ? 'rtl' : 'ltr';
+}

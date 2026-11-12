@@ -1,4 +1,5 @@
 import { ATTR_EXITING, CASCADE_SPREAD, FADE_DURATION } from './constants';
+import { directionOf, type SkeletonDirection } from './motion';
 
 /** Where one piece of a reveal sits: a piece of content arriving, or a rect of the skeleton leaving. */
 export type Piece = {
@@ -11,6 +12,8 @@ export type Piece = {
   reveal: DOMRect;
   /** ms since the first of the reveals landing alongside this one. */
   late: number;
+  /** The reveal's writing direction; drives whether horizontal cascades read left-to-right or right-to-left. */
+  direction: SkeletonDirection;
 };
 
 /** What a reveal knows as its content lands, for `choose`. */
@@ -208,6 +211,7 @@ function sequencePlan(
   if (now - batch > BATCH_WINDOW) batch = now;
   const late = now - batch;
   const reveal = root.getBoundingClientRect();
+  const direction = directionOf(root);
 
   type Unit = { rect: DOMRect; size: number };
   const units = new Map<Element, Unit>();
@@ -244,6 +248,7 @@ function sequencePlan(
         secondary: piece.size < piece.unit.size,
         reveal,
         late,
+        direction,
       });
     },
     boneDelay: (rect) => {
@@ -255,6 +260,7 @@ function sequencePlan(
         secondary: !!unit && rect.height < unit.size * 0.8,
         reveal,
         late,
+        direction,
       });
     },
   };
@@ -327,10 +333,14 @@ export function planReveal(
   };
 }
 
-/** `sequence`: each piece timed by its place in the reveal, top to bottom, then a little left to right. */
-export const byPosition = ({ rect, reveal }: Piece) => {
+/** `sequence`: each piece timed by its place in the reveal, top to bottom, then along the reading axis —
+ *  left to right in LTR, right to left in RTL. */
+export const byPosition = ({ rect, reveal, direction }: Piece) => {
   const down = (rect.top - reveal.top) / Math.max(reveal.height, 1);
-  const across = (rect.left - reveal.left) / Math.max(reveal.width, 1);
+  const across =
+    direction === 'rtl'
+      ? (reveal.right - rect.right) / Math.max(reveal.width, 1)
+      : (rect.left - reveal.left) / Math.max(reveal.width, 1);
   return clamp(down * 0.8 + across * 0.2, 1) * CASCADE_SPREAD;
 };
 

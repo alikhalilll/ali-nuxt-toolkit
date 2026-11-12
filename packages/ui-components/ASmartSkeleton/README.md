@@ -28,6 +28,7 @@ Hand-authored skeletons are the second template you have to maintain. Padding dr
 - [Hints — `ask-block`, `ask-ignore`, `ask-own`](#hints--ask-block-ask-ignore-ask-own)
 - [Chrome capture](#chrome-capture)
 - [Reveal transitions](#reveal-transitions)
+- [Direction-aware animations](#direction-aware-animations)
 - [Theming](#theming)
 - [API reference](#api-reference)
 - [Changelog highlights](#changelog-highlights)
@@ -291,6 +292,22 @@ Full details and before/after shots → [Chrome capture section](https://alikhal
 
 ---
 
+## Direction-aware animations
+
+The shimmer sweep, the content-reveal front, and the `byPosition` sequence cascade all read the inherited CSS `direction` and flip to match. Set `<html dir="rtl">` once — or scope it with `style="direction: rtl"` on any ancestor — and the animations flow right-to-left. No prop, no new custom property; the skeleton reads the same writing-direction signal as the rest of the page.
+
+```html
+<section dir="rtl">
+  <ASmartSkeleton :data="thread" :sample="SAMPLE_THREAD">
+    <CommentThread :thread="thread" />
+  </ASmartSkeleton>
+</section>
+```
+
+Non-directional motion is left untouched: `pulse` (opacity), content fades, the height ease between panes, and the `byRow` sequence order look identical in LTR and RTL. See [Direction-aware animations](https://alikhalilll.github.io/ali-nuxt-toolkit/ui/smart-skeleton#direction-aware-animations) for the demo and trade-offs.
+
+---
+
 ## Theming
 
 Every surface is driven by CSS custom properties. Set them on any ancestor:
@@ -351,6 +368,7 @@ Full props / slots / events reference → [API reference](https://alikhalilll.gi
 
 ## Changelog highlights
 
+- **Direction-aware animations** — shimmer sweep, sweep reveal front, and `byPosition` sequence cascade follow the inherited CSS `direction`. An RTL page flows right-to-left with no prop or extra configuration.
 - **Chrome capture** (`type: 'chrome'`) — reproduces card outlines pixel-for-pixel from the consumer's own paint. Partial borders (`border-t` dividers) are preserved. `url(…)` background layers are filtered out so hero bitmaps don't re-download.
 - **Light-DOM bones** — placeholders now live in the light DOM with a `[ask-rect="text|media|box|chrome"]` attribute, so consumer stylesheets can style them per type without `:deep()` on a shadow root.
 - **4-px minimum radius** — every non-chrome bone is floored at 4 px so sharp-cornered placeholders don't read as glyphs of the real content.

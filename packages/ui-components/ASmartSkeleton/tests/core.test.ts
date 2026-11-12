@@ -30,7 +30,9 @@ import {
   createSkeletonBox,
   skeletonBoxStyle,
   motionOf,
+  shimmer,
 } from '../src/core';
+import { directionOf } from '../src/core/motion';
 
 describe('constants', () => {
   it('defines correct ask-* attributes', () => {
@@ -64,6 +66,40 @@ describe('constants', () => {
     expect(DURATIONS.shimmer.fast).toBe(2000);
     expect(DURATIONS.pulse.slow).toBe(2400);
     expect(DURATIONS.pulse.fast).toBe(1200);
+  });
+});
+
+describe('byPosition direction', () => {
+  // CASCADE_SPREAD is 0 today, so byPosition evaluates to 0 for every piece. We verify
+  // the function accepts both directions without throwing, and that the reading-order
+  // formula itself reverses between LTR and RTL (so it's wired for the day CASCADE_SPREAD
+  // becomes non-zero).
+  const reveal = new DOMRect(0, 0, 1000, 400);
+  const leftPiece = {
+    rect: new DOMRect(0, 100, 100, 50),
+    unit: null,
+    secondary: false,
+    reveal,
+    late: 0,
+  };
+  const rightPiece = {
+    rect: new DOMRect(900, 100, 100, 50),
+    unit: null,
+    secondary: false,
+    reveal,
+    late: 0,
+  };
+
+  it('accepts both directions and returns a finite number', () => {
+    expect(Number.isFinite(byPosition({ ...leftPiece, direction: 'ltr' }))).toBe(true);
+    expect(Number.isFinite(byPosition({ ...rightPiece, direction: 'rtl' }))).toBe(true);
+  });
+
+  it('reading-order axis flips sign between LTR and RTL', () => {
+    const acrossLtr = (rect: DOMRect) => (rect.left - reveal.left) / reveal.width;
+    const acrossRtl = (rect: DOMRect) => (reveal.right - rect.right) / reveal.width;
+    expect(acrossLtr(leftPiece.rect)).toBeLessThan(acrossLtr(rightPiece.rect));
+    expect(acrossRtl(leftPiece.rect)).toBeGreaterThan(acrossRtl(rightPiece.rect));
   });
 });
 
@@ -119,6 +155,108 @@ describe('motionOf', () => {
     const motion = motionOf(el);
     expect(motion.animation).toBe('shimmer');
     expect(motion.duration).toBe(DURATIONS.shimmer.slow);
+    expect(motion.direction).toBe('ltr');
     el.remove();
+  });
+
+  it('picks up `direction: rtl` from the element itself', () => {
+    const el = document.createElement('div');
+    el.style.direction = 'rtl';
+    document.body.appendChild(el);
+    try {
+      expect(motionOf(el).direction).toBe('rtl');
+    } finally {
+      el.remove();
+    }
+  });
+});
+
+describe('directionOf', () => {
+  it('defaults to ltr', () => {
+    const el = document.createElement('div');
+    document.body.appendChild(el);
+    expect(directionOf(el)).toBe('ltr');
+    el.remove();
+  });
+
+  it('reads `direction: rtl` set directly on the element', () => {
+    const el = document.createElement('div');
+    el.style.direction = 'rtl';
+    document.body.appendChild(el);
+    expect(directionOf(el)).toBe('rtl');
+    el.remove();
+  });
+});
+
+describe('shimmer direction', () => {
+  // Shimmer uses `element.animate`; fix a bounding box so happy-dom doesn't zero everything out.
+  const mountWithRect = (direction: 'ltr' | 'rtl') => {
+    const el = document.createElement('div');
+    if (direction === 'rtl') el.style.direction = 'rtl';
+    Object.defineProperty(el, 'getBoundingClientRect', {
+      value: () => ({
+        left: 100,
+        top: 50,
+        width: 200,
+        height: 30,
+        right: 300,
+        bottom: 80,
+        x: 100,
+        y: 50,
+        toJSON: () => ({}),
+      }),
+    });
+    document.body.appendChild(el);
+    return el;
+  };
+
+  const keyframesOf = (el: HTMLElement) => {
+    const anim = el.getAnimations?.()[0];
+    return anim?.effect?.getKeyframes?.() ?? [];
+  };
+
+  const bgX = (keyframe: Keyframe) => {
+    const raw = String(keyframe.backgroundPosition ?? '');
+    const match = raw.match(/(-?[\d.]+)px/);
+    return match ? parseFloat(match[1]!) : NaN;
+  };
+
+  it('LTR shimmer advances backgroundPosition in +x', () => {
+    const el = mountWithRect('ltr');
+    try {
+      shimmer(el);
+      const kfs = keyframesOf(el);
+      expect(kfs).toHaveLength(2);
+      expect(bgX(kfs[1]!)).toBeGreaterThan(bgX(kfs[0]!));
+    } finally {
+      el.remove();
+    }
+  });
+
+  it('RTL shimmer advances backgroundPosition in -x', () => {
+    const el = mountWithRect('rtl');
+    try {
+      shimmer(el);
+      const kfs = keyframesOf(el);
+      expect(kfs).toHaveLength(2);
+      expect(bgX(kfs[1]!)).toBeLessThan(bgX(kfs[0]!));
+    } finally {
+      el.remove();
+    }
+  });
+
+  it('RTL and LTR deltas have equal magnitude (one tile), opposite sign', () => {
+    const ltr = mountWithRect('ltr');
+    const rtl = mountWithRect('rtl');
+    try {
+      shimmer(ltr);
+      shimmer(rtl);
+      const dLtr = bgX(keyframesOf(ltr)[1]!) - bgX(keyframesOf(ltr)[0]!);
+      const dRtl = bgX(keyframesOf(rtl)[1]!) - bgX(keyframesOf(rtl)[0]!);
+      expect(dLtr).toBeCloseTo(-dRtl, 5);
+    } finally {
+      ltr.remove();
+      rtl.remove();
+    }
   });
 });

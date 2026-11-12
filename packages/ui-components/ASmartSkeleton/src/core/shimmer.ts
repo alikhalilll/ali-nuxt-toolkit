@@ -1,6 +1,6 @@
 import { ATTR_RECT, DURATIONS, HIGHLIGHT } from './constants';
 import type { SkeletonAnimation, SkeletonSpeed } from './theme';
-import { animationsOf, prefersReducedMotion } from './motion';
+import { animationsOf, directionOf, prefersReducedMotion, type SkeletonDirection } from './motion';
 import type { SkeletonRect } from './measure';
 
 const SWEEP = 0.7; // of a duration a sweep takes at the reference width — sweeps run back to back, so this sets the pace
@@ -11,9 +11,15 @@ const PULSE_LOW = 0.45; // opacity at the bottom of a pulse
 
 const ANIMATIONS: readonly SkeletonAnimation[] = ['shimmer', 'group-shimmer', 'pulse', 'none'];
 
-export type Motion = { animation: SkeletonAnimation; duration: number };
+export type Motion = {
+  animation: SkeletonAnimation;
+  duration: number;
+  direction: SkeletonDirection;
+};
 
-/** The animation an element inherits from the theme: `--ask-animation` and `--ask-speed`. */
+/** The animation an element inherits from the theme: `--ask-animation` and `--ask-speed`.
+ *  `direction` comes from the native CSS `direction` cascade (`<html dir>` or any ancestor) —
+ *  no new API, so a consumer flips RTL by the same handle Bootstrap, Tailwind, and React use. */
 export function motionOf(element: Element): Motion {
   const style = getComputedStyle(element);
   const read = <T extends string>(name: string, allowed: readonly T[], fallback: T): T => {
@@ -25,6 +31,7 @@ export function motionOf(element: Element): Motion {
   return {
     animation,
     duration: DURATIONS[animation === 'pulse' ? 'pulse' : 'shimmer'][speed],
+    direction: style.direction === 'rtl' ? 'rtl' : 'ltr',
   };
 }
 
@@ -109,8 +116,12 @@ export function shimmer(element: HTMLElement, group?: Span, motion: Motion = mot
   element.style.backgroundImage = image;
   element.style.backgroundSize = `${tile}px 100%`;
   element.style.backgroundRepeat = 'repeat-x';
+  // The shared-stream invariant `bg_pos_x_bone = bg_absolute − along` holds as `bg_absolute`
+  // moves either way — reversing the delta sign flips travel direction while every bone in
+  // the group stays in phase. RTL slides the band leftward so it tracks the reading eye.
+  const delta = motion.direction === 'rtl' ? -tile : tile;
   element.animate(
-    [{ backgroundPosition: `${-along}px 0` }, { backgroundPosition: `${tile - along}px 0` }],
+    [{ backgroundPosition: `${-along}px 0` }, { backgroundPosition: `${delta - along}px 0` }],
     { duration: tile * pace, iterations: Infinity }
   ).startTime = 0;
 }
@@ -217,7 +228,7 @@ export function drawSkeleton(layer: HTMLElement, rects: SkeletonRect[]) {
     }
 
     // Restarted only when its place, group, the page's width or the motion changes
-    const key = `${Math.round(group.left + part.x)}|${Math.round(part.y)}|${Math.round(part.height)}|${Math.round(group.left)}|${Math.round(group.width)}|${Math.round(group.height)}|${document.documentElement.clientWidth}|${motion.animation}|${motion.duration}`;
+    const key = `${Math.round(group.left + part.x)}|${Math.round(part.y)}|${Math.round(part.height)}|${Math.round(group.left)}|${Math.round(group.width)}|${Math.round(group.height)}|${document.documentElement.clientWidth}|${motion.animation}|${motion.duration}|${motion.direction}`;
     if (element.dataset.motion !== key) {
       element.dataset.motion = key;
       shimmer(element, group, motion);
