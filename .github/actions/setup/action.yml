@@ -1,15 +1,11 @@
 name: Setup toolchain
-description: Checkout, pnpm, Node, and dependency install — the shared preamble for every workflow.
+description: pnpm + Node + frozen install — the shared toolchain preamble. Caller must run `actions/checkout` first (repo-relative composite actions can't check themselves out).
 
 inputs:
   node-version:
     description: Node.js version to install. Defaults to the repo's engines.node floor (20).
     required: false
     default: '20'
-  fetch-depth:
-    description: Checkout depth. Set to 0 for workflows that need full history (changesets, commitlint).
-    required: false
-    default: '1'
   install:
     description: Run `pnpm install --frozen-lockfile`. Set 'false' to skip (rare — only when a job needs no deps).
     required: false
@@ -18,11 +14,6 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: ${{ inputs.fetch-depth }}
-        persist-credentials: false
-
     - uses: pnpm/action-setup@v4
       with:
         version: 10.32.1

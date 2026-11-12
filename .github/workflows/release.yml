@@ -24,9 +24,11 @@ jobs:
       - uses: step-security/harden-runner@v2
         with:
           egress-policy: audit
-      - uses: ./.github/actions/setup
+      - uses: actions/checkout@v4
         with:
-          fetch-depth: '0'
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: ./.github/actions/setup
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm -r --if-present test
