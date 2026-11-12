@@ -1,0 +1,55 @@
+# ali-nuxt-toolkit
+
+> Five independently-installable, type-driven packages for Vue 3 and Nuxt 3+: a typed `fetch` client, Web-Crypto encryption, layout-based route middleware, a headless international tel input, and measured skeleton loaders. Each package ships a framework-agnostic `./core` entry (Node / Bun / Deno / tests) alongside its Nuxt module or Vue component.
+
+Packages live under the `@alikhalilll` scope and have zero runtime dependency on one another. Install one, three, or all five. Documentation is maintained alongside the code in `apps/docs/` (Nuxt Content, GitHub Pages) and every page is also served at a parallel `<route>.md` URL for machine consumption.
+
+Design principles enforced across the repo: types-first public API, pure-function core (side effects at the smallest possible boundary), strategy-pattern dispatch for runtime variants, SSR-safe (no `window` / `document` at module scope), honest `sideEffects` declarations for tree-shaking. See the repository `CLAUDE.md` for the full policy.
+
+## Repository
+
+- [README](https://github.com/alikhalilll/ali-nuxt-toolkit/blob/master/README.md): project overview, package table, install, per-package capsules, releasing
+- [CONTRIBUTING](https://github.com/alikhalilll/ali-nuxt-toolkit/blob/master/CONTRIBUTING.md): setup, conventions, quality gates, release flow
+- [CLAUDE.md](https://github.com/alikhalilll/ali-nuxt-toolkit/blob/master/CLAUDE.md): repo-wide design-discipline policy (SOLID, pure functions, strategy pattern, types-first)
+- [llms-full.txt](https://alikhalilll.github.io/ali-nuxt-toolkit/llms-full.txt): single-file dump of install + minimal usage for every package
+
+## Docs — index
+
+- [Introduction](https://alikhalilll.github.io/ali-nuxt-toolkit/index.md): toolkit overview, which package to reach for, shared idioms
+- [UI components index](https://alikhalilll.github.io/ali-nuxt-toolkit/ui.md): overview of `a-tel-input` and `a-smart-skeleton`
+
+## Docs — packages
+
+- [@alikhalilll/nuxt-api-provider](https://alikhalilll.github.io/ali-nuxt-toolkit/api-provider.md): typed `fetch` client — TanStack-Query-style caching (SWR, dedupe, GC), interceptors, retry + exponential backoff, request timeouts, upload + download progress via transparent `XMLHttpRequest` fallback, structured `ApiError` with cross-realm `isApiError()` guard
+- [@alikhalilll/nuxt-crypto](https://alikhalilll.github.io/ali-nuxt-toolkit/crypto.md): AES-256-GCM + PBKDF2-SHA256 on native Web Crypto — derived-key caching, pluggable algorithms, server-only mode, optional device-fingerprint binding (HttpOnly device-ID cookie survives network changes)
+- [@alikhalilll/nuxt-auto-middleware](https://alikhalilll.github.io/ali-nuxt-toolkit/auto-middleware.md): declarative layout-based route middleware — glob + `RegExp` patterns, named groups, per-page overrides via `definePageMeta`, typed registry (typos are compile errors)
+- [@alikhalilll/a-tel-input](https://alikhalilll.github.io/ali-nuxt-toolkit/ui/tel-input.md): headless international telephone input — smart country detection (IP / timezone / locale chain), `libphonenumber-js` validation, responsive popover + bottom-sheet drawer, first-class VeeValidate + Zod integration with async server-side checks
+- [@alikhalilll/a-smart-skeleton](https://alikhalilll.github.io/ali-nuxt-toolkit/ui/smart-skeleton.md): measured skeleton loaders — renders real content invisibly, captures geometry (background, border, radius, box-shadow, text lines, media boxes), replays a pixel-faithful placeholder; zero cumulative layout shift; `smart` / `sequence` / `sweep` / `together` reveal strategies
+
+## npm
+
+- [@alikhalilll/nuxt-api-provider](https://www.npmjs.com/package/@alikhalilll/nuxt-api-provider): published npm package
+- [@alikhalilll/nuxt-crypto](https://www.npmjs.com/package/@alikhalilll/nuxt-crypto): published npm package
+- [@alikhalilll/nuxt-auto-middleware](https://www.npmjs.com/package/@alikhalilll/nuxt-auto-middleware): published npm package
+- [@alikhalilll/a-tel-input](https://www.npmjs.com/package/@alikhalilll/a-tel-input): published npm package
+- [@alikhalilll/a-smart-skeleton](https://www.npmjs.com/package/@alikhalilll/a-smart-skeleton): published npm package
+
+## Per-package READMEs (deep reference)
+
+- [a-tel-input README](https://github.com/alikhalilll/ali-nuxt-toolkit/blob/master/packages/ui-components/ATelInput/README.md): full prop / event / slot / exposed-method tables, VeeValidate + Zod recipes, theming tokens, accessibility notes
+- [a-smart-skeleton README](https://github.com/alikhalilll/ali-nuxt-toolkit/blob/master/packages/ui-components/ASmartSkeleton/README.md): states, hints (`ask-block` / `ask-ignore` / `ask-own`), reveal strategies, chrome capture, theming
+- [api-provider source](https://github.com/alikhalilll/ali-nuxt-toolkit/tree/master/packages/api-provider/src): source layout for cache, interceptors, retry, progress
+- [crypto source](https://github.com/alikhalilll/ali-nuxt-toolkit/tree/master/packages/crypto/src): source layout for AES-GCM + PBKDF2, key cache, fingerprint binding
+- [auto-middleware source](https://github.com/alikhalilll/ali-nuxt-toolkit/tree/master/packages/auto-middleware/src): source layout for the virtual registry and matcher
+
+## Examples
+
+- [Nuxt playground](https://github.com/alikhalilll/ali-nuxt-toolkit/tree/master/playgrounds/nuxt): integration playground exercising all five packages — run with `pnpm play`
+- [StackBlitz](https://stackblitz.com/github/alikhalilll/ali-nuxt-toolkit/tree/master/playgrounds/nuxt): one-click browser version of the playground
+
+## Optional
+
+- [Releases](https://github.com/alikhalilll/ali-nuxt-toolkit/releases): tagged releases with changelogs
+- [SECURITY.md](https://github.com/alikhalilll/ali-nuxt-toolkit/blob/master/SECURITY.md): how to report vulnerabilities (GitHub Security Advisories, not public issues)
+- [CODE_OF_CONDUCT.md](https://github.com/alikhalilll/ali-nuxt-toolkit/blob/master/CODE_OF_CONDUCT.md): Contributor Covenant v2.1
+- [OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/alikhalilll/ali-nuxt-toolkit): supply-chain security posture

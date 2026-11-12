@@ -1,0 +1,434 @@
+# ali-nuxt-toolkit — full reference
+
+> Five independently-installable, type-driven packages for Vue 3 and Nuxt 3+. A typed `fetch` client, Web-Crypto encryption, layout-based route middleware, a headless international tel input, and measured skeleton loaders. Each package ships a framework-agnostic `./core` entry alongside its Nuxt module or Vue component.
+
+This file is a single-file reference designed for LLM consumption. It inlines install + minimal usage for every package so a model can get productive without follow-up fetches. For richer prose, props/events/slots tables, theming tokens, and accessibility notes, follow the per-package links listed in `llms.txt`.
+
+Supported runtimes: Node ≥ 20.19, Nuxt ≥ 3.12, Vue ≥ 3.4. The `@alikhalilll/a-*` UI packages are plain Vue 3 components — they work outside Nuxt too, via `unplugin-vue-components` resolvers.
+
+---
+
+## Design contract (repo-wide)
+
+Every package in this repo adheres to the same rules. When writing code that uses or extends the toolkit, follow these too — reviewers enforce them:
+
+- **Types first.** Public API is defined by exported types, implementations second. Discriminated unions over boolean flags.
+- **Pure-function first.** Side effects (DOM reads, `localStorage`, network) are confined to the smallest possible boundary. Walkers, transformers, formatters stay pure and testable.
+- **Strategy pattern over `if` chains.** Runtime variants (reveal modes, cache strategies, auth presets) are entries in a dispatch table.
+- **Composition over inheritance.** Render-function composition, composables, slot trees — no mixins.
+- **SSR-safe.** No `window` / `document` at module scope. Browser-only effects behind `onMounted`. Hydration-stable DOM output.
+- **Boundary purity.** Each package's `./core` must not import from its Nuxt module surface and vice versa.
+- **Honest `sideEffects`.** Subpath exports (`/core`, `/types`, `/zod`, `/vee-validate`) so unused code doesn't ship.
+
+---
+
+## Install
+
+```bash
+# UI components (Vue 3 — work outside Nuxt)
+pnpm add @alikhalilll/a-tel-input @alikhalilll/a-smart-skeleton
+
+# Nuxt modules
+pnpm add @alikhalilll/nuxt-api-provider \
+         @alikhalilll/nuxt-crypto \
+         @alikhalilll/nuxt-auto-middleware
+```
+
+```ts
+// nuxt.config.ts — add only what you use
+export default defineNuxtConfig({
+  modules: [
+    '@alikhalilll/a-tel-input/nuxt',
+    '@alikhalilll/a-smart-skeleton/nuxt',
+    '@alikhalilll/nuxt-api-provider',
+    '@alikhalilll/nuxt-crypto',
+    '@alikhalilll/nuxt-auto-middleware',
+  ],
+  css: ['@alikhalilll/a-tel-input/styles.css'],
+});
+```
+
+For non-Nuxt Vue + Vite consumers, each component package ships a resolver:
+
+```ts
+// vite.config.ts
+import Components from 'unplugin-vue-components/vite';
+import ATelInputResolver from '@alikhalilll/a-tel-input/resolver';
+import ASmartSkeletonResolver from '@alikhalilll/a-smart-skeleton/resolver';
+
+export default {
+  plugins: [Components({ resolvers: [ATelInputResolver(), ASmartSkeletonResolver()] })],
+};
+```
+
+---
+
+## `@alikhalilll/nuxt-api-provider`
+
+Strongly-typed `fetch` client. TanStack-Query-style caching enabled by default (SWR, in-flight deduplication, GC), interceptor chain, retry with exponential backoff, request timeouts, upload + download progress via transparent `XMLHttpRequest` fallback, structured `ApiError` with a cross-realm `isApiError()` guard (uses `Symbol.for(...)` so bundle duplication doesn't break the check).
+
+### Config
+
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  modules: ['@alikhalilll/nuxt-api-provider'],
+  apiProvider: {
+    baseURL: 'https://api.example.com',
+    provideName: '$apiProvider',
+    defaultTimeoutMs: 20_000,
+    retry: { attempts: 2, delayMs: 500, backoff: 2 },
+    cache: { staleTime: 60_000, hydrate: true },
+    onRequestPath: '~/api/on-request',
+    onErrorPath: '~/api/on-error',
+  },
+});
+```
+
+### Usage
+
+```ts
+import type { ApiProviderClient } from '@alikhalilll/nuxt-api-provider/types';
+export const useApi = (): ApiProviderClient => useNuxtApp().$apiProvider;
+
+// 3rd arg is the query object; null/undefined/'' are skipped, arrays repeat.
+const posts = await useApi()<Post[]>('/posts', null, { userId: 1, tag: ['news', 'featured'] });
+await useApi()<Post>('/posts', { method: 'POST', body: { userId: 42, title: 'Hello' } });
+
+// Per-call cache control
+await useApi()<Stock>('/stocks/AAPL', { cache: false });                 // bypass
+await useApi()<User>('/me', { cache: { refetch: true } });               // force refetch
+useApi().cache.invalidate((key) => key.includes('/posts'));              // manual invalidate
+```
+
+### Behaviour
+
+- Repeated GETs return cached data within `staleTime` (default 30s) without hitting the network.
+- After `staleTime`, cached data is returned **and** a background refresh is kicked off (stale-while-revalidate).
+- Concurrent identical calls share one in-flight promise (deduplication).
+- Mutations are never cached.
+- Pass `onRequestProgress` and the client transparently swaps to `XMLHttpRequest` for upload progress — retry, timeout, `AbortSignal`, `ApiError`, and caching keep working identically; the fast path stays on native `fetch`.
+
+### Errors
+
+```ts
+import { isApiError } from '@alikhalilll/nuxt-api-provider/types';
+
+try {
+  await useApi()<User>('/me');
+} catch (e) {
+  if (isApiError(e)) {
+    // e.status === 0 → network / aborted (no response)
+    // e.status >= 400 → HTTP error
+    console.error(e.status, e.statusText, e.data);
+  }
+}
+```
+
+### Framework-agnostic core
+
+```ts
+import { createApiClient } from '@alikhalilll/nuxt-api-provider/core';
+
+const api = createApiClient({ baseURL: 'https://api.github.com', retry: { attempts: 2 } });
+const repo = await api<{ stargazers_count: number }>('/repos/nuxt/nuxt');
+```
+
+---
+
+## `@alikhalilll/nuxt-crypto`
+
+Symmetric encryption on the native Web Crypto API. AES-256-GCM + PBKDF2-SHA256 by default, with derived-key caching, pluggable algorithms, and a server-only mode that keeps the passphrase off the browser bundle. PBKDF2 is deliberately slow; cached per-salt derived keys make the second decrypt essentially free.
+
+### Config
+
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  modules: ['@alikhalilll/nuxt-crypto'],
+  crypto: {
+    passphrase: process.env.NUXT_ENCRYPTION_PASSPHRASE ?? '',
+    iterations: 100_000,
+    keyCacheSize: 64,
+    serverOnly: false,       // true → skip client plugin
+  },
+});
+```
+
+### Usage
+
+```ts
+const { $crypto } = useNuxtApp();
+
+const payload = await $crypto.encrypt('super-secret');
+// → "v1.<saltB64>.<ivB64>.<cipherB64>"
+
+const plain = await $crypto.decrypt(payload);
+```
+
+### Device-fingerprint binding
+
+Ties a payload to the browser that created it — a copy of the token in another browser refuses to decrypt. The fingerprint is built from an HttpOnly device-ID cookie, so it survives Wi-Fi ↔ 4G switches, VPN rotations, and IP changes.
+
+### Framework-agnostic core
+
+```ts
+import { createCryptoService } from '@alikhalilll/nuxt-crypto/core';
+
+const crypto = await createCryptoService({ passphrase: process.env.ENC_PASS! });
+const token = await crypto.encrypt('hi');
+const plain = await crypto.decrypt(token);
+```
+
+---
+
+## `@alikhalilll/nuxt-auto-middleware`
+
+Declarative, layout-based route middleware. Map layouts → middlewares once in `nuxt.config.ts` and the module generates a single global route middleware that dispatches the right chain on each navigation. Glob (`*`, `**`, `?`) and `RegExp` patterns are both supported.
+
+### Config
+
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  modules: ['@alikhalilll/nuxt-auto-middleware'],
+  autoMiddleware: {
+    groups: {
+      auth: ['auth', 'verify-role'],
+      adminOnly: ['auth', 'verify-role', 'require-admin'],
+    },
+    rules: [
+      { layouts: ['default'], middlewares: ['log-activity'] },
+      { layouts: ['dashboard', 'dashboard/*'], middlewares: ['@auth'] },
+      { layouts: ['admin', 'admin/**'], middlewares: ['@adminOnly'] },
+    ],
+  },
+});
+```
+
+### Per-page overrides
+
+```ts
+definePageMeta({ middlewares: ['custom'] }); // replaces the layout chain for this page
+```
+
+The module emits a **typed registry** so middleware typos are compile errors, not silent routing bugs.
+
+---
+
+## `@alikhalilll/a-tel-input`
+
+Headless international telephone input. Starts as a single clean input — the country picker stays hidden until a number is recognised. Numbers validate against `libphonenumber-js` in real time; the picker is a popover on desktop and a bottom-sheet drawer on mobile (both with a sticky-safe scroll lock). Plugs straight into VeeValidate + Zod with first-class support for async server-side checks.
+
+### Two binding contracts (stay in sync)
+
+```vue
+<!-- Single E.164 string — works with VeeValidate and native forms -->
+<script setup lang="ts">
+import { ref } from 'vue';
+import { ATelInput } from '@alikhalilll/a-tel-input';
+const phone = ref(''); // → '+201066105963'
+</script>
+<template>
+  <ATelInput v-model="phone" default-country="SA" show-validation />
+</template>
+```
+
+```vue
+<!-- Or split into two v-models: digits-only national + dial code -->
+<ATelInput v-model:phone="phone" v-model:country="country" default-country="SA" show-validation />
+```
+
+### VeeValidate + Zod
+
+```vue
+<script setup lang="ts">
+import { useForm, Field as VeeField } from 'vee-validate';
+import { toTypedSchema } from '@vee-validate/zod';
+import { z } from 'zod';
+import { ATelInput } from '@alikhalilll/a-tel-input';
+import { zPhone } from '@alikhalilll/a-tel-input/zod';
+
+const { handleSubmit } = useForm({
+  validationSchema: toTypedSchema(z.object({ phone: zPhone() })),
+});
+</script>
+
+<template>
+  <form @submit="handleSubmit(onSubmit)">
+    <VeeField v-slot="{ field, errors }" name="phone">
+      <ATelInput
+        v-bind="field"
+        :error="errors[0]"
+        :aria-invalid="!!errors.length"
+        default-country="SA"
+        show-validation
+      />
+    </VeeField>
+  </form>
+</template>
+```
+
+### Server-side async validation ("is this phone already registered?")
+
+```ts
+import { useForm } from 'vee-validate';
+import { toTypedSchema } from '@vee-validate/zod';
+import { z } from 'zod';
+import { useTelField } from '@alikhalilll/a-tel-input/vee-validate';
+import { zPhone } from '@alikhalilll/a-tel-input/zod';
+
+const phoneSchema = zPhone().refine(
+  async (value) => {
+    if (!value) return true;
+    const { exists } = await $fetch('/api/phone/exists', { query: { phone: value } });
+    return !exists;
+  },
+  { message: 'This phone number is already registered.' }
+);
+
+const { handleSubmit } = useForm({
+  validationSchema: toTypedSchema(z.object({ phone: phoneSchema })),
+});
+
+const { phone, country, error, handleBlur, fieldProps, validating } = useTelField('phone', {
+  validateOn: 'blur',
+});
+```
+
+```vue
+<ATelInput
+  v-model:phone="phone"
+  v-model:country="country"
+  v-bind="fieldProps"
+  :error="error"
+  :validating="validating"
+  show-validation
+  @blur="handleBlur"
+/>
+```
+
+`:validating` shows a spinner in the field while the server check is in flight; the input stays focusable and `aria-busy="true"` is set for assistive tech.
+
+### Capabilities summary
+
+- Smart country detection: debounced typing + IP / timezone / locale chain on mount.
+- Seven libphonenumber failure reasons; per-country format hint.
+- Headless slots for every visual region (trigger, chevron, flag, item, search, hint, error).
+- i18n + RTL — Arabic-Indic / Persian / Devanagari / Bengali numerals folded to ASCII; country names via `Intl.DisplayNames`.
+- SSR-safe, TypeScript-first, web-types for JetBrains IDEs.
+
+---
+
+## `@alikhalilll/a-smart-skeleton`
+
+Measured skeleton loaders. Hand-authored skeletons drift from the real template as padding changes, font sizes bump, and images load later — the reveal jumps. `ASmartSkeleton` lays your real content out invisibly, measures the live geometry (background, border, radius, box-shadow, text lines, media boxes), and reconstructs a pixel-faithful placeholder from what it saw. One template — the real one — stays the source of truth. Zero cumulative layout shift.
+
+### Minimal example
+
+```vue
+<script setup lang="ts">
+import { ref, onMounted } from 'vue';
+
+const user = ref<User | null>(null);
+const SAMPLE_USER = {
+  name: 'Sarah Connor',
+  role: 'Chief Mitigation Officer',
+  avatar: 'https://example.com/avatar.jpg',
+};
+
+onMounted(async () => (user.value = await $fetch('/api/me')));
+</script>
+
+<template>
+  <ASmartSkeleton :data="user" :sample="SAMPLE_USER" id="user-card">
+    <template #default="{ data }">
+      <!-- your real template — this is also what the skeleton measures -->
+      <div class="card">
+        <img :src="data.avatar" />
+        <h3>{{ data.name }}</h3>
+        <p>{{ data.role }}</p>
+      </div>
+    </template>
+  </ASmartSkeleton>
+</template>
+```
+
+### States
+
+Four built-in states resolved automatically from the `data` prop (plus a configurable `empty` predicate):
+
+- `loading` — data is null / fetching
+- `content` — data resolved and non-empty
+- `empty` — resolved but empty (array `[]`, empty string, custom predicate)
+- `error` — bound explicitly via the `:error` prop
+
+### Hints (steer the capture)
+
+HTML attributes on elements inside the slot:
+
+- `ask-block` — treat this element as an atomic shape (don't recurse into its children)
+- `ask-ignore` — skip this element entirely in the skeleton
+- `ask-own` — render this element's own tree verbatim (escape hatch for icons / interactive bits)
+
+### Reveal strategies
+
+Entries in a dispatch table (strategy pattern), selected via `reveal` prop:
+
+- `smart` (default) — reveals by content type: text lines cross-fade, images pop, blocks slide
+- `sequence` — top-to-bottom cascade
+- `sweep` — diagonal gradient sweep
+- `together` — single global crossfade
+
+### Theming
+
+CSS custom properties — override `--ass-base`, `--ass-shimmer`, `--ass-duration`, etc. at any ancestor.
+
+---
+
+## Framework-agnostic cores (recap)
+
+Every Nuxt-module package exposes the same functionality without Nuxt, via `./core` — usable in Node, Bun, Deno, CLIs, and tests. The UI packages (`a-tel-input`, `a-smart-skeleton`) are plain Vue 3 components and work in any Vue app.
+
+| Package                            | Framework-agnostic entry                    | Shape                                |
+| ---------------------------------- | ------------------------------------------- | ------------------------------------ |
+| `@alikhalilll/nuxt-api-provider`   | `@alikhalilll/nuxt-api-provider/core`       | `createApiClient(options)` function  |
+| `@alikhalilll/nuxt-crypto`         | `@alikhalilll/nuxt-crypto/core`             | `createCryptoService(options)` async |
+| `@alikhalilll/nuxt-auto-middleware`| (Nuxt-only — routing is Nuxt's concern)     | n/a                                  |
+| `@alikhalilll/a-tel-input`         | Vue component — import from the root        | `<ATelInput />`                      |
+| `@alikhalilll/a-smart-skeleton`    | Vue component — import from the root        | `<ASmartSkeleton />`                 |
+
+---
+
+## Repository layout
+
+```
+packages/
+  api-provider/                     # @alikhalilll/nuxt-api-provider
+  crypto/                           # @alikhalilll/nuxt-crypto
+  auto-middleware/                  # @alikhalilll/nuxt-auto-middleware
+  ui-components/
+    ATelInput/                      # @alikhalilll/a-tel-input
+    ASmartSkeleton/                 # @alikhalilll/a-smart-skeleton
+    AInput/ APopover/ ADrawer/      # internal — bundled into the UI packages' dist
+    AResponsivePopover/ AUiBase/
+apps/
+  docs/                             # Nuxt Content docs site (GitHub Pages)
+playgrounds/
+  nuxt/                             # integration playground — `pnpm play`
+scripts/
+  release/ build/ pack/ validate/   # the tk CLI — release, build, validate, helpers
+```
+
+Each Nuxt-module package exposes three subpaths: `.` (Nuxt module), `./core` (framework-agnostic), `./types`. UI component packages expose `.` (Vue component), `./nuxt` (module auto-register), `./styles.css`, `./resolver`, and feature-specific entries (`./zod`, `./vee-validate`).
+
+---
+
+## Pointers
+
+- Repository: https://github.com/alikhalilll/ali-nuxt-toolkit
+- Docs site: https://alikhalilll.github.io/ali-nuxt-toolkit/
+- Playground (StackBlitz): https://stackblitz.com/github/alikhalilll/ali-nuxt-toolkit/tree/master/playgrounds/nuxt
+- Issues: https://github.com/alikhalilll/ali-nuxt-toolkit/issues
+- Security policy: https://github.com/alikhalilll/ali-nuxt-toolkit/blob/master/SECURITY.md
+- `llms.txt` index: https://alikhalilll.github.io/ali-nuxt-toolkit/llms.txt

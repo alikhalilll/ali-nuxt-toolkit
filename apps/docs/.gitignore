@@ -8,3 +8,8 @@
 /public/crypto.md
 /public/ui.md
 /public/ui/
+
+# Root-level AI entry points — source of truth is the repo root; mirror script
+# copies them into public/ at build time so they also serve from the docs URL.
+/public/llms.txt
+/public/llms-full.txt

@@ -44,6 +44,11 @@ import { fileURLToPath } from 'node:url';
 const here = dirname(fileURLToPath(import.meta.url));
 const CONTENT_DIR = join(here, '..', 'content');
 const PUBLIC_DIR = join(here, '..', 'public');
+// Repo root is three levels up from apps/docs/scripts/ — llms.txt / llms-full.txt
+// live there so GitHub serves them as the canonical copy, and we mirror them into
+// public/ so they're also served at the docs site URL.
+const REPO_ROOT = join(here, '..', '..', '..');
+const ROOT_MIRRORS = ['llms.txt', 'llms-full.txt'];
 
 /**
  * Recursively yield every `.md` file under `dir` (depth-first). Pure
@@ -77,6 +82,21 @@ export function routeFor(relPath) {
   return parent === '.' ? 'index.md' : `${parent}.md`;
 }
 
+async function mirrorRootFile(name) {
+  const source = join(REPO_ROOT, name);
+  try {
+    await stat(source);
+  } catch {
+    console.warn(`[mirror-content] ${name} not found at ${source} — skipping.`);
+    return false;
+  }
+  const dest = join(PUBLIC_DIR, name);
+  await mkdir(dirname(dest), { recursive: true });
+  await copyFile(source, dest);
+  console.log(`[mirror-content] ${name} → public/${name}`);
+  return true;
+}
+
 async function mirror() {
   let mirrored = 0;
   try {
@@ -94,6 +114,10 @@ async function mirror() {
     await copyFile(sourceFile, outFile);
     console.log(`[mirror-content] ${rel} → public/${outRel}`);
     mirrored += 1;
+  }
+
+  for (const name of ROOT_MIRRORS) {
+    if (await mirrorRootFile(name)) mirrored += 1;
   }
 
   console.log(`[mirror-content] mirrored ${mirrored} file${mirrored === 1 ? '' : 's'}.`);
