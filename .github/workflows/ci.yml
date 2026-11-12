@@ -13,20 +13,21 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  # Treat npm-side warnings as surface-level signal, not noise.
+  NPM_CONFIG_FUND: 'false'
+  NPM_CONFIG_AUDIT: 'false'
+
 jobs:
   lint:
     name: Lint & format
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: step-security/harden-runner@v2
         with:
-          version: 10.32.1
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+          egress-policy: audit
+      - uses: ./.github/actions/setup
       - run: pnpm lint
       - run: pnpm format:check
 
@@ -34,37 +35,119 @@ jobs:
     name: Commit messages
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
+    timeout-minutes: 5
     steps:
+      - uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: pnpm/action-setup@v4
+          persist-credentials: false
+      # wagoid runs commitlint without a full pnpm install — faster than priming the workspace.
+      - uses: wagoid/commitlint-github-action@v6
         with:
-          version: 10.32.1
-      - uses: actions/setup-node@v4
+          configFile: commitlint.config.mjs
+
+  typecheck:
+    name: Typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: step-security/harden-runner@v2
         with:
-          node-version: 20
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - name: Validate PR commits
-        run: pnpm commitlint --from=${{ github.event.pull_request.base.sha }} --to=${{ github.event.pull_request.head.sha }}
+          egress-policy: audit
+      - uses: ./.github/actions/setup
+      - run: pnpm typecheck
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+      - uses: ./.github/actions/setup
+      # --if-present skips packages that don't declare a test script (currently all
+      # publishable packages except ASmartSkeleton). As more packages add tests this
+      # keeps working with no CI change.
+      - run: pnpm -r --if-present test
 
   build:
-    name: Typecheck & build (node ${{ matrix.node }})
+    name: Build (node ${{ matrix.node }})
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
         node: [20, 22]
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: step-security/harden-runner@v2
         with:
-          version: 10.32.1
-      - uses: actions/setup-node@v4
+          egress-policy: audit
+      - uses: ./.github/actions/setup
         with:
           node-version: ${{ matrix.node }}
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
       - run: pnpm build
-      - run: pnpm typecheck
+      # Upload the node 20 build so downstream jobs don't rebuild.
+      - if: matrix.node == 20
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: |
+            packages/*/dist
+            packages/ui-components/*/dist
+          retention-days: 1
+          if-no-files-found: error
+
+  # Heavy publishing-correctness gate: publint + @arethetypeswrong + consumer install.
+  # Only runs on PRs to master — it packs every publishable package into a tarball and
+  # installs it into a fresh consumer, which is slow (~5 min). Skipping it on direct
+  # master pushes is fine because the release workflow re-runs it before publish.
+  validate:
+    name: Validate packaging
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [lint, typecheck, test]
+    steps:
+      - uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+      - uses: ./.github/actions/setup
+      - run: pnpm tk validate all
+
+  # Single required-status surface. Branch protection only has to require this one
+  # check; it fails if any upstream job failed or was cancelled.
+  ci-ok:
+    name: CI
+    if: always()
+    runs-on: ubuntu-latest
+    needs: [lint, commitlint, typecheck, test, build, validate]
+    steps:
+      - name: Report aggregate result
+        run: |
+          echo "lint       = ${{ needs.lint.result }}"
+          echo "commitlint = ${{ needs.commitlint.result }}"
+          echo "typecheck  = ${{ needs.typecheck.result }}"
+          echo "test       = ${{ needs.test.result }}"
+          echo "build      = ${{ needs.build.result }}"
+          echo "validate   = ${{ needs.validate.result }}"
+          # Commitlint / validate are skipped on direct master pushes — that's fine,
+          # fail only on explicit failure or cancellation.
+          failed=0
+          for result in \
+            "${{ needs.lint.result }}" \
+            "${{ needs.commitlint.result }}" \
+            "${{ needs.typecheck.result }}" \
+            "${{ needs.test.result }}" \
+            "${{ needs.build.result }}" \
+            "${{ needs.validate.result }}"
+          do
+            case "$result" in
+              success|skipped) ;;
+              *) failed=1 ;;
+            esac
+          done
+          exit $failed

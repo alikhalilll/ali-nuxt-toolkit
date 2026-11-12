@@ -3,8 +3,22 @@ name: CodeQL
 on:
   push:
     branches: [master]
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - 'apps/docs/**'
+      - '.changeset/**'
+      - '.github/ISSUE_TEMPLATE/**'
+      - 'LICENSE'
   pull_request:
     branches: [master]
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - 'apps/docs/**'
+      - '.changeset/**'
+      - '.github/ISSUE_TEMPLATE/**'
+      - 'LICENSE'
   schedule:
     - cron: '0 6 * * 1' # Monday 06:00 UTC
 
@@ -21,12 +35,18 @@ jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
         language: [javascript-typescript]
     steps:
+      - uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}

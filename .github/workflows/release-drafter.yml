@@ -1,10 +1,11 @@
 name: Release drafter
 
 on:
-  push:
-    branches: [master]
+  # One trigger path — PR events keep the draft current as PRs merge / update.
+  # No separate push trigger: changesets drives the actual releases; this just
+  # maintains a human-readable draft on GitHub.
   pull_request:
-    types: [opened, reopened, synchronize]
+    types: [opened, reopened, synchronize, edited, labeled, unlabeled, closed]
 
 permissions:
   contents: read
@@ -15,11 +16,16 @@ concurrency:
 
 jobs:
   update_release_draft:
+    name: Update release draft
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       contents: write
       pull-requests: write
-    runs-on: ubuntu-latest
     steps:
+      - uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
       - uses: release-drafter/release-drafter@v6
         with:
           config-name: release-drafter.yml

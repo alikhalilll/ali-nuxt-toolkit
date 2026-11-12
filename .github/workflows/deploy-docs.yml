@@ -1,35 +1,52 @@
 name: Deploy docs to GitHub Pages
 
 on:
-  push:
+  # Only deploy on master push if CI already succeeded for that commit.
+  workflow_run:
+    workflows: [CI]
     branches: [master]
+    types: [completed]
+  # Manual trigger for emergency re-deploys.
   workflow_dispatch:
+  # Build (but don't deploy) on docs-affecting PRs so breakage is caught pre-merge.
+  pull_request:
+    branches: [master]
+    paths:
+      - 'apps/docs/**'
+      - 'packages/**'
+      - '.github/workflows/deploy-docs.yml'
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: pages
+  # Serialize deploys, but cancel superseded ones. PR previews key on PR number.
+  group: pages-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
   build:
+    name: Build docs
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # On workflow_run, only proceed if the upstream CI run succeeded.
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     steps:
+      - uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
       - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
         with:
-          version: 10.32.1
+          # For workflow_run events, check out the SHA that passed CI, not the latest master.
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          persist-credentials: false
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: pnpm
-
-      - run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup
 
       - name: Build workspace packages
         run: pnpm build
@@ -38,18 +55,38 @@ jobs:
         working-directory: apps/docs
         env:
           NUXT_APP_BASE_URL: /ali-nuxt-toolkit/
-          NUXT_PUBLIC_CF_ANALYTICS_TOKEN: 9b74107355e248b7887bf7ef69925180
+          # Public Cloudflare Web Analytics token — moved out of YAML so it can be
+          # rotated by editing a repo variable instead of a workflow file.
+          NUXT_PUBLIC_CF_ANALYTICS_TOKEN: ${{ vars.CF_ANALYTICS_TOKEN }}
         run: pnpm generate
 
       - uses: actions/configure-pages@v5
+        # PR builds don't need a Pages config — they're verifying build success only.
+        if: github.event_name != 'pull_request'
 
       - uses: actions/upload-pages-artifact@v5
+        if: github.event_name != 'pull_request'
         with:
           path: apps/docs/.output/public
 
+      # Keep a PR artifact for visual sanity-checking without publishing to Pages.
+      - uses: actions/upload-artifact@v4
+        if: github.event_name == 'pull_request'
+        with:
+          name: docs-preview
+          path: apps/docs/.output/public
+          retention-days: 7
+
   deploy:
+    name: Deploy to GitHub Pages
+    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
