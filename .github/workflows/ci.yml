@@ -64,6 +64,9 @@ jobs:
         with:
           persist-credentials: false
       - uses: ./.github/actions/setup
+      # Publishable packages consume internal workspace deps (e.g. @alikhalilll/a-ui-base)
+      # via their dist/ output, so cross-package type resolution needs a build first.
+      - run: pnpm build
       - run: pnpm typecheck
 
   test:
@@ -78,6 +81,8 @@ jobs:
         with:
           persist-credentials: false
       - uses: ./.github/actions/setup
+      # Same cross-package dist dependency as the typecheck job.
+      - run: pnpm build
       # --if-present skips packages that don't declare a test script (currently all
       # publishable packages except ASmartSkeleton). As more packages add tests this
       # keeps working with no CI change.

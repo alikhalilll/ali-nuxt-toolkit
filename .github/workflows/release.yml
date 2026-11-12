@@ -30,6 +30,8 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/setup
       - run: pnpm lint
+      # Cross-package type resolution needs workspace dist/ in place first.
+      - run: pnpm build
       - run: pnpm typecheck
       - run: pnpm -r --if-present test
       - run: pnpm tk validate all
