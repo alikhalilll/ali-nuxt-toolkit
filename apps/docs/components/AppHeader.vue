@@ -96,6 +96,45 @@ const navLinks = [
       <!-- Right actions -->
       <div class="app-header__actions">
         <a
+          href="https://alikhalilll.github.io/en-us"
+          target="_blank"
+          rel="noopener"
+          class="app-header__icon-btn"
+          aria-label="Personal website"
+          title="Website"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="12" r="9" />
+            <path d="M3 12h18" />
+            <path d="M12 3a14 14 0 0 1 0 18" />
+            <path d="M12 3a14 14 0 0 0 0 18" />
+          </svg>
+        </a>
+        <a
+          href="https://www.linkedin.com/in/alikhalilll/"
+          target="_blank"
+          rel="noopener"
+          class="app-header__icon-btn"
+          aria-label="LinkedIn"
+          title="LinkedIn"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path
+              d="M20.45 20.45h-3.56v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.34V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.07 2.07 0 1 1 0-4.14 2.07 2.07 0 0 1 0 4.14zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z"
+            />
+          </svg>
+        </a>
+        <a
           href="https://github.com/alikhalilll/ali-nuxt-toolkit"
           target="_blank"
           rel="noopener"
@@ -186,6 +225,22 @@ const navLinks = [
         >
           ATelInput
         </NuxtLink>
+        <a
+          href="https://alikhalilll.github.io/en-us"
+          target="_blank"
+          rel="noopener"
+          class="app-header__sheet-link"
+        >
+          Website ↗
+        </a>
+        <a
+          href="https://www.linkedin.com/in/alikhalilll/"
+          target="_blank"
+          rel="noopener"
+          class="app-header__sheet-link"
+        >
+          LinkedIn ↗
+        </a>
         <a
           href="https://github.com/alikhalilll/ali-nuxt-toolkit"
           target="_blank"
@@ -360,6 +415,10 @@ const navLinks = [
 @media (max-width: 860px) {
   .app-header__nav {
     display: none;
+  }
+  /* Nav carries flex:1 on desktop; when it's gone, push actions to the right edge. */
+  .app-header__actions {
+    margin-left: auto;
   }
   .app-header__hamburger {
     display: inline-flex;
