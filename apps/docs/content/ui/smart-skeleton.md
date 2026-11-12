@@ -74,7 +74,7 @@ export default {
 
 Wrap a component with `<ASmartSkeleton>`. Pass the data ref and a representative `sample`. While `data` is `null`, the plugin renders the sample out of sight, measures it, and paints the skeleton. When data arrives, it reveals.
 
-Four rules keep the measurement honest. Each one has a short section below with a tiny before/after; the full example at the end puts them together.
+Five rules keep the measurement honest and the paint on-brand. Each one has a short section below with a tiny before/after; the full example at the end puts them together.
 
 ## Rule 1 — Always pass a `sample`
 
@@ -132,9 +132,32 @@ An `<img>` without `width` / `height` or `aspect-ratio` reports zero height unti
 <img :src="user.avatar" class="aspect-square w-16" />
 ```
 
+## Rule 5 — Theme to your design with `<ASmartSkeletonProvider>`
+
+The raw fallback greys (`rgb(128 128 128 / 0.2)` base, `rgb(255 255 255 / 0.12)` highlight) are translucent so they read on both light and dark pages — they're a stand-in, not a production look. Wrap your app once in `<ASmartSkeletonProvider>` to set the bone fill and shimmer colour against your real surface, and the provider's `mode="system"` toggle keeps the theme in step with `prefers-color-scheme`. Per-skeleton overrides work too: any ancestor can declare the `--ask-*` variables and the cascade carries them down.
+
+```vue
+<!-- ❌ no provider — bones use the fallback greys regardless of your design -->
+<ASmartSkeleton :data="user" :sample="SAMPLE_USER">…</ASmartSkeleton>
+
+<!-- ✅ app-wide provider, light and dark themed against real surfaces -->
+<ASmartSkeletonProvider
+  mode="system"
+  :theme="{
+    light: { base: '#d1d4dc', highlight: '#ffffff' },
+    dark: { base: '#31363f', highlight: 'rgba(255,255,255,0.08)' },
+    radius: '6px',
+  }"
+>
+  <ASmartSkeleton :data="user" :sample="SAMPLE_USER">…</ASmartSkeleton>
+</ASmartSkeletonProvider>
+```
+
+See [Theming](#theming) for the full token table and chrome-bone rules.
+
 ## Putting it together
 
-All four rules applied in one component — stable `id`, matching `sample`, `{ data }` destructured in the slot, and the avatar's dimensions pinned via the class on `<UserCard>`'s own `<img>`:
+All five rules applied — provider wraps the app with themed bones, each skeleton has a stable `id`, a matching `sample`, `{ data }` destructured in the slot, and the avatar's dimensions pinned via the class on `<UserCard>`'s own `<img>`:
 
 ```vue
 <script setup lang="ts">
@@ -154,11 +177,20 @@ onMounted(async () => {
 </script>
 
 <template>
-  <ASmartSkeleton id="user-card" :data="user" :sample="SAMPLE_USER">
-    <template #default="{ data }">
-      <UserCard :user="data" />
-    </template>
-  </ASmartSkeleton>
+  <ASmartSkeletonProvider
+    mode="system"
+    :theme="{
+      light: { base: '#d1d4dc', highlight: '#ffffff' },
+      dark: { base: '#31363f', highlight: 'rgba(255,255,255,0.08)' },
+      radius: '6px',
+    }"
+  >
+    <ASmartSkeleton id="user-card" :data="user" :sample="SAMPLE_USER">
+      <template #default="{ data }">
+        <UserCard :user="data" />
+      </template>
+    </ASmartSkeleton>
+  </ASmartSkeletonProvider>
 </template>
 ```
 
