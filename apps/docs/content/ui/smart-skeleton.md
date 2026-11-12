@@ -9,28 +9,6 @@ order: 2
 
 > A skeleton that **measures itself** from your real component. One template, pixel-aligned chrome, no second DOM tree to maintain.
 
-::DemoSkeletonPostFeedMinimal
-::
-
-Every grey rectangle above was measured from the component rendered beneath it. There is no parallel placeholder file. Padding changes on the real card and the skeleton follows; text wraps differently and the bars re-flow; a card gains a shadow and the outline copies it.
-
-::alert{type="note" title="What this package is — and isn't"}
-`ASmartSkeleton` **owns a loading state**. It is not a hand-authored shape library (`<RectBone />` / `<CircleBone />`), and it does nothing useful without a real component plus a representative `sample` to measure. If you want to draw an arbitrary pill or bar with no measurement, that's `<ASmartSkeletonBox>` — covered [below](#standalone-box).
-::
-
-## Why this exists
-
-A hand-authored `<ProductCardSkeleton>` next to `<ProductCard>` is a second template that drifts: padding diverges, fonts change, images start loading later and the reveal jumps.
-
-`ASmartSkeleton` sidesteps that by laying the real component out invisibly, reading the DOM it produced with `getBoundingClientRect()` and Canvas 2D font metrics, then reconstructing a placeholder from what it saw. One template — the real one — stays the source of truth.
-
-- **Zero layout shift.** Bone positions come from the actual DOM, not a copy.
-- **Painted chrome is reproduced**, not re-drawn. Backgrounds, borders, radii, and box-shadows copy over verbatim onto chrome bones.
-- **Text follows the font's ascender / descender**, not a guessed line-height.
-- **One document clock** drives every shimmer, so skeletons mounted at different times still sweep in phase.
-- **Direction-aware animations.** The shimmer, the content-reveal sweep, and the `byPosition` sequence order all follow the inherited CSS `direction` — an RTL page flows right-to-left with no prop or custom property.
-- **One component, four states** — loading, content, empty, error — plus the reveal transition between them.
-
 ## Install
 
 ::doc-install{pkg="@alikhalilll/a-smart-skeleton"}
@@ -69,6 +47,30 @@ export default {
 ::alert{type="info" title="Four components ship"}
 `<ASmartSkeleton>` (the measured loader), `<ASmartSkeletonBox>` (a standalone bar), `<ASmartSkeletonSuspense>` (a `<Suspense>` wrapper that measures its fallback), and `<ASmartSkeletonProvider>` (app-wide theme + reveal defaults).
 ::
+
+## Preview
+
+::DemoOverviewTileRow
+::
+
+Every grey rectangle above was measured from the component rendered beneath it. There is no parallel placeholder file. Padding changes on the real card and the skeleton follows; text wraps differently and the bars re-flow; a card gains a shadow and the outline copies it.
+
+::alert{type="note" title="What this package is — and isn't"}
+`ASmartSkeleton` **owns a loading state**. It is not a hand-authored shape library (`<RectBone />` / `<CircleBone />`), and it does nothing useful without a real component plus a representative `sample` to measure. If you want to draw an arbitrary pill or bar with no measurement, that's `<ASmartSkeletonBox>` — covered [below](#standalone-box).
+::
+
+## Why this exists
+
+A hand-authored `<ProductCardSkeleton>` next to `<ProductCard>` is a second template that drifts: padding diverges, fonts change, images start loading later and the reveal jumps.
+
+`ASmartSkeleton` sidesteps that by laying the real component out invisibly, reading the DOM it produced with `getBoundingClientRect()` and Canvas 2D font metrics, then reconstructing a placeholder from what it saw. One template — the real one — stays the source of truth.
+
+- **Zero layout shift.** Bone positions come from the actual DOM, not a copy.
+- **Painted chrome is reproduced**, not re-drawn. Backgrounds, borders, radii, and box-shadows copy over verbatim onto chrome bones.
+- **Text follows the font's ascender / descender**, not a guessed line-height.
+- **One document clock** drives every shimmer, so skeletons mounted at different times still sweep in phase.
+- **Direction-aware animations.** The shimmer, the content-reveal sweep, and the `byPosition` sequence order all follow the inherited CSS `direction` — an RTL page flows right-to-left with no prop or custom property.
+- **One component, four states** — loading, content, empty, error — plus the reveal transition between them.
 
 ## Quick start
 
@@ -196,7 +198,7 @@ onMounted(async () => {
 
 A product card driven by `:data` + `:sample`:
 
-::DemoSkeletonDataDriven
+::DemoOverviewTile
 ::
 
 ## State machine
@@ -233,7 +235,7 @@ The `loading` prop is an escape hatch for state you can't model as "data is `nul
 
 `@reveal` fires once per `skeleton → content` transition. It does not fire on error / empty transitions or on subsequent re-renders.
 
-::DemoSkeletonStates
+::DemoOverviewStates
 ::
 
 ## Reveal transitions
@@ -258,7 +260,10 @@ Every option above the "Motion" control in the playground below is wired to the 
 The default `smart` picks `byRow` for lists with more than a few pieces, which stacks a per-card cascade on top of the pane fade and the height ease — three animations fighting each other. `together` collapses the list entry into one crossfade that lands with the resize.
 ::
 
-::DemoSkeletonPostFeed
+::DemoOverviewChart
+::
+
+::DemoOverviewDistribution
 ::
 
 ### Custom reveals
@@ -586,6 +591,290 @@ Imported from `@alikhalilll/a-smart-skeleton` (or `/core`):
 | `setDebug(on: boolean)`      | —                                | Switch debug mode on or off globally.                                                         |
 | `traceMeasurement(el, …)`    | —                                | Logs one element's class list, computed padding, and bounds. Called by the measure walker.    |
 | `debugging(el?)`             | `boolean`                        | `true` when the global flag is set, or when `el` has an `[ask-debug]` ancestor.               |
+
+## Recipes
+
+Six focused examples, derived from one realistic page — an analytics overview with a metrics row, a comparison chart, a distribution list, and a paginated table. They **compose**: stack all six and you have the full page. Pick them apart and each one teaches a single pattern.
+
+Nothing below is tied to a framework, chart library, or design system. Replace `<DataTable>`, `<AreaChart>`, and the class names with whatever you use.
+
+### 1. One measured tile
+
+The smallest useful loader. One card, one data object, one measured skeleton.
+
+```vue
+<script setup lang="ts">
+import { ref, onMounted } from 'vue';
+
+interface Metric {
+  label: string;
+  value: number;
+  delta: number;
+}
+
+const metric = ref<Metric | null>(null);
+const SAMPLE: Metric = { label: 'Visitors', value: 12_480, delta: 0.143 };
+
+onMounted(async () => {
+  metric.value = await $fetch('/api/metrics/visitors');
+});
+</script>
+
+<template>
+  <ASmartSkeleton id="metric-visitors" :data="metric" :sample="SAMPLE">
+    <template #default="{ data }">
+      <article class="card">
+        <p class="label">{{ data.label }}</p>
+        <p class="value">{{ data.value.toLocaleString() }}</p>
+        <p class="delta">{{ (data.delta * 100).toFixed(1) }}%</p>
+      </article>
+    </template>
+  </ASmartSkeleton>
+</template>
+```
+
+The three rules in one place: a stable `id`, a `sample` that mirrors the real response, a slot that destructures `{ data }` so the sample reaches the card during measurement.
+
+### 2. A row of tiles that reveal together
+
+Wrap the whole grid in one skeleton so four cards fade in as a single unit instead of a stagger.
+
+```vue
+<script setup lang="ts">
+import { ref } from 'vue';
+
+interface Overview {
+  metrics: Metric[];
+}
+
+const overview = ref<Overview | null>(null);
+const SAMPLE: Overview = {
+  metrics: [
+    { label: 'Visitors', value: 12_480, delta: 0.143 },
+    { label: 'Sessions', value: 18_206, delta: 0.101 },
+    { label: 'Page views', value: 41_372, delta: -0.06 },
+    { label: 'Engagement', value: 64.2, delta: 0.024 },
+  ],
+};
+</script>
+
+<template>
+  <ASmartSkeleton id="metrics-row" :data="overview" :sample="SAMPLE" reveal="together">
+    <template #default="{ data }">
+      <div class="grid grid-cols-4 gap-4">
+        <article v-for="m in data.metrics" :key="m.label" class="card">
+          <p>{{ m.label }}</p>
+          <p>{{ m.value.toLocaleString() }}</p>
+        </article>
+      </div>
+    </template>
+  </ASmartSkeleton>
+</template>
+```
+
+Default `reveal="smart"` picks a per-card stagger for lists, which reads as noise on a tight grid. `together` collapses four crossfades into one.
+
+### 3. A comparison line chart
+
+Charts render out of SVG primitives that don't measure cleanly. Use the `#skeleton` slot to opt out of measurement entirely, keep the chart under `<ClientOnly>`, and reach for `lineDashArray` to distinguish overlaid series.
+
+```vue
+<script setup lang="ts">
+import { ref } from 'vue';
+
+interface Point {
+  date: string;
+  current: number;
+  previous: number;
+}
+
+const series = ref<Point[] | null>(null);
+
+// First series solid, second series dashed — lineDashArray[i] applies per series.
+const lineDashArray = [[], [4, 4]];
+</script>
+
+<template>
+  <ASmartSkeleton id="comparison-chart" :data="series" :sample="[]">
+    <template #default>
+      <ClientOnly>
+        <AreaChart
+          :data="series ?? []"
+          :line-dash-array="lineDashArray"
+          :height="288"
+          :curve-type="'monotoneX'"
+        />
+      </ClientOnly>
+    </template>
+
+    <template #skeleton>
+      <!-- Hand-authored placeholder opts out of measurement. Size it to
+           match the real chart so the reveal doesn't shift. -->
+      <div class="h-72" ask-block>
+        <ASmartSkeletonBox width="100%" height="100%" radius="12px" />
+      </div>
+    </template>
+  </ASmartSkeleton>
+</template>
+```
+
+`lineDashArray: [[], [4, 4]]` draws series 0 solid and series 1 dashed — the shape a "this period vs previous period" overlay wants. The `#skeleton` slot sets `ask-own` for you so the walker stops at the chart root.
+
+### 4. A paginated table
+
+The slot binding is doing the work here: the sample's rows reach the child table so the measurement captures a full table shape, not an empty single-column shell. Every column `<DataTable>` renders gets a bone.
+
+```vue
+<script setup lang="ts">
+import { ref } from 'vue';
+
+interface Page {
+  url: string;
+  sessions: number;
+  bounce: number;
+}
+interface Report {
+  rows: Page[];
+  total: number;
+}
+
+const report = ref<Report | null>(null);
+const SAMPLE: Report = {
+  total: 5,
+  rows: [
+    { url: '/', sessions: 8420, bounce: 0.42 },
+    { url: '/pricing', sessions: 3420, bounce: 0.51 },
+    { url: '/docs', sessions: 2340, bounce: 0.38 },
+    { url: '/blog', sessions: 1730, bounce: 0.62 },
+    { url: '/about', sessions: 1214, bounce: 0.58 },
+  ],
+};
+</script>
+
+<template>
+  <ASmartSkeleton id="pages-report" :data="report" :sample="SAMPLE">
+    <template #default="{ data }">
+      <DataTable :rows="data?.rows ?? []" :total="data?.total ?? 0" />
+    </template>
+  </ASmartSkeleton>
+</template>
+```
+
+The same markup without the destructure measures an empty table — see [Thread `data` through the slot](#thread-data-through-the-slot) for the before / after.
+
+### 5. A distribution list
+
+Lists of rows measure well out of the box. `reveal="together"` keeps them from staggering row-by-row.
+
+```vue
+<script setup lang="ts">
+import { ref } from 'vue';
+
+interface Row {
+  label: string;
+  value: number;
+  share: number;
+}
+
+const distribution = ref<Row[] | null>(null);
+const SAMPLE: Row[] = [
+  { label: 'Chrome', value: 6840, share: 0.55 },
+  { label: 'Safari', value: 3920, share: 0.31 },
+  { label: 'Edge', value: 980, share: 0.08 },
+  { label: 'Firefox', value: 420, share: 0.03 },
+  { label: 'Other', value: 310, share: 0.02 },
+];
+</script>
+
+<template>
+  <ASmartSkeleton id="browser-distribution" :data="distribution" :sample="SAMPLE" reveal="together">
+    <template #default="{ data }">
+      <div class="flex flex-col gap-3">
+        <div v-for="row in data" :key="row.label" class="row">
+          <span>{{ row.label }}</span>
+          <span>{{ row.value.toLocaleString() }}</span>
+          <span>{{ (row.share * 100).toFixed(0) }}%</span>
+          <div class="bar" :style="{ width: `${row.share * 100}%` }" />
+        </div>
+      </div>
+    </template>
+  </ASmartSkeleton>
+</template>
+```
+
+### 6. Four states, one component
+
+The same skeleton resolves `loading → error → empty → content`. Wire all four slots and the component picks the right one.
+
+```vue
+<script setup lang="ts">
+import { ref } from 'vue';
+
+const report = ref<Report | null>(null);
+const fetchError = ref<Error | null>(null);
+
+async function load() {
+  report.value = null;
+  fetchError.value = null;
+  try {
+    report.value = await $fetch('/api/report');
+  } catch (e) {
+    fetchError.value = e as Error;
+  }
+}
+</script>
+
+<template>
+  <ASmartSkeleton
+    id="four-state-report"
+    :data="report"
+    :sample="SAMPLE"
+    :error="fetchError"
+    :empty="report?.rows.length === 0"
+  >
+    <template #default="{ data }">
+      <DataTable :rows="data.rows" />
+    </template>
+
+    <template #empty>
+      <article class="empty-card">
+        <p>No data in this window.</p>
+      </article>
+    </template>
+
+    <template #error>
+      <article class="error-card">
+        <p>Couldn't load the report.</p>
+        <button @click="load">Retry</button>
+      </article>
+    </template>
+  </ASmartSkeleton>
+</template>
+```
+
+Error wins over empty, empty wins over content. A slot you forgot to wire is quietly unrendered.
+
+### When the slot can't carry `data` — compose the fallback
+
+Some pages render a slot from values a composable derives from several sources (a per-filter fetch, an aggregated fetch, an interactive refetch). You can't funnel all of those through the `{ data }` slot argument; make **every** derivation fall back to the sample while the real payload is still null.
+
+```ts
+import { computed, ref } from 'vue';
+import { SAMPLE } from './sample';
+
+export function useReport() {
+  const aggregated = ref<Report | null>(null);
+  const perFilter = ref<Row[] | null>(null);
+
+  // Falls back to SAMPLE.rows while both sources are null, so the skeleton
+  // measures a full list instead of an empty one.
+  const rows = computed(() => perFilter.value ?? aggregated.value?.rows ?? SAMPLE.rows);
+
+  return { aggregated, perFilter, rows };
+}
+```
+
+The slot then renders from `rows` directly and the skeleton captures a real shape even when the outer refs are still loading.
 
 ## API reference
 
