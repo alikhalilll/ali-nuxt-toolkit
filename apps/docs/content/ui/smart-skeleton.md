@@ -9,6 +9,15 @@ order: 2
 
 > A skeleton that **measures itself** from your real component. One template, pixel-aligned chrome, no second DOM tree to maintain.
 
+::DemoOverviewTileRow
+::
+
+Every grey rectangle above was measured from the component rendered beneath it. There is no parallel placeholder file. Padding changes on the real card and the skeleton follows; text wraps differently and the bars re-flow; a card gains a shadow and the outline copies it.
+
+::alert{type="note" title="What this package is — and isn't"}
+`ASmartSkeleton` **owns a loading state**. It is not a hand-authored shape library (`<RectBone />` / `<CircleBone />`), and it does nothing useful without a real component plus a representative `sample` to measure. If you want to draw an arbitrary pill or bar with no measurement, that's `<ASmartSkeletonBox>` — covered [below](#standalone-box).
+::
+
 ## Install
 
 ::doc-install{pkg="@alikhalilll/a-smart-skeleton"}
@@ -46,17 +55,6 @@ export default {
 
 ::alert{type="info" title="Four components ship"}
 `<ASmartSkeleton>` (the measured loader), `<ASmartSkeletonBox>` (a standalone bar), `<ASmartSkeletonSuspense>` (a `<Suspense>` wrapper that measures its fallback), and `<ASmartSkeletonProvider>` (app-wide theme + reveal defaults).
-::
-
-## Preview
-
-::DemoOverviewTileRow
-::
-
-Every grey rectangle above was measured from the component rendered beneath it. There is no parallel placeholder file. Padding changes on the real card and the skeleton follows; text wraps differently and the bars re-flow; a card gains a shadow and the outline copies it.
-
-::alert{type="note" title="What this package is — and isn't"}
-`ASmartSkeleton` **owns a loading state**. It is not a hand-authored shape library (`<RectBone />` / `<CircleBone />`), and it does nothing useful without a real component plus a representative `sample` to measure. If you want to draw an arbitrary pill or bar with no measurement, that's `<ASmartSkeletonBox>` — covered [below](#standalone-box).
 ::
 
 ## Why this exists

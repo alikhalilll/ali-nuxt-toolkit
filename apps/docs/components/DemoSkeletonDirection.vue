@@ -99,75 +99,68 @@ const code = `<script setup lang="ts">
           </button>
         </div>
 
-        <!-- Stage -->
-        <div class="mx-auto max-w-3xl">
-          <div class="dsd rounded-xl border border-border bg-surface/50 p-4">
-            <ASmartSkeletonProvider :mode="providerMode" :theme="DEMO_THEME">
-              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <section dir="ltr" class="min-w-0">
-                  <header class="mb-2 flex items-center justify-between text-[11px] text-text-dim">
-                    <code class="font-semibold">dir="ltr"</code>
-                    <span>reads left-to-right</span>
-                  </header>
-                  <div
-                    class="min-h-[164px] overflow-hidden rounded-xl border border-border bg-surface shadow-sm"
+        <!-- Stage — one outer wrapper card (DemoTabs). The only inner "card"
+             is the article itself, which is what the skeleton mirrors. -->
+        <ASmartSkeletonProvider :mode="providerMode" :theme="DEMO_THEME">
+          <div class="mx-auto grid max-w-3xl grid-cols-1 gap-4 sm:grid-cols-2">
+            <section dir="ltr" class="min-w-0">
+              <header class="mb-2 flex items-center justify-between text-[11px] text-text-dim">
+                <code class="font-semibold">dir="ltr"</code>
+                <span>reads left-to-right</span>
+              </header>
+              <ASmartSkeleton
+                v-if="mounted"
+                id="dsd-ltr"
+                :data="null"
+                :sample="{ title: 'Lorem ipsum', body: 'Dolor sit amet.' }"
+                label="Loading card"
+              >
+                <template #default>
+                  <article
+                    class="flex flex-col gap-2 rounded-xl border border-border bg-surface p-4 shadow-sm"
                   >
-                    <ASmartSkeleton
-                      v-if="mounted"
-                      id="dsd-ltr"
-                      :data="null"
-                      :sample="{ title: 'Lorem ipsum', body: 'Dolor sit amet.' }"
-                      label="Loading card"
-                    >
-                      <template #default>
-                        <article class="flex flex-col gap-2 p-4">
-                          <div class="size-10 rounded-full bg-primary/20" />
-                          <h4 class="text-sm font-semibold text-text">Lorem ipsum</h4>
-                          <p class="text-xs text-text-dim">
-                            Dolor sit amet, consectetur adipiscing elit. Nunc viverra.
-                          </p>
-                        </article>
-                      </template>
-                    </ASmartSkeleton>
-                  </div>
-                </section>
+                    <div class="size-10 rounded-full bg-primary/20" />
+                    <h4 class="text-sm font-semibold text-text">Lorem ipsum</h4>
+                    <p class="text-xs text-text-dim">
+                      Dolor sit amet, consectetur adipiscing elit. Nunc viverra.
+                    </p>
+                  </article>
+                </template>
+              </ASmartSkeleton>
+            </section>
 
-                <section dir="rtl" class="min-w-0">
-                  <header class="mb-2 flex items-center justify-between text-[11px] text-text-dim">
-                    <code class="font-semibold">dir="rtl"</code>
-                    <span>reads right-to-left</span>
-                  </header>
-                  <div
-                    class="min-h-[164px] overflow-hidden rounded-xl border border-border bg-surface shadow-sm"
+            <section dir="rtl" class="min-w-0">
+              <header class="mb-2 flex items-center justify-between text-[11px] text-text-dim">
+                <code class="font-semibold">dir="rtl"</code>
+                <span>reads right-to-left</span>
+              </header>
+              <ASmartSkeleton
+                v-if="mounted"
+                id="dsd-rtl"
+                :data="null"
+                :sample="{ title: 'لوريم إيبسوم', body: 'دولور سيت أميت.' }"
+                label="جاري التحميل"
+              >
+                <template #default>
+                  <article
+                    class="flex flex-col gap-2 rounded-xl border border-border bg-surface p-4 shadow-sm"
                   >
-                    <ASmartSkeleton
-                      v-if="mounted"
-                      id="dsd-rtl"
-                      :data="null"
-                      :sample="{ title: 'لوريم إيبسوم', body: 'دولور سيت أميت.' }"
-                      label="جاري التحميل"
-                    >
-                      <template #default>
-                        <article class="flex flex-col gap-2 p-4">
-                          <div class="size-10 rounded-full bg-primary/20" />
-                          <h4 class="text-sm font-semibold text-text">لوريم إيبسوم</h4>
-                          <p class="text-xs text-text-dim">
-                            دولور سيت أميت، كونسيكتيتور أدايبايسكينج إيليت. نونك فيفيرا.
-                          </p>
-                        </article>
-                      </template>
-                    </ASmartSkeleton>
-                  </div>
-                </section>
-              </div>
-            </ASmartSkeletonProvider>
+                    <div class="size-10 rounded-full bg-primary/20" />
+                    <h4 class="text-sm font-semibold text-text">لوريم إيبسوم</h4>
+                    <p class="text-xs text-text-dim">
+                      دولور سيت أميت، كونسيكتيتور أدايبايسكينج إيليت. نونك فيفيرا.
+                    </p>
+                  </article>
+                </template>
+              </ASmartSkeleton>
+            </section>
           </div>
+        </ASmartSkeletonProvider>
 
-          <p class="mt-3 text-center text-[11px] text-text-dim">
-            Same skeleton, same document clock, same provider. The only difference is the
-            <code>dir</code> on the wrapper — and the shimmer sweep flips to match.
-          </p>
-        </div>
+        <p class="mt-5 text-center text-[11px] text-text-dim">
+          Same skeleton, same document clock, same provider. The only difference is the
+          <code>dir</code> on the wrapper — and the shimmer sweep flips to match.
+        </p>
       </div>
     </DemoTabs>
   </div>
