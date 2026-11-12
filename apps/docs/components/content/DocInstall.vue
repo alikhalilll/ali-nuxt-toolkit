@@ -21,6 +21,8 @@
  */
 import { computed, onMounted, ref } from 'vue';
 import { CheckIcon, CopyIcon } from '~/components/icons';
+import SparklesIcon from '~/components/icons/SparklesIcon.vue';
+import { promptFor, hasPrompt } from '~/utils/ai-prompts';
 
 const props = withDefaults(
   defineProps<{
@@ -80,6 +82,28 @@ async function copy() {
     /* clipboard unavailable */
   }
 }
+
+// Copy-prompt button: only renders when the (single) package is in the AI-prompt
+// catalog. Multi-package installs skip the button — the prompt is scoped to one
+// package's docs/rules, not a composed set.
+const canCopyPrompt = computed(() => {
+  const pkg = props.pkg?.trim();
+  return !!pkg && !props.pkgs && hasPrompt(pkg);
+});
+const promptCopied = ref(false);
+async function copyPrompt() {
+  const pkg = props.pkg?.trim();
+  if (!pkg) return;
+  const text = promptFor(pkg, selected.value);
+  if (!text) return;
+  try {
+    await navigator.clipboard.writeText(text);
+    promptCopied.value = true;
+    setTimeout(() => (promptCopied.value = false), 1500);
+  } catch {
+    /* clipboard unavailable */
+  }
+}
 </script>
 
 <template>
@@ -97,6 +121,21 @@ async function copy() {
         {{ m }}
       </button>
       <span class="doc-install__bar-spacer" />
+      <button
+        v-if="canCopyPrompt"
+        type="button"
+        class="doc-install__copy doc-install__copy--prompt"
+        title="Copy an AI-ready prompt — install command, docs links, rules, and a minimal example. Paste into any AI coding assistant."
+        :aria-label="
+          promptCopied ? 'Prompt copied' : 'Copy AI install-and-use prompt for this package'
+        "
+        :data-copied="promptCopied || undefined"
+        @click="copyPrompt"
+      >
+        <CheckIcon v-if="promptCopied" class="size-3" />
+        <SparklesIcon v-else class="size-3" />
+        <span>{{ promptCopied ? 'Copied' : 'Copy prompt' }}</span>
+      </button>
       <button
         type="button"
         class="doc-install__copy"
@@ -219,6 +258,23 @@ async function copy() {
 .doc-install__copy[data-copied] {
   color: var(--color-success);
   border-color: color-mix(in oklab, var(--color-success) 50%, var(--color-border));
+}
+/* Copy-prompt button: brand-tinted so it reads as "the AI-assistant handoff"
+   next to the plain "Copy command" button, without going louder than it. */
+.doc-install__copy--prompt {
+  color: color-mix(in oklab, var(--color-brand) 80%, var(--color-text-dim));
+  border-color: color-mix(in oklab, var(--color-brand) 35%, var(--color-border));
+  background: color-mix(in oklab, var(--color-brand) 6%, transparent);
+}
+.doc-install__copy--prompt:hover {
+  color: var(--color-brand);
+  background: color-mix(in oklab, var(--color-brand) 14%, transparent);
+  border-color: color-mix(in oklab, var(--color-brand) 55%, var(--color-border));
+}
+.doc-install__copy--prompt[data-copied] {
+  color: var(--color-success);
+  border-color: color-mix(in oklab, var(--color-success) 50%, var(--color-border));
+  background: color-mix(in oklab, var(--color-success) 10%, transparent);
 }
 
 /* Body — dark editor surface with the command in a `<pre>`. Mirror the
