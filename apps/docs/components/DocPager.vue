@@ -12,7 +12,7 @@ const order: PagerEntry[] = [
   { path: '/crypto', title: 'crypto' },
   { path: '/auto-middleware', title: 'auto-middleware' },
   { path: '/ui', title: 'ui' },
-  { path: '/ui/smart-skeleton', title: 'ASmartSkeleton' },
+  { path: '/ui/ghost-skeleton', title: 'AGhostSkeleton' },
   { path: '/ui/tel-input', title: 'ATelInput' },
 ];
 

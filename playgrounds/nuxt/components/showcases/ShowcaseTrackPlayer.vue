@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { RevealMode } from '@alikhalilll/a-smart-skeleton';
+import type { RevealMode } from '@alikhalilll/a-ghost-skeleton';
 
 /**
  * **Loading track player**
@@ -34,7 +34,7 @@ const { data } = useShowcaseData<Track>(() => ({
 </script>
 
 <template>
-  <ASmartSkeleton
+  <AGhostSkeleton
     id="showcase-track"
     :key="`track-${nonce}`"
     :reveal="reveal"
@@ -72,5 +72,5 @@ const { data } = useShowcaseData<Track>(() => ({
         </button>
       </article>
     </template>
-  </ASmartSkeleton>
+  </AGhostSkeleton>
 </template>

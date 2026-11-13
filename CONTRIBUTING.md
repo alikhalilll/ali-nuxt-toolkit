@@ -73,7 +73,7 @@ packages/
   auto-middleware/             # @alikhalilll/nuxt-auto-middleware
   ui-components/
     ATelInput/                 # @alikhalilll/a-tel-input
-    ASmartSkeleton/            # @alikhalilll/a-smart-skeleton
+    AGhostSkeleton/            # @alikhalilll/a-ghost-skeleton
     AInput/ APopover/ ADrawer/ # internal — bundled into the UI packages' dist
     AResponsivePopover/ AUiBase/
 apps/
@@ -95,7 +95,7 @@ Every **Nuxt-module package** exposes three entry points:
 
 Public API changes must update **all three** surfaces when relevant.
 
-**UI component packages** (`a-tel-input`, `a-smart-skeleton`) ship a different shape:
+**UI component packages** (`a-tel-input`, `a-ghost-skeleton`) ship a different shape:
 
 | Subpath          | What it is                                 |
 | ---------------- | ------------------------------------------ |
@@ -152,7 +152,7 @@ during review is fine — prefer `--force-with-lease`.
 <type>(<scope>): <subject>
 
 feat(a-tel-input): add Zod async refine integration
-feat(a-smart-skeleton): add 'sweep' reveal strategy
+feat(a-ghost-skeleton): add 'sweep' reveal strategy
 fix(api-provider): reject with ApiError when AbortSignal fires mid-retry
 docs(auto-middleware): document RegExp patterns
 chore(repo): bump pnpm
@@ -161,7 +161,7 @@ chore(repo): bump pnpm
 Allowed types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`,
 `chore`, `revert`, `release`.
 
-Useful scopes: `a-tel-input`, `a-smart-skeleton`, `api-provider`, `crypto`,
+Useful scopes: `a-tel-input`, `a-ghost-skeleton`, `api-provider`, `crypto`,
 `auto-middleware`, `docs`, `playground`, `release`, `repo`, `ci`, `deps`.
 
 - `feat:` / `fix:` land in the changelog and trigger a minor / patch bump.
@@ -229,7 +229,7 @@ re-export ambient internals — cut narrow, named surfaces.
 
 ### Tests
 
-- Unit tests live alongside the code (see `packages/ui-components/ASmartSkeleton/tests/`
+- Unit tests live alongside the code (see `packages/ui-components/AGhostSkeleton/tests/`
   for the current reference).
 - Run via Vitest; add a `"test": "vitest run"` script to any package that doesn't have one
   yet and tests will pick up automatically in CI (`pnpm -r --if-present test`).

@@ -11,7 +11,7 @@ export default defineNuxtConfig({
     '@alikhalilll/a-responsive-popover/styles.css',
     '@alikhalilll/a-input/styles.css',
     '@alikhalilll/a-tel-input/styles.css',
-    '@alikhalilll/a-smart-skeleton/styles.css',
+    '@alikhalilll/a-ghost-skeleton/styles.css',
     '~/assets/main.css',
   ],
   app: {
@@ -35,7 +35,7 @@ export default defineNuxtConfig({
     '@alikhalilll/a-drawer/nuxt',
     '@alikhalilll/a-responsive-popover/nuxt',
     '@alikhalilll/a-tel-input/nuxt',
-    '@alikhalilll/a-smart-skeleton/nuxt',
+    '@alikhalilll/a-ghost-skeleton/nuxt',
   ],
   apiProvider: {
     baseURL: 'https://dummyjson.com',

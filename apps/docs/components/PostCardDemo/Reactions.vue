@@ -10,7 +10,7 @@ defineProps<{
 
 <template>
   <!--
-    `data-ask-block` tells the smart-skeleton walker to draw this whole
+    `data-ask-block` tells the ghost-skeleton walker to draw this whole
     button as one bone at its own bounding box + border-radius, instead of
     recursing into the SVG + count. Mirrors the handcrafted
     `<ASkeletonBlock :w="48" :h="16" class="rounded-full" />` footer pill in

@@ -2,7 +2,7 @@
 // Mirrors Header.vue (feed variant) in muslim-academy-platform. Real impl
 // uses NuxtLinkLocale + i18n + UiARelativeTime + verified-badge icon.
 // Here: plain <a> for the links, inline time string, minimal verified SVG —
-// every CLASS preserved so the smart-skeleton walker sees an identical tree.
+// every CLASS preserved so the ghost-skeleton walker sees an identical tree.
 import UserAvatar from './UserAvatar.vue';
 import ActionsMenu from './ActionsMenu.vue';
 

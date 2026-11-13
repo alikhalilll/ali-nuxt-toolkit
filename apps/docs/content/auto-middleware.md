@@ -1,8 +1,22 @@
 ---
-title: auto-middleware
-description: Declarative layout-based route middleware for Nuxt 3/4 with glob patterns, named groups, per-page overrides, and a typed registry.
+title: 'auto-middleware — Nuxt 3 / 4 layout-based route middleware'
+description: 'Declarative layout-based route middleware for Nuxt 3 / 4 — glob patterns, named groups, per-page overrides, and a typed registry. Map layouts to middlewares once in nuxt.config; the module generates the dispatch chain.'
 package: '@alikhalilll/nuxt-auto-middleware'
 order: 3
+keywords:
+  - nuxt middleware
+  - nuxt route middleware
+  - auto middleware
+  - layout middleware
+  - nuxt 3 middleware
+  - nuxt 4 middleware
+  - declarative middleware
+  - glob middleware
+  - typed middleware
+  - nuxt 3
+  - nuxt 4
+  - typescript
+  - nuxt module
 ---
 
 # `@alikhalilll/nuxt-auto-middleware`

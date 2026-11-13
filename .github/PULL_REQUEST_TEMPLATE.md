@@ -5,14 +5,14 @@ PR TITLE must follow Conventional Commits — it becomes the squash-merge commit
 validated by commitlint. Examples:
 
   feat(a-tel-input): add Zod async refine integration
-  feat(a-smart-skeleton): add 'sweep' reveal strategy
+  feat(a-ghost-skeleton): add 'sweep' reveal strategy
   fix(api-provider): reject with ApiError when AbortSignal fires mid-retry
   fix(crypto): propagate SubtleCrypto errors untouched
   docs(auto-middleware): document RegExp patterns
   chore(repo): bump pnpm
 
 Allowed types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert, release.
-Allowed scopes: a-tel-input, a-smart-skeleton, api-provider, crypto, auto-middleware,
+Allowed scopes: a-tel-input, a-ghost-skeleton, api-provider, crypto, auto-middleware,
                 docs, playground, release, repo, ci, deps.
 -->
 
@@ -25,7 +25,7 @@ Allowed scopes: a-tel-input, a-smart-skeleton, api-provider, crypto, auto-middle
 <!-- Tick what this PR touches. Keep PRs scoped — split unrelated changes. -->
 
 - [ ] `@alikhalilll/a-tel-input`
-- [ ] `@alikhalilll/a-smart-skeleton`
+- [ ] `@alikhalilll/a-ghost-skeleton`
 - [ ] `@alikhalilll/nuxt-api-provider`
 - [ ] `@alikhalilll/nuxt-crypto`
 - [ ] `@alikhalilll/nuxt-auto-middleware`

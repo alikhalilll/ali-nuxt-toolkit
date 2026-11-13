@@ -26,7 +26,7 @@ Every package in this repo adheres to the same rules. When writing code that use
 
 ```bash
 # UI components (Vue 3 — work outside Nuxt)
-pnpm add @alikhalilll/a-tel-input @alikhalilll/a-smart-skeleton
+pnpm add @alikhalilll/a-tel-input @alikhalilll/a-ghost-skeleton
 
 # Nuxt modules
 pnpm add @alikhalilll/nuxt-api-provider \
@@ -39,7 +39,7 @@ pnpm add @alikhalilll/nuxt-api-provider \
 export default defineNuxtConfig({
   modules: [
     '@alikhalilll/a-tel-input/nuxt',
-    '@alikhalilll/a-smart-skeleton/nuxt',
+    '@alikhalilll/a-ghost-skeleton/nuxt',
     '@alikhalilll/nuxt-api-provider',
     '@alikhalilll/nuxt-crypto',
     '@alikhalilll/nuxt-auto-middleware',
@@ -54,10 +54,10 @@ For non-Nuxt Vue + Vite consumers, each component package ships a resolver:
 // vite.config.ts
 import Components from 'unplugin-vue-components/vite';
 import ATelInputResolver from '@alikhalilll/a-tel-input/resolver';
-import ASmartSkeletonResolver from '@alikhalilll/a-smart-skeleton/resolver';
+import AGhostSkeletonResolver from '@alikhalilll/a-ghost-skeleton/resolver';
 
 export default {
-  plugins: [Components({ resolvers: [ATelInputResolver(), ASmartSkeletonResolver()] })],
+  plugins: [Components({ resolvers: [ATelInputResolver(), AGhostSkeletonResolver()] })],
 };
 ```
 
@@ -320,9 +320,9 @@ const { phone, country, error, handleBlur, fieldProps, validating } = useTelFiel
 
 ---
 
-## `@alikhalilll/a-smart-skeleton`
+## `@alikhalilll/a-ghost-skeleton`
 
-Measured skeleton loaders. Hand-authored skeletons drift from the real template as padding changes, font sizes bump, and images load later — the reveal jumps. `ASmartSkeleton` lays your real content out invisibly, measures the live geometry (background, border, radius, box-shadow, text lines, media boxes), and reconstructs a pixel-faithful placeholder from what it saw. One template — the real one — stays the source of truth. Zero cumulative layout shift.
+Measured skeleton loaders. Hand-authored skeletons drift from the real template as padding changes, font sizes bump, and images load later — the reveal jumps. `AGhostSkeleton` lays your real content out invisibly, measures the live geometry (background, border, radius, box-shadow, text lines, media boxes), and reconstructs a pixel-faithful placeholder from what it saw. One template — the real one — stays the source of truth. Zero cumulative layout shift.
 
 ### Minimal example
 
@@ -341,7 +341,7 @@ onMounted(async () => (user.value = await $fetch('/api/me')));
 </script>
 
 <template>
-  <ASmartSkeleton :data="user" :sample="SAMPLE_USER" id="user-card">
+  <AGhostSkeleton :data="user" :sample="SAMPLE_USER" id="user-card">
     <template #default="{ data }">
       <!-- your real template — this is also what the skeleton measures -->
       <div class="card">
@@ -350,7 +350,7 @@ onMounted(async () => (user.value = await $fetch('/api/me')));
         <p>{{ data.role }}</p>
       </div>
     </template>
-  </ASmartSkeleton>
+  </AGhostSkeleton>
 </template>
 ```
 
@@ -388,7 +388,7 @@ CSS custom properties — override `--ass-base`, `--ass-shimmer`, `--ass-duratio
 
 ## Framework-agnostic cores (recap)
 
-Every Nuxt-module package exposes the same functionality without Nuxt, via `./core` — usable in Node, Bun, Deno, CLIs, and tests. The UI packages (`a-tel-input`, `a-smart-skeleton`) are plain Vue 3 components and work in any Vue app.
+Every Nuxt-module package exposes the same functionality without Nuxt, via `./core` — usable in Node, Bun, Deno, CLIs, and tests. The UI packages (`a-tel-input`, `a-ghost-skeleton`) are plain Vue 3 components and work in any Vue app.
 
 | Package                            | Framework-agnostic entry                    | Shape                                |
 | ---------------------------------- | ------------------------------------------- | ------------------------------------ |
@@ -396,7 +396,7 @@ Every Nuxt-module package exposes the same functionality without Nuxt, via `./co
 | `@alikhalilll/nuxt-crypto`         | `@alikhalilll/nuxt-crypto/core`             | `createCryptoService(options)` async |
 | `@alikhalilll/nuxt-auto-middleware`| (Nuxt-only — routing is Nuxt's concern)     | n/a                                  |
 | `@alikhalilll/a-tel-input`         | Vue component — import from the root        | `<ATelInput />`                      |
-| `@alikhalilll/a-smart-skeleton`    | Vue component — import from the root        | `<ASmartSkeleton />`                 |
+| `@alikhalilll/a-ghost-skeleton`    | Vue component — import from the root        | `<AGhostSkeleton />`                 |
 
 ---
 
@@ -409,7 +409,7 @@ packages/
   auto-middleware/                  # @alikhalilll/nuxt-auto-middleware
   ui-components/
     ATelInput/                      # @alikhalilll/a-tel-input
-    ASmartSkeleton/                 # @alikhalilll/a-smart-skeleton
+    AGhostSkeleton/                 # @alikhalilll/a-ghost-skeleton
     AInput/ APopover/ ADrawer/      # internal — bundled into the UI packages' dist
     AResponsivePopover/ AUiBase/
 apps/

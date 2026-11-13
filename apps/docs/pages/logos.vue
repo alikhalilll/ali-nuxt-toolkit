@@ -38,7 +38,7 @@ const marks: Mark[] = [
   },
   {
     id: 'seal-skel',
-    pkg: 'a-smart-skeleton',
+    pkg: 'a-ghost-skeleton',
     glyph: 'bars',
     function: 'Draws a measured skeleton while your data loads.',
     why: 'The mark is three descending bars — exactly what the component paints in the loading state. The logo is literally a frozen frame of the component doing its job.',

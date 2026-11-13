@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { RevealMode } from '@alikhalilll/a-smart-skeleton';
+import type { RevealMode } from '@alikhalilll/a-ghost-skeleton';
 
 /**
  * **Loading article**
@@ -33,7 +33,7 @@ const { data } = useShowcaseData<Article>(() => ({
 </script>
 
 <template>
-  <ASmartSkeleton
+  <AGhostSkeleton
     id="showcase-article"
     :key="`article-${nonce}`"
     :reveal="reveal"
@@ -58,5 +58,5 @@ const { data } = useShowcaseData<Article>(() => ({
         </div>
       </article>
     </template>
-  </ASmartSkeleton>
+  </AGhostSkeleton>
 </template>

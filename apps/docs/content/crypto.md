@@ -1,8 +1,25 @@
 ---
-title: crypto
-description: AES-256-GCM + PBKDF2 encryption for Nuxt 3/4 using the Web Crypto API, with key caching and pluggable algorithms.
+title: 'crypto — Nuxt 3 / 4 AES-256-GCM encryption'
+description: 'AES-256-GCM + PBKDF2 symmetric encryption for Nuxt 3 / 4 and Vue 3, built on the native Web Crypto API — with key caching, pluggable algorithms, and SSR-safe composables.'
 package: '@alikhalilll/nuxt-crypto'
 order: 2
+keywords:
+  - nuxt crypto
+  - nuxt encryption
+  - vue crypto
+  - web crypto api
+  - aes
+  - aes-gcm
+  - aes-256-gcm
+  - pbkdf2
+  - pbkdf2-sha256
+  - symmetric encryption
+  - key derivation
+  - nuxt 3
+  - nuxt 4
+  - vue 3
+  - typescript
+  - nuxt module
 ---
 
 # @alikhalilll/nuxt-crypto

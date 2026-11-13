@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * One measured metric tile — the smallest useful ASmartSkeleton loader.
+ * One measured metric tile — the smallest useful AGhostSkeleton loader.
  * Click the tile to reload. Mirrors the first "Recipe" block in the docs.
  */
 import { onUnmounted, ref } from 'vue';
@@ -59,7 +59,7 @@ const SAMPLE = { label: 'Visitors', value: '12,480', delta: '+14.3%', up: true }
 \u003c/script>
 
 <template>
-  <ASmartSkeleton id="metric-tile" :data="metric" :sample="SAMPLE">
+  <AGhostSkeleton id="metric-tile" :data="metric" :sample="SAMPLE">
     <template #default="{ data }">
       <article class="tile">
         <p class="label">{{ data.label }}</p>
@@ -67,7 +67,7 @@ const SAMPLE = { label: 'Visitors', value: '12,480', delta: '+14.3%', up: true }
         <p class="delta" :class="data.up ? 'up' : 'down'">{{ data.delta }}</p>
       </article>
     </template>
-  </ASmartSkeleton>
+  </AGhostSkeleton>
 </template>`;
 </script>
 
@@ -83,7 +83,7 @@ const SAMPLE = { label: 'Visitors', value: '12,480', delta: '+14.3%', up: true }
       @keydown.enter="reload"
       @keydown.space.prevent="reload"
     >
-      <ASmartSkeleton id="demo-metric-tile" :data="metric" :sample="SAMPLE">
+      <AGhostSkeleton id="demo-metric-tile" :data="metric" :sample="SAMPLE">
         <template #default="{ data }">
           <article class="odt__tile">
             <p class="odt__label">{{ (data as Metric).label }}</p>
@@ -93,7 +93,7 @@ const SAMPLE = { label: 'Visitors', value: '12,480', delta: '+14.3%', up: true }
             </p>
           </article>
         </template>
-      </ASmartSkeleton>
+      </AGhostSkeleton>
     </div>
   </DemoTabs>
 </template>

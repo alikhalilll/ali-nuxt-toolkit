@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * Main hero demo for ASmartSkeleton on the docs site.
+ * Main hero demo for AGhostSkeleton on the docs site.
  *
  * Layout:
  *   ┌───────────────────────────────────────────────────────────┐
@@ -439,20 +439,20 @@ const showAdvanced = ref(false);
       <!--  Feed stage                                               -->
       <!-- ========================================================= -->
       <div class="pf-stage">
-        <ASmartSkeletonProvider
+        <AGhostSkeletonProvider
           :mode="providerMode"
           :theme="demoTheme"
           :debug="themeDebug"
           :reveal="revealMode"
         >
-          <ASmartSkeleton id="docs-demo-social-feed" :data="feed" :sample="SAMPLE_POSTS">
+          <AGhostSkeleton id="docs-demo-social-feed" :data="feed" :sample="SAMPLE_POSTS">
             <template #default="{ data }">
               <div class="pf-stage__list">
                 <PostCard v-for="post in data as Post[]" :key="post.id" :post="post" />
               </div>
             </template>
-          </ASmartSkeleton>
-        </ASmartSkeletonProvider>
+          </AGhostSkeleton>
+        </AGhostSkeletonProvider>
       </div>
     </div>
   </DemoStage>

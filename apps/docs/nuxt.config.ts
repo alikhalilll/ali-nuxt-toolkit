@@ -3,8 +3,122 @@ import tailwindcss from '@tailwindcss/vite';
 const siteUrl =
   process.env.NUXT_PUBLIC_SITE_URL || 'https://alikhalilll.github.io/ali-nuxt-toolkit';
 const siteName = 'ali-nuxt-toolkit';
+const siteTagline =
+  'Nuxt 3 / 4 and Vue 3 packages — skeleton loader, fetch client, crypto, middleware, phone input';
 const siteDescription =
-  'Five focused, strongly-typed packages for Nuxt 3 / 4 and Vue 3: a typed fetch client with caching + retry, AES-GCM + PBKDF2 encryption, layout-based route middleware, a measured skeleton loader, and an international phone input.';
+  'Production-grade Nuxt 3 / 4 and Vue 3 packages: a content-aware Vue skeleton loader (no CLS, no hand-authored shapes), a typed fetch client with retry and upload progress, AES-256-GCM + PBKDF2 encryption on the Web Crypto API, layout-based route middleware, and a headless international phone input.';
+const siteKeywords = [
+  // Skeleton loader (headline product)
+  'vue skeleton',
+  'vue skeleton loader',
+  'vue 3 skeleton',
+  'nuxt skeleton',
+  'nuxt skeleton loader',
+  'nuxt 3 skeleton',
+  'nuxt 4 skeleton',
+  'skeleton loader',
+  'skeleton screen',
+  'skeleton component',
+  'skeleton animation',
+  'loading skeleton',
+  'content-aware skeleton',
+  'auto skeleton',
+  'automatic skeleton',
+  'measured skeleton',
+  'ghost loader',
+  'ghost skeleton',
+  'shimmer',
+  'shimmer effect',
+  'pulse',
+  'pulse loader',
+  'loading placeholder',
+  'placeholder loader',
+  'cls',
+  'zero cls',
+  'layout shift',
+  'cumulative layout shift',
+  'core web vitals',
+  // Fetch client
+  'nuxt fetch',
+  'nuxt api',
+  'nuxt api client',
+  'typed fetch',
+  'typed api client',
+  'vue fetch',
+  'vue api client',
+  'fetch wrapper',
+  'ofetch wrapper',
+  'request interceptor',
+  'response interceptor',
+  'interceptors',
+  'retry',
+  'exponential backoff',
+  'upload progress',
+  'download progress',
+  'request deduplication',
+  'stale while revalidate',
+  // Crypto
+  'nuxt crypto',
+  'nuxt encryption',
+  'nuxt security',
+  'vue crypto',
+  'vue encryption',
+  'encryption',
+  'decryption',
+  'aes',
+  'aes-gcm',
+  'aes-256-gcm',
+  'pbkdf2',
+  'pbkdf2-sha256',
+  'web crypto api',
+  'subtle crypto',
+  'symmetric encryption',
+  'device fingerprint',
+  'cookie encryption',
+  // Middleware
+  'nuxt middleware',
+  'nuxt route middleware',
+  'auto middleware',
+  'layout middleware',
+  'page middleware',
+  'route guard',
+  'navigation guard',
+  'declarative middleware',
+  'glob middleware',
+  'typed middleware',
+  // Phone input
+  'vue phone input',
+  'vue tel input',
+  'nuxt phone input',
+  'international phone input',
+  'intl tel input',
+  'phone number input',
+  'phone validation',
+  'phone formatter',
+  'country picker',
+  'country code',
+  'dial code',
+  'e164',
+  'libphonenumber',
+  'libphonenumber-js',
+  // Framework
+  'nuxt 3',
+  'nuxt 4',
+  'nuxt module',
+  'nuxt toolkit',
+  'nuxt starter',
+  'nuxt packages',
+  'nuxt library',
+  'vue 3',
+  'vue 3 toolkit',
+  'vue 3 library',
+  'vue 3 components',
+  'headless components',
+  'headless ui',
+  'shadcn vue',
+  'typescript',
+  'ssr',
+].join(', ');
 
 const baseURL = process.env.NUXT_APP_BASE_URL || '/';
 const withBase = (path: string) => `${baseURL}${path}`.replace(/\/+/g, '/');
@@ -32,7 +146,7 @@ export default defineNuxtConfig({
     '@nuxt/content',
     '@alikhalilll/nuxt-api-provider',
     '@alikhalilll/nuxt-crypto',
-    '@alikhalilll/a-smart-skeleton/nuxt',
+    '@alikhalilll/a-ghost-skeleton/nuxt',
   ],
   // Note: @alikhalilll/a-ui-base/tokens.css is @imported from the top of docs.css instead of
   // listed here. Vite + pnpm workspaces resolves the same workspace-symlinked CSS via
@@ -48,7 +162,9 @@ export default defineNuxtConfig({
     public: {
       siteUrl,
       siteName,
+      siteTagline,
       siteDescription,
+      siteKeywords,
     },
   },
   nitro: {
@@ -71,8 +187,7 @@ export default defineNuxtConfig({
         '/auto-middleware',
         '/ui',
         '/ui/tel-input',
-        '/ui/skeleton',
-        '/ui/smart-skeleton',
+        '/ui/ghost-skeleton',
       ],
       failOnError: false,
     },
@@ -121,7 +236,7 @@ export default defineNuxtConfig({
       htmlAttrs: {
         lang: 'en',
       },
-      title: siteName,
+      title: `${siteName} — ${siteTagline}`,
       link: [
         { rel: 'icon', type: 'image/svg+xml', href: withBase('favicon.svg') },
         { rel: 'icon', type: 'image/png', sizes: '32x32', href: withBase('favicon-32x32.png') },
@@ -141,11 +256,7 @@ export default defineNuxtConfig({
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1, maximum-scale=1' },
         { name: 'description', content: siteDescription },
-        {
-          name: 'keywords',
-          content:
-            'nuxt, nuxt 3, nuxt 4, nuxt modules, vue 3, typescript, fetch, api client, interceptors, retry, upload progress, crypto, aes-gcm, pbkdf2, web crypto, middleware, auto middleware, skeleton loader, phone input, libphonenumber, vee-validate',
-        },
+        { name: 'keywords', content: siteKeywords },
         { name: 'author', content: 'Ali Khalil' },
         { name: 'theme-color', content: '#0a0a0a' },
         { name: 'color-scheme', content: 'dark light' },
@@ -153,10 +264,10 @@ export default defineNuxtConfig({
         { name: 'googlebot', content: 'index, follow' },
         { name: 'format-detection', content: 'telephone=no' },
 
-        // Open Graph
+        // Open Graph — defaults; per-page templates in [...slug].vue override title/description/url
         { property: 'og:type', content: 'website' },
         { property: 'og:site_name', content: siteName },
-        { property: 'og:title', content: siteName },
+        { property: 'og:title', content: `${siteName} — ${siteTagline}` },
         { property: 'og:description', content: siteDescription },
         { property: 'og:url', content: siteUrl },
         { property: 'og:locale', content: 'en_US' },
@@ -164,14 +275,18 @@ export default defineNuxtConfig({
         { property: 'og:image:type', content: 'image/png' },
         { property: 'og:image:width', content: '1200' },
         { property: 'og:image:height', content: '630' },
-        { property: 'og:image:alt', content: `${siteName} logo` },
+        { property: 'og:image:alt', content: `${siteName} — ${siteTagline}` },
 
-        // Twitter
+        // Twitter — same note on per-page overrides
         { name: 'twitter:card', content: 'summary_large_image' },
-        { name: 'twitter:title', content: siteName },
+        { name: 'twitter:title', content: `${siteName} — ${siteTagline}` },
         { name: 'twitter:description', content: siteDescription },
         { name: 'twitter:image', content: socialImage },
-        { name: 'twitter:image:alt', content: `${siteName} logo` },
+        { name: 'twitter:image:alt', content: `${siteName} — ${siteTagline}` },
+
+        // Pinterest-style rich pin & Discord/Slack unfurl hints (safe no-ops elsewhere)
+        { name: 'application-name', content: siteName },
+        { name: 'apple-mobile-web-app-title', content: siteName },
       ],
       script: [
         /*

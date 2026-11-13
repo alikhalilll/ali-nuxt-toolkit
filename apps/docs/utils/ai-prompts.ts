@@ -37,7 +37,7 @@ const MANAGER_CMD: Record<Manager, string> = {
 };
 
 interface PromptEntry {
-  /** Docs page path, e.g. `/ui/smart-skeleton` */
+  /** Docs page path, e.g. `/ui/ghost-skeleton` */
   docs: string;
   /** Repo path to the package source, relative to REPO_BASE/tree/master */
   repo: string;
@@ -45,18 +45,18 @@ interface PromptEntry {
   readme: string;
   /**
    * The body of the prompt. `{{INSTALL}}` is replaced with the install
-   * command (e.g. `pnpm add @alikhalilll/a-smart-skeleton`) at copy-time.
+   * command (e.g. `pnpm add @alikhalilll/a-ghost-skeleton`) at copy-time.
    * `{{DOCS}}`, `{{REPO}}`, `{{README}}` are also interpolated for brevity.
    */
   body: string;
 }
 
 const PACKAGE_PROMPTS: Record<string, PromptEntry> = {
-  '@alikhalilll/a-smart-skeleton': {
-    docs: '/ui/smart-skeleton',
-    repo: 'packages/ui-components/ASmartSkeleton',
-    readme: 'packages/ui-components/ASmartSkeleton/README.md',
-    body: `Install and set up **@alikhalilll/a-smart-skeleton** in this Vue 3 / Nuxt 3+ project.
+  '@alikhalilll/a-ghost-skeleton': {
+    docs: '/ui/ghost-skeleton',
+    repo: 'packages/ui-components/AGhostSkeleton',
+    readme: 'packages/ui-components/AGhostSkeleton/README.md',
+    body: `Install and set up **@alikhalilll/a-ghost-skeleton** in this Vue 3 / Nuxt 3+ project.
 
 What it is: a measured skeleton loader. It lays the real component out unseen, reads its DOM with \`getBoundingClientRect()\` and Canvas 2D font metrics, and replays it as a placeholder — one template, no second DOM tree to maintain. Zero layout shift. Chrome capture (backgrounds/borders/radii/shadows copied verbatim). Direction-aware (RTL supported natively).
 
@@ -78,11 +78,11 @@ Add the module to \`nuxt.config.ts\`:
 
 \`\`\`ts
 export default defineNuxtConfig({
-  modules: ['@alikhalilll/a-smart-skeleton/nuxt'],
+  modules: ['@alikhalilll/a-ghost-skeleton/nuxt'],
 });
 \`\`\`
 
-The four components (\`ASmartSkeleton\`, \`ASmartSkeletonBox\`, \`ASmartSkeletonSuspense\`, \`ASmartSkeletonProvider\`) auto-import. Stylesheet injects itself. Pre-paint boot script is wired for you.
+The four components (\`AGhostSkeleton\`, \`AGhostSkeletonBox\`, \`AGhostSkeletonSuspense\`, \`AGhostSkeletonProvider\`) auto-import. Stylesheet injects itself. Pre-paint boot script is wired for you.
 
 ## Setup (Vue 3 + Vite)
 
@@ -90,7 +90,7 @@ Import the stylesheet in your entry:
 
 \`\`\`ts
 // main.ts
-import '@alikhalilll/a-smart-skeleton/styles.css';
+import '@alikhalilll/a-ghost-skeleton/styles.css';
 \`\`\`
 
 For \`unplugin-vue-components\`, use the shipped resolver:
@@ -98,10 +98,10 @@ For \`unplugin-vue-components\`, use the shipped resolver:
 \`\`\`ts
 // vite.config.ts
 import Components from 'unplugin-vue-components/vite';
-import ASmartSkeletonResolver from '@alikhalilll/a-smart-skeleton/resolver';
+import AGhostSkeletonResolver from '@alikhalilll/a-ghost-skeleton/resolver';
 
 export default {
-  plugins: [Components({ resolvers: [ASmartSkeletonResolver()] })],
+  plugins: [Components({ resolvers: [AGhostSkeletonResolver()] })],
 };
 \`\`\`
 
@@ -111,7 +111,7 @@ export default {
 2. **Give the skeleton a stable \`:id\`** — shape memory is keyed by \`id\` across visits; returning users see last session's shape immediately.
 3. **Destructure \`{ data }\` in \`#default\`** — the plugin invokes the slot with \`{ data: SAMPLE }\` during measurement. If the slot ignores the argument and reads an outer ref instead, that ref is still \`null\` during measurement, children receive empty data, and the cold-load skeleton is wrong (warm visits hide the bug because they hit cached shape).
 4. **Give \`<img>\` explicit \`width\`/\`height\` or \`aspect-ratio\`** — an image without dimensions reports zero height until load, and the skeleton reserves no space for it.
-5. **Theme via \`<ASmartSkeletonProvider>\`** — the raw fallback greys are translucent placeholders, not a production look. Wrap your app once to set \`base\`/\`highlight\` against your real surface; \`mode="system"\` tracks \`prefers-color-scheme\`.
+5. **Theme via \`<AGhostSkeletonProvider>\`** — the raw fallback greys are translucent placeholders, not a production look. Wrap your app once to set \`base\`/\`highlight\` against your real surface; \`mode="system"\` tracks \`prefers-color-scheme\`.
 
 ## Minimal example
 
@@ -132,7 +132,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <ASmartSkeletonProvider
+  <AGhostSkeletonProvider
     mode="system"
     :theme="{
       light: { base: '#d1d4dc', highlight: '#ffffff' },
@@ -140,12 +140,12 @@ onMounted(async () => {
       radius: '6px',
     }"
   >
-    <ASmartSkeleton id="user-card" :data="user" :sample="SAMPLE_USER">
+    <AGhostSkeleton id="user-card" :data="user" :sample="SAMPLE_USER">
       <template #default="{ data }">
         <UserCard :user="data" />
       </template>
-    </ASmartSkeleton>
-  </ASmartSkeletonProvider>
+    </AGhostSkeleton>
+  </AGhostSkeletonProvider>
 </template>
 \`\`\`
 

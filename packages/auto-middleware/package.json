@@ -1,7 +1,7 @@
 {
   "name": "@alikhalilll/nuxt-auto-middleware",
   "version": "1.2.1",
-  "description": "Declarative, layout-based route middleware for Nuxt 3/4, with glob matching, named groups, and per-page overrides.",
+  "description": "Declarative, layout-based route middleware for Nuxt 3 / 4 — glob matching, named groups, per-page overrides, and a typed registry. Map layouts to middleware chains once in nuxt.config; the module generates the dispatcher.",
   "license": "MIT",
   "author": "alikhalilll",
   "repository": {
@@ -20,10 +20,27 @@
   },
   "keywords": [
     "nuxt",
+    "nuxt3",
+    "nuxt4",
     "nuxt-module",
+    "nuxt-middleware",
     "middleware",
-    "layout",
-    "route-middleware"
+    "route-middleware",
+    "auto-middleware",
+    "layout-middleware",
+    "page-middleware",
+    "vue-middleware",
+    "declarative-middleware",
+    "glob-middleware",
+    "typed-middleware",
+    "route-guard",
+    "navigation-guard",
+    "nuxt-routing",
+    "nuxt-auth-middleware",
+    "glob-matching",
+    "routing",
+    "vue-router",
+    "typescript"
   ],
   "exports": {
     ".": {

@@ -1,8 +1,24 @@
 ---
-title: ATelInput
-description: A headless international telephone input for Vue 3 / Nuxt 3+ — country auto-detect, libphonenumber-js validation, responsive popover/drawer picker, and first-class VeeValidate + Zod integration with server-side validation hooks.
+title: 'ATelInput — Vue 3 / Nuxt international phone input'
+description: 'A headless international telephone input for Vue 3 and Nuxt 3 / 4 — country auto-detect, libphonenumber-js validation, responsive popover/drawer picker, and first-class VeeValidate + Zod integration with server-side validation hooks.'
 package: '@alikhalilll/a-tel-input'
 order: 1
+keywords:
+  - vue phone input
+  - nuxt phone input
+  - international phone input
+  - vue 3 phone input
+  - tel input
+  - libphonenumber
+  - libphonenumber-js
+  - country picker
+  - phone validation
+  - veevalidate
+  - zod
+  - headless phone input
+  - nuxt module
+  - typescript
+  - vue 3
 ---
 
 # ATelInput

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 /**
- * State Machine Demo for ASmartSkeleton.
+ * State Machine Demo for AGhostSkeleton.
  *
- * Demonstrates the 4 mutual states handled natively by ASmartSkeleton:
+ * Demonstrates the 4 mutual states handled natively by AGhostSkeleton:
  *   - Loading   → renders shimmering measured skeleton
  *   - Content   → renders #default="{ data }"
  *   - Empty     → renders #empty slot
@@ -33,7 +33,7 @@ function setState(s: StateKey) {
 
 const code = `<script setup lang="ts">
 import { ref } from 'vue';
-import { ASmartSkeleton } from '@alikhalilll/a-smart-skeleton';
+import { AGhostSkeleton } from '@alikhalilll/a-ghost-skeleton';
 
 type State = 'loading' | 'content' | 'empty' | 'error';
 const activeState = ref<State>('loading');
@@ -43,7 +43,7 @@ const activeState = ref<State>('loading');
   <!-- Every props-driven state the component recognises, wired up at once
        so flipping \`activeState\` re-enters the right branch; in production
        you'd usually drive a single state at a time off your fetch result. -->
-  <ASmartSkeleton
+  <AGhostSkeleton
     id="demo-states-card"
     :loading="activeState === 'loading'"
     :data="activeState === 'content' ? MEMBERS : null"
@@ -76,7 +76,7 @@ const activeState = ref<State>('loading');
         <button @click="retry">Retry</button>
       </div>
     </template>
-  </ASmartSkeleton>
+  </AGhostSkeleton>
 </template>`;
 </script>
 
@@ -118,7 +118,7 @@ const activeState = ref<State>('loading');
           <div
             class="min-h-[220px] rounded-xl border border-border bg-surface p-4 sm:p-5 shadow-sm flex flex-col justify-center"
           >
-            <ASmartSkeleton
+            <AGhostSkeleton
               id="demo-states-card"
               :loading="activeState === 'loading'"
               :data="activeState === 'content' ? MEMBERS : null"
@@ -215,7 +215,7 @@ const activeState = ref<State>('loading');
                   </button>
                 </div>
               </template>
-            </ASmartSkeleton>
+            </AGhostSkeleton>
           </div>
         </div>
       </div>

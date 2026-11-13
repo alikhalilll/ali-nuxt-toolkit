@@ -56,15 +56,15 @@ const code = `<script setup lang="ts">
 <template>
   <div class="grid grid-cols-2 gap-4">
     <section dir="ltr">
-      <ASmartSkeleton :data="post" :sample="SAMPLE_POST">
+      <AGhostSkeleton :data="post" :sample="SAMPLE_POST">
         <PostCard :post="post" />
-      </ASmartSkeleton>
+      </AGhostSkeleton>
     </section>
 
     <section dir="rtl">
-      <ASmartSkeleton :data="post" :sample="SAMPLE_POST">
+      <AGhostSkeleton :data="post" :sample="SAMPLE_POST">
         <PostCard :post="post" />
-      </ASmartSkeleton>
+      </AGhostSkeleton>
     </section>
   </div>
 </template>`;
@@ -101,14 +101,14 @@ const code = `<script setup lang="ts">
 
         <!-- Stage — one outer wrapper card (DemoTabs). The only inner "card"
              is the article itself, which is what the skeleton mirrors. -->
-        <ASmartSkeletonProvider :mode="providerMode" :theme="DEMO_THEME">
+        <AGhostSkeletonProvider :mode="providerMode" :theme="DEMO_THEME">
           <div class="mx-auto grid max-w-3xl grid-cols-1 gap-4 sm:grid-cols-2">
             <section dir="ltr" class="min-w-0">
               <header class="mb-2 flex items-center justify-between text-[11px] text-text-dim">
                 <code class="font-semibold">dir="ltr"</code>
                 <span>reads left-to-right</span>
               </header>
-              <ASmartSkeleton
+              <AGhostSkeleton
                 v-if="mounted"
                 id="dsd-ltr"
                 :data="null"
@@ -126,7 +126,7 @@ const code = `<script setup lang="ts">
                     </p>
                   </article>
                 </template>
-              </ASmartSkeleton>
+              </AGhostSkeleton>
             </section>
 
             <section dir="rtl" class="min-w-0">
@@ -134,7 +134,7 @@ const code = `<script setup lang="ts">
                 <code class="font-semibold">dir="rtl"</code>
                 <span>reads right-to-left</span>
               </header>
-              <ASmartSkeleton
+              <AGhostSkeleton
                 v-if="mounted"
                 id="dsd-rtl"
                 :data="null"
@@ -152,10 +152,10 @@ const code = `<script setup lang="ts">
                     </p>
                   </article>
                 </template>
-              </ASmartSkeleton>
+              </AGhostSkeleton>
             </section>
           </div>
-        </ASmartSkeletonProvider>
+        </AGhostSkeletonProvider>
 
         <p class="mt-5 text-center text-[11px] text-text-dim">
           Same skeleton, same document clock, same provider. The only difference is the

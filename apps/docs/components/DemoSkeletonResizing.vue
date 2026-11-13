@@ -5,13 +5,13 @@
  *
  * The sample is a two-line placeholder post. When the viewer picks "Short",
  * "Medium", or "Tall", a real post with wildly different body length loads
- * in. The `<ASmartSkeleton>` parent eases its height between the outgoing
+ * in. The `<AGhostSkeleton>` parent eases its height between the outgoing
  * skeleton's measured box and the incoming content's live box over
  * `RESIZE_DURATION` (280 ms) with `cubic-bezier(0.2, 0, 0, 1)` — so the
  * frame around the swap never snaps, even when the two shapes disagree
  * by 400+ px.
  *
- * Mechanism (shared with every `<ASmartSkeleton>` surface):
+ * Mechanism (shared with every `<AGhostSkeleton>` surface):
  *   1. `fadeOut()` takes the skeleton pane out of flow with `position: absolute`.
  *   2. The incoming content pane claims the natural height for a tick.
  *   3. `resize(parent, box)` animates the parent's `height` from the
@@ -113,7 +113,7 @@ async function loadShape(shape: 'short' | 'medium' | 'tall') {
   <!-- \`reveal\` left at the default (\`smart\`). Even when \`smart\` picks
        \`instant\` for a <150ms fetch, the parent's height still eases
        between the two shapes — continuity is independent of the fade. -->
-  <ASmartSkeletonProvider
+  <AGhostSkeletonProvider
     mode="system"
     :theme="{
       light: { base: '#d1d4dc', highlight: '#ffffff' },
@@ -121,15 +121,15 @@ async function loadShape(shape: 'short' | 'medium' | 'tall') {
     }"
     reveal="smart"
   >
-    <ASmartSkeleton id="docs-resizing" :data="data" :sample="SAMPLE">
+    <AGhostSkeleton id="docs-resizing" :data="data" :sample="SAMPLE">
       <template #default="{ data }">
         <article>
           <h3>{{ data.author }}</h3>
           <p>{{ data.body }}</p>
         </article>
       </template>
-    </ASmartSkeleton>
-  </ASmartSkeletonProvider>
+    </AGhostSkeleton>
+  </AGhostSkeletonProvider>
 </template>`;
 </script>
 
@@ -177,8 +177,8 @@ async function loadShape(shape: 'short' | 'medium' | 'tall') {
         <!-- Stage -->
         <div class="mx-auto max-w-md">
           <div class="dsr overflow-hidden rounded-xl border border-border bg-surface/50 p-3">
-            <ASmartSkeletonProvider :mode="providerMode" :theme="DEMO_THEME" reveal="smart">
-              <ASmartSkeleton id="docs-resizing" :data="data" :sample="SAMPLE">
+            <AGhostSkeletonProvider :mode="providerMode" :theme="DEMO_THEME" reveal="smart">
+              <AGhostSkeleton id="docs-resizing" :data="data" :sample="SAMPLE">
                 <template #default="{ data }">
                   <article class="rounded-xl border border-border bg-surface p-4 shadow-sm">
                     <h3 class="mb-2 text-sm font-semibold text-text">
@@ -189,8 +189,8 @@ async function loadShape(shape: 'short' | 'medium' | 'tall') {
                     </p>
                   </article>
                 </template>
-              </ASmartSkeleton>
-            </ASmartSkeletonProvider>
+              </AGhostSkeleton>
+            </AGhostSkeletonProvider>
           </div>
           <p class="mt-3 text-center text-[11px] text-text-dim">
             Watch the card frame: the height eases to the new body length instead of snapping, even

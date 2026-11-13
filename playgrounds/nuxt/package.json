@@ -13,7 +13,7 @@
     "@alikhalilll/nuxt-crypto": "workspace:*",
     "@alikhalilll/nuxt-auto-middleware": "workspace:*",
     "@alikhalilll/a-input": "workspace:*",
-    "@alikhalilll/a-smart-skeleton": "workspace:*",
+    "@alikhalilll/a-ghost-skeleton": "workspace:*",
     "@alikhalilll/a-popover": "workspace:*",
     "@alikhalilll/a-drawer": "workspace:*",
     "@alikhalilll/a-responsive-popover": "workspace:*",

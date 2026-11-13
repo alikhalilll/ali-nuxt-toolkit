@@ -1,8 +1,25 @@
 ---
-title: api-provider
-description: Strongly-typed fetch client for Nuxt 3/4 with interceptors, retry/backoff, and upload/download progress.
+title: 'api-provider — Nuxt 3 / 4 typed fetch client'
+description: 'A strongly-typed fetch client for Nuxt 3 / 4 and Vue 3 with interceptors, retry and exponential backoff, and native upload / download progress. Framework-agnostic core; thin Nuxt module on top.'
 package: '@alikhalilll/nuxt-api-provider'
 order: 1
+keywords:
+  - nuxt fetch
+  - nuxt api client
+  - typed fetch
+  - typed api client
+  - ofetch
+  - ofetch wrapper
+  - nuxt interceptors
+  - fetch retry
+  - fetch backoff
+  - upload progress
+  - download progress
+  - nuxt 3
+  - nuxt 4
+  - vue 3
+  - typescript
+  - nuxt module
 ---
 
 # @alikhalilll/nuxt-api-provider

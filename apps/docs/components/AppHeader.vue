@@ -32,7 +32,7 @@ watch(
 const isActive = (prefix: string) => {
   const p = route.path.replace(/\/+$/, '');
   if (prefix === '/') return p === '' || p === '/';
-  if (prefix === '/ui') return p === '/ui' || p === '/ui/smart-skeleton' || p === '/ui/tel-input';
+  if (prefix === '/ui') return p === '/ui' || p === '/ui/ghost-skeleton' || p === '/ui/tel-input';
   return p === prefix || p.startsWith(`${prefix}/`);
 };
 
@@ -214,10 +214,10 @@ const navLinks = [
           UI overview
         </NuxtLink>
         <NuxtLink
-          to="/ui/smart-skeleton"
-          :class="['app-header__sheet-link', isActive('/ui/smart-skeleton') && 'is-active']"
+          to="/ui/ghost-skeleton"
+          :class="['app-header__sheet-link', isActive('/ui/ghost-skeleton') && 'is-active']"
         >
-          ASmartSkeleton
+          AGhostSkeleton
         </NuxtLink>
         <NuxtLink
           to="/ui/tel-input"

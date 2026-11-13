@@ -84,7 +84,7 @@ jobs:
       # Same cross-package dist dependency as the typecheck job.
       - run: pnpm build
       # --if-present skips packages that don't declare a test script (currently all
-      # publishable packages except ASmartSkeleton). As more packages add tests this
+      # publishable packages except AGhostSkeleton). As more packages add tests this
       # keeps working with no CI change.
       - run: pnpm -r --if-present test
 

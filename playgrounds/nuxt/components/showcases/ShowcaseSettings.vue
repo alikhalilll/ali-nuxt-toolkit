@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { RevealMode } from '@alikhalilll/a-smart-skeleton';
+import type { RevealMode } from '@alikhalilll/a-ghost-skeleton';
 
 /**
  * **Loading settings**
@@ -29,7 +29,7 @@ const { data } = useShowcaseData<Setting[]>(() => [
 </script>
 
 <template>
-  <ASmartSkeleton
+  <AGhostSkeleton
     id="showcase-settings"
     :key="`settings-${nonce}`"
     :reveal="reveal"
@@ -60,5 +60,5 @@ const { data } = useShowcaseData<Setting[]>(() => [
         </button>
       </div>
     </template>
-  </ASmartSkeleton>
+  </AGhostSkeleton>
 </template>

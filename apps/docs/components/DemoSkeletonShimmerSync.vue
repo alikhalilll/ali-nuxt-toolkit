@@ -54,7 +54,7 @@ onMounted(replay);
 onBeforeUnmount(clear);
 
 const code = `<script setup lang="ts">
-// Six cards mount 180 ms apart — each <ASmartSkeleton> draws its own
+// Six cards mount 180 ms apart — each <AGhostSkeleton> draws its own
 // bones, but every bone shares one document-clock sweep. The result:
 // every skeleton on the page shimmers in phase, even as cards mount
 // at different times (paginated feeds, async grid cells, etc.).
@@ -62,7 +62,7 @@ const code = `<script setup lang="ts">
 
 <template>
   <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
-    <ASmartSkeleton
+    <AGhostSkeleton
       v-for="card in cards"
       :key="card.id"
       :id="\`grid-\${card.id}\`"
@@ -72,7 +72,7 @@ const code = `<script setup lang="ts">
       <template #default>
         <GridCard />
       </template>
-    </ASmartSkeleton>
+    </AGhostSkeleton>
   </div>
 </template>`;
 </script>
@@ -109,14 +109,14 @@ const code = `<script setup lang="ts">
         <!-- Stage -->
         <div class="mx-auto max-w-2xl">
           <div class="dss rounded-xl border border-border bg-surface/50 p-4">
-            <ASmartSkeletonProvider :mode="providerMode" :theme="DEMO_THEME">
+            <AGhostSkeletonProvider :mode="providerMode" :theme="DEMO_THEME">
               <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 <div
                   v-for="(isMounted, i) in mounted"
                   :key="i"
                   class="min-h-[132px] overflow-hidden rounded-xl border border-border bg-surface shadow-sm"
                 >
-                  <ASmartSkeleton
+                  <AGhostSkeleton
                     v-if="isMounted"
                     :id="`dss-card-${i}`"
                     :data="null"
@@ -130,10 +130,10 @@ const code = `<script setup lang="ts">
                         <p class="text-xs text-text-dim">Cards mount staggered.</p>
                       </article>
                     </template>
-                  </ASmartSkeleton>
+                  </AGhostSkeleton>
                 </div>
               </div>
-            </ASmartSkeletonProvider>
+            </AGhostSkeletonProvider>
           </div>
 
           <p class="mt-3 text-center text-[11px] text-text-dim">

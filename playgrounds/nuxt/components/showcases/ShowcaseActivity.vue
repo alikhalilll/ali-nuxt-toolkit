@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { RevealMode } from '@alikhalilll/a-smart-skeleton';
+import type { RevealMode } from '@alikhalilll/a-ghost-skeleton';
 
 /**
  * **Loading activity feed**
@@ -50,7 +50,7 @@ const { data } = useShowcaseData<Entry[]>(() => [
 </script>
 
 <template>
-  <ASmartSkeleton
+  <AGhostSkeleton
     id="showcase-activity"
     :key="`activity-${nonce}`"
     :reveal="reveal"
@@ -80,5 +80,5 @@ const { data } = useShowcaseData<Entry[]>(() => [
         </div>
       </article>
     </template>
-  </ASmartSkeleton>
+  </AGhostSkeleton>
 </template>

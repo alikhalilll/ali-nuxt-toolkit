@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import type { RevealMode } from '@alikhalilll/a-smart-skeleton';
+import type { RevealMode } from '@alikhalilll/a-ghost-skeleton';
 import AppNav from '~/components/AppNav.vue';
 import ShowcaseArticle from '~/components/showcases/ShowcaseArticle.vue';
 import ShowcaseGallery from '~/components/showcases/ShowcaseGallery.vue';
@@ -12,7 +12,7 @@ import ShowcaseTrackPlayer from '~/components/showcases/ShowcaseTrackPlayer.vue'
 import ShowcasePortfolio from '~/components/showcases/ShowcasePortfolio.vue';
 
 /**
- * `/showcases` — gallery of 8 real-world demos, each wrapped in `<ASmartSkeleton>`
+ * `/showcases` — gallery of 8 real-world demos, each wrapped in `<AGhostSkeleton>`
  * with a shared reveal selector and global document-clock shimmer synchronization.
  */
 
@@ -40,9 +40,9 @@ const headline = computed(() => `reveal: ${reveal.value}`);
     <AppNav />
 
     <header class="mb-8 flex flex-col gap-3">
-      <h1 class="text-3xl font-bold">ASmartSkeleton showcases</h1>
+      <h1 class="text-3xl font-bold">AGhostSkeleton showcases</h1>
       <p class="text-text-dim max-w-prose">
-        Eight real-world loading states, each wrapped in <code>&lt;ASmartSkeleton&gt;</code>. The
+        Eight real-world loading states, each wrapped in <code>&lt;AGhostSkeleton&gt;</code>. The
         reveal selector controls how content replaces the skeleton when data resolves. Hit
         <strong>Reload all</strong> to re-trigger the loading states simultaneously and see the
         synchronized document-clock shimmer.

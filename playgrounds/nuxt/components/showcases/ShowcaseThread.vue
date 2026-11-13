@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { RevealMode } from '@alikhalilll/a-smart-skeleton';
+import type { RevealMode } from '@alikhalilll/a-ghost-skeleton';
 
 /**
  * **Loading thread**
@@ -73,7 +73,7 @@ const { data } = useShowcaseData<Thread>(() => ({
 </script>
 
 <template>
-  <ASmartSkeleton
+  <AGhostSkeleton
     id="showcase-thread"
     :key="`thread-${nonce}`"
     :reveal="reveal"
@@ -123,5 +123,5 @@ const { data } = useShowcaseData<Thread>(() => ({
         </button>
       </section>
     </template>
-  </ASmartSkeleton>
+  </AGhostSkeleton>
 </template>

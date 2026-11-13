@@ -6,8 +6,8 @@ const links = [
   { to: '/crypto', label: 'crypto' },
   { to: '/crypto-core', label: 'crypto · core' },
   { to: '/auto-middleware', label: 'auto-middleware' },
-  { to: '/smart-skeleton', label: 'smart-skeleton' },
-  { to: '/showcases', label: 'smart-skeleton · showcases' },
+  { to: '/ghost-skeleton', label: 'ghost-skeleton' },
+  { to: '/showcases', label: 'ghost-skeleton · showcases' },
   { to: '/dashboard', label: 'Dashboard' },
   { to: '/admin', label: 'Admin' },
 ];

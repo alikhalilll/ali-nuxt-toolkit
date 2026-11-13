@@ -77,7 +77,7 @@ const SAMPLE = { label: 'Visitors', value: '12,480', delta: '+14.3%', up: true }
 <template>
   <!-- The same skeleton owns all four states. Resolution order:
        loading → error → empty → content. -->
-  <ASmartSkeleton
+  <AGhostSkeleton
     id="four-state"
     :data="metric"
     :sample="SAMPLE"
@@ -95,7 +95,7 @@ const SAMPLE = { label: 'Visitors', value: '12,480', delta: '+14.3%', up: true }
     <template #error="{ error }">
       <ErrorCard :error="error" @retry="reload" />
     </template>
-  </ASmartSkeleton>
+  </AGhostSkeleton>
 </template>`;
 </script>
 
@@ -109,7 +109,7 @@ const SAMPLE = { label: 'Visitors', value: '12,480', delta: '+14.3%', up: true }
         <button type="button" @click="showError">Error</button>
       </div>
 
-      <ASmartSkeleton
+      <AGhostSkeleton
         id="demo-four-state-tile"
         :data="metric"
         :sample="SAMPLE"
@@ -140,7 +140,7 @@ const SAMPLE = { label: 'Visitors', value: '12,480', delta: '+14.3%', up: true }
             <button type="button" class="ods__retry" @click="showContent">Retry</button>
           </article>
         </template>
-      </ASmartSkeleton>
+      </AGhostSkeleton>
     </div>
   </DemoTabs>
 </template>

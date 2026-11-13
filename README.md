@@ -37,7 +37,7 @@
 | Package                                                                    | Version                                                                                                                                                 | Downloads                                                                                                                                               | Min+gzip                                                                                                                                                                     | Purpose                                                                                                                              |
 | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
 | [`@alikhalilll/a-tel-input`](./packages/ui-components/ATelInput)           | [![npm](https://img.shields.io/npm/v/@alikhalilll/a-tel-input.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/a-tel-input)                   | [![dl](https://img.shields.io/npm/dm/@alikhalilll/a-tel-input.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/a-tel-input)                   | [![size](https://img.shields.io/bundlephobia/minzip/@alikhalilll/a-tel-input?label=&color=444)](https://bundlephobia.com/package/@alikhalilll/a-tel-input)                   | International tel input — country auto-detect, libphonenumber-js validation, VeeValidate + Zod integration with async server checks. |
-| [`@alikhalilll/a-smart-skeleton`](./packages/ui-components/ASmartSkeleton) | [![npm](https://img.shields.io/npm/v/@alikhalilll/a-smart-skeleton.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/a-smart-skeleton)         | [![dl](https://img.shields.io/npm/dm/@alikhalilll/a-smart-skeleton.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/a-smart-skeleton)         | [![size](https://img.shields.io/bundlephobia/minzip/@alikhalilll/a-smart-skeleton?label=&color=444)](https://bundlephobia.com/package/@alikhalilll/a-smart-skeleton)         | Measured skeleton loaders — renders your real template invisibly, captures geometry, replays it as a pixel-faithful placeholder.     |
+| [`@alikhalilll/a-ghost-skeleton`](./packages/ui-components/AGhostSkeleton) | [![npm](https://img.shields.io/npm/v/@alikhalilll/a-ghost-skeleton.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/a-ghost-skeleton)         | [![dl](https://img.shields.io/npm/dm/@alikhalilll/a-ghost-skeleton.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/a-ghost-skeleton)         | [![size](https://img.shields.io/bundlephobia/minzip/@alikhalilll/a-ghost-skeleton?label=&color=444)](https://bundlephobia.com/package/@alikhalilll/a-ghost-skeleton)         | Measured skeleton loaders — renders your real template invisibly, captures geometry, replays it as a pixel-faithful placeholder.     |
 | [`@alikhalilll/nuxt-api-provider`](./packages/api-provider)                | [![npm](https://img.shields.io/npm/v/@alikhalilll/nuxt-api-provider.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-api-provider)       | [![dl](https://img.shields.io/npm/dm/@alikhalilll/nuxt-api-provider.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-api-provider)       | [![size](https://img.shields.io/bundlephobia/minzip/@alikhalilll/nuxt-api-provider?label=&color=444)](https://bundlephobia.com/package/@alikhalilll/nuxt-api-provider)       | Typed `fetch` client — TanStack-Query-style caching, interceptors, retry + backoff, timeouts, progress, structured `ApiError`.       |
 | [`@alikhalilll/nuxt-crypto`](./packages/crypto)                            | [![npm](https://img.shields.io/npm/v/@alikhalilll/nuxt-crypto.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-crypto)                   | [![dl](https://img.shields.io/npm/dm/@alikhalilll/nuxt-crypto.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-crypto)                   | [![size](https://img.shields.io/bundlephobia/minzip/@alikhalilll/nuxt-crypto?label=&color=444)](https://bundlephobia.com/package/@alikhalilll/nuxt-crypto)                   | AES-256-GCM + PBKDF2 via Web Crypto — derived-key cache, pluggable algorithms, server-only mode, device-fingerprint binding.         |
 | [`@alikhalilll/nuxt-auto-middleware`](./packages/auto-middleware)          | [![npm](https://img.shields.io/npm/v/@alikhalilll/nuxt-auto-middleware.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-auto-middleware) | [![dl](https://img.shields.io/npm/dm/@alikhalilll/nuxt-auto-middleware.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/nuxt-auto-middleware) | [![size](https://img.shields.io/bundlephobia/minzip/@alikhalilll/nuxt-auto-middleware?label=&color=444)](https://bundlephobia.com/package/@alikhalilll/nuxt-auto-middleware) | Layout-based route middleware — globs, named groups, per-page overrides, typed registry.                                             |
@@ -85,7 +85,7 @@ Pick only what you need; every manager is first-class.
 
 ```bash
 # UI components (Vue 3 — work outside Nuxt too)
-pnpm add @alikhalilll/a-tel-input @alikhalilll/a-smart-skeleton
+pnpm add @alikhalilll/a-tel-input @alikhalilll/a-ghost-skeleton
 
 # Nuxt modules
 pnpm add @alikhalilll/nuxt-api-provider \
@@ -98,7 +98,7 @@ pnpm add @alikhalilll/nuxt-api-provider \
 export default defineNuxtConfig({
   modules: [
     '@alikhalilll/a-tel-input/nuxt',
-    '@alikhalilll/a-smart-skeleton/nuxt',
+    '@alikhalilll/a-ghost-skeleton/nuxt',
     '@alikhalilll/nuxt-api-provider',
     '@alikhalilll/nuxt-crypto',
     '@alikhalilll/nuxt-auto-middleware',
@@ -139,10 +139,10 @@ const phone = ref(''); // → '+201066105963'
 
 ---
 
-## `@alikhalilll/a-smart-skeleton`
+## `@alikhalilll/a-ghost-skeleton`
 
 Hand-authored skeletons are the second template you have to maintain — padding drifts,
-font sizes bump, images start loading later, and the reveal jumps. `ASmartSkeleton` lays
+font sizes bump, images start loading later, and the reveal jumps. `AGhostSkeleton` lays
 your **real** content out invisibly, measures the live geometry (background, border, radius,
 box-shadow, text lines, media boxes), and reconstructs a pixel-faithful placeholder from
 what it saw. One template — the real one — stays the source of truth. Zero cumulative
@@ -158,15 +158,15 @@ onMounted(async () => (user.value = await $fetch('/api/me')));
 </script>
 
 <template>
-  <ASmartSkeleton :data="user" :sample="SAMPLE" id="user-card">
+  <AGhostSkeleton :data="user" :sample="SAMPLE" id="user-card">
     <template #default="{ data }">
       <!-- your real template — this is also what the skeleton measures -->
     </template>
-  </ASmartSkeleton>
+  </AGhostSkeleton>
 </template>
 ```
 
-[Guide →](./packages/ui-components/ASmartSkeleton/README.md) · [Docs →](https://alikhalilll.github.io/ali-nuxt-toolkit/ui/smart-skeleton)
+[Guide →](./packages/ui-components/AGhostSkeleton/README.md) · [Docs →](https://alikhalilll.github.io/ali-nuxt-toolkit/ui/ghost-skeleton)
 
 ---
 
@@ -302,7 +302,7 @@ packages/
   auto-middleware/                  # @alikhalilll/nuxt-auto-middleware
   ui-components/
     ATelInput/                      # @alikhalilll/a-tel-input
-    ASmartSkeleton/                 # @alikhalilll/a-smart-skeleton
+    AGhostSkeleton/                 # @alikhalilll/a-ghost-skeleton
     AInput/ APopover/ ADrawer/      # internal — bundled into the UI packages' dist
     AResponsivePopover/ AUiBase/
 apps/

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * Author Hints Demo for ASmartSkeleton.
+ * Author Hints Demo for AGhostSkeleton.
  *
  * Demonstrates:
  *   - ask-block / data-skeleton-block  (unifies complex inner markup into one solid bone)
@@ -21,7 +21,7 @@ function pick(h: HintOption) {
 const TAGS = ['TypeScript', 'Vue 3', 'Nuxt', 'Performance'];
 
 const code = `<template>
-  <ASmartSkeleton
+  <AGhostSkeleton
     :id="\`demo-hints-\${currentHint}\`"
     loading
     label="Loading author card"
@@ -47,7 +47,7 @@ const code = `<template>
         <span v-for="t in TAGS" :key="t" class="tag">{{ t }}</span>
       </div>
     </article>
-  </ASmartSkeleton>
+  </AGhostSkeleton>
 </template>`;
 </script>
 
@@ -115,7 +115,7 @@ const code = `<template>
         <!-- Live Card Stage -->
         <div class="mx-auto max-w-md">
           <div class="rounded-xl border border-border bg-surface p-5 shadow-sm">
-            <ASmartSkeleton
+            <AGhostSkeleton
               :id="`demo-hints-${currentHint}`"
               :key="`hint-stage-${nonce}`"
               loading
@@ -161,7 +161,7 @@ const code = `<template>
                   </span>
                 </div>
               </article>
-            </ASmartSkeleton>
+            </AGhostSkeleton>
           </div>
         </div>
       </div>

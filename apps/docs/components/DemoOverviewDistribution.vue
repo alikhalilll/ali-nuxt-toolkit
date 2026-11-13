@@ -74,7 +74,7 @@ const SAMPLE = [
 \u003c/script>
 
 <template>
-  <ASmartSkeleton
+  <AGhostSkeleton
     id="distribution"
     :data="distribution"
     :sample="SAMPLE"
@@ -90,7 +90,7 @@ const SAMPLE = [
         </li>
       </ul>
     </template>
-  </ASmartSkeleton>
+  </AGhostSkeleton>
 </template>`;
 </script>
 
@@ -106,7 +106,7 @@ const SAMPLE = [
       @keydown.enter="reload"
       @keydown.space.prevent="reload"
     >
-      <ASmartSkeleton
+      <AGhostSkeleton
         id="demo-distribution"
         :data="distribution"
         :sample="SAMPLE"
@@ -129,7 +129,7 @@ const SAMPLE = [
             </ul>
           </section>
         </template>
-      </ASmartSkeleton>
+      </AGhostSkeleton>
     </div>
   </DemoTabs>
 </template>

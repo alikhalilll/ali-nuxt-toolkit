@@ -33,7 +33,7 @@ const groups: Group[] = [
     heading: 'UI',
     pages: [
       { path: '/ui', title: 'Overview' },
-      { path: '/ui/smart-skeleton', title: 'ASmartSkeleton' },
+      { path: '/ui/ghost-skeleton', title: 'AGhostSkeleton' },
       { path: '/ui/tel-input', title: 'ATelInput' },
     ],
   },

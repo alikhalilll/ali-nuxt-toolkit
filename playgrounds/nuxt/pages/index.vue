@@ -84,13 +84,13 @@
       </div>
 
       <div class="rounded-xl border border-brand-border bg-surface p-5">
-        <h2 class="mb-2 border-l-[3px] border-brand pl-2 text-lg font-semibold">smart-skeleton</h2>
+        <h2 class="mb-2 border-l-[3px] border-brand pl-2 text-lg font-semibold">ghost-skeleton</h2>
         <p class="mb-3 text-sm text-text-dim">
-          <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-brand-2">ASmartSkeleton</code>
+          <code class="rounded bg-code-bg px-1.5 py-0.5 text-xs text-brand-2">AGhostSkeleton</code>
           lays content out unseen in normal DOM flow, measures font metrics with Canvas 2D
           precision, and reveals with synchronized document-clock shimmer animations.
         </p>
-        <NuxtLink to="/smart-skeleton">
+        <NuxtLink to="/ghost-skeleton">
           <button
             class="cursor-pointer rounded border border-brand bg-brand px-3.5 py-1.5 text-sm font-semibold text-bg hover:brightness-110"
           >

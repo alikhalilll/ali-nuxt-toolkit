@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { RevealMode } from '@alikhalilll/a-smart-skeleton';
+import type { RevealMode } from '@alikhalilll/a-ghost-skeleton';
 
 /**
  * **Loading gallery**
@@ -29,7 +29,7 @@ const { data } = useShowcaseData<Shot[]>(
 </script>
 
 <template>
-  <ASmartSkeleton
+  <AGhostSkeleton
     id="showcase-gallery"
     :key="`gallery-${nonce}`"
     :reveal="reveal"
@@ -53,5 +53,5 @@ const { data } = useShowcaseData<Shot[]>(
         />
       </figure>
     </template>
-  </ASmartSkeleton>
+  </AGhostSkeleton>
 </template>

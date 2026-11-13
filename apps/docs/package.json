@@ -15,7 +15,7 @@
     "typecheck": "nuxt typecheck"
   },
   "dependencies": {
-    "@alikhalilll/a-smart-skeleton": "workspace:*",
+    "@alikhalilll/a-ghost-skeleton": "workspace:*",
     "@alikhalilll/a-tel-input": "workspace:*",
     "@alikhalilll/a-ui-base": "workspace:*",
     "@alikhalilll/nuxt-api-provider": "workspace:*",

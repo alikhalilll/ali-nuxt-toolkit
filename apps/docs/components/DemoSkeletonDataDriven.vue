@@ -2,9 +2,9 @@
 /**
  * Data-Driven Skeleton Demo.
  *
- * Demonstrates the `:data` + `:sample` workflow with ASmartSkeleton:
+ * Demonstrates the `:data` + `:sample` workflow with AGhostSkeleton:
  * Pass your expected data structure to `:sample`. While `:data` is null or pending,
- * ASmartSkeleton lays out the sample unseen in real DOM flow, measures exact typographic
+ * AGhostSkeleton lays out the sample unseen in real DOM flow, measures exact typographic
  * and bounding boxes, and reveals seamlessly with zero layout shift.
  */
 import { onMounted, onUnmounted, ref } from 'vue';
@@ -55,7 +55,7 @@ onUnmounted(() => {
 
 const code = `<script setup lang="ts">
 import { ref } from 'vue';
-import { ASmartSkeleton } from '@alikhalilll/a-smart-skeleton';
+import { AGhostSkeleton } from '@alikhalilll/a-ghost-skeleton';
 
 const product = ref(null);
 
@@ -71,8 +71,8 @@ const SAMPLE_PRODUCT = {
 \u003c/script>
 
 <template>
-  <!-- While product is null, ASmartSkeleton lays out SAMPLE_PRODUCT invisibly -->
-  <ASmartSkeleton
+  <!-- While product is null, AGhostSkeleton lays out SAMPLE_PRODUCT invisibly -->
+  <AGhostSkeleton
     id="demo-product-card"
     :data="product"
     :sample="SAMPLE_PRODUCT"
@@ -92,7 +92,7 @@ const SAMPLE_PRODUCT = {
         </div>
       </article>
     </template>
-  </ASmartSkeleton>
+  </AGhostSkeleton>
 </template>`;
 </script>
 
@@ -126,7 +126,7 @@ const SAMPLE_PRODUCT = {
         <!-- Product Card Stage -->
         <div class="mx-auto max-w-sm">
           <div class="overflow-hidden rounded-xl border border-border bg-surface shadow-sm">
-            <ASmartSkeleton
+            <AGhostSkeleton
               id="demo-product-card"
               :data="product"
               :sample="SAMPLE_PRODUCT"
@@ -183,7 +183,7 @@ const SAMPLE_PRODUCT = {
                   </div>
                 </article>
               </template>
-            </ASmartSkeleton>
+            </AGhostSkeleton>
           </div>
         </div>
       </div>

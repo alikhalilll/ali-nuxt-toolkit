@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { RevealMode } from '@alikhalilll/a-smart-skeleton';
+import type { RevealMode } from '@alikhalilll/a-ghost-skeleton';
 
 /**
  * **Loading dashboard metrics**
@@ -32,7 +32,7 @@ const { data } = useShowcaseData<Metric[]>(() => [
 </script>
 
 <template>
-  <ASmartSkeleton
+  <AGhostSkeleton
     id="showcase-dashboard"
     :key="`dashboard-${nonce}`"
     :reveal="reveal"
@@ -52,5 +52,5 @@ const { data } = useShowcaseData<Metric[]>(() => [
         </p>
       </article>
     </template>
-  </ASmartSkeleton>
+  </AGhostSkeleton>
 </template>

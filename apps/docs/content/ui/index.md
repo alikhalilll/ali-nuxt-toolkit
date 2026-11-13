@@ -1,15 +1,29 @@
 ---
-title: ui
-description: Headless Vue 3 / Nuxt 3+ components — an international phone input, and a measured skeleton loader. Fully typed, themed via CSS variables.
+title: 'UI — headless Vue 3 / Nuxt components'
+description: 'Headless Vue 3 and Nuxt 3 / 4 components — an international phone input and a content-aware skeleton loader. Fully typed, SSR-safe, themed via CSS variables.'
 package: '@alikhalilll/a-*'
 order: 4
+keywords:
+  - vue 3 components
+  - nuxt components
+  - headless components
+  - vue skeleton
+  - vue skeleton loader
+  - nuxt skeleton
+  - skeleton component
+  - vue phone input
+  - international phone input
+  - nuxt phone input
+  - headless ui
+  - typescript
+  - ssr
 ---
 
 # UI components
 
 Two Vue 3 components built around a single idea: the DOM already knows the answer, so stop re-authoring it.
 
-`ASmartSkeleton` reads the geometry of your real component and replays it as a placeholder — one template, no drift. `ATelInput` reads the user's dial code and reveals the country as they type it — no picker shoved in their face first. Both are headless, framework-light, themed by native CSS variables, and ship typed end-to-end. The directional one (`ASmartSkeleton`) flips its shimmer and sweep to right-to-left when the inherited `direction` says so — no prop, no new knob.
+`AGhostSkeleton` reads the geometry of your real component and replays it as a placeholder — one template, no drift. `ATelInput` reads the user's dial code and reveals the country as they type it — no picker shoved in their face first. Both are headless, framework-light, themed by native CSS variables, and ship typed end-to-end. The directional one (`AGhostSkeleton`) flips its shimmer and sweep to right-to-left when the inherited `direction` says so — no prop, no new knob.
 
 ::alert{type="note" title="Pick what you need — nothing is bundled"}
 There is no shared peer dependency, no shared registration, no shared stylesheet. Each component is its own npm package with its own tokens, its own install path, and its own version. The common prefix (`a-*`) is the only thing they share. Installing one does not install the other.
@@ -17,7 +31,7 @@ There is no shared peer dependency, no shared registration, no shared stylesheet
 
 ## Components
 
-### [`ASmartSkeleton`](/ui/smart-skeleton)
+### [`AGhostSkeleton`](/ui/ghost-skeleton)
 
 A skeleton loader that **measures itself from your real component**. It lays the real card out unseen, reads its DOM with `getBoundingClientRect()` and Canvas 2D font metrics, then reconstructs the placeholder from what it saw. The hand-authored `<ProductCardSkeleton>` next to your `<ProductCard>` — the one that silently drifts every time padding changes — is gone.
 
@@ -28,11 +42,11 @@ A skeleton loader that **measures itself from your real component**. It lays the
 - **Four states in one component.** `loading` → `error` → `empty` → `content`, plus the reveal transition between them.
 
 ```vue
-<ASmartSkeleton id="user-card" :data="user" :sample="SAMPLE_USER">
+<AGhostSkeleton id="user-card" :data="user" :sample="SAMPLE_USER">
   <template #default="{ data }">
     <UserCard :user="data" />
   </template>
-</ASmartSkeleton>
+</AGhostSkeleton>
 ```
 
 ### [`ATelInput`](/ui/tel-input)
@@ -73,7 +87,7 @@ Write `220 70% 8%`, not `hsl(220 70% 8%)`. The tokens compose into the final col
 
 ### Shared token surface
 
-The `--ak-ui-*` tokens below are what `ATelInput` and any component built on `AUiBase` read from. `ASmartSkeleton` uses a separate `--ask-*` namespace documented on [its theming page](/ui/smart-skeleton#theming).
+The `--ak-ui-*` tokens below are what `ATelInput` and any component built on `AUiBase` read from. `AGhostSkeleton` uses a separate `--ask-*` namespace documented on [its theming page](/ui/ghost-skeleton#theming).
 
 | Variable                              | Used for                                        |
 | ------------------------------------- | ----------------------------------------------- |

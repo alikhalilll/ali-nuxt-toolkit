@@ -8,24 +8,90 @@
  *      eyebrow, name, description, feature chips, Docs CTA, and a framed demo.
  */
 const {
-  public: { siteUrl, siteName, siteDescription },
+  public: { siteUrl, siteName, siteTagline, siteDescription, siteKeywords },
 } = useRuntimeConfig();
 const canonical = `${siteUrl}/`;
+const homeTitle = `${siteName} — ${siteTagline}`;
 
 useSeoMeta({
-  title: siteName,
+  title: homeTitle,
   description: siteDescription,
-  ogTitle: siteName,
+  ogTitle: homeTitle,
   ogDescription: siteDescription,
   ogUrl: canonical,
   ogType: 'website',
-  twitterTitle: siteName,
+  twitterTitle: homeTitle,
   twitterDescription: siteDescription,
   twitterCard: 'summary_large_image',
 });
 
 useHead({
   link: [{ rel: 'canonical', href: canonical }],
+  meta: [{ name: 'keywords', content: siteKeywords }],
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: siteName,
+        url: siteUrl,
+        description: siteDescription,
+        inLanguage: 'en',
+        author: {
+          '@type': 'Person',
+          name: 'Ali Khalil',
+          url: 'https://github.com/alikhalilll',
+          sameAs: ['https://github.com/alikhalilll'],
+        },
+        publisher: {
+          '@type': 'Organization',
+          name: siteName,
+          url: siteUrl,
+        },
+      }),
+    },
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        name: `${siteName} packages`,
+        itemListElement: [
+          {
+            '@type': 'ListItem',
+            position: 1,
+            name: '@alikhalilll/a-ghost-skeleton',
+            url: `${siteUrl}/ui/ghost-skeleton`,
+          },
+          {
+            '@type': 'ListItem',
+            position: 2,
+            name: '@alikhalilll/nuxt-api-provider',
+            url: `${siteUrl}/api-provider`,
+          },
+          {
+            '@type': 'ListItem',
+            position: 3,
+            name: '@alikhalilll/nuxt-crypto',
+            url: `${siteUrl}/crypto`,
+          },
+          {
+            '@type': 'ListItem',
+            position: 4,
+            name: '@alikhalilll/nuxt-auto-middleware',
+            url: `${siteUrl}/auto-middleware`,
+          },
+          {
+            '@type': 'ListItem',
+            position: 5,
+            name: '@alikhalilll/a-tel-input',
+            url: `${siteUrl}/ui/tel-input`,
+          },
+        ],
+      }),
+    },
+  ],
 });
 </script>
 
@@ -84,7 +150,7 @@ useHead({
           <span class="hero__install-prompt">$</span>
           <span class="hero__install-pm">pnpm</span>
           <span class="hero__install-action">add</span>
-          <span class="hero__install-pkg">@alikhalilll/a-smart-skeleton</span>
+          <span class="hero__install-pkg">@alikhalilll/a-ghost-skeleton</span>
         </code>
 
         <!-- Stats strip — compact row, like nestjs's trusted-by band -->
@@ -112,8 +178,8 @@ useHead({
       </div>
     </section>
 
-    <!-- ───── Section 1: a-smart-skeleton ─────────────────────────────── -->
-    <section id="smart-skeleton" class="pkg">
+    <!-- ───── Section 1: a-ghost-skeleton ─────────────────────────────── -->
+    <section id="ghost-skeleton" class="pkg">
       <div class="pkg__head">
         <div class="pkg__eyebrow">UI · Vue 3</div>
         <svg
@@ -129,7 +195,7 @@ useHead({
           <rect x="18" y="31" width="22" height="3" rx="1.5" fill="currentColor" opacity="0.65" />
           <rect x="18" y="38" width="14" height="3" rx="1.5" fill="currentColor" opacity="0.35" />
         </svg>
-        <h2 class="pkg__name">a-smart-skeleton</h2>
+        <h2 class="pkg__name">a-ghost-skeleton</h2>
         <p class="pkg__pitch">
           A skeleton that <strong>measures itself</strong> from your real component. One template,
           zero layout shift, chrome captured verbatim from the real card — including backgrounds,
@@ -141,7 +207,7 @@ useHead({
           <span class="chip">Synced shimmer</span>
           <span class="chip">Reduced-motion aware</span>
         </div>
-        <NuxtLink to="/ui/smart-skeleton" class="pkg__cta">
+        <NuxtLink to="/ui/ghost-skeleton" class="pkg__cta">
           Read the docs
           <svg
             width="14"
@@ -159,7 +225,7 @@ useHead({
           </svg>
         </NuxtLink>
       </div>
-      <div class="pkg__demo"><HomeDemoSmartSkeleton /></div>
+      <div class="pkg__demo"><HomeDemoGhostSkeleton /></div>
     </section>
 
     <!-- ───── Section 2: a-tel-input ─────────────────────────────────── -->

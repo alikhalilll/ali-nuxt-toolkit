@@ -15,7 +15,7 @@
  */
 const route = useRoute();
 const {
-  public: { siteUrl, siteName, siteDescription },
+  public: { siteUrl, siteName, siteDescription, siteKeywords },
 } = useRuntimeConfig();
 const path = computed(() => {
   if (route.path === '/') return '/index';
@@ -30,10 +30,18 @@ if (!page.value) {
   throw createError({ statusCode: 404, statusMessage: 'Doc not found', fatal: true });
 }
 
-const pageTitle = computed(() => page.value?.title ?? 'Docs');
-const pageDescription = computed(() => page.value?.description ?? siteDescription);
+type PageMeta = { title?: string; description?: string; keywords?: string | string[] };
+const pageMeta = computed(() => (page.value ?? null) as PageMeta | null);
+const pageTitle = computed(() => pageMeta.value?.title ?? 'Docs');
+const pageDescription = computed(() => pageMeta.value?.description ?? siteDescription);
 const canonical = computed(() => `${siteUrl}${route.path}`);
 const fullTitle = computed(() => `${pageTitle.value} · ${siteName}`);
+const pageKeywords = computed(() => {
+  const k = pageMeta.value?.keywords;
+  if (Array.isArray(k)) return k.join(', ');
+  if (typeof k === 'string' && k.trim()) return k;
+  return siteKeywords;
+});
 
 useSeoMeta({
   title: fullTitle,
@@ -50,6 +58,112 @@ useSeoMeta({
 
 useHead({
   link: [{ rel: 'canonical', href: canonical }],
+  meta: [{ name: 'keywords', content: pageKeywords }],
+});
+
+/**
+ * JSON-LD — gives Google an unambiguous read on what this page represents.
+ * TechArticle for every doc; SoftwareSourceCode is layered on top when the
+ * page documents a published package. BreadcrumbList enables breadcrumb
+ * rendering in SERP.
+ */
+const AUTHOR_PERSON = {
+  '@type': 'Person',
+  name: 'Ali Khalil',
+  url: 'https://github.com/alikhalilll',
+  sameAs: ['https://github.com/alikhalilll'],
+};
+const PUBLISHER_ORG = { '@type': 'Organization', name: siteName, url: siteUrl };
+
+const breadcrumbList = computed(() => {
+  const segments = route.path
+    .replace(/^\/|\/$/g, '')
+    .split('/')
+    .filter(Boolean);
+  const items = [{ name: 'Home', url: `${siteUrl}/` }];
+  let acc = '';
+  for (const seg of segments) {
+    acc += `/${seg}`;
+    items.push({
+      name: seg.charAt(0).toUpperCase() + seg.slice(1).replace(/-/g, ' '),
+      url: `${siteUrl}${acc}`,
+    });
+  }
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: items.map((it, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: it.name,
+      item: it.url,
+    })),
+  };
+});
+
+const packageJsonLd = computed(() => {
+  const pkg = (page.value as { package?: string } | null)?.package;
+  if (!pkg || pkg.includes('*')) return null;
+  const subPath = {
+    '@alikhalilll/nuxt-api-provider': 'packages/api-provider',
+    '@alikhalilll/nuxt-crypto': 'packages/crypto',
+    '@alikhalilll/nuxt-auto-middleware': 'packages/auto-middleware',
+    '@alikhalilll/a-tel-input': 'packages/ui-components/ATelInput',
+    '@alikhalilll/a-ghost-skeleton': 'packages/ui-components/AGhostSkeleton',
+  }[pkg];
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareSourceCode',
+    name: pkg,
+    description: pageDescription.value,
+    url: canonical.value,
+    codeRepository: 'https://github.com/alikhalilll/ali-nuxt-toolkit',
+    programmingLanguage: 'TypeScript',
+    runtimePlatform: ['Vue 3', 'Nuxt 3', 'Nuxt 4', 'Node.js'],
+    license: 'https://opensource.org/licenses/MIT',
+    author: AUTHOR_PERSON,
+    maintainer: AUTHOR_PERSON,
+    publisher: PUBLISHER_ORG,
+    downloadUrl: `https://www.npmjs.com/package/${pkg}`,
+    sameAs: [
+      `https://www.npmjs.com/package/${pkg}`,
+      `https://github.com/alikhalilll/ali-nuxt-toolkit${subPath ? `/tree/master/${subPath}` : ''}`,
+    ],
+  };
+});
+
+const articleJsonLd = computed(() => ({
+  '@context': 'https://schema.org',
+  '@type': 'TechArticle',
+  headline: pageTitle.value,
+  description: pageDescription.value,
+  url: canonical.value,
+  mainEntityOfPage: canonical.value,
+  inLanguage: 'en',
+  author: AUTHOR_PERSON,
+  publisher: PUBLISHER_ORG,
+  keywords: pageKeywords.value,
+  isPartOf: { '@type': 'WebSite', name: siteName, url: siteUrl },
+}));
+
+useHead({
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: computed(() => JSON.stringify(breadcrumbList.value)),
+    },
+    { type: 'application/ld+json', innerHTML: computed(() => JSON.stringify(articleJsonLd.value)) },
+    ...(packageJsonLd.value
+      ? [
+          {
+            type: 'application/ld+json',
+            innerHTML: computed(() =>
+              packageJsonLd.value ? JSON.stringify(packageJsonLd.value) : ''
+            ),
+          },
+        ]
+      : []),
+  ],
 });
 
 const tocState = useDocToc();
@@ -65,7 +179,7 @@ watch(page, (p) => {
  */
 const category = computed(() => {
   const p = route.path.replace(/\/+$/, '');
-  if (p.startsWith('/ui/smart-skeleton') || p.startsWith('/ui/tel-input')) return 'UI · Vue 3';
+  if (p.startsWith('/ui/ghost-skeleton') || p.startsWith('/ui/tel-input')) return 'UI · Vue 3';
   if (p === '/ui' || p.startsWith('/ui')) return 'UI Overview';
   if (p.startsWith('/api-provider')) return 'Nuxt Module · Fetch';
   if (p.startsWith('/crypto')) return 'Nuxt Module · Security';
@@ -84,7 +198,7 @@ const PACKAGE_SOURCE_PATHS: Record<string, string> = {
   '@alikhalilll/nuxt-crypto': 'packages/crypto',
   '@alikhalilll/nuxt-auto-middleware': 'packages/auto-middleware',
   '@alikhalilll/a-tel-input': 'packages/ui-components/ATelInput',
-  '@alikhalilll/a-smart-skeleton': 'packages/ui-components/ASmartSkeleton',
+  '@alikhalilll/a-ghost-skeleton': 'packages/ui-components/AGhostSkeleton',
 };
 const sourceUrl = computed(() => {
   const sub = packageName.value ? PACKAGE_SOURCE_PATHS[packageName.value] : null;

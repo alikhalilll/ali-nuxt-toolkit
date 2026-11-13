@@ -91,7 +91,7 @@ const lineDashArray = [[], [4, 4]];
 \u003c/script>
 
 <template>
-  <ASmartSkeleton id="comparison-chart" :data="series" :sample="[]">
+  <AGhostSkeleton id="comparison-chart" :data="series" :sample="[]">
     <template #default>
       <ClientOnly>
         <AreaChart
@@ -106,10 +106,10 @@ const lineDashArray = [[], [4, 4]];
     <template #skeleton>
       <!-- Hand-authored placeholder opts out of measurement. -->
       <div class="h-[140px]" ask-block>
-        <ASmartSkeletonBox width="100%" height="100%" radius="8px" />
+        <AGhostSkeletonBox width="100%" height="100%" radius="8px" />
       </div>
     </template>
-  </ASmartSkeleton>
+  </AGhostSkeleton>
 </template>`;
 </script>
 
@@ -125,7 +125,7 @@ const lineDashArray = [[], [4, 4]];
       @keydown.enter="reload"
       @keydown.space.prevent="reload"
     >
-      <ASmartSkeleton id="demo-comparison-chart" :data="series" :sample="SAMPLE">
+      <AGhostSkeleton id="demo-comparison-chart" :data="series" :sample="SAMPLE">
         <template #default>
           <section class="odc__card">
             <header class="odc__head">
@@ -151,10 +151,10 @@ const lineDashArray = [[], [4, 4]];
 
         <template #skeleton>
           <div class="odc__card odc__card--skeleton" ask-block>
-            <ASmartSkeletonBox width="100%" height="140px" radius="8px" />
+            <AGhostSkeletonBox width="100%" height="140px" radius="8px" />
           </div>
         </template>
-      </ASmartSkeleton>
+      </AGhostSkeleton>
     </div>
   </DemoTabs>
 </template>

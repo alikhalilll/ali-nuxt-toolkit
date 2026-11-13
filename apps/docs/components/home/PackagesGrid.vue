@@ -62,9 +62,9 @@ const packages: PackageCard[] = [
     modeLabel: 'Vue 3 (Nuxt + non-Nuxt)',
   },
   {
-    name: '@alikhalilll/a-smart-skeleton',
-    docs: '/ui/smart-skeleton',
-    npm: 'https://www.npmjs.com/package/@alikhalilll/a-smart-skeleton',
+    name: '@alikhalilll/a-ghost-skeleton',
+    docs: '/ui/ghost-skeleton',
+    npm: 'https://www.npmjs.com/package/@alikhalilll/a-ghost-skeleton',
     description:
       'Intelligent zero-shift skeleton loader — measures unseen content in normal DOM flow with Canvas 2D font metrics, synchronized document-clock shimmer, and refined reveal animations.',
     accent: 'ui',

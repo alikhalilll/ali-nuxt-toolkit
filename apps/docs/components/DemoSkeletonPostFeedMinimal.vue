@@ -158,7 +158,7 @@ async function refreshFeed() {
   <!-- Provider sets the colour mode + theme and the default reveal
        animation for every skeleton inside; omit it to inherit the page's
        theme and \`smart\` as the default. -->
-  <ASmartSkeletonProvider
+  <AGhostSkeletonProvider
     mode="system"
     :theme="{
       light: { base: '#d1d4dc', highlight: '#ffffff' },
@@ -166,7 +166,7 @@ async function refreshFeed() {
     }"
     reveal="smart"
   >
-    <ASmartSkeleton
+    <AGhostSkeleton
       id="docs-hero-feed"
       :data="feed"
       :sample="SAMPLE_POSTS"
@@ -176,8 +176,8 @@ async function refreshFeed() {
           <PostCard v-for="post in data" :key="post.id" :post="post" />
         </div>
       </template>
-    </ASmartSkeleton>
-  </ASmartSkeletonProvider>
+    </AGhostSkeleton>
+  </AGhostSkeletonProvider>
 </template>`;
 </script>
 
@@ -211,15 +211,15 @@ async function refreshFeed() {
         <!-- Feed stage — same container pattern as the product-card demo -->
         <div class="pfm mx-auto max-w-md">
           <div class="overflow-hidden rounded-xl border border-border bg-surface/50 p-3">
-            <ASmartSkeletonProvider :mode="providerMode" :theme="DEMO_THEME" reveal="smart">
-              <ASmartSkeleton id="docs-hero-feed" :data="feed" :sample="SAMPLE_POSTS">
+            <AGhostSkeletonProvider :mode="providerMode" :theme="DEMO_THEME" reveal="smart">
+              <AGhostSkeleton id="docs-hero-feed" :data="feed" :sample="SAMPLE_POSTS">
                 <template #default="{ data }">
                   <div class="flex flex-col gap-3">
                     <PostCard v-for="post in data as Post[]" :key="post.id" :post="post" />
                   </div>
                 </template>
-              </ASmartSkeleton>
-            </ASmartSkeletonProvider>
+              </AGhostSkeleton>
+            </AGhostSkeletonProvider>
           </div>
         </div>
       </div>

@@ -74,7 +74,7 @@ const SAMPLE = [
 <template>
   <!-- One skeleton wraps the whole row; reveal="together" collapses the
        four crossfades into a single pane fade. -->
-  <ASmartSkeleton
+  <AGhostSkeleton
     id="metrics-row"
     :data="metrics"
     :sample="SAMPLE"
@@ -89,7 +89,7 @@ const SAMPLE = [
         </article>
       </div>
     </template>
-  </ASmartSkeleton>
+  </AGhostSkeleton>
 </template>`;
 </script>
 
@@ -105,7 +105,7 @@ const SAMPLE = [
       @keydown.enter="reload"
       @keydown.space.prevent="reload"
     >
-      <ASmartSkeleton id="demo-metrics-row" :data="metrics" :sample="SAMPLE" reveal="together">
+      <AGhostSkeleton id="demo-metrics-row" :data="metrics" :sample="SAMPLE" reveal="together">
         <template #default="{ data }">
           <div class="odr__grid">
             <article v-for="m in data as Metric[]" :key="m.label" class="odr__tile">
@@ -115,7 +115,7 @@ const SAMPLE = [
             </article>
           </div>
         </template>
-      </ASmartSkeleton>
+      </AGhostSkeleton>
     </div>
   </DemoTabs>
 </template>
