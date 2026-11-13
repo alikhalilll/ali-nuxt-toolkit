@@ -1,6 +1,6 @@
 {
   "name": "@alikhalilll/nuxt-crypto",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "description": "Symmetric encryption for Nuxt 3 / 4 and Vue 3, built on the native Web Crypto API — AES-256-GCM with PBKDF2 key derivation, key caching, pluggable algorithms, and optional device-fingerprint binding.",
   "license": "MIT",
   "author": "alikhalilll",
