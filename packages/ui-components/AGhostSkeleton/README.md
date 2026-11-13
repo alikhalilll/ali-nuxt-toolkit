@@ -10,7 +10,7 @@
 > Measured skeleton loaders for Vue 3 and Nuxt 3+. Captures your real component's layout — background, border, radius, box-shadow, text lines, and media boxes — and replays it as a pixel-faithful placeholder. One template to maintain. Zero cumulative layout shift.
 
 [![npm](https://img.shields.io/npm/v/@alikhalilll/a-ghost-skeleton.svg?color=444)](https://www.npmjs.com/package/@alikhalilll/a-ghost-skeleton)
-[![license](https://img.shields.io/npm/l/@alikhalilll/a-ghost-skeleton.svg?color=444)](https://github.com/alikhalilll/ali-nuxt-toolkit/blob/main/LICENSE)
+[![license](https://img.shields.io/npm/l/@alikhalilll/a-ghost-skeleton.svg?color=444)](https://github.com/alikhalilll/ali-nuxt-toolkit/blob/master/LICENSE)
 [![docs](https://img.shields.io/badge/docs-live%20demo-5c6ac4)](https://alikhalilll.github.io/ali-nuxt-toolkit/ui/ghost-skeleton)
 
 **[Live demo and full documentation →](https://alikhalilll.github.io/ali-nuxt-toolkit/ui/ghost-skeleton)**
@@ -377,7 +377,7 @@ Full props / slots / events reference → [API reference](https://alikhalilll.gi
 - **Fixed `reveal="instant"`** — previously threw `Cannot read properties of undefined (reading 'hold')`. Unknown reveal strings now fall through to `smart` instead of crashing.
 - **Cleaned stylesheet** — the published `dist/styles.css` is now a hand-authored ~4 KB file. No Tailwind utilities, `@property` globals, or theme tokens leak into the consumer's `:root`.
 
-See the full version history → [CHANGELOG](https://github.com/alikhalilll/ali-nuxt-toolkit/blob/main/packages/ui-components/AGhostSkeleton/CHANGELOG.md) · browse source → [GitHub](https://github.com/alikhalilll/ali-nuxt-toolkit/tree/main/packages/ui-components/AGhostSkeleton) · open an issue → [Issues](https://github.com/alikhalilll/ali-nuxt-toolkit/issues).
+See the full version history → [CHANGELOG](https://github.com/alikhalilll/ali-nuxt-toolkit/blob/master/packages/ui-components/AGhostSkeleton/CHANGELOG.md) · browse source → [GitHub](https://github.com/alikhalilll/ali-nuxt-toolkit/tree/master/packages/ui-components/AGhostSkeleton) · open an issue → [Issues](https://github.com/alikhalilll/ali-nuxt-toolkit/issues).
 
 ---
 
