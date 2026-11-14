@@ -1,6 +1,6 @@
 {
   "name": "@alikhalilll/nuxt-auto-middleware",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Declarative, layout-based route middleware for Nuxt 3 / 4 — glob matching, named groups, per-page overrides, and a typed registry. Map layouts to middleware chains once in nuxt.config; the module generates the dispatcher.",
   "license": "MIT",
   "author": "alikhalilll",
