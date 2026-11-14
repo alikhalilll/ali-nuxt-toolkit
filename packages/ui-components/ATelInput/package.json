@@ -1,6 +1,6 @@
 {
   "name": "@alikhalilll/a-tel-input",
-  "version": "1.4.7",
+  "version": "1.4.8",
   "description": "Headless, shadcn-vue style international telephone input for Vue 3 and Nuxt 3 / 4 — country auto-detect, libphonenumber-js validation, responsive popover/drawer country picker, and first-class VeeValidate + Zod integration. Part of the @alikhalilll/a-* toolkit.",
   "license": "MIT",
   "author": "alikhalilll",
