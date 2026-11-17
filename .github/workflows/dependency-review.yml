@@ -31,6 +31,7 @@ jobs:
           fail-on-severity: high
           comment-summary-in-pr: on-failure
           # Allow the licenses we already depend on repo-wide. Expand as new deps appear.
+          # BlueOak-1.0.0 covers isaacs/minimatch v10+ (relicensed from ISC) and glob v11+.
           allow-licenses: >-
             MIT, ISC, Apache-2.0, BSD-2-Clause, BSD-3-Clause, CC-BY-4.0,
-            CC0-1.0, 0BSD, Unlicense, Python-2.0
+            CC0-1.0, 0BSD, Unlicense, Python-2.0, BlueOak-1.0.0
