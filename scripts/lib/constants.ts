@@ -79,9 +79,12 @@ export const ATTW_IGNORE_NO_RESOLUTION: Record<PublishablePackage, string[]> = {
   'a-ghost-skeleton': ['./styles.css'],
 };
 
-export const BUMP_TYPES = ['patch', 'minor', 'major', 'prerelease', 'none'] as const;
+/**
+ * Bumps the prep-only release flow accepts. `prerelease` + `none` were removed
+ * when publish moved to CI — the Changesets state machine only handles these
+ * three. Pre-release lines are now driven via `pnpm changeset pre enter <tag>`.
+ */
+export const BUMP_TYPES = ['patch', 'minor', 'major'] as const;
 export type BumpType = (typeof BUMP_TYPES)[number];
 
 export const DEFAULT_BRANCH = 'master';
-
-export const DEFAULT_DIST_TAG = 'latest';

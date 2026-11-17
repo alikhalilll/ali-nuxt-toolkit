@@ -1,11 +1,11 @@
 import { capture, run } from '../lib/exec.ts';
 import { die } from '../lib/logger.ts';
 
-export function currentBranch() {
+export function currentBranch(): string {
   return capture('git', ['rev-parse', '--abbrev-ref', 'HEAD']);
 }
 
-export function ensureGitClean() {
+export function ensureGitClean(): void {
   const status = capture('git', ['status', '--porcelain']);
   if (status) {
     die(
@@ -17,44 +17,20 @@ export function ensureGitClean() {
   }
 }
 
-export function ensureOnBranch(expected) {
+export function ensureOnBranch(expected: string): void {
   const actual = currentBranch();
   if (actual !== expected) {
     die(`Expected to be on branch "${expected}" but you are on "${actual}".`);
   }
 }
 
-export function tagExists(tag) {
-  const out = capture('git', ['tag', '-l', tag]);
-  return out.trim() === tag;
-}
-
-export function commitAll(message, { dryRun = false } = {}) {
+export function commitAll(message: string, { dryRun = false }: { dryRun?: boolean } = {}): void {
   if (dryRun) return;
   run('git', ['add', '.']);
   run('git', ['commit', '-m', message]);
 }
 
-export function createTag(tag, message, { dryRun = false, force = false } = {}) {
-  if (dryRun) return;
-  const args = ['tag', '-a', tag, '-m', message];
-  if (force) args.splice(1, 0, '-f');
-  run('git', args);
-}
-
-export function pushBranch(branch, { dryRun = false } = {}) {
+export function pushBranch(branch: string, { dryRun = false }: { dryRun?: boolean } = {}): void {
   if (dryRun) return;
   run('git', ['push', 'origin', branch]);
-}
-
-export function pushTag(tag, { dryRun = false, force = false } = {}) {
-  if (dryRun) return;
-  const args = ['push', 'origin', tag];
-  if (force) args.splice(1, 0, '--force');
-  run('git', args);
-}
-
-export function deleteTagLocal(tag, { dryRun = false } = {}) {
-  if (dryRun) return;
-  run('git', ['tag', '-d', tag], { allowFail: true });
 }

@@ -22,7 +22,7 @@
  *   node scripts/consumer-validate.mjs --keep     # keep tmp dir on success (for debugging)
  */
 import fs from 'node:fs/promises';
-import { readFileSync } from 'node:fs';
+import { readFileSync, type Dirent } from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { fileURLToPath } from 'node:url';
@@ -40,7 +40,27 @@ const args = minimist(process.argv.slice(2), {
   default: { all: false, keep: false },
 });
 
-function pickPkgs() {
+/** A single tarball entry inside pack-all's manifest.json. */
+type Tarball = { pkgDir: string; version: string; filename: string; path: string };
+/** The top-level manifest.json shape emitted by `scripts/pack/pack-all.ts`. */
+type Manifest = { createdAt: string; outDir: string; tarballs: Record<string, Tarball> };
+
+type DepSection = 'dependencies' | 'devDependencies' | 'peerDependencies' | 'optionalDependencies';
+type DepRecord = Record<string, string>;
+type PkgJson = {
+  name?: string;
+  version?: string;
+  dependencies?: DepRecord;
+  devDependencies?: DepRecord;
+  peerDependencies?: DepRecord;
+  optionalDependencies?: DepRecord;
+  pnpm?: {
+    overrides?: DepRecord;
+    onlyBuiltDependencies?: string[];
+  } & Record<string, unknown>;
+};
+
+function pickPkgs(): string[] {
   if (args.all) return [...PUBLISHABLE_PACKAGES];
   if (args.pkg) {
     return String(args.pkg)
@@ -51,7 +71,7 @@ function pickPkgs() {
   return [...PUBLISHABLE_PACKAGES];
 }
 
-async function exists(p) {
+async function exists(p: string): Promise<boolean> {
   try {
     await fs.access(p);
     return true;
@@ -60,7 +80,7 @@ async function exists(p) {
   }
 }
 
-async function copyDir(src, dest) {
+async function copyDir(src: string, dest: string): Promise<void> {
   await fs.mkdir(dest, { recursive: true });
   await fs.cp(src, dest, {
     recursive: true,
@@ -81,9 +101,18 @@ async function copyDir(src, dest) {
  * packages with a `file:` reference to the tarball. Deps for packages not under
  * test are removed entirely so the temp playground only installs what's packed.
  */
-async function rewriteInternalDeps(pkgJsonPath, manifestTarballs, allInternalNames) {
-  const pkgJson = JSON.parse(await fs.readFile(pkgJsonPath, 'utf8'));
-  const sections = ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies'];
+async function rewriteInternalDeps(
+  pkgJsonPath: string,
+  manifestTarballs: Record<string, Tarball>,
+  allInternalNames: readonly string[]
+): Promise<void> {
+  const pkgJson: PkgJson = JSON.parse(await fs.readFile(pkgJsonPath, 'utf8'));
+  const sections: DepSection[] = [
+    'dependencies',
+    'devDependencies',
+    'peerDependencies',
+    'optionalDependencies',
+  ];
 
   for (const sectionName of sections) {
     const section = pkgJson[sectionName];
@@ -103,7 +132,9 @@ async function rewriteInternalDeps(pkgJsonPath, manifestTarballs, allInternalNam
   // pnpm 10 treats unconfirmed postinstall scripts as a hard error. Inherit the
   // root's `onlyBuiltDependencies` allowlist so the temp playground's install
   // doesn't trip [ERR_PNPM_IGNORED_BUILDS] on esbuild/@parcel/watcher/etc.
-  const rootPkgJson = JSON.parse(await fs.readFile(path.join(ROOT, 'package.json'), 'utf8'));
+  const rootPkgJson: PkgJson = JSON.parse(
+    await fs.readFile(path.join(ROOT, 'package.json'), 'utf8')
+  );
   const onlyBuilt = rootPkgJson.pnpm?.onlyBuiltDependencies;
   if (onlyBuilt) {
     pkgJson.pnpm = { ...pkgJson.pnpm, onlyBuiltDependencies: onlyBuilt };
@@ -135,7 +166,7 @@ async function rewriteInternalDeps(pkgJsonPath, manifestTarballs, allInternalNam
  * from a config source. Uses a brace-depth counter so nested objects don't
  * fool it the way a `{[^}]*}` regex would. Returns the modified source.
  */
-function stripObjectKey(src, key) {
+function stripObjectKey(src: string, key: string): string {
   const startRe = new RegExp(`(^|\\n)(\\s*)${key}\\s*:\\s*\\{`, 'g');
   for (;;) {
     const m = startRe.exec(src);
@@ -158,7 +189,10 @@ function stripObjectKey(src, key) {
   }
 }
 
-async function stripMissingModulesFromNuxtConfig(tmpPlayground, missingModuleNames) {
+async function stripMissingModulesFromNuxtConfig(
+  tmpPlayground: string,
+  missingModuleNames: readonly string[]
+): Promise<void> {
   if (missingModuleNames.length === 0) return;
 
   const candidates = ['nuxt.config.ts', 'nuxt.config.mts', 'nuxt.config.js', 'nuxt.config.mjs'];
@@ -174,7 +208,7 @@ async function stripMissingModulesFromNuxtConfig(tmpPlayground, missingModuleNam
       src = src.replace(new RegExp(`['"]${escaped}(?:/[^'"]+)?['"]\\s*,?`, 'g'), '');
       // Per-module config block keyed by the camelCased short identifier.
       const shortKey = shortIdentifier(mod);
-      const camelKey = shortKey.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+      const camelKey = shortKey.replace(/-([a-z])/g, (_: string, c: string) => c.toUpperCase());
       src = stripObjectKey(src, camelKey);
     }
     // Tidy dangling commas / empty array slots.
@@ -195,7 +229,7 @@ async function stripMissingModulesFromNuxtConfig(tmpPlayground, missingModuleNam
  * `@alikhalilll/nuxt-api-provider` → `api-provider`
  * `@alikhalilll/a-tel-input` → `a-tel-input`
  */
-function shortIdentifier(pkgName) {
+function shortIdentifier(pkgName: string): string {
   return pkgName.replace(/^@[^/]+\//, '').replace(/^nuxt-/, '');
 }
 
@@ -209,7 +243,10 @@ function shortIdentifier(pkgName) {
  * Scan list mirrors Nuxt's auto-import + routing surface: pages, server,
  * components, composables, layouts, middleware, plugins.
  */
-async function stripPackageReferencesFromPlayground(tmpPlayground, missingPackageNames) {
+async function stripPackageReferencesFromPlayground(
+  tmpPlayground: string,
+  missingPackageNames: readonly string[]
+): Promise<void> {
   if (missingPackageNames.length === 0) return;
 
   const scanDirs = [
@@ -228,10 +265,10 @@ async function stripPackageReferencesFromPlayground(tmpPlayground, missingPackag
   const shortNames = missingPackageNames.map(shortIdentifier);
   const filenameRegex = new RegExp(`^(${shortNames.join('|')})(-|\\.|$)`);
 
-  async function walkAndStrip(dir) {
-    let entries;
+  async function walkAndStrip(dir: string): Promise<void> {
+    let entries: Dirent<string>[];
     try {
-      entries = await fs.readdir(dir, { withFileTypes: true });
+      entries = (await fs.readdir(dir, { withFileTypes: true })) as Dirent<string>[];
     } catch {
       return;
     }
@@ -268,7 +305,7 @@ async function stripPackageReferencesFromPlayground(tmpPlayground, missingPackag
   }
 }
 
-async function ensureNuxtTypecheckReady(tmpPlayground) {
+async function ensureNuxtTypecheckReady(tmpPlayground: string): Promise<void> {
   console.log(pc.cyan('→') + ' nuxi prepare');
   await execa('pnpm', ['exec', 'nuxi', 'prepare'], {
     cwd: tmpPlayground,
@@ -329,7 +366,7 @@ const UI_AUTO_IMPORTED_COMPONENTS = [
   'AResponsivePopoverTrigger',
 ];
 
-async function verifyAutoImports(tmpPlayground, includesUi) {
+async function verifyAutoImports(tmpPlayground: string, includesUi: boolean): Promise<void> {
   if (!includesUi) return;
 
   const componentsDts = path.join(tmpPlayground, '.nuxt', 'components.d.ts');
@@ -431,7 +468,7 @@ async function main() {
 
   const requested = pickPkgs();
   for (const p of requested) {
-    if (!PUBLISHABLE_PACKAGES.includes(p)) {
+    if (!(PUBLISHABLE_PACKAGES as readonly string[]).includes(p)) {
       throw new Error(
         `Unknown package "${p}". Expected one of: ${PUBLISHABLE_PACKAGES.join(', ')}`
       );
@@ -465,7 +502,9 @@ async function main() {
   console.log(pc.cyan('→') + ' Packing tarballs...');
   await execa(packArgs[0], packArgs.slice(1), { stdio: 'inherit', cwd: ROOT });
 
-  const manifest = JSON.parse(await fs.readFile(path.join(outDir, 'manifest.json'), 'utf8'));
+  const manifest: Manifest = JSON.parse(
+    await fs.readFile(path.join(outDir, 'manifest.json'), 'utf8')
+  );
   const packedNames = Object.keys(manifest.tarballs);
 
   // 2. Copy playgrounds/nuxt to tmp
@@ -486,7 +525,7 @@ async function main() {
   // Collect every internal package name the playground may reference, so unpacked
   // ones get removed (not left dangling) and packed ones get pinned to `file:`.
   const playgroundPkgJsonPath = path.join(tmpPlayground, 'package.json');
-  const playgroundPkgJson = JSON.parse(await fs.readFile(playgroundPkgJsonPath, 'utf8'));
+  const playgroundPkgJson: PkgJson = JSON.parse(await fs.readFile(playgroundPkgJsonPath, 'utf8'));
   const allInternalNames = Array.from(
     new Set([
       ...packedNames,

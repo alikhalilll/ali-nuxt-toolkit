@@ -38,24 +38,27 @@ const PLAYGROUND_NM = path.join(PLAYGROUND_DIR, 'node_modules');
 
 const INTERNAL_PREFIX = '@alikhalilll/';
 
-async function exists(p) {
-  try {
-    await fs.access(p);
-    return true;
-  } catch {
-    return false;
-  }
-}
+/** Shape of a tarball entry inside pack-all's manifest.json. */
+type Tarball = { pkgDir: string; version: string; filename: string; path: string };
+type TarballMap = Record<string, Tarball>;
 
-async function readJson(p) {
+type DepSection = 'dependencies' | 'devDependencies' | 'peerDependencies' | 'optionalDependencies';
+/** The subset of playgrounds/nuxt/package.json we read/write. */
+type PlaygroundPkg = {
+  [K in DepSection]?: Record<string, string>;
+} & {
+  pnpm?: { overrides?: Record<string, string> } & Record<string, unknown>;
+};
+
+async function readJson<T = PlaygroundPkg>(p: string): Promise<T> {
   return JSON.parse(await fs.readFile(p, 'utf8'));
 }
 
-async function writeJson(p, value) {
+async function writeJson(p: string, value: unknown): Promise<void> {
   await fs.writeFile(p, JSON.stringify(value, null, 2) + '\n');
 }
 
-function depSections() {
+function depSections(): readonly DepSection[] {
   return ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies'];
 }
 
@@ -80,11 +83,13 @@ async function packAllIntoPlayground() {
   console.log(pc.cyan('→') + ' Packing ' + pc.bold(ALL_PACKAGES.join(', ')));
   await execa(packArgs[0], packArgs.slice(1), { stdio: 'inherit', cwd: ROOT });
 
-  const manifest = await readJson(path.join(TARBALL_DIR, 'manifest.json'));
+  const manifest = await readJson<{ tarballs: TarballMap }>(
+    path.join(TARBALL_DIR, 'manifest.json')
+  );
   return manifest.tarballs;
 }
 
-async function rewriteToFileDeps(tarballs) {
+async function rewriteToFileDeps(tarballs: TarballMap): Promise<void> {
   const pkg = await readJson(PLAYGROUND_PKG);
   let changed = 0;
 
@@ -181,8 +186,8 @@ async function restoreWorkspaceInstall() {
   await execa('pnpm', ['install'], { cwd: ROOT, stdio: 'inherit' });
 }
 
-function detectMode() {
-  const pkg = JSON.parse(fsSync.readFileSync(PLAYGROUND_PKG, 'utf8'));
+function detectMode(): 'packed' | 'workspace' {
+  const pkg: PlaygroundPkg = JSON.parse(fsSync.readFileSync(PLAYGROUND_PKG, 'utf8'));
   for (const section of depSections()) {
     const deps = pkg[section];
     if (!deps) continue;

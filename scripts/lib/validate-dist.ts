@@ -21,13 +21,16 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, '..', '..');
 
-function section(title) {
+/** A single problem entry from attw's JSON report — we only read the two fields we classify on. */
+type AttwProblem = { kind: string; entrypoint?: string };
+
+function section(title: string): void {
   console.log('\n' + pc.bold(pc.blue('─'.repeat(60))));
   console.log('  ' + pc.bold(pc.blue(title)));
   console.log(pc.bold(pc.blue('─'.repeat(60))));
 }
 
-async function runPublint(pkgRoot) {
+async function runPublint(pkgRoot: string): Promise<void> {
   section('1 / 2  publint (strict)');
   // `--strict` promotes publint warnings to failures. Warnings (e.g.
   // shared-types-for-dual-CJS-ESM) are real consumer-facing bugs in a published
@@ -36,7 +39,10 @@ async function runPublint(pkgRoot) {
   console.log('\n' + pc.green('  ✓') + ' ' + pc.bold('publint passed.'));
 }
 
-function classifyAttwProblem(problem, ignoreNoResolutionEntrypoints) {
+function classifyAttwProblem(
+  problem: AttwProblem,
+  ignoreNoResolutionEntrypoints: readonly string[]
+): 'ignore' | 'fail' {
   // CJSResolvesToESM is covered by .attw.json ignoreRules; belt-and-suspenders.
   if (problem.kind === 'CJSResolvesToESM') return 'ignore';
   // Side-effect-only subpaths (e.g. CSS) have no `.d.ts` — that's intentional.
@@ -47,7 +53,10 @@ function classifyAttwProblem(problem, ignoreNoResolutionEntrypoints) {
   return 'fail';
 }
 
-async function runAttw(pkgRoot, { ignoreNoResolutionEntrypoints }) {
+async function runAttw(
+  pkgRoot: string,
+  { ignoreNoResolutionEntrypoints }: { ignoreNoResolutionEntrypoints: readonly string[] }
+): Promise<void> {
   section('2 / 2  @arethetypeswrong/cli (attw)');
 
   const reportFile = path.join(pkgRoot, '.attw-report.json');
@@ -129,7 +138,7 @@ async function runAttw(pkgRoot, { ignoreNoResolutionEntrypoints }) {
  * in the package dir — and attw doesn't clean it up when it crashes on the fflate
  * gunzip bug. Remove any stray tarballs so they don't pile up in the working tree.
  */
-async function removeStrayTarballs(pkgRoot) {
+async function removeStrayTarballs(pkgRoot: string): Promise<void> {
   const entries = await fs.readdir(pkgRoot);
   await Promise.all(
     entries
@@ -138,7 +147,15 @@ async function removeStrayTarballs(pkgRoot) {
   );
 }
 
-export async function runDistValidation({ pkgRoot, ignoreNoResolutionEntrypoints = [] } = {}) {
+export type RunDistValidationOptions = {
+  pkgRoot: string;
+  ignoreNoResolutionEntrypoints?: readonly string[];
+};
+
+export async function runDistValidation({
+  pkgRoot,
+  ignoreNoResolutionEntrypoints = [],
+}: RunDistValidationOptions): Promise<void> {
   if (!pkgRoot) throw new Error('runDistValidation: `pkgRoot` is required');
 
   const pkgJson = JSON.parse(await fs.readFile(path.join(pkgRoot, 'package.json'), 'utf8'));

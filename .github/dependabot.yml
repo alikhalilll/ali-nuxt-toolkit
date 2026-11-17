@@ -1,0 +1,77 @@
+version: 2
+
+updates:
+  # pnpm workspace: one root lockfile covers every package, playground, example and app.
+  # Dependabot resolves workspace members from pnpm-workspace.yaml, so a single
+  # directory entry is correct — do NOT add per-package entries, they fight the lockfile.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: Africa/Cairo
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - npm
+    commit-message:
+      prefix: build
+      prefix-development: build
+      include: scope
+    versioning-strategy: increase-if-necessary
+    groups:
+      # Minor + patch across all runtime deps land in one PR. Low-risk, batched weekly.
+      production-minor-patch:
+        applies-to: version-updates
+        dependency-type: production
+        update-types:
+          - minor
+          - patch
+      # Dev-tooling churn (eslint, prettier, tsx, husky, etc.) is noisy; group it too.
+      development-minor-patch:
+        applies-to: version-updates
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+      # Security advisories get their own group regardless of type — never lump them
+      # with routine upgrades so they can be reviewed and merged on their own clock.
+      security-updates:
+        applies-to: security-updates
+        patterns:
+          - '*'
+    ignore:
+      # Major bumps for the framework core go through manual review — breaking changes
+      # here (SSR, module API, auto-imports) warrant their own PR with a migration note.
+      - dependency-name: nuxt
+        update-types: [version-update:semver-major]
+      - dependency-name: vue
+        update-types: [version-update:semver-major]
+      - dependency-name: '@nuxt/*'
+        update-types: [version-update:semver-major]
+      # Node types track the runtime `engines.node` constraint; bump deliberately.
+      - dependency-name: '@types/node'
+        update-types: [version-update:semver-major]
+
+  # Pin GitHub Actions by SHA upstream is ideal, but at minimum keep versions fresh.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: Africa/Cairo
+    open-pull-requests-limit: 3
+    labels:
+      - dependencies
+      - github-actions
+    commit-message:
+      prefix: ci
+      include: scope
+    groups:
+      actions-minor-patch:
+        applies-to: version-updates
+        update-types:
+          - minor
+          - patch

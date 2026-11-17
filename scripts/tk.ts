@@ -20,7 +20,7 @@
  *   pack        Build + pack one or all publishable packages into .tgz
  *   validate    Full validate (build + publint + attw + consumer install)
  *   consumer    Consumer-validate only (faster than `validate`)
- *   release    Interactive release: bump version, publish, tag (use `--dry-run`)
+ *   release     Prep a release: write changeset + commit + push (CI publishes)
  *   dev         Boot a dev server: play | play:packed | play:restore | docs
  *
  * Two ways to call it:
@@ -105,7 +105,7 @@ ${pc.bold('Actions:')}
   pack       ${pc.dim('Build + pack one or all publishable packages → .tgz')}
   validate   ${pc.dim('Full validate (build + publint + attw + consumer install)')}
   consumer   ${pc.dim('Consumer-validate only (faster than validate)')}
-  release    ${pc.dim('Interactive release; pass --dry-run to preview')}
+  release    ${pc.dim('Prep release (changeset + commit + push); CI publishes')}
 
   ${pc.yellow('Run')}
   dev        ${pc.dim('Boot a dev server: play | play:packed | play:restore | docs')}
@@ -212,7 +212,7 @@ async function pickAction(): Promise<Action> {
       },
       // Ship
       {
-        name: `${pc.green('release')}    interactive release ${pc.dim('(--dry-run supported)')}`,
+        name: `${pc.green('release')}    prep release — writes changeset, pushes ${pc.dim('(CI publishes)')}`,
         value: 'release',
       },
       // Run
@@ -366,8 +366,8 @@ async function runDev(target: DevTarget): Promise<void> {
 
 async function main(): Promise<void> {
   const args = minimist(process.argv.slice(2), {
-    string: ['pkg'],
-    boolean: ['help'],
+    string: ['pkg', 'bump'],
+    boolean: ['help', 'dry-run', 'all'],
     alias: { h: 'help' },
   });
 
@@ -433,10 +433,13 @@ async function main(): Promise<void> {
       return;
     }
     case 'release': {
-      // Pass through additional flags (--dry-run, --pkg, etc.) to the release script.
+      // Forward flags understood by scripts/release/index.ts. Anything passed
+      // explicitly here bypasses the interactive prompt in pickInteractive.
       const extras: string[] = [];
       if (args['dry-run']) extras.push('--dry-run');
       if (args.pkg) extras.push('--pkg', String(args.pkg));
+      if (args.bump) extras.push('--bump', String(args.bump));
+      if (args.all) extras.push('--all');
       const positionalScope = positional[1];
       if (positionalScope)
         extras.push(positionalScope === 'all' ? '--all' : `--pkg=${positionalScope}`);

@@ -41,7 +41,17 @@ async function main() {
   const outDir = argv.outDir ? path.resolve(ROOT, argv.outDir) : path.join(ROOT, 'artifacts');
   fs.mkdirSync(outDir, { recursive: true });
 
-  const manifest = {
+  type TarballEntry = {
+    pkgDir: string;
+    version: string;
+    filename: string;
+    path: string;
+  };
+  const manifest: {
+    createdAt: string;
+    outDir: string;
+    tarballs: Record<string, TarballEntry>;
+  } = {
     createdAt: new Date().toISOString(),
     outDir,
     tarballs: {},
@@ -67,7 +77,8 @@ async function main() {
     const pkgJson = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf8'));
     // pnpm names tarballs `<scope-name>-<version>.tgz` (scope @ stripped, / → -).
     const expectedPrefix = `${pkgJson.name.replace(/^@/, '').replace(/\//g, '-')}-${pkgJson.version}`;
-    const filename = created.find((f) => f.startsWith(expectedPrefix)) || created.sort().at(-1);
+    const filename = created.find((f) => f.startsWith(expectedPrefix)) ?? created.sort().at(-1);
+    if (!filename) die(`pnpm pack did not create a .tgz for ${dir}`);
 
     manifest.tarballs[pkgJson.name] = {
       pkgDir: dir,

@@ -2,36 +2,28 @@ import minimist from 'minimist';
 import {
   BUMP_TYPES,
   DEFAULT_BRANCH,
-  DEFAULT_DIST_TAG,
   PUBLISHABLE_PACKAGES,
+  type BumpType,
+  type PublishablePackage,
 } from '../lib/constants.ts';
 import { die } from '../lib/logger.ts';
 
-export function parseArgs(argv = process.argv.slice(2)) {
+export type ReleaseArgs = {
+  flags: { interactive: boolean; dryRun: boolean; all: boolean };
+  packages: PublishablePackage[];
+  bump: BumpType | null;
+  branch: string;
+};
+
+export function parseArgs(argv: string[] = process.argv.slice(2)): ReleaseArgs {
   const parsed = minimist(argv, {
-    string: ['pkg', 'bump', 'tag', 'branch'],
-    boolean: [
-      'all',
-      'interactive',
-      'dry-run',
-      'skip-git',
-      'skip-publish',
-      'skip-github',
-      'force-tag',
-    ],
-    alias: {
-      i: 'interactive',
-      d: 'dry-run',
-    },
+    string: ['pkg', 'bump', 'branch'],
+    boolean: ['all', 'interactive', 'dry-run'],
+    alias: { i: 'interactive', d: 'dry-run' },
     default: {
       interactive: false,
       all: false,
       'dry-run': false,
-      'skip-git': false,
-      'skip-publish': false,
-      'skip-github': false,
-      'force-tag': false,
-      tag: DEFAULT_DIST_TAG,
       branch: DEFAULT_BRANCH,
     },
   });
@@ -39,22 +31,18 @@ export function parseArgs(argv = process.argv.slice(2)) {
   const flags = {
     interactive: !!parsed.interactive,
     dryRun: !!parsed['dry-run'],
-    skipGit: !!parsed['skip-git'],
-    skipPublish: !!parsed['skip-publish'],
-    skipGithub: !!parsed['skip-github'],
-    forceTag: !!parsed['force-tag'],
     all: !!parsed.all,
   };
 
-  const packages = resolvePackages(parsed);
-  const bump = parsed.bump ?? null;
-  const distTag = parsed.tag || DEFAULT_DIST_TAG;
-  const branch = parsed.branch || DEFAULT_BRANCH;
-
-  return { flags, packages, bump, distTag, branch };
+  return {
+    flags,
+    packages: resolvePackages(parsed),
+    bump: (parsed.bump as BumpType | undefined) ?? null,
+    branch: (parsed.branch as string) || DEFAULT_BRANCH,
+  };
 }
 
-function resolvePackages(parsed) {
+function resolvePackages(parsed: minimist.ParsedArgs): PublishablePackage[] {
   if (parsed.all) return [...PUBLISHABLE_PACKAGES];
   if (!parsed.pkg) return [];
   const names = String(parsed.pkg)
@@ -62,18 +50,18 @@ function resolvePackages(parsed) {
     .map((s) => s.trim())
     .filter(Boolean);
   for (const n of names) {
-    if (!PUBLISHABLE_PACKAGES.includes(n)) {
+    if (!(PUBLISHABLE_PACKAGES as readonly string[]).includes(n)) {
       die(
         `Unknown package: "${n}". Valid names: ${PUBLISHABLE_PACKAGES.join(', ')} (or pass --all).`
       );
     }
   }
-  return names;
+  return names as PublishablePackage[];
 }
 
-export function validateBump(bump) {
+export function validateBump(bump: string | null): void {
   if (bump == null) return;
-  if (!BUMP_TYPES.includes(bump)) {
+  if (!(BUMP_TYPES as readonly string[]).includes(bump)) {
     die(`Unknown bump type: "${bump}". Must be one of: ${BUMP_TYPES.join(', ')}.`);
   }
 }
