@@ -20,7 +20,12 @@ export default {
         'release',
       ],
     ],
-    'subject-max-length': [2, 'always', 100],
+    // Dependabot grouped-bump titles like
+    // "ci(deps): bump ossf/scorecard-action from 2.4.3 to 2.5.0 in the actions-minor-patch group across 1 directory"
+    // routinely exceed the conventional default of 100. 150 leaves headroom
+    // without turning subjects into run-on paragraphs for humans.
+    'header-max-length': [2, 'always', 150],
+    'subject-max-length': [2, 'always', 150],
     'scope-empty': [0],
     'subject-case': [0],
   },
