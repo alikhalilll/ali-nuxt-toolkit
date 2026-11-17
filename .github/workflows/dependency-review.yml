@@ -32,6 +32,9 @@ jobs:
           comment-summary-in-pr: on-failure
           # Allow the licenses we already depend on repo-wide. Expand as new deps appear.
           # BlueOak-1.0.0 covers isaacs/minimatch v10+ (relicensed from ISC) and glob v11+.
+          # MPL-2.0 covers lightningcss (Nuxt/Vite CSS pipeline, pulled in transitively) and
+          # its platform-specific native binaries. Weak-copyleft: triggers only on modification
+          # of MPL-licensed files themselves, not on downstream consumption.
           allow-licenses: >-
             MIT, ISC, Apache-2.0, BSD-2-Clause, BSD-3-Clause, CC-BY-4.0,
-            CC0-1.0, 0BSD, Unlicense, Python-2.0, BlueOak-1.0.0
+            CC0-1.0, 0BSD, Unlicense, Python-2.0, BlueOak-1.0.0, MPL-2.0
