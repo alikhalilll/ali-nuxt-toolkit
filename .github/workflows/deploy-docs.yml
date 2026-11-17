@@ -40,7 +40,7 @@ jobs:
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # For workflow_run events, check out the SHA that passed CI, not the latest master.
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
