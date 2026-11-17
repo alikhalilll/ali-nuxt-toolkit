@@ -26,6 +26,11 @@ export default {
     // without turning subjects into run-on paragraphs for humans.
     'header-max-length': [2, 'always', 150],
     'subject-max-length': [2, 'always', 150],
+    // Dependabot bodies include markdown-linked dep names (`[pkg](url)`) that regularly
+    // break 100 chars on a single line. Line-wrap of auto-generated bodies/footers isn't
+    // a signal worth gating merges on; the header/subject rules stay strict.
+    'body-max-line-length': [0],
+    'footer-max-line-length': [0],
     'scope-empty': [0],
     'subject-case': [0],
   },
