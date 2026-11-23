@@ -189,7 +189,7 @@
     "vue": "^3.5.0",
     "vue-tsc": "^3.2.4",
     "vee-validate": "^4.13.0",
-    "zod": "^3.23.8",
+    "zod": "^4.6.6",
     "@alikhalilll/a-ui-base": "workspace:*",
     "@alikhalilll/a-responsive-popover": "workspace:*"
   }
